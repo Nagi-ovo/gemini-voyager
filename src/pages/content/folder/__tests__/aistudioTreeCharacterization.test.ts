@@ -179,10 +179,10 @@ describe('AI Studio folder tree: what it shows', () => {
     expect(tree.conversationIds('b')).toEqual(['c1', 'c2', 'c3']);
   });
 
-  it('stops at two levels: a subfolder offers no subfolder of its own', async () => {
+  it('stops at three levels: a third-level folder offers no subfolder', async () => {
     await mount();
-    expect(tree.canCreateSubfolder('b')).toBe(true);
-    expect(tree.canCreateSubfolder('b1')).toBe(false);
+    expect(tree.canCreateSubfolder('b1')).toBe(true);
+    expect(tree.canCreateSubfolder('g')).toBe(false);
   });
 
   // The old sidebar tree hid a third level that imported data could hold; the

@@ -76,7 +76,7 @@ C'est pourquoi nous avons créé **Voyager**. Plus qu'un simple outil, c'est un 
 
 ### 🌌 Noyau Commun (Gemini & AI Studio)
 
-- **📂 [Dossiers](https://voyager.nagi.fun/fr/guide/folders)** : organisez vos discussions dans une hiérarchie à deux niveaux, avec prise en charge du glisser-déposer.
+- **📂 [Dossiers](https://voyager.nagi.fun/fr/guide/folders)** : organisez vos discussions dans une hiérarchie de dossiers jusqu’à trois niveaux, avec prise en charge du glisser-déposer.
   - **Gemini** : Support du **mode d'isolation de compte** et **couleurs de dossiers personnalisées**.
 - **💡 [Coffre-fort de Prompts](https://voyager.nagi.fun/fr/guide/prompts)** : Enregistrez et réutilisez vos meilleurs prompts sur Gemini, AI Studio et [sites personnalisés](https://voyager.nagi.fun/fr/guide/prompts#disponible-partout).
 - **☁️ [Synchronisation Cloud](https://voyager.nagi.fun/fr/guide/cloud-sync)** : synchronisez dossiers et prompts via Google Drive, ou via iCloud sur Safari.

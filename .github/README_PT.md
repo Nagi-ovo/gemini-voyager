@@ -82,7 +82,7 @@ Para um guia completo, visite a nossa [Documentação](https://voyager.nagi.fun/
 
 ### 🌌 Núcleo Comum (Gemini & AI Studio)
 
-- **📂 [Organização por Pastas](https://voyager.nagi.fun/pt/guide/folders)**: Organize chats em uma hierarquia de pastas de dois níveis, com suporte a arrastar e soltar.
+- **📂 [Organização por Pastas](https://voyager.nagi.fun/pt/guide/folders)**: Organize chats em uma hierarquia de pastas de até três níveis, com suporte a arrastar e soltar.
   - **Gemini**: Suporta o **Modo de Isolamento de Conta** e **Cores de Pastas Personalizadas**.
 - **💡 [Cofre de Prompts](https://voyager.nagi.fun/pt/guide/prompts)**: Guarde e reutilize os seus melhores prompts no Gemini, AI Studio e [sites personalizados](https://voyager.nagi.fun/pt/guide/prompts#funciona-em-qualquer-site).
 - **☁️ [Sincronização na Nuvem](https://voyager.nagi.fun/pt/guide/cloud-sync)**: Sincronize pastas e prompts pelo Google Drive ou pelo iCloud no Safari.

@@ -4,18 +4,17 @@ import {
 } from '@/core/services/AccountIsolationService';
 import { buildConversationIdFromUrl } from '@/core/utils/conversationIdentity';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
-import { MAX_FOLDER_DEPTH } from '@/features/folder/constants';
 import { readConversationStars } from '@/features/folder/model/conversationStars';
 import {
   type ConversationSortMode,
   cloneFolderData,
-  getFolderDepth,
   moveFolder,
   ownBucket,
   removeFolder,
   reorderConversations,
   setBucket,
 } from '@/features/folder/model/folderData';
+import { canCreateFolderUnder } from '@/features/folder/model/folderDepth';
 import { placeConversations } from '@/features/folder/model/placeConversations';
 import { applyFolderOp } from '@/features/folder/owner/applyFolderOp';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
@@ -175,7 +174,7 @@ export class FolderStore {
 
   createFolder(name: string, parentId: string | null = null): Folder | null {
     if (!this.canEdit) return null;
-    if (parentId !== null && getFolderDepth(this.data, parentId) >= MAX_FOLDER_DEPTH) return null;
+    if (!canCreateFolderUnder(this.data, parentId)) return null;
     const maxSortIndex = this.data.folders
       .filter((folder) => folder.parentId === parentId)
       .reduce((max, folder) => Math.max(max, folder.sortIndex ?? -1), -1);

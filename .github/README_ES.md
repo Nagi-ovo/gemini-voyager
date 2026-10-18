@@ -76,7 +76,7 @@ Por eso creamos **Voyager**. No es solo una herramienta; es un compañero que te
 
 ### 🌌 Núcleo Común (Gemini & AI Studio)
 
-- **📂 [Organización por Carpetas](https://voyager.nagi.fun/es/guide/folders)**: Organiza los chats en una jerarquía de carpetas de dos niveles con soporte para **arrastrar y soltar**.
+- **📂 [Organización por Carpetas](https://voyager.nagi.fun/es/guide/folders)**: Organiza los chats en una jerarquía de carpetas de hasta tres niveles con soporte para **arrastrar y soltar**.
   - **Gemini**: Soporta **Modo de Aislamiento de Cuenta** y **Colores de Carpeta Personalizados**.
 - **💡 [Depósito de Prompts](https://voyager.nagi.fun/es/guide/prompts)**: Guarda y reutiliza tus mejores prompts en Gemini, AI Studio y [sitios web personalizados](https://voyager.nagi.fun/es/guide/prompts#disponible-en-cualquier-sitio).
 - **☁️ [Sincronización en la Nube](https://voyager.nagi.fun/es/guide/cloud-sync)**: Sincroniza carpetas y prompts a través de Google Drive, o de iCloud en Safari.

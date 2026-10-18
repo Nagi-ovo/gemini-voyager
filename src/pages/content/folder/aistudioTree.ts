@@ -2,6 +2,7 @@ import { normalizeText } from '@/core/utils/text';
 import type { FolderCommands } from '@/features/folder/commands/folderCommands';
 import { AISTUDIO_ROOT_BUCKET_ID } from '@/features/folder/constants';
 import { ownBucket, removeFolder, setBucket } from '@/features/folder/model/folderData';
+import { canCreateFolderUnder } from '@/features/folder/model/folderDepth';
 import { placeConversations } from '@/features/folder/model/placeConversations';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
 
@@ -164,6 +165,7 @@ export function addFolder(
   if (folder.parentId && !data.folders.some((candidate) => candidate.id === folder.parentId)) {
     return false;
   }
+  if (!canCreateFolderUnder(data, folder.parentId)) return false;
   data.folders.push({
     id: folder.id,
     name: folder.name,

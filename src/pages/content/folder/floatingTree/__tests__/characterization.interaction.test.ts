@@ -171,15 +171,6 @@ describe.each(CONSUMERS)('$name: naming folders', ({ consumer }) => {
     expect(actions.onCreateFolder.mock.calls).toEqual([['Sub', 'b']]);
   });
 
-  it('offers no subfolder under a subfolder', () => {
-    const { view } = mount(consumer);
-    expect(view.addSubfolderButton('Alpha')).not.toBeNull();
-    expect(view.addSubfolderButton('Inner')).toBeNull();
-
-    view.openMenuByRightClick('Inner');
-    expect(menuItemLabels()).not.toContain(label('floatingPanelCreateSubfolder'));
-  });
-
   it('renames from a double-click on the name, starting from the current name', async () => {
     const { view, actions } = mount(consumer);
     view.startRename('Beta');

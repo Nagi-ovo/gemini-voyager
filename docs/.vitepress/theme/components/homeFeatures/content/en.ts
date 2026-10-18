@@ -13,7 +13,7 @@ export const en: HomeFeaturesContent = {
   folders: {
     eyebrow: 'Folders',
     title: 'A home for your thoughts.',
-    body: 'Right inside the Gemini and ChatGPT sidebars. Two levels deep, starred chats on top, searchable.',
+    body: 'Right inside the Gemini and ChatGPT sidebars. Three levels deep, starred chats on top, searchable.',
     hint: 'Try it: open another chat · drag one into a folder · search "cat"',
     heading: 'Folders',
     searchPlaceholder: 'Search folders and chats',

@@ -75,7 +75,7 @@ export function deepFreeze<T>(value: T): T {
  * creation order all disagree, so each consumer's ordering shows itself:
  *
  * - Zeta, Alpha and pinned Mu at the root; Orphan's parent is gone;
- * - Alpha › Child › Grandchild, deeper than a user can create (stored data can);
+ * - Alpha › Child › Grandchild, the deepest level a user can create;
  * - Loop X and Loop Y name each other as parent;
  * - Alpha holds three chats stored oldest first with the starred one in the middle;
  * - one chat is filed at the root.

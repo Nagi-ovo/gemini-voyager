@@ -76,7 +76,7 @@ AI チャットボット — Gemini、Claude、ChatGPT、DeepSeek — は強力�
 
 ### 🌌 共通コア (Gemini & AI Studio)
 
-- **📂 [フォルダ管理](https://voyager.nagi.fun/ja/guide/folders)**: 2 階層のフォルダ構造で、ドラッグ＆ドロップによりチャットを整理できます。
+- **📂 [フォルダ管理](https://voyager.nagi.fun/ja/guide/folders)**: 最大 3 階層のフォルダ構造で、ドラッグ＆ドロップによりチャットを整理できます。
   - **Gemini**: **マルチアカウント分離モード**と**カスタムフォルダカラー**をサポート。
 - **💡 [プロンプト管理](https://voyager.nagi.fun/ja/guide/prompts)**: プロンプトを保存して再利用。Gemini、AI Studio、[カスタムサイト](https://voyager.nagi.fun/ja/guide/prompts#あらゆるサイトで利用可能)で使用可能。
 - **☁️ [クラウド同期](https://voyager.nagi.fun/ja/guide/cloud-sync)**: Google ドライブ、または Safari では iCloud を通じて、フォルダとプロンプトを同期できます。

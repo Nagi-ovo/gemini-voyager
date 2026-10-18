@@ -1,15 +1,14 @@
 import type { ConversationReference, Folder, FolderData } from '@/core/types/folder';
-import { MAX_FOLDER_DEPTH } from '@/features/folder/constants';
 import { readConversationStars } from '@/features/folder/model/conversationStars';
 import {
   getFolderAndDescendants,
-  getFolderDepth,
   moveFolder,
   ownBucket,
   removeFolder,
   reorderConversations,
   setBucket,
 } from '@/features/folder/model/folderData';
+import { canCreateFolderUnder } from '@/features/folder/model/folderDepth';
 import { placeConversations } from '@/features/folder/model/placeConversations';
 import { applyNativeTitle } from '@/pages/content/folder/conversationTitleSync';
 
@@ -170,9 +169,7 @@ export function applyFolderOp(
       if (!body.name.trim()) return reject(data, 'name_invalid');
       if (body.parentId !== null) {
         if (!findFolder(data, body.parentId)) return reject(data, 'folder_missing');
-        if (getFolderDepth(data, body.parentId) >= MAX_FOLDER_DEPTH) {
-          return reject(data, 'depth_limit');
-        }
+        if (!canCreateFolderUnder(data, body.parentId)) return reject(data, 'depth_limit');
       }
       const sortIndex =
         data.folders

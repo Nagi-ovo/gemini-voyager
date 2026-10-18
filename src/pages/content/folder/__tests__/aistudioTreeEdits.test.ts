@@ -33,6 +33,16 @@ describe('AI Studio tree edits', () => {
     expect(current.folderContents.n).toEqual([]);
   });
 
+  // Only the tree hid the add button; a command could still nest past the cap.
+  it('refuses a fourth level, leaving the data untouched', () => {
+    const current = data();
+    addFolder(current, { id: 'c', name: 'Third', parentId: 'b', at: 3 });
+    const before = structuredClone(current);
+
+    expect(addFolder(current, { id: 'n', name: 'Too deep', parentId: 'c', at: 4 })).toBe(false);
+    expect(current).toEqual(before);
+  });
+
   // The tree asks for every non-empty rename; it cannot see the live name.
   it('renames against the live name, and ignores a name that is already there', () => {
     const current = data();

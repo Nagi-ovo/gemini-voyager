@@ -76,7 +76,7 @@ That's why I built **Voyager**. It's a companion that helps you keep your AI con
 
 ### 🌌 Core (Gemini & AI Studio)
 
-- **📂 [Folder Organization](https://voyager.nagi.fun/en/guide/folders)**: Organize chats into a two-level folder hierarchy with drag-and-drop support.
+- **📂 [Folder Organization](https://voyager.nagi.fun/en/guide/folders)**: Organize chats into folders up to three levels deep, with drag-and-drop support.
   - **Gemini**: Supports **Account Isolation Mode** and **Custom Folder Colors**.
 - **💡 [Prompt Vault](https://voyager.nagi.fun/en/guide/prompts)**: Save and reuse prompts across Gemini, AI Studio, and [custom websites](https://voyager.nagi.fun/en/guide/prompts#available-anywhere).
 - **☁️ [Cloud Sync](https://voyager.nagi.fun/en/guide/cloud-sync)**: Sync folders and prompts through Google Drive, or iCloud on Safari.

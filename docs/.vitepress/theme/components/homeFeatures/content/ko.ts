@@ -13,7 +13,7 @@ export const ko: HomeFeaturesContent = {
   folders: {
     eyebrow: '폴더',
     title: '당신의 생각을 위한 파일 시스템.',
-    body: 'Gemini와 ChatGPT 사이드바 안에 그대로. 2단계 폴더, 별표 대화는 맨 위에, 검색까지.',
+    body: 'Gemini와 ChatGPT 사이드바 안에 그대로. 3단계 폴더, 별표 대화는 맨 위에, 검색까지.',
     hint: '해 보세요: 다른 대화 열기 · 폴더로 드래그 · "고양이" 검색',
     heading: '폴더',
     searchPlaceholder: '폴더 및 채팅 검색',

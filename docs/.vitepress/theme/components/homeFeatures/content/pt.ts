@@ -13,7 +13,7 @@ export const pt: HomeFeaturesContent = {
   folders: {
     eyebrow: 'Pastas',
     title: 'Um sistema de ficheiros para os seus pensamentos.',
-    body: 'Mesmo dentro da barra lateral do Gemini e do ChatGPT. Dois níveis, conversas com estrela no topo e pesquisa.',
+    body: 'Mesmo dentro da barra lateral do Gemini e do ChatGPT. Três níveis, conversas com estrela no topo e pesquisa.',
     hint: 'Experimente: abra outra conversa · arraste uma para uma pasta · pesquise «gata»',
     heading: 'Pastas',
     searchPlaceholder: 'Pesquisar pastas e conversas',

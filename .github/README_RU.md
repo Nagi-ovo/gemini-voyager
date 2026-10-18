@@ -76,7 +76,7 @@
 
 ### 🌌 Общие функции (Gemini & AI Studio)
 
-- **📂 [Организация по папкам](https://voyager.nagi.fun/ru/guide/folders)**: группируйте чаты в двухуровневую иерархию папок с перетаскиванием.
+- **📂 [Организация по папкам](https://voyager.nagi.fun/ru/guide/folders)**: группируйте чаты в иерархию папок до трёх уровней с перетаскиванием.
   - **Gemini**: Поддержка **режима изоляции аккаунтов** и **пользовательских цветов папок**.
 - **💡 [Хранилище промптов](https://voyager.nagi.fun/ru/guide/prompts)**: Сохраняйте и повторно используйте лучшие промпты в Gemini, AI Studio и на [любых сайтах](https://voyager.nagi.fun/ru/guide/prompts#доступно-везде).
 - **☁️ [Облачная синхронизация](https://voyager.nagi.fun/ru/guide/cloud-sync)**: синхронизируйте папки и промпты через Google Drive или через iCloud в Safari.

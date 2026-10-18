@@ -76,7 +76,7 @@
 
 ### 🌌 الميزات الأساسية (Gemini & AI Studio)
 
-- **📂 [تنظيم المجلدات](https://voyager.nagi.fun/ar/guide/folders)**: نظّم المحادثات في تسلسل هرمي للمجلدات من مستويين، مع دعم السحب والإفلات.
+- **📂 [تنظيم المجلدات](https://voyager.nagi.fun/ar/guide/folders)**: نظّم المحادثات في تسلسل هرمي للمجلدات يصل إلى ثلاثة مستويات، مع دعم السحب والإفلات.
   - **Gemini**: يدعم **وضع عزل الحساب** و **ألوان المجلدات المخصصة**.
 - **💡 [مستودع المطالبات](https://voyager.nagi.fun/ar/guide/prompts)**: احفظ وأعد استخدام أفضل مطالباتك في Gemini و AI Studio و[المواقع المخصصة](https://voyager.nagi.fun/ar/guide/prompts#يعمل-على-أي-موقع).
 - **☁️ [المزامنة السحابية](https://voyager.nagi.fun/ar/guide/cloud-sync)**: زامن المجلدات والمطالبات عبر Google Drive، أو iCloud على Safari.

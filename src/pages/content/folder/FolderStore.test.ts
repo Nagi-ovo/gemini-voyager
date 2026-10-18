@@ -167,14 +167,15 @@ describe('FolderStore ownership', () => {
     expect(adapter.saveData).toHaveBeenCalledTimes(1);
   });
 
-  it('uses one creation command with the existing depth cap and preserves data on rejection', async () => {
+  it('creates down to a third level and preserves data when a fourth is refused', async () => {
     const child = store.createFolder('Child', 'root')!;
+    const grandchild = store.createFolder('Grandchild', child.id)!;
     await vi.advanceTimersByTimeAsync(0);
     const before = structuredClone(store.data);
-    expect(store.createFolder('Too deep', child.id)).toBeNull();
+    expect(store.createFolder('Too deep', grandchild.id)).toBeNull();
     expect(store.data).toEqual(before);
-    expect(saved.folders.map((folder) => folder.name)).toEqual(['Root', 'Child']);
-    expect(saved.folderContents[child.id]).toEqual([]);
+    expect(saved.folders.map((folder) => folder.name)).toEqual(['Root', 'Child', 'Grandchild']);
+    expect(saved.folderContents[grandchild.id]).toEqual([]);
     expect(saved.folderContents.root).toHaveLength(2);
   });
 

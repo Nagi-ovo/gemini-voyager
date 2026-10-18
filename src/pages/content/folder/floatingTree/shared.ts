@@ -1,4 +1,3 @@
-import { MAX_FOLDER_DEPTH } from '@/features/folder/constants';
 import type { ConversationIdentity } from '@/features/folder/model/conversationStars';
 import {
   type ConversationSortMode,
@@ -274,10 +273,6 @@ export function layoutFolders(
 export function acceptsDrag(actions: TreeActions, types: readonly string[]): boolean {
   if (actions.onDrop && actions.acceptsDrag) return actions.acceptsDrag(types);
   return types.includes('application/json');
-}
-
-export function canCreateChildAtDepth(depth: number): boolean {
-  return depth < MAX_FOLDER_DEPTH;
 }
 
 export function readConversationDragData(e: DragEvent): ConversationDragData | null {

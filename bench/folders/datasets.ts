@@ -22,7 +22,7 @@ export interface DatasetSpec {
   readonly refs: number;
   /** Share of `refs` filed in the root bucket. */
   readonly rootShare: number;
-  /** Deepest folder depth (root = 0). Current UI creates at most depth 1. */
+  /** Deepest folder depth (root = 0). Current UI creates at most depth 2. */
   readonly maxDepth: number;
   /** Chance that a new folder nests under the folder created just before it. */
   readonly chainBias: number;

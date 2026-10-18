@@ -13,7 +13,7 @@ export const fr: HomeFeaturesContent = {
   folders: {
     eyebrow: 'Dossiers',
     title: 'Les dossiers, comme ils devraient l’être.',
-    body: 'Directement dans la barre latérale de Gemini et de ChatGPT. Deux niveaux, les favoris en haut, et une recherche.',
+    body: 'Directement dans la barre latérale de Gemini et de ChatGPT. Trois niveaux, les favoris en haut, et une recherche.',
     hint: 'Essayez : ouvrez une autre conversation · glissez-en une dans un dossier · cherchez « chat »',
     heading: 'Dossiers',
     searchPlaceholder: 'Rechercher des dossiers et des discussions',

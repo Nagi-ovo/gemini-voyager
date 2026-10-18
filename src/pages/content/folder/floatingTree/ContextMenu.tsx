@@ -2,7 +2,7 @@
 import { render } from 'preact';
 import { useLayoutEffect, useRef } from 'preact/hooks';
 
-import { getFolderDepth } from '@/features/folder/model/folderData';
+import { canCreateFolderUnder } from '@/features/folder/model/folderDepth';
 
 import { FOLDER_COLORS, getFolderColor, isDarkMode } from '../folderColors';
 import type { Folder } from '../types';
@@ -11,7 +11,6 @@ import {
   type ConversationMenuState,
   type FolderMenuState,
   type TreeProps,
-  canCreateChildAtDepth,
   cls,
   isFolderMenu,
   t,
@@ -104,7 +103,7 @@ function FolderMenu({ tree, menu: contextMenu, folder }: FolderMenuProps) {
           apply({ contextMenu: null }, () => actions.onToggleFolderPinned?.(folder.id));
         }}
       />
-      {canCreateChildAtDepth(getFolderDepth(data, folder.id)) && (
+      {canCreateFolderUnder(data, folder.id) && (
         <MenuButton
           labelKey="floatingPanelCreateSubfolder"
           onClick={(e) => {

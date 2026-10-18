@@ -3,6 +3,7 @@ import type { ItemInstance } from '@headless-tree/core';
 import { useEffect, useRef } from 'preact/hooks';
 
 import { getFolderDepth } from '@/features/folder/model/folderData';
+import { canCreateChildAtDepth } from '@/features/folder/model/folderDepth';
 
 import { getFolderColor, isDarkMode } from '../folderColors';
 import { IconButton, InlineForm } from './controls';
@@ -13,7 +14,6 @@ import {
   FOLDER_DRAG_TYPE,
   type TreeProps,
   acceptsDrag,
-  canCreateChildAtDepth,
   cls,
   readConversationDragData,
   t,

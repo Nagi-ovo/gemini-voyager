@@ -13,7 +13,7 @@ export const zh: HomeFeaturesContent = {
   folders: {
     eyebrow: '文件夹',
     title: '给思想安个家。',
-    body: '长在 Gemini 和 ChatGPT 侧栏里，两级嵌套，标星置顶，还能搜。',
+    body: '长在 Gemini 和 ChatGPT 侧栏里，三级嵌套，标星置顶，还能搜。',
     hint: '试试：点另一个对话 · 拖进文件夹 · 搜「猫」',
     heading: '文件夹',
     searchPlaceholder: '搜索文件夹和对话',

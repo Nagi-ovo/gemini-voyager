@@ -13,7 +13,7 @@ export const ja: HomeFeaturesContent = {
   folders: {
     eyebrow: 'フォルダ',
     title: '思考に家を与える。',
-    body: 'Gemini と ChatGPT のサイドバーにそのまま溶け込みます。2階層まで入れ子にでき、スター付きは上に固定、検索もできます。',
+    body: 'Gemini と ChatGPT のサイドバーにそのまま溶け込みます。3階層まで入れ子にでき、スター付きは上に固定、検索もできます。',
     hint: '試してみて：別の会話をクリック · フォルダへドラッグ · 「猫」で検索',
     heading: 'フォルダ',
     searchPlaceholder: 'フォルダとチャットを検索',

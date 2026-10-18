@@ -110,14 +110,21 @@ describe('ChatGPT legacy FolderCommands import', () => {
 });
 
 describe('ChatGPT legacy FolderCommands folder moves', () => {
-  /** Work › Notes, and Personal. */
+  /** Work › Notes › Archive, and Personal. */
   const NESTED: FolderData = {
     folders: [
       folder('work', 'Work'),
       { ...folder('notes', 'Notes'), parentId: 'work' },
+      { ...folder('archive', 'Archive'), parentId: 'notes' },
       folder('personal', 'Personal'),
     ],
-    folderContents: { work: [], notes: [], personal: [], [ROOT_CONVERSATIONS_ID]: [] },
+    folderContents: {
+      work: [],
+      notes: [],
+      archive: [],
+      personal: [],
+      [ROOT_CONVERSATIONS_ID]: [],
+    },
   };
 
   beforeEach(async () => {
@@ -135,20 +142,43 @@ describe('ChatGPT legacy FolderCommands folder moves', () => {
 
     expect(outcome).toEqual({ kind: 'unconfirmed' });
     const parents = Object.fromEntries(stored().folders.map((f) => [f.id, f.parentId]));
-    expect(parents).toMatchObject({ work: 'personal', notes: 'work', personal: null });
+    // Archive lands on a fourth level, one below what a new folder may reach.
+    expect(parents).toMatchObject({
+      work: 'personal',
+      notes: 'work',
+      archive: 'notes',
+      personal: null,
+    });
   });
 
-  it('reports the depth limit when a new folder would nest too deep, and creates nothing', async () => {
-    const outcome = await createLegacyChatGptCommands(store).run({
+  it('creates a third level, then reports the depth limit below it and creates nothing', async () => {
+    const commands = createLegacyChatGptCommands(store);
+    await commands.run({
       kind: 'createFolder',
       folderId: 'ignored',
-      name: 'Too deep',
+      name: 'Drafts',
       parentId: 'notes',
+    });
+    await settle();
+    const drafts = stored().folders.find((f) => f.name === 'Drafts');
+    expect(drafts?.parentId).toBe('notes');
+
+    const outcome = await commands.run({
+      kind: 'createFolder',
+      folderId: 'ignored-too',
+      name: 'Too deep',
+      parentId: drafts!.id,
     });
     await settle();
 
     expect(outcome).toMatchObject({ kind: 'rejected', reason: 'depth_limit' });
-    expect(stored().folders.map((f) => f.name)).toEqual(['Work', 'Notes', 'Personal']);
+    expect(stored().folders.map((f) => f.name)).toEqual([
+      'Work',
+      'Notes',
+      'Archive',
+      'Personal',
+      'Drafts',
+    ]);
   });
 
   it('refuses to nest a folder under one that is gone', async () => {

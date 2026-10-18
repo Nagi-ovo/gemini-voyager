@@ -1,6 +1,6 @@
 /**
  * The /library floating drop zone: while a table row is dragged, a card lists
- * Uncategorized and the folders (top level and their subfolders) as targets.
+ * Uncategorized and every folder, nested under its parent, as targets.
  */
 import { sortFoldersByCreation } from '@/features/folder/model/folderData';
 
@@ -144,31 +144,38 @@ function rootItem(options: LibraryDropZoneOptions): HTMLElement {
   return item;
 }
 
-function folderItem(folder: Folder, isSubfolder: boolean, options: LibraryDropZoneOptions) {
+function folderItem(folder: Folder, depth: number, options: LibraryDropZoneOptions) {
   const item = document.createElement('div');
   item.className = 'gv-library-folder-item';
   item.dataset.folderId = folder.id;
-  item.style.cssText = folderItemStyle(isSubfolder ? '28px' : '12px');
+  item.style.cssText = folderItemStyle(`${12 + depth * 16}px`);
   const icon = document.createElement('span');
   icon.className = 'google-symbols';
   icon.style.cssText = 'font-size: 16px; color: #8ab4f8;';
-  icon.textContent = isSubfolder ? 'subdirectory_arrow_right' : 'folder';
+  icon.textContent = depth > 0 ? 'subdirectory_arrow_right' : 'folder';
   item.append(icon, document.createTextNode(folder.name));
   const styles = { idle: FOLDER_IDLE, hover: FOLDER_HOVER, dropped: FOLDER_IDLE };
   bindDropTarget(item, styles, options.canEdit, (event) => options.onDrop(event, folder));
   return item;
 }
 
-/** Uncategorized, then each top-level folder followed by its direct subfolders, pinned first. */
+/** Uncategorized, then every folder depth-first under its parent, siblings in creation order. */
 function listItems(options: LibraryDropZoneOptions): HTMLElement[] {
   options.ensureFolder();
   const { folders } = options.data();
   const items = [rootItem(options)];
-  for (const root of sortFoldersByCreation(folders.filter((folder) => !folder.parentId))) {
-    items.push(folderItem(root, false, options));
-    const subfolders = folders.filter((folder) => folder.parentId === root.id);
-    for (const sub of sortFoldersByCreation(subfolders)) items.push(folderItem(sub, true, options));
-  }
+  // Legacy data may hold a parent cycle; each folder is listed once.
+  const listed = new Set<string>();
+  const visit = (parentId: string | null, depth: number): void => {
+    const children = folders.filter((folder) => (folder.parentId || null) === parentId);
+    for (const folder of sortFoldersByCreation(children)) {
+      if (listed.has(folder.id)) continue;
+      listed.add(folder.id);
+      items.push(folderItem(folder, depth, options));
+      visit(folder.id, depth + 1);
+    }
+  };
+  visit(null, 0);
   return items;
 }
 

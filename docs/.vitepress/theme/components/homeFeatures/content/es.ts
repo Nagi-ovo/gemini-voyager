@@ -13,7 +13,7 @@ export const es: HomeFeaturesContent = {
   folders: {
     eyebrow: 'Carpetas',
     title: 'Dale un hogar a tus ideas.',
-    body: 'Dentro de la barra lateral de Gemini y ChatGPT. Dos niveles, chats destacados arriba y con buscador.',
+    body: 'Dentro de la barra lateral de Gemini y ChatGPT. Tres niveles, chats destacados arriba y con buscador.',
     hint: 'Pruébalo: abre otro chat · arrastra uno a una carpeta · busca «gata»',
     heading: 'Carpetas',
     searchPlaceholder: 'Buscar carpetas y chats',

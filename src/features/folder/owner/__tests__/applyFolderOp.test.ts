@@ -264,6 +264,28 @@ describe('applyFolderOp', () => {
     expect(order).toEqual(['a', 'x', 'y', 'z', 'b']);
   });
 
+  it('creates a third level and refuses a fourth as the depth limit', () => {
+    const data = folderData([
+      folder('A'),
+      folder('B', 'B', { parentId: 'A' }),
+      folder('C', 'C', { parentId: 'B' }),
+    ]);
+    const create = (folderId: string, parentId: string) =>
+      applyFolderOp(
+        data,
+        { kind: 'createFolder', folderId, name: folderId, parentId },
+        FOLDER_SITE_POLICIES.gemini,
+        NOW,
+      );
+
+    const third = create('N', 'B');
+    expect(third.outcome).toEqual({ kind: 'saved' });
+    expect(third.data.folders.find((f) => f.id === 'N')?.parentId).toBe('B');
+    const fourth = create('M', 'C');
+    expect(fourth.outcome).toMatchObject({ kind: 'rejected', reason: 'depth_limit' });
+    expect(fourth.data).toBe(data);
+  });
+
   it('never mutates the data it is given, so a view can replay ops over its base', () => {
     const data = deepFreeze(
       folderData([folder('F1'), folder('F2', 'F2', { sortIndex: 1 })], {

@@ -76,7 +76,7 @@
 
 ### 🌌 通用核心 (Gemini & AI Studio)
 
-- **📂 [文件夹管理](https://voyager.nagi.fun/guide/folders)**: 支持 **两级文件夹层级**，并可拖拽整理对话。
+- **📂 [文件夹管理](https://voyager.nagi.fun/guide/folders)**: 支持 **最多三级的文件夹层级**，并可拖拽整理对话。
   - **Gemini**: 支持 **多账号隔离模式** 及 **自定义文件夹颜色**。
 - **💡 [提示词库](https://voyager.nagi.fun/guide/prompts)**: 跨平台同步提示词，支持 Gemini、AI Studio 及 [自定义网站](https://voyager.nagi.fun/guide/prompts#任何网站都能用)。
 - **☁️ [云同步](https://voyager.nagi.fun/guide/cloud-sync)**: 通过 Google Drive 同步文件夹和提示词，Safari 上还可使用 iCloud。

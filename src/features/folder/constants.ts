@@ -13,8 +13,8 @@ export const ROOT_CONVERSATIONS_ID = '__root_conversations__';
 export const AISTUDIO_ROOT_BUCKET_ID = '__uncategorized__';
 
 /**
- * Cap nesting at 2 total layers: root (depth 0) plus one subfolder level
- * (depth 1). Deeper pre-existing data keeps rendering; only new creation
- * beyond this is blocked.
+ * Cap new nesting at 3 total layers: top-level folders (depth 0) and two
+ * subfolder levels below them (depth 2). Only creation is capped; see
+ * `model/folderDepth.ts`.
  */
-export const MAX_FOLDER_DEPTH = 1;
+export const MAX_FOLDER_DEPTH = 2;

@@ -13,7 +13,7 @@ export const zhTW: HomeFeaturesContent = {
   folders: {
     eyebrow: '資料夾',
     title: '給思想安個家。',
-    body: '就長在 Gemini 和 ChatGPT 側邊欄裡，兩層巢狀，星標置頂，還能搜尋。',
+    body: '就長在 Gemini 和 ChatGPT 側邊欄裡，三層巢狀，星標置頂，還能搜尋。',
     hint: '試試看：點另一個對話 · 拖進資料夾 · 搜尋「貓」',
     heading: '資料夾',
     searchPlaceholder: '搜尋資料夾和對話',

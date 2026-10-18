@@ -6,7 +6,7 @@ This folder contains the implementation of the conversation folder management fe
 
 The folder manager allows users to:
 
-- Create and manage folders and subfolders (2-level nesting)
+- Create and manage folders and subfolders (up to 3 levels)
 - Drag and drop conversations from the sidebar into folders
 - Move conversations between folders
 - Display Gem-specific icons for different conversation types
@@ -181,4 +181,3 @@ Potential improvements that could be contributed:
 
 - Custom user-defined Gems
 - Gem icon customization
-- Support for more than 2 levels of folder nesting
