@@ -52,6 +52,29 @@ function normalized(raw: string): string {
   return raw.toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
+// Page data and conversation text are not the page speaking: an existing chat's
+// first load embeds its turns in <script> data, and a reply can quote any notice.
+const NOT_PAGE_COPY_SELECTOR = 'script, style, noscript, template, [data-turn-key]';
+
+/** The shell page's own text, without layout: no scripts, no conversation turns. */
+function shellText(doc: Document): string {
+  const body = doc.body;
+  if (!body) return '';
+  const walker = doc.createTreeWalker(
+    body,
+    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+    (node) =>
+      node instanceof Element && node.matches(NOT_PAGE_COPY_SELECTOR)
+        ? NodeFilter.FILTER_REJECT
+        : NodeFilter.FILTER_ACCEPT,
+  );
+  const parts: string[] = [];
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node.nodeType === Node.TEXT_NODE) parts.push(node.textContent ?? '');
+  }
+  return normalized(parts.join(' '));
+}
+
 function pageText(doc: Document): string {
   const body = doc.body;
   return normalized(body ? (body.innerText ?? body.textContent ?? '') : '');
@@ -64,7 +87,7 @@ function readVerdict(doc: Document): Verdict {
     (title.includes('attention required') && title.includes('cloudflare'));
   // A shell page streams a reply for minutes: read its text without forcing layout.
   const hasShell = doc.querySelector(APP_SHELL_SELECTOR) !== null;
-  const text = hasShell ? normalized(doc.body?.textContent ?? '') : pageText(doc);
+  const text = hasShell ? shellText(doc) : pageText(doc);
   const shortPage = text.length < SHORT_PAGE_CHARS;
   const accountBlocked =
     text.includes('suspicious activity detected') && text.includes('secure your account');

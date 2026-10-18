@@ -37,4 +37,26 @@ describe('Local Bridge challenge guard', () => {
       '<main><p>Suspicious activity detected. Secure your account to continue.</p></main>';
     expect(createChallengeGuard().current()).toBe('account-blocked');
   });
+
+  it('does not stop on an existing chat whose page data quotes the block notice', () => {
+    // Measured live: a reopened chat embeds its turns, and Pro's notes, in <script> data.
+    document.title = 'ChatGPT';
+    document.body.innerHTML = `<form data-chatgpt-composer><div id="prompt-textarea"></div></form>
+      <script>enqueue("suspicious activity detected ... secure your account")</script>`;
+    expect(createChallengeGuard().current()).toBeNull();
+  });
+
+  it('does not stop on a reply that quotes the block notice', () => {
+    document.title = 'ChatGPT';
+    document.body.innerHTML = `<div data-turn-key="t1"><p>It checks for "Suspicious activity
+      detected" and "Secure your account".</p></div><form data-chatgpt-composer></form>`;
+    expect(createChallengeGuard().current()).toBeNull();
+  });
+
+  it('still reports the block notice shown on the app shell outside the conversation', () => {
+    document.title = 'ChatGPT';
+    document.body.innerHTML = `<div role="dialog">Suspicious activity detected. Secure your
+      account to continue.</div><form data-chatgpt-composer></form>`;
+    expect(createChallengeGuard().current()).toBe('account-blocked');
+  });
 });
