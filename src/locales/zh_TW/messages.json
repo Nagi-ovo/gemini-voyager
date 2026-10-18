@@ -4285,24 +4285,28 @@
     "message": "操作沒有成功，請重試。",
     "description": "Error after unpairing or turning on updates failed"
   },
-  "chatgptProUsageWeek": {
-    "message": "Pro 本週 {count} 次",
-    "description": "Label beside ChatGPT's model picker: Pro messages sent this week. {count} is a number."
-  },
-  "chatgptProUsageLeft": {
-    "message": "Pro 剩 {left}/{limit}",
-    "description": "Label beside ChatGPT's model picker once the Pro limit is known. {left} and {limit} are numbers."
-  },
   "chatgptProUsageResets": {
-    "message": "重設 {time}",
-    "description": "Appended to the Pro usage label. {time} is a short local date and time."
-  },
-  "chatgptProUsageHint": {
-    "message": "依這個瀏覽器中送出的 GPT-6 Pro 訊息統計，不含其他裝置或應用程式中的傳送。",
-    "description": "Tooltip of the ChatGPT Pro usage label."
+    "message": "{time} 重設",
+    "description": "Appended to the Pro usage card's second line. {time} is a short local date and time."
   },
   "chatgptProUsageNoneLeft": {
     "message": "Pro 已用完",
-    "description": "Label beside ChatGPT's model picker while ChatGPT says Pro is used up and the limit is unknown."
+    "description": "First line of the Pro usage card while ChatGPT says Pro is used up."
+  },
+  "chatgptProUsageUsed": {
+    "message": "本週已用 {used} / {limit} 次 Pro",
+    "description": "First line of the card over the ChatGPT Pro usage ring. {used} and {limit} are numbers."
+  },
+  "chatgptProUsageScope": {
+    "message": "只統計這個瀏覽器",
+    "description": "Second line of the Pro usage card: the count only covers this browser."
+  },
+  "chatgptProUsageWeeklyLimit": {
+    "message": "每週 Pro 額度",
+    "description": "Label of the ChatGPT Pro usage plugin setting: Pro messages per week."
+  },
+  "chatgptProUsageWeeklyLimitHint": {
+    "message": "ChatGPT 平時不會告訴你 Pro 額度，圓環先以這個數字計算；ChatGPT 回報額度後會自動以它為準。",
+    "description": "Hint under the weekly Pro allowance setting."
   }
 }

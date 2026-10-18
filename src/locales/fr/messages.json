@@ -4285,24 +4285,28 @@
     "message": "Cela n’a pas fonctionné. Réessayez.",
     "description": "Error after unpairing or turning on updates failed"
   },
-  "chatgptProUsageWeek": {
-    "message": "Pro cette semaine : {count}",
-    "description": "Label beside ChatGPT's model picker: Pro messages sent this week. {count} is a number."
-  },
-  "chatgptProUsageLeft": {
-    "message": "Pro : {left}/{limit} restants",
-    "description": "Label beside ChatGPT's model picker once the Pro limit is known. {left} and {limit} are numbers."
-  },
   "chatgptProUsageResets": {
     "message": "réinitialisation {time}",
-    "description": "Appended to the Pro usage label. {time} is a short local date and time."
-  },
-  "chatgptProUsageHint": {
-    "message": "Compté à partir des messages GPT-6 Pro envoyés dans ce navigateur. Les messages envoyés depuis d’autres appareils ou applications ne sont pas inclus.",
-    "description": "Tooltip of the ChatGPT Pro usage label."
+    "description": "Appended to the Pro usage card's second line. {time} is a short local date and time."
   },
   "chatgptProUsageNoneLeft": {
-    "message": "Pro : plus rien",
-    "description": "Label beside ChatGPT's model picker while ChatGPT says Pro is used up and the limit is unknown."
+    "message": "Pro est épuisé",
+    "description": "First line of the Pro usage card while ChatGPT says Pro is used up."
+  },
+  "chatgptProUsageUsed": {
+    "message": "{used} / {limit} messages Pro utilisés cette semaine",
+    "description": "First line of the card over the ChatGPT Pro usage ring. {used} and {limit} are numbers."
+  },
+  "chatgptProUsageScope": {
+    "message": "Compté dans ce navigateur uniquement",
+    "description": "Second line of the Pro usage card: the count only covers this browser."
+  },
+  "chatgptProUsageWeeklyLimit": {
+    "message": "Quota Pro hebdomadaire",
+    "description": "Label of the ChatGPT Pro usage plugin setting: Pro messages per week."
+  },
+  "chatgptProUsageWeeklyLimitHint": {
+    "message": "ChatGPT n’indique généralement pas votre quota Pro : l’anneau utilise donc ce nombre. Dès que ChatGPT l’indique, sa valeur est utilisée.",
+    "description": "Hint under the weekly Pro allowance setting."
   }
 }

@@ -10940,33 +10940,85 @@ a.gv-rp-item-source:hover {
   outline-offset: 1px;
 }
 
-/* ChatGPT · Pro usage this week: a quiet chip right after the composer's model picker. */
+/* ChatGPT · Pro usage this week: an 18px ring just before the model picker, and its hover card. */
 .gv-chatgpt-pro-usage {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
   align-self: center;
-  max-width: 260px;
-  height: 22px;
-  margin-inline-start: 6px;
-  padding: 0 8px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-inline-end: 3px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
-  line-height: 20px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   cursor: default;
-  user-select: none;
+  --gv-pro-ring-track: #e8e8e8;
+  --gv-pro-ring-arc: #0d0d0d;
 }
 
-html[data-gv-scheme='light'] .gv-chatgpt-pro-usage {
-  border-color: rgba(0, 0, 0, 0.1);
-  background: rgba(0, 0, 0, 0.035);
-  color: rgba(0, 0, 0, 0.62);
+.gv-chatgpt-pro-usage svg {
+  display: block;
+}
+
+.gv-chatgpt-pro-usage-track {
+  stroke: var(--gv-pro-ring-track);
+}
+
+.gv-chatgpt-pro-usage-arc {
+  stroke: var(--gv-pro-ring-arc);
+}
+
+.gv-chatgpt-pro-usage:focus-visible {
+  outline: 2px solid var(--gv-pro-ring-arc);
+  outline-offset: 2px;
+}
+
+html[data-gv-scheme='dark'] .gv-chatgpt-pro-usage {
+  --gv-pro-ring-track: #4a4a4a;
+  --gv-pro-ring-arc: #ececec;
+}
+
+.gv-chatgpt-pro-usage-card {
+  position: fixed;
+  z-index: 2147483000;
+  box-sizing: border-box;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: 8px 12px;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  font-family: inherit;
+  pointer-events: none;
+}
+
+.gv-chatgpt-pro-usage-card-title {
+  color: #0d0d0d;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.gv-chatgpt-pro-usage-card-detail {
+  margin-top: 2px;
+  color: #6e6e6e;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+html[data-gv-scheme='dark'] .gv-chatgpt-pro-usage-card {
+  border-color: #454545;
+  background: #353535;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+html[data-gv-scheme='dark'] .gv-chatgpt-pro-usage-card-title {
+  color: #ececec;
+}
+
+html[data-gv-scheme='dark'] .gv-chatgpt-pro-usage-card-detail {
+  color: #afafaf;
 }

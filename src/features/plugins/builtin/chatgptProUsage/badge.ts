@@ -1,5 +1,6 @@
 /**
- * The "Pro this week" label beside ChatGPT's chat-mode model picker.
+ * The Pro usage ring beside ChatGPT's chat-mode model picker, and the small
+ * card that names the numbers on hover or focus.
  *
  * Measured on chatgpt.com (zh-CN, 2026-10-18): the picker trigger is a
  * `button[aria-haspopup=menu]` in the composer form whose `aria-label` is in
@@ -7,6 +8,10 @@
  * the `aria-hidden` caption) is the selected effort, "Pro" for GPT-6 Pro.
  * Work mode has its own picker without a Pro step, so a trigger reading
  * Pro means chat mode with Pro selected.
+ *
+ * The ring is a sibling placed before the trigger, never a child: React owns
+ * the button. The card hangs off `body` with fixed positioning, so no
+ * composer `overflow` can clip it.
  */
 import { chatgptAdapter } from '@/features/plugins/sites/adapters/chatgpt';
 import type { ModelPickerSection } from '@/features/plugins/sites/sections/modelPickerData';
@@ -17,9 +22,24 @@ import { findTrigger, mergedLabels, triggerText } from '../chatgptModelSelect/pi
 import type { ProUsageSummary } from './usageStore';
 
 export const PRO_USAGE_BADGE_ID = 'gv-chatgpt-pro-usage';
-const BADGE_CLASS = 'gv-chatgpt-pro-usage';
+export const PRO_USAGE_CARD_ID = 'gv-chatgpt-pro-usage-card';
+const RING_CLASS = 'gv-chatgpt-pro-usage';
+const CARD_CLASS = 'gv-chatgpt-pro-usage-card';
 /** The effort id the site data gives the Pro step. */
 const PRO_EFFORT_ID = 'pro';
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const RADIUS = 7;
+export const RING_CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+/** The shortest arc drawn for any use at all, so one send is visible. */
+const MIN_ARC = 2.2;
+const CARD_GAP_PX = 8;
+const VIEWPORT_MARGIN_PX = 8;
+
+export interface RingView {
+  readonly summary: ProUsageSummary;
+  /** The denominator when ChatGPT has not named its limit: the plugin setting. */
+  readonly fallbackLimit: number;
+}
 
 function pickerData(adapter: SiteAdapter | null): ModelPickerSection | null {
   return adapter?.modelPicker ?? chatgptAdapter.modelPicker ?? null;
@@ -66,45 +86,150 @@ function formatTime(ms: number): string {
   }
 }
 
-export function badgeText(summary: ProUsageSummary): string {
-  let main: string;
-  if (summary.limit !== null && summary.remaining !== null) {
-    main = fill(getTranslationSync('chatgptProUsageLeft'), {
-      left: summary.remaining,
-      limit: summary.limit,
-    });
-  } else if (summary.blocked) {
-    main = getTranslationSync('chatgptProUsageNoneLeft');
-  } else {
-    main = fill(getTranslationSync('chatgptProUsageWeek'), { count: summary.usedThisWeek });
-  }
-  if (summary.resetsAt === null) return main;
-  const reset = fill(getTranslationSync('chatgptProUsageResets'), {
-    time: formatTime(summary.resetsAt),
-  });
-  return `${main} · ${reset}`;
+/** What the ring draws and the card says. */
+export function describeRing(view: RingView): {
+  readonly ratio: number;
+  readonly title: string;
+  readonly detail: string;
+} {
+  const { summary } = view;
+  const limit = summary.limit ?? view.fallbackLimit;
+  const ratio = summary.blocked ? 1 : Math.min(1, summary.usedThisWeek / limit);
+  const title = summary.blocked
+    ? getTranslationSync('chatgptProUsageNoneLeft')
+    : fill(getTranslationSync('chatgptProUsageUsed'), { used: summary.usedThisWeek, limit });
+  const scope = getTranslationSync('chatgptProUsageScope');
+  const detail =
+    summary.resetsAt === null
+      ? scope
+      : `${scope} · ${fill(getTranslationSync('chatgptProUsageResets'), {
+          time: formatTime(summary.resetsAt),
+        })}`;
+  return { ratio, title, detail };
 }
 
 export function isBadgeNode(node: Node): boolean {
   const element = node instanceof Element ? node : node.parentElement;
-  return Boolean(element?.closest(`#${PRO_USAGE_BADGE_ID}`));
+  return Boolean(element?.closest(`#${PRO_USAGE_BADGE_ID}, #${PRO_USAGE_CARD_ID}`));
 }
 
-/** Show the label right after `trigger`, or remove it when there is none. */
-export function renderBadge(trigger: HTMLElement | null, summary: ProUsageSummary | null): void {
-  let badge = document.getElementById(PRO_USAGE_BADGE_ID);
-  if (!trigger || !summary) {
-    badge?.remove();
+function svgElement(name: string, attributes: Record<string, string>): SVGElement {
+  const element = document.createElementNS(SVG_NS, name);
+  for (const [key, value] of Object.entries(attributes)) element.setAttribute(key, value);
+  return element;
+}
+
+function circle(className: string): SVGElement {
+  return svgElement('circle', {
+    class: className,
+    cx: '9',
+    cy: '9',
+    r: String(RADIUS),
+    fill: 'none',
+    'stroke-width': '2',
+  });
+}
+
+function hideCard(): void {
+  document.getElementById(PRO_USAGE_CARD_ID)?.remove();
+}
+
+function showCard(ring: HTMLElement): void {
+  let card = document.getElementById(PRO_USAGE_CARD_ID);
+  if (!card) {
+    card = document.createElement('div');
+    card.id = PRO_USAGE_CARD_ID;
+    card.className = CARD_CLASS;
+    card.setAttribute('role', 'tooltip');
+    const title = document.createElement('div');
+    title.className = `${CARD_CLASS}-title`;
+    const detail = document.createElement('div');
+    detail.className = `${CARD_CLASS}-detail`;
+    card.append(title, detail);
+    document.body.append(card);
+  }
+  card.children[0].textContent = ring.dataset.gvTitle ?? '';
+  card.children[1].textContent = ring.dataset.gvDetail ?? '';
+  // Above the ring, right edges aligned, kept inside the viewport.
+  const rect = ring.getBoundingClientRect();
+  const width = card.offsetWidth;
+  const maxLeft = window.innerWidth - width - VIEWPORT_MARGIN_PX;
+  card.style.left = `${Math.max(VIEWPORT_MARGIN_PX, Math.min(rect.right - width, maxLeft))}px`;
+  card.style.bottom = `${window.innerHeight - rect.top + CARD_GAP_PX}px`;
+}
+
+function createRing(): HTMLElement {
+  const ring = document.createElement('span');
+  ring.id = PRO_USAGE_BADGE_ID;
+  ring.className = RING_CLASS;
+  ring.tabIndex = 0;
+  ring.setAttribute('role', 'img');
+  ring.setAttribute('aria-describedby', PRO_USAGE_CARD_ID);
+  const svg = svgElement('svg', {
+    width: '18',
+    height: '18',
+    viewBox: '0 0 18 18',
+    'aria-hidden': 'true',
+  });
+  const arc = circle(`${RING_CLASS}-arc`);
+  arc.setAttribute('stroke-linecap', 'round');
+  // Start at 12 o'clock.
+  arc.setAttribute('transform', 'rotate(-90 9 9)');
+  svg.append(circle(`${RING_CLASS}-track`), arc);
+  ring.append(svg);
+  const show = (): void => showCard(ring);
+  ring.addEventListener('mouseenter', show);
+  ring.addEventListener('focus', show);
+  ring.addEventListener('mouseleave', () => {
+    if (document.activeElement !== ring) hideCard();
+  });
+  ring.addEventListener('blur', hideCard);
+  return ring;
+}
+
+const ANCHOR_DEPTH = 6;
+
+/**
+ * The element the ring goes before: the trigger's ancestor that sits in a flex
+ * row. ChatGPT wraps the trigger in a `display: contents` span inside a block
+ * div (measured), so a ring placed beside the trigger itself lands on the line
+ * above it.
+ */
+function ringAnchor(trigger: HTMLElement): HTMLElement {
+  let node: HTMLElement = trigger;
+  for (let depth = 0; depth < ANCHOR_DEPTH; depth += 1) {
+    const parent = node.parentElement;
+    if (!parent || parent.tagName === 'FORM') break;
+    const display = getComputedStyle(parent).display;
+    if (display === 'flex' || display === 'inline-flex') return node;
+    node = parent;
+  }
+  return trigger;
+}
+
+/** Show the ring right before `trigger`, or remove it (and its card) when there is none. */
+export function renderBadge(trigger: HTMLElement | null, view: RingView | null): void {
+  let ring = document.getElementById(PRO_USAGE_BADGE_ID);
+  if (!trigger || !view) {
+    ring?.remove();
+    hideCard();
     return;
   }
-  if (!badge) {
-    badge = document.createElement('span');
-    badge.id = PRO_USAGE_BADGE_ID;
-    badge.className = BADGE_CLASS;
+  ring ??= createRing();
+  const { ratio, title, detail } = describeRing(view);
+  const arc = ring.querySelector(`.${RING_CLASS}-arc`);
+  const length =
+    ratio <= 0 ? 0 : Math.min(RING_CIRCUMFERENCE, Math.max(MIN_ARC, ratio * RING_CIRCUMFERENCE));
+  const dash = `${length.toFixed(2)} ${RING_CIRCUMFERENCE.toFixed(2)}`;
+  if (arc && arc.getAttribute('stroke-dasharray') !== dash) {
+    arc.setAttribute('stroke-dasharray', dash);
+    // A zero-length dash with a round cap still paints a dot.
+    arc.setAttribute('visibility', length > 0 ? 'visible' : 'hidden');
   }
-  const text = badgeText(summary);
-  if (badge.textContent !== text) badge.textContent = text;
-  const hint = getTranslationSync('chatgptProUsageHint');
-  if (badge.title !== hint) badge.title = hint;
-  if (trigger.nextElementSibling !== badge) trigger.insertAdjacentElement('afterend', badge);
+  if (ring.getAttribute('aria-label') !== title) ring.setAttribute('aria-label', title);
+  ring.dataset.gvTitle = title;
+  ring.dataset.gvDetail = detail;
+  if (document.getElementById(PRO_USAGE_CARD_ID)) showCard(ring);
+  const anchor = ringAnchor(trigger);
+  if (ring.nextElementSibling !== anchor) anchor.insertAdjacentElement('beforebegin', ring);
 }

@@ -4285,24 +4285,28 @@
     "message": "Не получилось. Попробуйте снова.",
     "description": "Error after unpairing or turning on updates failed"
   },
-  "chatgptProUsageWeek": {
-    "message": "Pro за неделю: {count}",
-    "description": "Label beside ChatGPT's model picker: Pro messages sent this week. {count} is a number."
-  },
-  "chatgptProUsageLeft": {
-    "message": "Pro: осталось {left}/{limit}",
-    "description": "Label beside ChatGPT's model picker once the Pro limit is known. {left} and {limit} are numbers."
-  },
   "chatgptProUsageResets": {
     "message": "сброс {time}",
-    "description": "Appended to the Pro usage label. {time} is a short local date and time."
-  },
-  "chatgptProUsageHint": {
-    "message": "Подсчитано по сообщениям GPT-6 Pro, отправленным из этого браузера. Сообщения с других устройств и из приложений не учитываются.",
-    "description": "Tooltip of the ChatGPT Pro usage label."
+    "description": "Appended to the Pro usage card's second line. {time} is a short local date and time."
   },
   "chatgptProUsageNoneLeft": {
-    "message": "Pro: лимит исчерпан",
-    "description": "Label beside ChatGPT's model picker while ChatGPT says Pro is used up and the limit is unknown."
+    "message": "Лимит Pro исчерпан",
+    "description": "First line of the Pro usage card while ChatGPT says Pro is used up."
+  },
+  "chatgptProUsageUsed": {
+    "message": "Pro за неделю: {used} / {limit}",
+    "description": "First line of the card over the ChatGPT Pro usage ring. {used} and {limit} are numbers."
+  },
+  "chatgptProUsageScope": {
+    "message": "Учитывается только этот браузер",
+    "description": "Second line of the Pro usage card: the count only covers this browser."
+  },
+  "chatgptProUsageWeeklyLimit": {
+    "message": "Недельный лимит Pro",
+    "description": "Label of the ChatGPT Pro usage plugin setting: Pro messages per week."
+  },
+  "chatgptProUsageWeeklyLimitHint": {
+    "message": "Обычно ChatGPT не сообщает лимит Pro, поэтому кольцо считает по этому числу. Когда ChatGPT сообщит лимит, будет использовано его значение.",
+    "description": "Hint under the weekly Pro allowance setting."
   }
 }

@@ -3,6 +3,7 @@ import type { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import type { PluginSettings, SiteAdapter } from '@/features/plugins/types';
 
 import { findProTrigger, isBadgeNode, renderBadge } from './badge';
+import { DEFAULT_WEEKLY_PRO_LIMIT, MAX_WEEKLY_PRO_LIMIT } from './manifest';
 import { type ObserverEvent, postToObserver, readObserverMessage } from './protocol';
 import {
   EMPTY_PRO_USAGE,
@@ -37,18 +38,19 @@ async function readStore(): Promise<ProUsageStore> {
 
 /**
  * Counts the Pro sends the page observer reports and shows this week's count
- * beside the model picker while Pro is selected. Everything stops with the
- * scope: the observer is disarmed, late reports are dropped and the label is
+ * as a ring beside the model picker while Pro is selected. Everything stops with the
+ * scope: the observer is disarmed, late reports are dropped and the ring is
  * removed. Background registers the observer only while this plugin is on.
  */
 export function activateChatGptProUsage(
   scope: PluginScope,
-  _settings: PluginSettings = {},
+  settings: PluginSettings = {},
   adapter: SiteAdapter | null = null,
 ): void {
   const { signal } = scope;
+  const fallbackLimit = weeklyLimitSetting(settings);
   let store: ProUsageStore = EMPTY_PRO_USAGE;
-  // No label until the observer answers: without it the count would silently stay at zero.
+  // No ring until the observer answers: without it the count would silently stay at zero.
   let observerReady = false;
   // The account this page named (hashed); until it does, the store's last account is shown.
   let currentAccount: string | null | undefined;
@@ -67,7 +69,9 @@ export function activateChatGptProUsage(
     if (signal.aborted) return;
     renderBadge(
       observerReady ? findProTrigger(adapter) : null,
-      observerReady ? summarizeProUsage(bucketOf(store, shownAccount()), Date.now()) : null,
+      observerReady
+        ? { summary: summarizeProUsage(bucketOf(store, shownAccount()), Date.now()), fallbackLimit }
+        : null,
     );
   };
 
@@ -90,7 +94,7 @@ export function activateChatGptProUsage(
         try {
           await chrome.storage.local.set({ [STORAGE_KEY]: next });
         } catch {
-          // Storage is gone with the extension context; the label still shows this page's count.
+          // Storage is gone with the extension context; the ring still shows this page's count.
         }
         render();
       })
@@ -167,13 +171,21 @@ export function activateChatGptProUsage(
       document.documentElement,
       { childList: true, subtree: true, characterData: true },
       (records) => {
-        // The label's own insertions would otherwise re-schedule a render forever.
+        // The ring's and card's own mutations would otherwise re-schedule a render forever.
         if (records.every((record) => isBadgeNode(record.target) || addsOnlyBadge(record))) return;
         scheduleRender();
       },
     );
   }
   scope.timer(render, CLOCK_REFRESH_MS, { repeat: true });
+}
+
+/** The plugin's "weekly Pro allowance", used until ChatGPT names the real limit. */
+function weeklyLimitSetting(settings: PluginSettings): number {
+  const value = settings.weeklyLimit;
+  return typeof value === 'number' && Number.isFinite(value) && value >= 1
+    ? Math.min(MAX_WEEKLY_PRO_LIMIT, Math.round(value))
+    : DEFAULT_WEEKLY_PRO_LIMIT;
 }
 
 function addsOnlyBadge(record: MutationRecord): boolean {

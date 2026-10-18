@@ -4285,24 +4285,28 @@
     "message": "That didn’t work. Try again.",
     "description": "Error after unpairing or turning on updates failed"
   },
-  "chatgptProUsageWeek": {
-    "message": "Pro this week: {count}",
-    "description": "Label beside ChatGPT's model picker: Pro messages sent this week. {count} is a number."
-  },
-  "chatgptProUsageLeft": {
-    "message": "Pro {left}/{limit} left",
-    "description": "Label beside ChatGPT's model picker once the Pro limit is known. {left} and {limit} are numbers."
-  },
   "chatgptProUsageResets": {
     "message": "resets {time}",
-    "description": "Appended to the Pro usage label. {time} is a short local date and time."
-  },
-  "chatgptProUsageHint": {
-    "message": "Counted from GPT-6 Pro messages sent in this browser. Messages from other devices or apps are not included.",
-    "description": "Tooltip of the ChatGPT Pro usage label."
+    "description": "Appended to the Pro usage card's second line. {time} is a short local date and time."
   },
   "chatgptProUsageNoneLeft": {
-    "message": "Pro: none left",
-    "description": "Label beside ChatGPT's model picker while ChatGPT says Pro is used up and the limit is unknown."
+    "message": "Pro is used up",
+    "description": "First line of the Pro usage card while ChatGPT says Pro is used up."
+  },
+  "chatgptProUsageUsed": {
+    "message": "{used} / {limit} Pro messages used this week",
+    "description": "First line of the card over the ChatGPT Pro usage ring. {used} and {limit} are numbers."
+  },
+  "chatgptProUsageScope": {
+    "message": "Counted in this browser only",
+    "description": "Second line of the Pro usage card: the count only covers this browser."
+  },
+  "chatgptProUsageWeeklyLimit": {
+    "message": "Weekly Pro allowance",
+    "description": "Label of the ChatGPT Pro usage plugin setting: Pro messages per week."
+  },
+  "chatgptProUsageWeeklyLimitHint": {
+    "message": "ChatGPT usually doesn't report your Pro allowance, so the ring uses this number. Once ChatGPT reports it, its number is used instead.",
+    "description": "Hint under the weekly Pro allowance setting."
   }
 }

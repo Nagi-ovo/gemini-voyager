@@ -4285,24 +4285,28 @@
     "message": "うまくいきませんでした。もう一度お試しください。",
     "description": "Error after unpairing or turning on updates failed"
   },
-  "chatgptProUsageWeek": {
-    "message": "今週の Pro {count} 回",
-    "description": "Label beside ChatGPT's model picker: Pro messages sent this week. {count} is a number."
-  },
-  "chatgptProUsageLeft": {
-    "message": "Pro 残り {left}/{limit}",
-    "description": "Label beside ChatGPT's model picker once the Pro limit is known. {left} and {limit} are numbers."
-  },
   "chatgptProUsageResets": {
     "message": "{time} にリセット",
-    "description": "Appended to the Pro usage label. {time} is a short local date and time."
-  },
-  "chatgptProUsageHint": {
-    "message": "このブラウザから送信した GPT-6 Pro のメッセージを数えています。ほかの端末やアプリからの送信は含まれません。",
-    "description": "Tooltip of the ChatGPT Pro usage label."
+    "description": "Appended to the Pro usage card's second line. {time} is a short local date and time."
   },
   "chatgptProUsageNoneLeft": {
-    "message": "Pro は使い切りました",
-    "description": "Label beside ChatGPT's model picker while ChatGPT says Pro is used up and the limit is unknown."
+    "message": "Pro を使い切りました",
+    "description": "First line of the Pro usage card while ChatGPT says Pro is used up."
+  },
+  "chatgptProUsageUsed": {
+    "message": "今週の Pro 使用 {used} / {limit} 回",
+    "description": "First line of the card over the ChatGPT Pro usage ring. {used} and {limit} are numbers."
+  },
+  "chatgptProUsageScope": {
+    "message": "このブラウザでの送信のみ",
+    "description": "Second line of the Pro usage card: the count only covers this browser."
+  },
+  "chatgptProUsageWeeklyLimit": {
+    "message": "週あたりの Pro 回数",
+    "description": "Label of the ChatGPT Pro usage plugin setting: Pro messages per week."
+  },
+  "chatgptProUsageWeeklyLimitHint": {
+    "message": "ChatGPT は通常 Pro の上限を知らせないため、リングはこの数で計算します。ChatGPT が上限を知らせた後はその値を使います。",
+    "description": "Hint under the weekly Pro allowance setting."
   }
 }

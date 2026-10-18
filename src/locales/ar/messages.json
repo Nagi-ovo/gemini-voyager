@@ -4285,24 +4285,28 @@
     "message": "لم ينجح ذلك. حاول مجددًا.",
     "description": "Error after unpairing or turning on updates failed"
   },
-  "chatgptProUsageWeek": {
-    "message": "Pro هذا الأسبوع: {count}",
-    "description": "Label beside ChatGPT's model picker: Pro messages sent this week. {count} is a number."
-  },
-  "chatgptProUsageLeft": {
-    "message": "Pro: متبقٍ {left}/{limit}",
-    "description": "Label beside ChatGPT's model picker once the Pro limit is known. {left} and {limit} are numbers."
-  },
   "chatgptProUsageResets": {
     "message": "يُعاد التعيين {time}",
-    "description": "Appended to the Pro usage label. {time} is a short local date and time."
-  },
-  "chatgptProUsageHint": {
-    "message": "محسوب من رسائل GPT-6 Pro المرسلة من هذا المتصفح. لا تُحتسب الرسائل المرسلة من أجهزة أو تطبيقات أخرى.",
-    "description": "Tooltip of the ChatGPT Pro usage label."
+    "description": "Appended to the Pro usage card's second line. {time} is a short local date and time."
   },
   "chatgptProUsageNoneLeft": {
-    "message": "Pro: نفد الرصيد",
-    "description": "Label beside ChatGPT's model picker while ChatGPT says Pro is used up and the limit is unknown."
+    "message": "نفد رصيد Pro",
+    "description": "First line of the Pro usage card while ChatGPT says Pro is used up."
+  },
+  "chatgptProUsageUsed": {
+    "message": "استُخدم {used} / {limit} من رسائل Pro هذا الأسبوع",
+    "description": "First line of the card over the ChatGPT Pro usage ring. {used} and {limit} are numbers."
+  },
+  "chatgptProUsageScope": {
+    "message": "يُحتسب في هذا المتصفح فقط",
+    "description": "Second line of the Pro usage card: the count only covers this browser."
+  },
+  "chatgptProUsageWeeklyLimit": {
+    "message": "حصة Pro الأسبوعية",
+    "description": "Label of the ChatGPT Pro usage plugin setting: Pro messages per week."
+  },
+  "chatgptProUsageWeeklyLimitHint": {
+    "message": "لا يذكر ChatGPT عادةً حصتك من Pro، لذا تعتمد الحلقة على هذا الرقم. وعندما يذكرها ChatGPT تُستخدم قيمته بدلًا منه.",
+    "description": "Hint under the weekly Pro allowance setting."
   }
 }
