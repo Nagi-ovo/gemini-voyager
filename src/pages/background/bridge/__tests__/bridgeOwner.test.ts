@@ -148,6 +148,20 @@ describe('bridge owner', () => {
     expect(second).toEqual(first);
   });
 
+  it('pairs when the same code is tried again after the first try failed', async () => {
+    const t = setup();
+    t.origins.add('http://127.0.0.1/*');
+    const helloOk = t.routes['/v1/hello'];
+    // Another program on the port answers the first try.
+    t.routes['/v1/hello'] = () => new Response('Unsupported method', { status: 501 });
+    const message = { type: 'gv.bridge.pair', port: 47321, code: '12345678' };
+    expect(await t.send(message)).toMatchObject({ ok: false });
+
+    t.routes['/v1/hello'] = helloOk;
+    expect(await t.send(message)).toEqual({ ok: true, data: { serverId: 'srv1' } });
+    expect(t.requests.filter((r) => r.path === '/v1/pair')).toHaveLength(1);
+  });
+
   it('turns online updates on before it checks the catalog for a stale policy', async () => {
     const t = setup({ onlineUpdatesEnabled: false });
     const reply = await t.send({ type: 'gv.bridge.enableRefresh' });

@@ -186,7 +186,14 @@ export function createBridgePairing(deps: BridgePairingDeps): BridgePairing {
       // Whoever pairs first consumes the intent, so a later grant cannot replay it.
       await deps.session.remove(INTENT);
       return run(read.port, read.code);
-    })().catch((error: unknown) => fail('server-unreachable', String(error)));
+    })()
+      .catch((error: unknown) => fail('server-unreachable', String(error)))
+      .then((outcome) => {
+        // A failed try must not hold the code: otherwise clicking Pair again
+        // answers with the old failure and never reaches the server.
+        if (outcome.state === 'failed') used.delete(key);
+        return outcome;
+      });
     used.set(key, started);
     while (used.size > USED_CODE_MEMORY) used.delete(used.keys().next().value as string);
     return started;
