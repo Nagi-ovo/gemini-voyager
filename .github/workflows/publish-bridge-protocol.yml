@@ -1,11 +1,12 @@
 name: Publish Bridge Protocol
 
 # The Local Bridge wire format, shared with voyager-cli. Raising the version in
-# packages/bridge-protocol/package.json on main publishes it; extension releases
-# do not. npm Trusted Publishing authenticates this workflow file through OIDC:
-# no token or 2FA prompt, and npm attaches provenance. The very first version
-# has to be published by hand, since npm only trusts a workflow for a package
-# that already exists.
+# packages/bridge-protocol/package.json on main stages it on npm; extension
+# releases do not. npm Trusted Publishing authenticates this workflow file
+# through OIDC and may only stage: a maintainer approves the staged version with
+# their second factor (npmjs.com → Staged Packages, or `npm stage approve`)
+# before it goes live. The very first version was published by hand, since npm
+# only trusts a workflow for a package that already exists.
 on:
   push:
     branches:
@@ -72,7 +73,10 @@ jobs:
         if: steps.npm.outputs.publish == 'true'
         run: bun run test packages/bridge-protocol
 
-      - name: Publish
+      # Staged publishing needs npm 11.15.0 or later.
+      - name: Stage for approval
         if: steps.npm.outputs.publish == 'true'
         working-directory: packages/bridge-protocol
-        run: npm publish --access public
+        run: |
+          npm install -g npm@^11.15.0
+          npm stage publish --access public
