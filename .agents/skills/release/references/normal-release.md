@@ -103,7 +103,7 @@ rg 'MARKETING_VERSION|CURRENT_PROJECT_VERSION' \
 
 ### In-product changelog
 
-Create `src/pages/content/changelog/notes/{VERSION}.md`. Read [changelog.md](changelog.md) before authoring it. All 10 locales are required before publication.
+Create `src/pages/content/changelog/notes/{VERSION}.md`. Read [changelog.md](changelog.md) before authoring it. All 10 locales are required before publication, each opening with the release quote the maintainer picked ([Opening quote](changelog.md#opening-quote-every-release)); `src/pages/content/changelog/__tests__/changelog.test.ts` fails a note without it.
 
 Every commit in `PREV_TAG..HEAD` must be accounted for before writing. Scale the effort to the range — do not fan out by default:
 

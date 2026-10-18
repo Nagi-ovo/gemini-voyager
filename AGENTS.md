@@ -18,6 +18,7 @@ Read matching rules before editing; do not assume the client auto-loaded `.claud
 | `src/pages/content/**`, `public/contentStyle.css`                        | [.claude/rules/content-scripts.md](.claude/rules/content-scripts.md)                                                                        |
 | `src/locales/**`                                                         | [.claude/rules/i18n.md](.claude/rules/i18n.md)                                                                                              |
 | Storage, backup, account isolation, Drive sync, folder or export modules | [.claude/rules/high-complexity.md](.claude/rules/high-complexity.md), full-file reads and full-suite verification for behavior/data changes |
+| `src/pages/content/changelog/notes/**` (release notes)                   | [.agents/skills/release/references/changelog.md](.agents/skills/release/references/changelog.md), including its opening quote               |
 | Contribution or release                                                  | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md); matching workflows in [.agents/skills/](.agents/skills/)                                |
 | `src/features/plugins/catalog/**`, `verbs/**` or `sites/**`              | [.agents/skills/create-voyager-plugin/SKILL.md](.agents/skills/create-voyager-plugin/SKILL.md)                                              |
 

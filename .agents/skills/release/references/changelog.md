@@ -8,7 +8,7 @@
 - Platform logo markers
 - Commit → entry filtering rules
 - Style guide
-- Optional opening quote
+- Opening quote (every release)
 - Template skeleton (copy-ready)
 - Authoring order — Chinese first
 - Reality check before saving
@@ -76,21 +76,23 @@ Rule of thumb: if a user couldn't see or feel the change, skip it.
 - **Screenshots are supported — use one for the headline feature.** `img` is on the sanitizer allow-list and `.gv-changelog-body img` already styles it (full width, rounded, click-to-zoom lightbox). Put the image in `docs/public/assets/promotion/` and append it to that bullet in every locale with localized alt text: `![{alt}](https://github.com/voyager-crew/voyager/raw/main/docs/public/assets/promotion/{file}.png)`. Only that folder is rewritten: the site turns the URL into its own `/assets/promotion/{file}.png`, and in-product the viewer swaps it for a bundled copy only when `getPromotionRuntimePath` in `src/pages/content/changelog/index.ts` maps the filename to a file in `public/` (today only `Activity-View.png` → `changelog-activity-view.png`); otherwise the extension loads the GitHub URL at view time. That URL only resolves once the docs commit is on `main` — verify with `curl -sIL -o /dev/null -w '%{http_code}'` before shipping. One screenshot per release at most; a wall of images buries the text.
 - Translations should feel native. Arabic is RTL — don't worry about it in the raw file (the viewer handles direction), just get the text right.
 
-## Optional opening quote
+## Opening quote (every release)
 
-**Ask the maintainer first whether they already have a line in mind.** Do this before searching for candidates — they often do, and their pick will fit the release better than anything a search surfaces. Only go looking yourself if they say they have nothing.
+Every release note opens with one quote; `src/pages/content/changelog/__tests__/changelog.test.ts` fails a note from 2.1.1 on without it. It is required, and it is chosen, not filled in: a line that merely occupies the slot is worse than taking longer to find the right one.
 
-Do **not** force a decorative quote into every release. Changelog notes are product communication first; a quote is optional and should be omitted unless it genuinely fits the release.
+1. **Ask the maintainer first whether they already have a line in mind.** They often do, and their pick fits the release better than anything a search surfaces.
+2. If not, **collect 3–5 candidates, mainly from films and anime.** A line the maintainer would recognize from a film or anime beats a philosopher, proverb or book.
+3. Check each against the bar below, verify it, and **give the maintainer the candidates with one line on how each fits.** The maintainer picks; the note does not ship without a pick.
 
-Use a quote only when it passes all of these checks:
+The bar:
 
-- **Direct fit**: it matches the release theme without explanation. For security, privacy, or permission releases, the line should be about responsibility, restraint, trust, or care — not just something vaguely warm.
-- **High recognition**: a casual fan or general reader is likely to recognize the line or at least the source. Prefer iconic lines, not quiet one-off dialogue from a minor scene.
-- **Source confidence**: the wording and attribution can be verified from a reliable source. Avoid fan quote lists unless a better source confirms it.
+- **Direct fit**: it matches what this release does (its highlights) without explanation. For security, privacy, or permission releases, the line should be about responsibility, restraint, trust, or care — not just something vaguely warm.
+- **High recognition**: a casual viewer is likely to recognize the line or at least the film or anime. Prefer iconic lines, not quiet one-off dialogue from a minor scene.
+- **Source confidence**: the line is really said in the work, in these words. Memes and misquotes fail ("We need to go deeper" is not in _Inception_). Check the film or episode, its script or a reliable transcript; fan quote lists alone are not enough.
 - **Tone fit**: it should feel like a small wink or reflection, not a motivational poster, sermon, ad, or inside joke.
 - **Localization fit**: it can be translated naturally in all 10 locales without getting awkward.
 
-Before writing it into the changelog, collect 3–5 candidates in scratch notes and reject anything that:
+Reject a candidate that:
 
 - needs an explanation to connect to the release
 - is only "valid" because WebSearch found it
@@ -98,9 +100,7 @@ Before writing it into the changelog, collect 3–5 candidates in scratch notes 
 - was chosen mainly because previous releases have not used it
 - feels more clever than useful
 
-Prefer no quote over an obscure or merely searchable quote.
-
-If you add one, open every locale's body with one blockquoted, italic line, right under its `<!-- lang:xx -->` marker and above the first section:
+Open every locale's body with one blockquoted, italic line, right under its `<!-- lang:xx -->` marker and above the first section:
 
 ```markdown
 <!-- lang:en -->
@@ -110,13 +110,14 @@ If you add one, open every locale's body with one blockquoted, italic line, righ
 ### Highlights
 ```
 
-When a quote is used:
+Before saving it:
 
 - Verify it with WebSearch or another reliable source. Do not rely on memory, fan quote lists alone, or aggregator paraphrases.
+- Use the film's or anime's official title and translation in each locale where one exists.
 - Confirm it has not been used before with `grep -rh '^>' src/pages/content/changelog/notes/`.
 - Use one line across all 10 locales. Use official/known translations where they exist; otherwise translate naturally.
 - Renders fine in the viewer: `blockquote` and `em` are on the sanitizer allow-list in `src/pages/content/changelog/index.ts` — don't introduce other raw HTML.
-- The line opens each locale's body, in every release that has one; the site's changelog pages list releases one after another, so a quote at the bottom reads as the start of the next release.
+- The line opens each locale's body; the site's changelog pages list releases one after another, so a quote at the bottom reads as the start of the next release.
 
 ## Template skeleton
 
@@ -254,4 +255,4 @@ Fill every locale — all 10 are non-negotiable. Write **Chinese first**, render
 - No locale is missing a section that another locale has.
 - Optional-feature markers are present in all 10 where they appear in English.
 - No commit-speak leaked in (avoid things like "implement X" or "refactor Y to be more Z" — those are internal descriptions).
-- If an optional quote is present, it opens the body in all 10 locales, is verified, is new vs. prior release notes, and clearly fits the release. If it feels decorative or obscure, remove it.
+- The quote is there: it opens the body in all 10 locales, is the maintainer's pick, is verified, is new vs. prior release notes, and clearly fits the release. If it feels decorative or obscure, go back to the candidates rather than ship it.

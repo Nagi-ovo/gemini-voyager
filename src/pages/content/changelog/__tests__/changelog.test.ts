@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -121,6 +121,32 @@ images:
       /^> \*"Not all those who wander are lost\."/,
     );
     expect(extractLocalizedContent(notes, 'zh')).toMatch(/^> \*「并非所有流浪者都迷失了方向。/);
+  });
+});
+
+describe('release note quotes', () => {
+  const LOCALES = ['en', 'zh', 'zh_TW', 'ja', 'fr', 'es', 'pt', 'ar', 'ko', 'ru'];
+  const notesDir = resolve(process.cwd(), 'src/pages/content/changelog/notes');
+  const parts = (version: string) => version.split('.').map(Number);
+  /** From 2.1.1 every release opens with a quote (the release skill's changelog guide). */
+  const sinceQuotesRequired = (version: string) => {
+    const [major, minor, patch] = parts(version);
+    return major * 1e6 + minor * 1e3 + patch >= 2_001_001;
+  };
+
+  it('does not let a release note ship without its opening quote in every locale', () => {
+    const versions = readdirSync(notesDir)
+      .map((file) => file.replace(/\.md$/, ''))
+      .filter((version) => /^\d+\.\d+\.\d+$/.test(version) && sinceQuotesRequired(version));
+    expect(versions.length).toBeGreaterThan(0);
+    for (const version of versions) {
+      const notes = readFileSync(resolve(notesDir, `${version}.md`), 'utf8');
+      for (const locale of LOCALES) {
+        expect(`${version} ${locale}: ${extractLocalizedContent(notes, locale)}`).toMatch(
+          new RegExp(`^${version.replace(/\./g, '\\.')} ${locale}: > _`),
+        );
+      }
+    }
   });
 });
 
