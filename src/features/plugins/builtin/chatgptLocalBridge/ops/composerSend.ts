@@ -21,11 +21,11 @@ import {
   bridgeError,
 } from '@/features/bridge/protocol';
 import { readConversationId } from '@/features/plugins/builtin/chatgptResponseNotification/page';
-import { hasComposerAttachments } from '@/features/plugins/builtin/chatgptTemporaryHandoff/composerDelivery';
 import type { SiteAdapter } from '@/features/plugins/types';
 
 import { type OpContext, OpFailure, OpTermination } from '../opContext';
-import { inventoryAttachments } from './attachmentEvidence';
+import { holdsAnyAttachment, inventoryAttachments } from './attachmentEvidence';
+import { readMode, readPageLanguage } from './conversationReady';
 import {
   composerFormOf,
   conversationItems,
@@ -81,6 +81,18 @@ export async function runComposerSend(
     timeoutMs: COMPOSER_TIMEOUT_MS,
   });
   if (!field) ctx.fail('selector-missing', 'The ChatGPT composer was not found.');
+  // Fail closed on its own, whoever calls: only a composer that positively reads as chat
+  // takes a prompt, never Work or one whose label this build has not measured (other UI languages).
+  const { mode, labels } = readMode(field);
+  if (mode !== 'chat') {
+    ctx.fail(
+      mode === 'work' ? 'mode-unavailable' : 'mode-unknown',
+      mode === 'work'
+        ? 'The composer is in ChatGPT Work mode.'
+        : 'The composer does not show chat mode under a label this build knows.',
+      { mode, lang: readPageLanguage(), composerLabels: labels },
+    );
+  }
   const form = composerFormOf(field);
   const expected = params.expectAttachments ?? [];
 
@@ -89,7 +101,7 @@ export async function runComposerSend(
   }
   const checkAttachments = (): void => {
     if (expected.length === 0) {
-      if (hasComposerAttachments(form)) {
+      if (holdsAnyAttachment(form, field)) {
         ctx.fail('composer-busy', 'The composer holds attachments.', { reason: 'attachments' });
       }
       return;

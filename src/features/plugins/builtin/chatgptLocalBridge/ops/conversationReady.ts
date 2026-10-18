@@ -65,6 +65,11 @@ function composerLabels(field: HTMLElement): string[] {
   return labels.map((label) => label?.trim() ?? '').filter((label) => label.length > 0);
 }
 
+/** The page's UI language: the mode labels above were measured in zh-CN only. */
+export function readPageLanguage(): string {
+  return document.documentElement.lang;
+}
+
 function readSurfaceMode(): string | null {
   try {
     return localStorage.getItem(SURFACE_MODE_STORAGE_KEY);
@@ -216,7 +221,7 @@ export async function runConversationReady(
     conversationId: checkConversation(),
     loggedIn: true,
     mode,
-    evidence: { composerLabels: labels, surfaceMode: readSurfaceMode() },
+    evidence: { composerLabels: labels, lang: readPageLanguage(), surfaceMode: readSurfaceMode() },
     ...(switchedMode ? { switchedMode } : {}),
   };
 }

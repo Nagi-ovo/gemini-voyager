@@ -64,6 +64,21 @@ describe('Local Bridge conversation.ready: mode', () => {
     expect(page.events().clicks).toBe(1);
   });
 
+  it('reports the page language beside the labels it could not read a mode from', async () => {
+    mount({ mode: 'chat' });
+    document.documentElement.lang = 'en-US';
+    page.composer.setAttribute('aria-label', 'Ask anything');
+    bridge.start('conversation.ready', {});
+    await vi.advanceTimersByTimeAsync(0);
+    document.documentElement.lang = '';
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { mode: 'unknown', evidence: { lang: 'en-US', composerLabels: ['Ask anything'] } },
+    });
+    expect(page.events().clicks).toBe(0);
+  });
+
   it('leaves a chat-mode page alone', async () => {
     mount({ mode: 'chat' });
     bridge.start('conversation.ready', {});

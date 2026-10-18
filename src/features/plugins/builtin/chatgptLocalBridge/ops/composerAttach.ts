@@ -17,13 +17,13 @@
  */
 import { readComposer } from '@/core/services/composer';
 import type { ComposerAttachParams, ComposerAttachResult } from '@/features/bridge/protocol';
-import { hasComposerAttachments } from '@/features/plugins/builtin/chatgptTemporaryHandoff/composerDelivery';
 import type { SiteAdapter } from '@/features/plugins/types';
 
 import type { OpContext } from '../opContext';
 import {
   findAttachmentCard,
   findGeneralFileInput,
+  holdsAnyAttachment,
   rejectionNotice,
   uploadBusySignals,
 } from './attachmentEvidence';
@@ -57,7 +57,7 @@ function checkComposerFree(
   if (normalizeForCompare(readComposer(field)) !== '') {
     ctx.fail('composer-busy', 'The composer holds a draft.', { reason: 'draft' });
   }
-  if (hasComposerAttachments(composerFormOf(field))) {
+  if (holdsAnyAttachment(composerFormOf(field), field)) {
     ctx.fail('composer-busy', 'The composer already holds attachments.', {
       reason: 'attachments',
     });

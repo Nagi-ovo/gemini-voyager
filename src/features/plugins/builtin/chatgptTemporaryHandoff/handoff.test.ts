@@ -196,6 +196,23 @@ describe('temporary chat handoff', () => {
     expect(hasCurrentComposerAttachments()).toBe(false);
   });
 
+  it('detects a file attached through the composer when its card carries no test id', () => {
+    const form = document.createElement('form');
+    const composer = document.createElement('div');
+    composer.id = 'prompt-textarea';
+    composer.contentEditable = 'true';
+    composer.setAttribute('role', 'textbox');
+    // As captured on 2026-10-18: the file input is empty once the card shows.
+    form.innerHTML = '<div data-composer-attachments=""></div><input type="file" multiple />';
+    form.appendChild(composer);
+    document.body.appendChild(form);
+    expect(hasCurrentComposerAttachments()).toBe(false);
+
+    form.querySelector('[data-composer-attachments]')!.innerHTML =
+      '<div><span><span>report.txt</span><button type="button" aria-label="移除 report.txt"></button></span></div>';
+    expect(hasCurrentComposerAttachments()).toBe(true);
+  });
+
   it('recognizes only attachment removal controls in the active composer', () => {
     const form = document.createElement('form');
     const composer = document.createElement('div');

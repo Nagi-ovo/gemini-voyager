@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { type ChatGptPageFixture, mountChatGptPage } from '../__tests__/chatgptPageFixture';
 import { type Harness, createHarness, errorCode } from '../__tests__/harness';
+import { liveAttachmentArea, unnamedAttachmentArea } from '../__tests__/liveAttachmentCard';
 import { namesFile } from './attachmentEvidence';
 
 vi.mock('@/core/utils/userEvent', () => ({ isUserEvent: vi.fn(() => false) }));
@@ -49,6 +50,34 @@ afterEach(() => {
 });
 
 describe('composer.send attachments', () => {
+  it('does not send a text prompt with a file the person attached through the composer', async () => {
+    page.form.prepend(liveAttachmentArea('probe-card.txt'));
+    bridge.start('composer.send', { text: 'hi' });
+    await vi.advanceTimersByTimeAsync(2_000);
+    const outcome = bridge.outcome();
+    expect(errorCode(outcome)).toBe('composer-busy');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({ reason: 'attachments' });
+    expect(page.events()).toMatchObject({ execCommand: 0, clicks: 0 });
+  });
+
+  it('does not send a text prompt beside an attachment card that names no file', async () => {
+    page.form.prepend(unnamedAttachmentArea());
+    bridge.start('composer.send', { text: 'hi' });
+    await vi.advanceTimersByTimeAsync(2_000);
+    const outcome = bridge.outcome();
+    expect(errorCode(outcome)).toBe('composer-busy');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({ reason: 'attachments' });
+    expect(page.events()).toMatchObject({ execCommand: 0, clicks: 0 });
+  });
+
+  it('sends once the person removed their file and the attachment area is empty', async () => {
+    page.form.prepend(liveAttachmentArea(null));
+    bridge.start('composer.send', { text: 'hi' });
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(bridge.outcome()).toMatchObject({ ok: true });
+    expect(page.events().clicks).toBe(1);
+  });
+
   it('does not send a file the person added beside the expected attachment', async () => {
     addCard('public-report.txt');
     addCard('private-payroll.csv');
@@ -98,6 +127,35 @@ describe('composer.send attachments', () => {
     await vi.advanceTimersByTimeAsync(2_000);
     expect(bridge.outcome()).toMatchObject({ ok: true, data: { conversationId: 'conv-123' } });
     expect(page.events().clicks).toBe(1);
+  });
+});
+
+describe('composer.send mode', () => {
+  afterEach(() => {
+    document.documentElement.lang = '';
+  });
+
+  it('sends nothing when the composer label names no measured mode, and says what it read', async () => {
+    document.documentElement.lang = 'en-US';
+    page.composer.setAttribute('aria-label', 'Ask anything');
+    bridge.start('composer.send', { text: 'hi' });
+    await vi.advanceTimersByTimeAsync(2_000);
+    const outcome = bridge.outcome();
+    expect(errorCode(outcome)).toBe('mode-unknown');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({
+      mode: 'unknown',
+      lang: 'en-US',
+      composerLabels: ['Ask anything'],
+    });
+    expect(page.events()).toMatchObject({ execCommand: 0, clicks: 0 });
+  });
+
+  it('sends nothing into a ChatGPT Work composer', async () => {
+    page = mountChatGptPage({ mode: 'work' });
+    bridge.start('composer.send', { text: 'hi' });
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(errorCode(bridge.outcome())).toBe('mode-unavailable');
+    expect(page.events()).toMatchObject({ execCommand: 0, clicks: 0 });
   });
 });
 

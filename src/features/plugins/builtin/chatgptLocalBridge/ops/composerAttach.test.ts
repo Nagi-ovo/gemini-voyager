@@ -7,6 +7,7 @@ import type { BlobRef } from '@/features/bridge/protocol';
 
 import { type ChatGptPageFixture, mountChatGptPage } from '../__tests__/chatgptPageFixture';
 import { type Harness, createHarness, errorCode } from '../__tests__/harness';
+import { liveAttachmentArea } from '../__tests__/liveAttachmentCard';
 import { BLOB_CHUNK_BYTES } from './blobBytes';
 
 vi.mock('@/core/utils/userEvent', () => ({ isUserEvent: vi.fn(() => false) }));
@@ -257,6 +258,17 @@ describe('Local Bridge composer.attach', () => {
     bridge.start('composer.attach', { blobs: [blobOf('b1', 'proj.zip', bytesOf(4096))] });
     await untilSettled(() => bridge.outcome() !== undefined);
     expect(errorCode(bridge.outcome())).toBe('composer-busy');
+    expect(reads()).toEqual([]);
+    expect(changes).toBe(0);
+  });
+
+  it('leaves a file the person attached alone when its card is all the page shows of it', async () => {
+    page.form.prepend(liveAttachmentArea('probe-card.txt'));
+    bridge.start('composer.attach', { blobs: [blobOf('b1', 'proj.zip', bytesOf(4096))] });
+    await untilSettled(() => bridge.outcome() !== undefined);
+    const outcome = bridge.outcome();
+    expect(errorCode(outcome)).toBe('composer-busy');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({ reason: 'attachments' });
     expect(reads()).toEqual([]);
     expect(changes).toBe(0);
   });

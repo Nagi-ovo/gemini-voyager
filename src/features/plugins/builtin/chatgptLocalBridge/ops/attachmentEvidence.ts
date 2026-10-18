@@ -10,6 +10,7 @@
  * moment they are set, whether or not the page took them. The uploading state
  * was not observed live; busy markers below are the usual structural ones.
  */
+import { hasComposerAttachments } from '@/features/plugins/builtin/chatgptTemporaryHandoff/composerDelivery';
 import { isRendered } from '@/pages/content/export/adapter/chatgptThread';
 
 const FILE_INPUT_SELECTOR = 'input[type="file"]';
@@ -209,6 +210,15 @@ export function inventoryAttachments(
     ambiguous: expected.filter((name) => (controls.get(name) ?? 0) > 1),
     unexpected,
   };
+}
+
+/**
+ * Whether the composer holds any attachment at all, for an op that attached none:
+ * a card in the inventory, or the language-independent markers.
+ */
+export function holdsAnyAttachment(form: Element, field: Element): boolean {
+  // The old markers alone missed the live card, so a text-only task sent the person's file.
+  return inventoryAttachments(form, field, []).unexpected > 0 || hasComposerAttachments(form);
 }
 
 function isUnfinishedProgress(element: Element): boolean {
