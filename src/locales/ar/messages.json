@@ -4250,7 +4250,7 @@
     "description": "Pairing error: the code is not eight digits"
   },
   "bridgeErrorPort": {
-    "message": "أدخل منفذًا من 1 إلى 65535.",
+    "message": "أدخل منفذًا من 1024 إلى 65535.",
     "description": "Pairing error: the port is not a valid number"
   },
   "bridgeErrorPermission": {

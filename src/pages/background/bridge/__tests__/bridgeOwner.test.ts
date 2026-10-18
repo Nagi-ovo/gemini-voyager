@@ -349,6 +349,59 @@ describe('bridge owner', () => {
     expect(t.requests.filter((r) => r.path.startsWith('/v1/ext/tasks/'))).toEqual([]);
   });
 
+  const OUTBOX = [
+    {
+      taskId: 'T1',
+      result: { ok: true, data: { markdown: 'a private reply' } },
+      at: 1,
+      serverId: 'srv1',
+    },
+  ];
+  const ON = { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } };
+
+  it('drops reply text waiting in the outbox when the person unpairs', async () => {
+    const t = setup({
+      local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING, [StorageKeys.BRIDGE_OUTBOX]: OUTBOX },
+    });
+    await t.send({ type: 'gv.bridge.unpair' });
+    expect(t.local.values[StorageKeys.BRIDGE_OUTBOX]).toBeUndefined();
+  });
+
+  it('drops reply text waiting in the outbox when the bridge is turned off', async () => {
+    const t = setup({
+      local: {
+        [StorageKeys.BRIDGE_PAIRING]: PAIRING,
+        [StorageKeys.PLUGINS_STATE]: ON,
+        [StorageKeys.BRIDGE_OUTBOX]: OUTBOX,
+      },
+    });
+    t.owner.onStorageChanged(
+      { [StorageKeys.PLUGINS_STATE]: { oldValue: ON, newValue: {} } },
+      'local',
+    );
+    await vi.waitFor(() => expect(t.local.values[StorageKeys.BRIDGE_OUTBOX]).toBeUndefined());
+    expect(t.local.values[StorageKeys.BRIDGE_PAIRING]).toEqual(PAIRING);
+  });
+
+  it('reads no session state for closed tabs while it is not paired', async () => {
+    const t = setup({ local: { [StorageKeys.PLUGINS_STATE]: ON } });
+    await t.send({ type: 'gv.bridge.status' }); // hydrated
+    const get = vi.spyOn(t.session, 'get');
+    t.owner.onTabRemoved(5);
+    t.owner.onTabRemoved(6);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(get).not.toHaveBeenCalled();
+  });
+
+  it('still frees the page when a bridge tab closes while it is on and paired', async () => {
+    const t = setup({
+      local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING, [StorageKeys.PLUGINS_STATE]: ON },
+      session: { [BRIDGE_SESSION_KEYS.tab]: { tabId: 5, jobId: 'J1', openedAt: 1 } },
+    });
+    t.owner.onTabRemoved(5);
+    await vi.waitFor(() => expect(t.session.values[BRIDGE_SESSION_KEYS.tab]).toBeUndefined());
+  });
+
   it('does not contact the server while the builtin is off', async () => {
     const t = setup({ local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING } });
     t.origins.add('http://127.0.0.1/*');

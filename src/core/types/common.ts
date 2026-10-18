@@ -410,7 +410,8 @@ export const StorageKeys = {
   // Local Bridge (src/pages/background/bridge/). All three are chrome.storage.local,
   // written by the background only and never synced or backed up.
   // Pairing with `voyager serve`: { serverId, port, token, pairedAt }. The token is
-  // a secret: read only in the background, never sent to a content script.
+  // a secret: read only in the background and never sent to a content script on
+  // purpose, though content scripts can read storage.local themselves.
   BRIDGE_PAIRING: 'gvBridgePairing',
   // Highest bridge policy revision accepted so far: { revision, allow: OpName[] }.
   // Lets a later, older catalog never re-allow what a newer one denied.

@@ -4250,7 +4250,7 @@
     "description": "Pairing error: the code is not eight digits"
   },
   "bridgeErrorPort": {
-    "message": "Saisissez un port entre 1 et 65535.",
+    "message": "Saisissez un port entre 1024 et 65535.",
     "description": "Pairing error: the port is not a valid number"
   },
   "bridgeErrorPermission": {

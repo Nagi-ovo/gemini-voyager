@@ -207,6 +207,8 @@ export interface BridgeTaskStore {
   /** False when the entry does not fit the caps; the result is then lost. */
   pushOutbox(entry: OutboxEntry): Promise<boolean>;
   removeOutbox(taskId: string): Promise<void>;
+  /** Drop every stored result: the pairing they were for is gone, or the bridge is off. */
+  clearOutbox(): Promise<void>;
 }
 
 export function createBridgeTaskStore(areas: {
@@ -298,5 +300,6 @@ export function createBridgeTaskStore(areas: {
         if (next.length === 0) await local.remove(StorageKeys.BRIDGE_OUTBOX);
         else await local.set({ [StorageKeys.BRIDGE_OUTBOX]: next });
       }),
+    clearOutbox: () => serial(() => local.remove(StorageKeys.BRIDGE_OUTBOX)),
   };
 }

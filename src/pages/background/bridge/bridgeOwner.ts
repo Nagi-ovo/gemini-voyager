@@ -254,6 +254,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       if (message.kind === 'unpaired') {
         await dispatcher.stopCurrent('not-paired', 'voyager serve dropped this pairing.');
         await pairing.forget();
+        await store.clearOutbox();
         return;
       }
       // Tagged with the pairing this poll used: a reply of a replaced pairing runs nothing.
@@ -280,7 +281,10 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
   const shutDown = async (code: 'bridge-disabled' | 'not-paired', message: string) => {
     stop();
     clearAlarm();
+    // The stopped task's result gets its one delivery try first.
     await dispatcher.stopCurrent(code, message);
+    // Results wait only for the server they belong to; reply text must not outlive the pairing.
+    await store.clearOutbox();
   };
 
   const status = async (): Promise<BridgeStatusData> => {
@@ -369,6 +373,22 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       ? isPluginEnabled(value as Record<string, { enabled?: unknown }>, BRIDGE_PLUGIN_ID)
       : isPluginEnabled({}, BRIDGE_PLUGIN_ID);
 
+  // Every tab the browser closes lands in `onTabRemoved`: while unpaired or off, skip its
+  // session reads. A tab record or lease left behind is replaced or probed away later.
+  let engaged: Promise<boolean> | null = null;
+  const isEngaged = (): Promise<boolean> =>
+    (engaged ??= env.local
+      .get([StorageKeys.BRIDGE_PAIRING, StorageKeys.PLUGINS_STATE])
+      .then(
+        (values) =>
+          parsePairing(values[StorageKeys.BRIDGE_PAIRING]) !== null &&
+          enabledIn(values[StorageKeys.PLUGINS_STATE]),
+      )
+      .catch(() => {
+        engaged = null;
+        return true;
+      }));
+
   return {
     handleMessage: createBridgeRuntimeMessageHandler(messageOwner),
     wake,
@@ -379,6 +399,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
     },
     onStorageChanged: (changes, area) => {
       if (area !== 'local') return;
+      if (changes[StorageKeys.PLUGINS_STATE] || changes[StorageKeys.BRIDGE_PAIRING]) engaged = null;
       const state = changes[StorageKeys.PLUGINS_STATE];
       if (state) {
         const was = enabledIn(state.oldValue);
@@ -419,7 +440,8 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
         if (!granted) stop();
       });
     },
-    onTabRemoved: (tabId) => void dispatcher.onTabRemoved(tabId),
+    onTabRemoved: (tabId) =>
+      void isEngaged().then((on) => (on ? dispatcher.onTabRemoved(tabId) : undefined)),
     idle: async () => {
       await loop;
     },

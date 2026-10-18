@@ -270,6 +270,21 @@ describe('ChatGptBridgeCard pairing', () => {
     expect(card()?.textContent).toContain('bridgeErrorCode');
   });
 
+  it('rejects a privileged port the background would refuse, before any prompt or message', async () => {
+    await render();
+    mocks.sendMessage.mockClear();
+    typeInto('gv-bridge-code', '12345678');
+    await click('bridgeAdvanced');
+    typeInto('gv-bridge-port', '80');
+
+    await click('bridgePair');
+
+    expect(mocks.permissionRequest).not.toHaveBeenCalled();
+    expect(sent('gv.bridge.pairIntent')).toEqual([]);
+    expect(sent('gv.bridge.pair')).toEqual([]);
+    expect(card()?.textContent).toContain('bridgeErrorPort');
+  });
+
   it('tells the person to get a new code when the server refuses it', async () => {
     replies['gv.bridge.pair'] = {
       ok: false,

@@ -4250,7 +4250,7 @@
     "description": "Pairing error: the code is not eight digits"
   },
   "bridgeErrorPort": {
-    "message": "1〜65535 のポート番号を入力してください。",
+    "message": "1024〜65535 のポート番号を入力してください。",
     "description": "Pairing error: the port is not a valid number"
   },
   "bridgeErrorPermission": {

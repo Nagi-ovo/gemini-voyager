@@ -53,7 +53,8 @@ export function bridgeErrorKey(failure: Pick<Failure, 'code' | 'upgrade'>): Tran
 function parsePort(value: string): number | undefined {
   if (!/^\d{1,5}$/.test(value.trim())) return undefined;
   const port = Number(value.trim());
-  return port >= 1 && port <= 65535 ? port : undefined;
+  // The background's `isValidBridgePort` range: a lower port passed here, asked for access, then failed.
+  return port >= 1024 && port <= 65535 ? port : undefined;
 }
 
 /** Why this browser cannot run the bridge at all; null when it can. */

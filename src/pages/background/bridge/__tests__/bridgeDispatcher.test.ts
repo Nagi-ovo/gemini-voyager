@@ -477,6 +477,60 @@ describe('bridge dispatcher', () => {
     expect(await restarted.inflight()).toEqual([]);
   });
 
+  it('switches a tab back to its mode when an op times out and no close follows', async () => {
+    const t = setup({ probe: async () => 'stopped' });
+    const tabId = await t.bridgeTab('doc-1', false);
+    await t.store.updateTab(tabId, { restoreMode: 'work' });
+    await t.dispatcher.onTask(task('turns.read', 'T1'));
+    t.advance(60_000 + 30_001);
+    await t.dispatcher.tick();
+    expect(t.resultOf('T1')?.error?.code).toBe('timeout');
+
+    expect(t.page.starts()).toHaveLength(2);
+    const restore = t.page.starts()[1].message.task as { taskId: string };
+    expect(restore).toMatchObject({
+      op: 'conversation.ready',
+      params: { ensureMode: 'work', restore: true },
+    });
+    expect(restore.taskId).not.toBe('T1');
+    expect(t.page.tabs.has(tabId)).toBe(true);
+
+    // Its report frees the page and tells the server nothing: the job it belonged to is over.
+    await t.dispatcher.onDone(contentSender(tabId), {
+      taskId: restore.taskId,
+      docNonce: 'doc-1',
+      outcome: { ok: true, data: { ...READY, mode: 'work' } },
+    });
+    expect(t.server.results()).toHaveLength(1);
+    expect(await t.lease.current()).toBeNull();
+  });
+
+  it('switches a tab back to its mode once the page confirms an aborted op stopped', async () => {
+    const t = setup();
+    const tabId = await t.bridgeTab();
+    await t.store.updateTab(tabId, { restoreMode: 'work' });
+    await t.dispatcher.onTask(task('composer.send', 'T1'));
+    t.page.state.onMessage = (_tabId, message) =>
+      message.type === 'gv.bridge.op.cancel' ? { stopped: true } : { accepted: true };
+    await t.dispatcher.onAbort('T1', 'timeout');
+    expect(t.resultOf('T1')?.error?.code).toBe('timeout');
+    expect(t.page.starts()[1]?.message.task).toMatchObject({
+      params: { ensureMode: 'work', restore: true },
+    });
+  });
+
+  it('leaves the mode alone after a timeout once the bridge may no longer touch the page', async () => {
+    const t = setup({ probe: async () => 'stopped' });
+    const tabId = await t.bridgeTab();
+    await t.store.updateTab(tabId, { restoreMode: 'work' });
+    await t.dispatcher.onTask(task('turns.read', 'T1'));
+    t.policy.denied = { code: 'policy-denied', message: 'off' };
+    t.advance(60_000 + 30_001);
+    await t.dispatcher.tick();
+    expect(t.resultOf('T1')?.error?.code).toBe('timeout');
+    expect(t.page.starts()).toHaveLength(1);
+  });
+
   it('reports a cancelled op only once its page confirms it stopped', async () => {
     const t = setup();
     await t.bridgeTab();

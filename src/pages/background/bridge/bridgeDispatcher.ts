@@ -338,12 +338,52 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     }
   };
 
+  /**
+   * After the job gave an op up (timeout, abort), switch its tab back to the mode a
+   * bridge op moved it from: a failed job leaves the tab open and never sends the
+   * close that would. Once, untracked, in a background tab too; a refusal is final.
+   */
+  const restoreLeftMode = async (ended: BridgeTaskRecord): Promise<void> => {
+    if (ended.op === 'conversation.close' || (await store.getTask())) return;
+    const tab = await store.getTab();
+    if (!tab?.restoreMode || tab.jobId !== ended.jobId) return;
+    const holder = holderOf(tab);
+    if (!holder || !(await tabs.exists(tab.tabId))) return;
+    if (await deps.policy.checkOp('conversation.ready')) return;
+    const taskId = `${ended.taskId}.restore-mode`;
+    const got = await leaseFor(taskId, 'conversation.ready', holder);
+    if ('refused' in got) return;
+    const { leaseId, deadline } = got.lease;
+    const readyTask: BridgeTask = {
+      taskId,
+      jobId: ended.jobId,
+      op: 'conversation.ready',
+      opVersion: 1,
+      params: { ensureMode: tab.restoreMode, restore: true },
+      deadlineMs: Math.max(0, deadline - now()),
+      issuedAt: now(),
+    };
+    let reply: unknown;
+    try {
+      reply = await tabs.send(holder, {
+        type: 'gv.bridge.op.start',
+        task: readyTask,
+        grant: { leaseId, deadline, docNonce: holder.docNonce },
+      });
+    } catch {
+      // No receiver: nothing runs, so the lease goes below.
+    }
+    // Its report finds no task and only frees this lease (see `onDone`).
+    if (!parseAck(reply).accepted) await lease.release(leaseId);
+  };
+
   const cancel = async (taskId: string, code: ErrorCode): Promise<void> => {
     const marked =
       (await store.updateTask(taskId, { cancelling: code }, notCancelling)) ??
       (await store.getTask());
     if (!marked || marked.taskId !== taskId || !marked.cancelling) return;
     await confirmStop(marked, marked.cancelling);
+    await restoreLeftMode(marked);
   };
 
   const scheduleTick = (delayMs: number): void => {
@@ -642,7 +682,10 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     const record = await store.getTask();
     if (!record) return;
     // A stop the page has not confirmed yet: ask again (the server may be away).
-    if (record.cancelling) return confirmStop(record, record.cancelling);
+    if (record.cancelling) {
+      await confirmStop(record, record.cancelling);
+      return restoreLeftMode(record);
+    }
     const t = now();
     // Only the wait for a hello has no page op that could still answer.
     const grace = record.phase === 'awaiting-hello' ? 0 : config.deadlineGraceMs;
@@ -654,7 +697,8 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
       await finish(record.taskId, fail('timeout', `${record.op} did not finish in time.`), {
         releaseLease: false,
       });
-      return;
+      // The CLI may have crashed or timed out too: no close will come to switch the mode back.
+      return restoreLeftMode(record);
     }
     if (record.tabId !== undefined && !(await tabs.exists(record.tabId))) {
       await deps.lease.releaseForTab(record.tabId);
