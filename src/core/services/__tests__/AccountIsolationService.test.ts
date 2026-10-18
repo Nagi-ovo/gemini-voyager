@@ -266,6 +266,54 @@ describe('AccountIsolationService', () => {
     expect(context.email).toBe('sample.user@example.com');
   });
 
+  it('keeps a Gemini route bound to its account when a reply shows another email', async () => {
+    const pageUrl = 'https://gemini.google.com/u/0/app/c1';
+    const service = new AccountIsolationService();
+    const owner = await service.resolveAccountScope({
+      pageUrl,
+      routeUserId: '0',
+      email: 'owner@example.com',
+    });
+    document.body.innerHTML = `
+      <div id="chat-history">
+        <model-response>
+          <message-content>
+            <a href="mailto:support@example.net">Write to support@example.net</a>
+            <button aria-label="Copy support@example.net"></button>
+          </message-content>
+        </model-response>
+      </div>
+      <conversations-list><a aria-label="Mail ops@example.org">Mail ops@example.org</a></conversations-list>
+      <span title="Ask help@example.io">tip</span>
+    `;
+
+    const context = detectAccountContextFromDocument(pageUrl, document);
+    const scope = await service.resolveAccountScope({
+      pageUrl,
+      routeUserId: context.routeUserId,
+      email: context.email,
+    });
+
+    expect(context.email).toBeNull();
+    expect(scope.accountKey).toBe(owner.accountKey);
+    const stored = (await chrome.storage.local.get(StorageKeys.GV_ACCOUNT_PROFILE_MAP))[
+      StorageKeys.GV_ACCOUNT_PROFILE_MAP
+    ] as { routeAliases: Record<string, string> };
+    expect(stored.routeAliases['0']).toBe(owner.accountKey);
+  });
+
+  it('reads the Gemini account from the Google account control, not from the thread', () => {
+    document.body.innerHTML = `
+      <div id="chat-history"><model-response><a href="mailto:support@example.net">mail</a></model-response></div>
+      <header>
+        <a href="https://accounts.google.com/SignOutOptions?hl=en" role="button"
+           aria-label="Google Account: Owner (owner@example.com)"></a>
+      </header>
+    `;
+    const context = detectAccountContextFromDocument('https://gemini.google.com/u/0/app', document);
+    expect(context.email).toBe('owner@example.com');
+  });
+
   it('reads AI Studio account email from account switcher structure', () => {
     document.body.innerHTML = `
       <div class="account-switcher-container">

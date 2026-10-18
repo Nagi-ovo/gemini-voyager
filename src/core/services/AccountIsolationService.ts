@@ -247,6 +247,45 @@ function findEmailBySelectors(
   return null;
 }
 
+/** Gemini's conversation content and chat list: page text that can carry any email. */
+const GEMINI_CONTENT_SELECTOR = [
+  '#chat-history',
+  'infinite-scroller.chat-history',
+  'chat-window-content',
+  '.conversation-container',
+  'user-query',
+  'model-response',
+  'message-content',
+  'response-element',
+  '.markdown',
+  'deep-research-immersive-panel',
+  '[data-message-author-role]',
+  'conversations-list',
+].join(', ');
+
+/**
+ * The Google account button first, then account labels outside the content. Only attributes
+ * are read: never text, `title` or `mailto:` links, which any reply or chat title can carry.
+ */
+const GEMINI_ACCOUNT_CONTROL_SELECTORS = [
+  'a[href*="accounts.google.com"][aria-label*="@"]',
+  '[data-email]',
+  '[aria-label*="@"]',
+];
+
+function findGeminiAccountControlEmail(doc: Document): string | null {
+  for (const selector of GEMINI_ACCOUNT_CONTROL_SELECTORS) {
+    for (const element of Array.from(doc.querySelectorAll(selector)).slice(0, 40)) {
+      if (element.closest(GEMINI_CONTENT_SELECTOR)) continue;
+      const email =
+        normalizeEmailAddress(element.getAttribute('data-email')) ??
+        extractEmailFromText(element.getAttribute('aria-label'));
+      if (email) return email;
+    }
+  }
+  return null;
+}
+
 export function detectAccountContextFromDocument(pageUrl: string, doc: Document): AccountContext {
   const routeUserId = extractRouteUserIdFromUrl(pageUrl);
   const hostname = parseHostname(pageUrl);
@@ -264,15 +303,9 @@ export function detectAccountContextFromDocument(pageUrl: string, doc: Document)
   }
 
   if (isGeminiHost(hostname)) {
-    const geminiEmail = findEmailBySelectors(doc, [
-      '[aria-label*="@"]',
-      '[data-email]',
-      '[title*="@"]',
-      'a[href^="mailto:"]',
-    ]);
-    if (geminiEmail) {
-      return { routeUserId, email: geminiEmail };
-    }
+    // Only account controls count: an email in a reply, a chat title or a mailto link would
+    // otherwise rebind this `/u/N` route to a stranger's bucket. No control, no email.
+    return { routeUserId, email: findGeminiAccountControlEmail(doc) };
   }
 
   const fallbackEmail = findEmailBySelectors(doc, [
