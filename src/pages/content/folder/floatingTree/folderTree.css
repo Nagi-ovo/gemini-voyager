@@ -18,14 +18,16 @@
 }
 
 /* One 1px line per enclosing folder, under that folder's caret: the same
- * 14px + depth * step (12px unless a site sets --gv-tree-step), as the rows indent. */
+ * 14px + depth * step (12px unless a site sets --gv-tree-step), as the rows indent.
+ * The box ends 1px past the last line: a whole number of tiles let the next
+ * tile's line show at fractional device pixel ratios, through the row's icon. */
 .gv-floating-folder-panel__tree-row[data-guides]::before {
   content: '';
   position: absolute;
   top: 0;
   bottom: 0;
   left: 14px;
-  width: calc(var(--gv-tree-guides, 0) * var(--gv-tree-step, 12px));
+  width: calc((var(--gv-tree-guides, 1) - 1) * var(--gv-tree-step, 12px) + 1px);
   background-image: repeating-linear-gradient(
     to right,
     rgba(255, 255, 255, 0.09) 0 1px,

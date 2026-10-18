@@ -103,10 +103,11 @@ export const SIDEBAR_TREE_CSS = `
 }
 
 /* The old list's nesting guide: one border-coloured line 12px into each enclosing folder.
-   Specific enough to beat the tree sheet's guides, which the tree adds after this one. */
+   Specific enough to beat the tree sheet's guides, which the tree adds after this one.
+   It ends 1px past the last line, or at a 1.25 pixel ratio the next one shows through the icons. */
 :host([data-gv-scheme]) .${FLOATING_PANEL_CLASS}__tree .${FLOATING_PANEL_CLASS}__tree-row[data-guides]::before {
   left: 12px;
-  width: calc(var(--gv-tree-guides, 0) * var(--gv-sidebar-tree-nest));
+  width: calc((var(--gv-tree-guides, 1) - 1) * var(--gv-sidebar-tree-nest) + 1px);
   background-image: repeating-linear-gradient(
     to right,
     var(--gv-sidebar-tree-border) 0 1px,
