@@ -10,10 +10,12 @@
  * - Effort: one ArrowLeft/ArrowRight keydown on the focused slider at a time,
  *   waiting for `aria-valuenow` to change before the next. Keys sent in a
  *   burst once hung the page for 45 s. At most `max + 1` presses.
- * - Verify: the target model's radio is checked, `aria-valuenow` is the
- *   target step, and the status names one of that step's labels. A target the
- *   page does not offer is `effort-unavailable`; nothing settles for a nearby
- *   step.
+ * - Verify: the target model's radio is checked, the slider has as many steps
+ *   as the site data, `aria-valuenow` is the target step, and the status does
+ *   not name another step. Step names come from ChatGPT's servers, not the UI
+ *   language (measured: a zh-CN page showing "Extra High"), so an unknown name
+ *   or an unreadable status is fine. A target the page does not offer is
+ *   `effort-unavailable`; nothing settles for a nearby step.
  * - Switching the model itself was not measured (the radios sit in a
  *   collapsed sub-panel), so another model selected is `model-not-found`.
  * - Close: Escape on the menu, confirmed by the trigger.
@@ -46,8 +48,6 @@ export interface ResolvedTarget {
   readonly modelId: string;
   /** Null: select the model only, whatever its effort. */
   readonly effortIndex: number | null;
-  /** Restoring a captured index: the step is known, only its name may be one the data lacks. */
-  readonly byIndex: boolean;
 }
 
 /** Expand a target through the site data; fails before any page event. */
@@ -86,12 +86,12 @@ export function resolveTarget(
         efforts: model.efforts?.map((step) => step.id) ?? [],
       });
     }
-    return { modelId, effortIndex: index, byIndex: false };
+    return { modelId, effortIndex: index };
   }
   if (effortIndex !== undefined && !model.efforts) {
     ctx.fail('effort-unavailable', `The site data has no effort steps for ${modelId}.`);
   }
-  return { modelId, effortIndex: effortIndex ?? null, byIndex: effortIndex !== undefined };
+  return { modelId, effortIndex: effortIndex ?? null };
 }
 
 /** What is left of the grant for page work, never more than `cap`. */
@@ -279,10 +279,10 @@ export async function selectModel(
     const otherLabels = new Set(
       efforts.flatMap((step, index) => (index === goal ? [] : [...mergedLabels(step.labels)])),
     );
-    // The zh-CN page names some steps in English (measured: "High" for 高), so a restore
-    // only refuses a name that belongs to another step; a chosen preset must be named.
+    // A zh-CN page may name its steps in English ("Extra High" for 极高), and other languages
+    // are not in the data at all: the position decides, a name only vetoes as another step's.
     const named = (label: string | null): boolean =>
-      label !== null && (labels.has(label) || (target.byIndex && !otherLabels.has(label)));
+      label === null || labels.has(label) || !otherLabels.has(label);
     const confirmed = await ctx.waitFor(
       () => {
         const reading = read();

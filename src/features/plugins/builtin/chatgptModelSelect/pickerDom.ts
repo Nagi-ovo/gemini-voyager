@@ -1,9 +1,11 @@
 /**
  * Read-only views of ChatGPT's chat-mode model picker, measured on chatgpt.com
- * (zh-CN) on 2026-10-18. Structure comes from ARIA; every localized string
- * comes from the site data (`modelPicker`):
- * - the trigger is a `button[aria-haspopup=menu]` in the composer form whose
- *   `aria-label` is a `triggerLabels` entry;
+ * (zh-CN) on 2026-10-18. Structure comes from ARIA and ChatGPT's own data
+ * attributes; localized strings come from the site data (`modelPicker`) and
+ * are never the only evidence:
+ * - the trigger is a `button[aria-haspopup=menu]` in the composer form marked
+ *   `data-composer-navigation-target="reasoning"`, else one whose `aria-label`
+ *   is a `triggerLabels` entry;
  * - its menu is found only through the trigger's `aria-controls`: Voyager's
  *   own export menu is another `role=menu` on the same page;
  * - inside it, `role=menuitemradio` radios (in a collapsed, `aria-hidden`
@@ -47,8 +49,14 @@ export function mergedLabels(table: Readonly<Record<string, readonly string[]>>)
   return new Set(Object.values(table).flatMap((labels) => labels.map(normalizeLabel)));
 }
 
+/** ChatGPT's marker on the picker trigger, the same in every UI language. */
+const TRIGGER_MARKER = 'button[aria-haspopup="menu"][data-composer-navigation-target="reasoning"]';
+
 /** The one rendered picker trigger in `scope`, else null (none, or ambiguous). */
 export function findTrigger(scope: ParentNode, data: ModelPickerSection): HTMLElement | null {
+  // The aria-label is translated into each of ChatGPT's UI languages; the marker is not.
+  const marked = Array.from(scope.querySelectorAll<HTMLElement>(TRIGGER_MARKER)).filter(isRendered);
+  if (marked.length > 0) return marked.length === 1 ? marked[0] : null;
   const labels = mergedLabels(data.triggerLabels);
   const found = Array.from(
     scope.querySelectorAll<HTMLElement>('button[aria-haspopup="menu"][aria-label]'),

@@ -107,6 +107,48 @@ describe('Local Bridge model.select: reaching an effort', () => {
   });
 });
 
+describe('Local Bridge model.select: UI languages the site data does not name', () => {
+  const german = {
+    triggerLabel: 'ChatGPT-Modell auswählen',
+    stepLabels: ['Instant', 'Mittel', 'Hoch', 'Sehr hoch', 'Pro'],
+    status: (label: string, position: number, count: number) =>
+      `${label}, ${position} von ${count}.`,
+  };
+
+  it('reaches Pro on a German page by the trigger marker and the slider position', async () => {
+    mount({ ...german, effort: 1 });
+    await select({ target: { preset: 'pro' } });
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { changed: true, observed: { modelId: 'gpt-6', effortIndex: 4 } },
+    });
+    expect(picker.state().open).toBe(false);
+  });
+
+  it('takes extra-high by position although the page names it Sehr hoch', async () => {
+    mount({ ...german, effort: 4 });
+    await select({ target: { preset: 'extra-high' } });
+
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { observed: { effortIndex: 3 } } });
+  });
+
+  it('still finds a trigger without the marker by its label', async () => {
+    mount({ marked: false, effort: 1 });
+    await select({ target: { preset: 'pro' } });
+
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { observed: { effortIndex: 4 } } });
+  });
+
+  it('finds no trigger when it carries neither the marker nor a known label', async () => {
+    mount({ ...german, marked: false });
+    await select({ target: { preset: 'pro' } });
+
+    expect(errorCode(bridge.outcome())).toBe('selector-missing');
+    expect(picker.state().pointerdowns).toBe(0);
+  });
+});
+
 describe('Local Bridge model.select: a remounted composer', () => {
   it('opens the menu with the model button mounted anew after the route was rewritten', async () => {
     // The old button takes the press but is replaced before it opens anything, as when
@@ -170,12 +212,12 @@ describe('Local Bridge model.select: refusals', () => {
     expect(picker.state()).toMatchObject({ effort: 3, keydowns: 0, open: false });
   });
 
-  it('does not settle for a top step the status names other than Pro', async () => {
-    mount({ effort: 3, stepLabels: ['即时', '中', '高', '极高', 'Max'] });
+  it('does not settle for Pro when the status names that step as another one', async () => {
+    mount({ effort: 3, stepLabels: ['即时', '中', '高', '极高', '极高'] });
     await select({ target: { preset: 'pro' } });
 
     expect(errorCode(bridge.outcome())).toBe('effort-unavailable');
-    expect(details()).toMatchObject({ available: ['极高', 'Max'] });
+    expect(details()).toMatchObject({ available: ['极高'] });
     expect(picker.state().open).toBe(false);
   });
 

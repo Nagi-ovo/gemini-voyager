@@ -25,27 +25,32 @@
   "modelPicker": {
     "format": 1,
     "triggerLabels": {
-      "zh-CN": ["选择 ChatGPT 模型"]
+      "zh-CN": ["选择 ChatGPT 模型"],
+      "en": ["Select ChatGPT model"]
     },
     "effortStatus": {
-      "zh-CN": "{label}，第 {position} 项，共 {count} 项。"
+      "zh-CN": "{label}，第 {position} 项，共 {count} 项。",
+      "en": "{label}, {position} of {count}."
     },
     "models": {
       "gpt-6": {
         "labels": {
-          "zh-CN": ["GPT-6"]
+          "zh-CN": ["GPT-6"],
+          "en": ["GPT-6"]
         },
         "efforts": [
           {
             "id": "instant",
             "labels": {
-              "zh-CN": ["即时"]
+              "zh-CN": ["即时"],
+              "en": ["Instant"]
             }
           },
           {
             "id": "medium",
             "labels": {
-              "zh-CN": ["中"]
+              "zh-CN": ["中"],
+              "en": ["Medium"]
             }
           },
           {

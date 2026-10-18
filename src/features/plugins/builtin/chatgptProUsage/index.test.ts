@@ -152,6 +152,15 @@ describe('ChatGPT Pro usage', () => {
     expect(badgeText()).toBe('Pro messages used this week: 0');
   });
 
+  it('shows the ring beside a picker labelled in a UI language the site data does not name', async () => {
+    const trigger = mountComposer('Pro');
+    trigger.setAttribute('aria-label', 'ChatGPT-Modell auswählen');
+    trigger.setAttribute('data-composer-navigation-target', 'reasoning');
+    await start();
+
+    expect(ring()?.nextElementSibling).toBe(trigger);
+  });
+
   it('keeps the ring on the picker row when ChatGPT wraps the picker in a block', async () => {
     const trigger = mountComposer('Pro');
     const row = document.createElement('div');

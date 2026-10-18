@@ -27,6 +27,12 @@ export interface PickerOptions {
   readonly stuck?: boolean;
   /** The trigger ignores pointer events. */
   readonly opens?: boolean;
+  /** The trigger's `aria-label`; ChatGPT translates it into each UI language. */
+  readonly triggerLabel?: string;
+  /** ChatGPT's `data-composer-navigation-target` marker on the trigger. */
+  readonly marked?: boolean;
+  /** The status line for a step, as another UI language words it. */
+  readonly status?: (label: string, position: number, count: number) => string;
 }
 
 export interface PickerState {
@@ -47,8 +53,8 @@ export interface LiveModelPicker {
 const TRIGGER_ID = 'radix-_r_a1_';
 const MENU_ID = 'radix-_r_a2_';
 
-function statusText(labels: readonly string[], index: number): string {
-  return `${labels[index]}，第 ${index + 1} 项，共 ${labels.length} 项。`;
+function zhStatus(label: string, position: number, count: number): string {
+  return `${label}，第 ${position} 项，共 ${count} 项。`;
 }
 
 /** Mount the picker into `form` (the composer's), plus Voyager's own menu as a decoy. */
@@ -57,6 +63,8 @@ export function mountLiveModelPicker(
   options: PickerOptions = {},
 ): LiveModelPicker {
   const labels = options.stepLabels ?? DEFAULT_STEP_LABELS;
+  const statusText = (names: readonly string[], index: number): string =>
+    (options.status ?? zhStatus)(names[index], index + 1, names.length);
   const model = options.model ?? 'GPT-6';
   let effort = options.effort ?? labels.length - 1;
   let pointerdowns = 0;
@@ -75,7 +83,10 @@ export function mountLiveModelPicker(
   const trigger = document.createElement('button');
   trigger.type = 'button';
   trigger.id = TRIGGER_ID;
-  trigger.setAttribute('aria-label', '选择 ChatGPT 模型');
+  trigger.setAttribute('aria-label', options.triggerLabel ?? '选择 ChatGPT 模型');
+  if (options.marked !== false) {
+    trigger.setAttribute('data-composer-navigation-target', 'reasoning');
+  }
   trigger.setAttribute('aria-haspopup', 'menu');
   trigger.setAttribute('aria-expanded', 'false');
   trigger.setAttribute('data-state', 'closed');
