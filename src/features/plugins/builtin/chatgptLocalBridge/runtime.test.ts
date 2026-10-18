@@ -210,6 +210,20 @@ describe('Local Bridge composer.send', () => {
     expect(page.events().clicks).toBe(1);
   });
 
+  it('sends from a work-mode composer whose project and files buttons draw inline icons', async () => {
+    // Measured live: these buttons linger for a moment after the switch to chat mode.
+    for (const label of ['选择项目', '文件']) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.setAttribute('aria-label', label);
+      button.innerHTML = `<svg viewBox="0 0 10 10"><path d=""></path></svg>${label}`;
+      page.form.append(button);
+    }
+    bridge.start('composer.send', { text: '只回复 OK' });
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { conversationId: 'conv-123' } });
+  });
+
   it('takes the newest prompt in an existing chat, not an identical older one', async () => {
     page = mountChatGptPage({
       route: '/c/conv-9',

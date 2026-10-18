@@ -369,6 +369,26 @@ describe('ChatGPT response completion notification', () => {
     expect(notifyCalls()).toHaveLength(0);
   });
 
+  it('still notifies when the user opens the work-mode project picker during a reply', async () => {
+    const page = mountPage();
+    stopRun = createChatGptResponseNotificationRun();
+    await settle(1500);
+
+    const project = rendered(document.createElement('button'));
+    project.type = 'button';
+    project.innerHTML = '<svg><path d=""></path></svg>选择项目';
+    page.form.append(project);
+    const turn = sendPrompt(page, 'reply with just OK');
+    const stop = showStop(page.form);
+    await settle(1000);
+    project.click();
+    landReply(turn, 'OK');
+    stop.remove();
+    await settle();
+
+    expect(notifyCalls()).toHaveLength(1);
+  });
+
   it('a prompt sent right after stop is not silenced', async () => {
     const page = mountPage();
     stopRun = createChatGptResponseNotificationRun();

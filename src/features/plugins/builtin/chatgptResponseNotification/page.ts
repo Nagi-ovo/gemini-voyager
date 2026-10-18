@@ -152,8 +152,12 @@ export function createChatGptPage(adapter: SiteAdapter | null): ChatGptPage {
       const button = target.closest('button');
       if (!button || !closest(button, selectors.composerRoot)) return false;
       if (hasStopLabel(button)) return true;
+      // Work mode's 选择项目 / 文件 buttons also draw inline svgs, but carry visible text.
       return (
-        button.type === 'button' && !!button.querySelector('svg') && !button.querySelector('use')
+        button.type === 'button' &&
+        !!button.querySelector('svg') &&
+        !button.querySelector('use') &&
+        normalizeText(button.textContent) === ''
       );
     },
 
