@@ -103,7 +103,7 @@ describe('Local Bridge runtime: op.start', () => {
   });
 
   it('answers a page-side op it does not run with unsupported-op', async () => {
-    bridge.start('model.select', { target: { preset: 'pro' } });
+    bridge.start('model.inspect', {});
     await vi.advanceTimersByTimeAsync(0);
     expect(errorCode(bridge.outcome())).toBe('unsupported-op');
     noPageEvents();

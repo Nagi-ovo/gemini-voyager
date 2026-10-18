@@ -193,10 +193,21 @@ describe('bridge dispatcher', () => {
     expect(t.resultOf('T1')).toMatchObject({ ok: false, error: { code: 'tab-hidden' } });
   });
 
-  it('refuses an op this build cannot run, without acknowledging it', async () => {
+  it('starts model.select in the page under its 25 s lease', async () => {
     const t = setup();
     await t.bridgeTab();
     await t.dispatcher.onTask(task('model.select', 'T1'));
+    const [start] = t.page.starts();
+    expect(start.message.task).toMatchObject({ op: 'model.select' });
+    const grant = start.message.grant as { leaseId?: string; deadline: number };
+    expect(grant.leaseId).toEqual(expect.any(String));
+    expect(grant.deadline).toBe(t.now() + 25_000);
+  });
+
+  it('refuses an op this build cannot run, without acknowledging it', async () => {
+    const t = setup();
+    await t.bridgeTab();
+    await t.dispatcher.onTask(task('model.inspect', 'T1'));
     expect(t.server.calls).toEqual([
       expect.objectContaining({ kind: 'result', body: expect.objectContaining({ ok: false }) }),
     ]);
@@ -362,16 +373,17 @@ describe('bridge dispatcher', () => {
     expect(start.message.task).toMatchObject({ taskId: 'T1', op: 'conversation.ready' });
   });
 
-  it('switches a tab it moved out of work mode back before closing it', async () => {
+  it('switches a tab it moved out of work mode back before closing it, when asked to', async () => {
     const t = setup();
-    await t.dispatcher.onTask(task('conversation.open', 'T1'));
+    const dispatcher = t.make(t.policy.checkOp, { restoreSwitchedMode: true });
+    await dispatcher.onTask(task('conversation.open', 'T1'));
     const tabId = (await t.store.getTab())!.tabId;
-    await t.dispatcher.onHello(contentSender(tabId), 'doc-9');
+    await dispatcher.onHello(contentSender(tabId), 'doc-9');
     const open = t.page.starts()[0].message;
     expect(open.task).toMatchObject({ params: { ensureMode: 'chat' } });
     expect(open.grant).toMatchObject({ leaseId: expect.any(String) });
     const switched = { ...READY, switchedMode: { from: 'work', to: 'chat' } };
-    await t.dispatcher.onDone(contentSender(tabId), {
+    await dispatcher.onDone(contentSender(tabId), {
       taskId: 'T1',
       docNonce: 'doc-9',
       outcome: { ok: true, data: switched },
@@ -379,7 +391,7 @@ describe('bridge dispatcher', () => {
     expect(t.resultOf('T1')).toMatchObject({ ok: true, data: { ready: switched } });
 
     const close = { ...task('conversation.close', 'T2'), params: { tabId } } as ValidatedBridgeTask;
-    await t.dispatcher.onTask(close);
+    await dispatcher.onTask(close);
     const restore = t.page.starts()[1].message;
     expect(restore.task).toMatchObject({
       taskId: 'T2',
@@ -388,7 +400,7 @@ describe('bridge dispatcher', () => {
     expect(restore.grant).toMatchObject({ leaseId: expect.any(String) });
     expect(t.page.tabs.has(tabId)).toBe(true);
 
-    await t.dispatcher.onDone(contentSender(tabId), {
+    await dispatcher.onDone(contentSender(tabId), {
       taskId: 'T2',
       docNonce: 'doc-9',
       outcome: { ok: true, data: { ...READY, mode: 'work' } },
@@ -396,6 +408,24 @@ describe('bridge dispatcher', () => {
     expect(t.resultOf('T2')).toEqual({ ok: true, data: { closed: true, restoredMode: true } });
     expect(t.page.tabs.has(tabId)).toBe(false);
     expect(await t.lease.current()).toBeNull();
+  });
+
+  it('leaves the account in chat when it closes a tab it moved out of work mode', async () => {
+    const t = setup();
+    await t.dispatcher.onTask(task('conversation.open', 'T1'));
+    const tabId = (await t.store.getTab())!.tabId;
+    await t.dispatcher.onHello(contentSender(tabId), 'doc-9');
+    await t.dispatcher.onDone(contentSender(tabId), {
+      taskId: 'T1',
+      docNonce: 'doc-9',
+      outcome: { ok: true, data: { ...READY, switchedMode: { from: 'work', to: 'chat' } } },
+    });
+
+    const close = { ...task('conversation.close', 'T2'), params: { tabId } } as ValidatedBridgeTask;
+    await t.dispatcher.onTask(close);
+    expect(t.page.starts()).toHaveLength(1);
+    expect(t.resultOf('T2')).toEqual({ ok: true, data: { closed: true } });
+    expect(t.page.tabs.has(tabId)).toBe(false);
   });
 
   it('still switches the mode back before closing after the bridge remounted and said hello again', async () => {

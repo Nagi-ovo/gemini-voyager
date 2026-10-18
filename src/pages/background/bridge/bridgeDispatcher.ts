@@ -52,11 +52,12 @@ import {
   leaseDurationFor,
 } from './pageLease';
 
-/** Ops this build can run: the service worker's own plus what the Phase B content runtime implements. */
+/** Ops this build can run: the service worker's own plus what the content runtime implements. */
 export const SUPPORTED_BRIDGE_OPS: ReadonlySet<OpName> = new Set<OpName>([
   'conversation.open',
   'conversation.close',
   'conversation.ready',
+  'model.select',
   'composer.attach',
   'composer.send',
   'turns.waitReply',
@@ -82,6 +83,11 @@ export interface DispatcherConfig {
   readonly cancelReplyTimeoutMs: number;
   /** How often a close checks whether a timeout's mode switch-back has finished. */
   readonly leftRestorePollMs: number;
+  /**
+   * Switch a tab the bridge moved to chat back to the mode it came from. Off: the
+   * person uses chat and asked that the bridge never switch their account to Work.
+   */
+  readonly restoreSwitchedMode: boolean;
   readonly supportedOps: ReadonlySet<OpName>;
 }
 
@@ -93,6 +99,7 @@ export const DEFAULT_DISPATCHER_CONFIG: DispatcherConfig = {
   closeMarginMs: 2_000,
   cancelReplyTimeoutMs: LEASE_PROBE_TIMEOUT_MS,
   leftRestorePollMs: 250,
+  restoreSwitchedMode: false,
   supportedOps: SUPPORTED_BRIDGE_OPS,
 };
 
@@ -674,7 +681,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   const noteMode = async (tabId: number, ready: ConversationReadyResult): Promise<void> => {
     const tab = await store.getTab();
     if (!tab || tab.tabId !== tabId) return;
-    if (ready.switchedMode && !tab.restoreMode) {
+    if (ready.switchedMode && !tab.restoreMode && config.restoreSwitchedMode) {
       await store.updateTab(tabId, { restoreMode: ready.switchedMode.from });
     } else if (tab.restoreMode && ready.mode === tab.restoreMode) {
       await store.updateTab(tabId, { restoreMode: undefined });

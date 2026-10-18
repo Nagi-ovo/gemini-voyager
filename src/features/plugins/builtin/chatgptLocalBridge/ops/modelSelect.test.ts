@@ -1,0 +1,207 @@
+// @vitest-environment jsdom
+// @vitest-environment-options { "url": "https://chatgpt.com/" }
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { chatgptAdapter } from '@/features/plugins/sites/adapters/chatgpt';
+
+import {
+  type ChatGptPageFixture,
+  type PageOptions,
+  mountChatGptPage,
+} from '../__tests__/chatgptPageFixture';
+import { type Harness, createHarness, errorCode } from '../__tests__/harness';
+import {
+  type LiveModelPicker,
+  type PickerOptions,
+  mountLiveModelPicker,
+} from '../__tests__/liveModelPicker';
+
+vi.mock('@/utils/i18n', () => ({ getCurrentLanguage: vi.fn(async () => 'en') }));
+
+let page: ChatGptPageFixture;
+let picker: LiveModelPicker;
+let bridge: Harness;
+
+function mount(options: PickerOptions = {}, pageOptions: PageOptions = {}): void {
+  page = mountChatGptPage(pageOptions);
+  picker = mountLiveModelPicker(page.form, options);
+  bridge = createHarness();
+}
+
+async function select(params: unknown, ms = 10_000): Promise<void> {
+  bridge.start('model.select', params, { deadline: Date.now() + 25_000 });
+  await vi.advanceTimersByTimeAsync(ms);
+}
+
+function details(): Record<string, unknown> | undefined {
+  const outcome = bridge.outcome();
+  return outcome && !outcome.ok ? outcome.error.details : undefined;
+}
+
+beforeEach(() => {
+  vi.useFakeTimers();
+  Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+});
+
+afterEach(() => {
+  const running = bridge?.runtime.runningTaskId;
+  if (running) bridge.runtime.abort(running);
+  vi.useRealTimers();
+});
+
+describe('Local Bridge model.select: reaching an effort', () => {
+  it('moves GPT-6 from 中 to Pro one step at a time and closes the menu', async () => {
+    mount({ effort: 1 });
+    await select({ target: { preset: 'pro' }, capturePrevious: true });
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: {
+        changed: true,
+        previous: { modelId: 'gpt-6', modelLabel: 'GPT-6', effortIndex: 1, effortMax: 4 },
+        observed: { modelId: 'gpt-6', modelLabel: 'GPT-6', effortIndex: 4, effortMax: 4 },
+      },
+    });
+    expect(picker.state()).toMatchObject({ effort: 4, open: false, keydowns: 3, overlapping: 0 });
+  });
+
+  it('waits for a picker that renders after the composer in a freshly opened tab', async () => {
+    page = mountChatGptPage();
+    bridge = createHarness();
+    bridge.start('model.select', { target: { preset: 'pro' } }, { deadline: Date.now() + 25_000 });
+    await vi.advanceTimersByTimeAsync(1_500);
+    picker = mountLiveModelPicker(page.form, { effort: 2 });
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { observed: { effortIndex: 4 } } });
+  });
+
+  it('finds its menu through the trigger although Voyager has a menu of its own on the page', async () => {
+    mount({ effort: 0 });
+    await select({ target: { preset: 'high' } });
+
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { observed: { effortIndex: 2 } } });
+    expect(picker.state().effort).toBe(2);
+  });
+
+  it('only opens and closes the menu when the page already shows the target', async () => {
+    mount({ effort: 4 });
+    await select({ target: { preset: 'pro' }, capturePrevious: true });
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { changed: false, previous: { effortIndex: 4 }, observed: { effortIndex: 4 } },
+    });
+    expect(picker.state()).toMatchObject({ pointerdowns: 1, keydowns: 0, open: false });
+  });
+
+  it('restores a captured effort index', async () => {
+    mount({ effort: 4 });
+    await select({ target: { mode: 'chat', model: 'gpt-6', effortIndex: 1 } });
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { changed: true, observed: { effortIndex: 1 } },
+    });
+    expect(picker.state()).toMatchObject({ effort: 1, open: false, keydowns: 3 });
+  });
+});
+
+describe('Local Bridge model.select: refusals', () => {
+  it('restores a captured effort although the page names that step in English', async () => {
+    mount({ effort: 4, stepLabels: ['即时', '中', 'Higher', '极高', 'Pro'] });
+    await select({ target: { mode: 'chat', model: 'gpt-6', effortIndex: 2 } });
+
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { observed: { effortIndex: 2 } } });
+  });
+
+  it('takes Extra High, as the page names 极高 in English, for the extra-high preset', async () => {
+    mount({ effort: 4, stepLabels: ['即时', '中', 'High', 'Extra High', 'Pro'] });
+    await select({ target: { preset: 'extra-high' } });
+
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { observed: { effortIndex: 3 } } });
+  });
+
+  it('does not restore onto a step the status names as another one', async () => {
+    mount({ effort: 4, stepLabels: ['即时', '中', '极高', '极高', 'Pro'] });
+    await select({ target: { mode: 'chat', model: 'gpt-6', effortIndex: 2 } });
+
+    expect(errorCode(bridge.outcome())).toBe('effort-unavailable');
+  });
+
+  it('refuses Pro as effort-unavailable when the slider ends below it, without moving it', async () => {
+    mount({ effort: 3, stepLabels: ['即时', '中', '高', '极高'] });
+    await select({ target: { preset: 'pro' } });
+
+    expect(errorCode(bridge.outcome())).toBe('effort-unavailable');
+    expect(details()).toMatchObject({ available: ['极高'] });
+    expect(picker.state()).toMatchObject({ effort: 3, keydowns: 0, open: false });
+  });
+
+  it('does not settle for a top step the status names other than Pro', async () => {
+    mount({ effort: 3, stepLabels: ['即时', '中', '高', '极高', 'Max'] });
+    await select({ target: { preset: 'pro' } });
+
+    expect(errorCode(bridge.outcome())).toBe('effort-unavailable');
+    expect(details()).toMatchObject({ available: ['极高', 'Max'] });
+    expect(picker.state().open).toBe(false);
+  });
+
+  it('stops after one key press when the slider does not move', async () => {
+    mount({ effort: 1, stuck: true });
+    await select({ target: { preset: 'pro' } });
+
+    expect(errorCode(bridge.outcome())).toBe('unverified');
+    expect(picker.state()).toMatchObject({ keydowns: 1, open: false });
+  });
+
+  it('reports model-not-found with the radio labels when another model is selected', async () => {
+    mount({ model: 'GPT-5.6 Sol' });
+    await select({ target: { preset: 'pro' } });
+
+    expect(errorCode(bridge.outcome())).toBe('model-not-found');
+    expect(details()).toMatchObject({
+      available: ['GPT-6', 'GPT-5.6 Sol'],
+      selected: 'GPT-5.6 Sol',
+    });
+    expect(picker.state()).toMatchObject({ keydowns: 0, open: false });
+  });
+
+  it('fails menu-not-found when the trigger does not open its menu', async () => {
+    mount({ opens: false });
+    await select({ target: { preset: 'pro' } });
+
+    expect(errorCode(bridge.outcome())).toBe('menu-not-found');
+    expect(picker.state().keydowns).toBe(0);
+  });
+
+  it.each([
+    ['work', 'mode-unavailable'],
+    ['unknown', 'mode-unknown'],
+  ] as const)('never opens the menu on a page in %s mode', async (mode, code) => {
+    mount({}, mode === 'work' ? { mode: 'work' } : {});
+    if (mode === 'unknown') page.composer.setAttribute('aria-label', 'Ask anything');
+    await select({ target: { preset: 'pro' } });
+
+    expect(errorCode(bridge.outcome())).toBe(code);
+    expect(picker.state().pointerdowns).toBe(0);
+  });
+
+  it('answers unsupported-data without touching the page when the site has no picker data', async () => {
+    mount({ effort: 1 });
+    bridge.runtime.attach({ ...chatgptAdapter, modelPicker: undefined });
+    await select({ target: { preset: 'pro' } });
+
+    expect(errorCode(bridge.outcome())).toBe('unsupported-data');
+    expect(picker.state().pointerdowns).toBe(0);
+  });
+
+  it('refuses a preset the site data does not define before opening the menu', async () => {
+    mount();
+    await select({ target: { preset: 'ultra' } });
+
+    expect(errorCode(bridge.outcome())).toBe('bad-request');
+    expect(details()).toMatchObject({ presets: expect.arrayContaining(['pro', 'instant']) });
+    expect(picker.state().pointerdowns).toBe(0);
+  });
+});

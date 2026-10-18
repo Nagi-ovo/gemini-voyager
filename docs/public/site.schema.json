@@ -115,10 +115,152 @@
     },
     "modelPicker": {
       "type": "object",
-      "description": "Reserved for the Local Bridge `model.select` op. No format is supported yet: a client drops the section (only `model.select` becomes unavailable) and `catalog:build` refuses to publish it.",
-      "required": ["format"],
+      "description": "Data for the Local Bridge `model.select` op. A section that fails validation is dropped (only `model.select` becomes unavailable) and `catalog:build` refuses to publish it.",
+      "required": ["format", "triggerLabels", "effortStatus", "models", "presets"],
+      "additionalProperties": false,
       "properties": {
-        "format": { "type": "integer", "minimum": 1, "description": "Data format version." }
+        "format": {
+          "const": 1,
+          "description": "Data format version; an unknown format drops the section."
+        },
+        "triggerLabels": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+          },
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          "description": "The model picker button's exact `aria-label`, per UI locale."
+        },
+        "effortStatus": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": "The menu's `role=status` text per UI locale, as a template with `{label}` (once) and optionally `{position}` / `{count}` (1-based).",
+          "examples": [
+            {
+              "zh-CN": "{label}，第 {position} 项，共 {count} 项。"
+            }
+          ]
+        },
+        "models": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 16,
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9.-]{0,63}$"
+          },
+          "description": "Models by id: their radio labels and, where measured, their effort steps.",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["labels"],
+            "additionalProperties": false,
+            "properties": {
+              "labels": {
+                "type": "object",
+                "minProperties": 1,
+                "propertyNames": {
+                  "type": "string",
+                  "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+                },
+                "additionalProperties": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 16,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "description": "The model radio's exact text, per UI locale."
+              },
+              "efforts": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 16,
+                "description": "Effort steps in slider order: the step at index i is `aria-valuenow` i.",
+                "items": {
+                  "type": "object",
+                  "required": ["id", "labels"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9][a-z0-9.-]{0,63}$"
+                    },
+                    "labels": {
+                      "type": "object",
+                      "minProperties": 1,
+                      "propertyNames": {
+                        "type": "string",
+                        "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+                      },
+                      "additionalProperties": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 16,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        }
+                      },
+                      "description": "The step's name as the status text shows it, per UI locale."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "presets": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 16,
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9.-]{0,63}$"
+          },
+          "description": "CLI presets (`voyager ask --model <name>`): a model of `models` and, optionally, one of its efforts.",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["mode", "model"],
+            "additionalProperties": false,
+            "properties": {
+              "mode": {
+                "const": "chat"
+              },
+              "model": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9.-]{0,63}$"
+              },
+              "effort": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9.-]{0,63}$"
+              }
+            }
+          }
+        }
       }
     },
     "bridge": {

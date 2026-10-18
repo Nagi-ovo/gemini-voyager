@@ -1,0 +1,305 @@
+/**
+ * The `model.select` engine (spec §3.4, measured on chatgpt.com 2026-10-18):
+ * open the picker, read what is selected, step the effort slider to the
+ * target, verify, close. Every page event goes through the op context's
+ * doors, and only after the menu is confirmed open.
+ *
+ * - Open: pointerdown + pointerup on the trigger (a bare `click()` does not
+ *   always open it), then the trigger must say `aria-expanded=true` and its
+ *   `aria-controls` must name a `role=menu`.
+ * - Effort: one ArrowLeft/ArrowRight keydown on the focused slider at a time,
+ *   waiting for `aria-valuenow` to change before the next. Keys sent in a
+ *   burst once hung the page for 45 s. At most `max + 1` presses.
+ * - Verify: the target model's radio is checked, `aria-valuenow` is the
+ *   target step, and the status names one of that step's labels. A target the
+ *   page does not offer is `effort-unavailable`; nothing settles for a nearby
+ *   step.
+ * - Switching the model itself was not measured (the radios sit in a
+ *   collapsed sub-panel), so another model selected is `model-not-found`.
+ * - Close: Escape on the menu, confirmed by the trigger.
+ */
+import type { ModelSelectResult, ModelSelection, ModelTarget } from '@/features/bridge/protocol';
+import {
+  GRANT_MARGIN_MS,
+  type OpContext,
+} from '@/features/plugins/builtin/chatgptLocalBridge/opContext';
+import type { ModelPickerSection } from '@/features/plugins/sites/sections/modelPickerData';
+
+import {
+  type PickerReading,
+  findOpenMenu,
+  findTrigger,
+  mergedLabels,
+  readPicker,
+  triggerText,
+} from './pickerDom';
+
+const OPEN_TIMEOUT_MS = 3_000;
+/** A step lands about 500 ms after its key press (measured). */
+const STEP_TIMEOUT_MS = 2_500;
+const TRIGGER_TIMEOUT_MS = 5_000;
+const STATUS_TIMEOUT_MS = 1_500;
+const CLOSE_TIMEOUT_MS = 2_000;
+const POLL_MS = 100;
+
+export interface ResolvedTarget {
+  readonly modelId: string;
+  /** Null: select the model only, whatever its effort. */
+  readonly effortIndex: number | null;
+  /** Restoring a captured index: the step is known, only its name may be one the data lacks. */
+  readonly byIndex: boolean;
+}
+
+/** Expand a target through the site data; fails before any page event. */
+export function resolveTarget(
+  ctx: OpContext,
+  data: ModelPickerSection,
+  target: ModelTarget,
+): ResolvedTarget {
+  let modelId: string;
+  let effort: string | undefined;
+  let effortIndex: number | undefined;
+  if ('preset' in target) {
+    const preset = Object.hasOwn(data.presets, target.preset) ? data.presets[target.preset] : null;
+    if (!preset) {
+      ctx.fail('bad-request', `The site data has no model preset "${target.preset}".`, {
+        presets: Object.keys(data.presets),
+      });
+    }
+    modelId = preset.model;
+    effort = preset.effort;
+  } else {
+    modelId = target.model;
+    if ('effortIndex' in target) effortIndex = target.effortIndex;
+    else effort = target.effort;
+  }
+  const model = Object.hasOwn(data.models, modelId) ? data.models[modelId] : null;
+  if (!model) {
+    ctx.fail('model-not-found', `The site data knows no model "${modelId}".`, {
+      models: Object.keys(data.models),
+    });
+  }
+  if (effort !== undefined) {
+    const index = model.efforts?.findIndex((step) => step.id === effort) ?? -1;
+    if (index < 0) {
+      ctx.fail('effort-unavailable', `The site data has no effort "${effort}" for ${modelId}.`, {
+        efforts: model.efforts?.map((step) => step.id) ?? [],
+      });
+    }
+    return { modelId, effortIndex: index, byIndex: false };
+  }
+  if (effortIndex !== undefined && !model.efforts) {
+    ctx.fail('effort-unavailable', `The site data has no effort steps for ${modelId}.`);
+  }
+  return { modelId, effortIndex: effortIndex ?? null, byIndex: effortIndex !== undefined };
+}
+
+/** What is left of the grant for page work, never more than `cap`. */
+function budget(ctx: OpContext, cap: number): number {
+  return Math.max(0, Math.min(cap, ctx.grant.deadline - GRANT_MARGIN_MS - ctx.now()));
+}
+
+function modelIdOf(data: ModelPickerSection, label: string): string | null {
+  for (const [id, model] of Object.entries(data.models)) {
+    if (mergedLabels(model.labels).has(label)) return id;
+  }
+  return null;
+}
+
+function selectionOf(data: ModelPickerSection, reading: PickerReading): ModelSelection {
+  const checked = reading.radios.filter((radio) => radio.checked);
+  const label = checked.length === 1 ? checked[0].label : '';
+  return {
+    modelId: label ? modelIdOf(data, label) : null,
+    modelLabel: label,
+    effortIndex: reading.slider?.now ?? null,
+    effortMax: reading.slider?.max ?? null,
+  };
+}
+
+function pointer(type: 'pointerdown' | 'pointerup'): PointerEvent {
+  return new PointerEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    composed: true,
+    pointerType: 'mouse',
+    isPrimary: true,
+    button: 0,
+    buttons: type === 'pointerdown' ? 1 : 0,
+  });
+}
+
+function key(name: 'ArrowLeft' | 'ArrowRight' | 'Escape'): KeyboardEvent {
+  return new KeyboardEvent('keydown', { key: name, code: name, bubbles: true, cancelable: true });
+}
+
+export async function selectModel(
+  ctx: OpContext,
+  data: ModelPickerSection,
+  target: ResolvedTarget,
+  scope: ParentNode,
+): Promise<Omit<ModelSelectResult, 'previous'> & { previous: ModelSelection }> {
+  // A fresh tab renders the picker after the composer that made it ready (measured live).
+  const trigger = await ctx.waitFor(() => findTrigger(scope, data), {
+    timeoutMs: budget(ctx, TRIGGER_TIMEOUT_MS),
+    intervalMs: POLL_MS,
+  });
+  if (!trigger) ctx.fail('selector-missing', 'The ChatGPT model picker was not found.');
+
+  let menu = findOpenMenu(trigger);
+  if (!menu) {
+    ctx.dispatch(trigger, pointer('pointerdown'));
+    ctx.dispatch(trigger, pointer('pointerup'));
+    menu = await ctx.waitFor(() => findOpenMenu(trigger), {
+      timeoutMs: budget(ctx, OPEN_TIMEOUT_MS),
+      intervalMs: POLL_MS,
+    });
+    if (!menu) {
+      ctx.fail('menu-not-found', 'The ChatGPT model menu did not open.', {
+        expanded: trigger.getAttribute('aria-expanded'),
+      });
+    }
+  }
+  const openMenu = menu;
+  let changed = false;
+  const seenLabels: string[] = [];
+  const read = (): PickerReading => {
+    const reading = readPicker(openMenu, data);
+    const label = reading.status.label;
+    if (label && !seenLabels.includes(label)) seenLabels.push(label);
+    return reading;
+  };
+
+  const close = async (): Promise<boolean> => {
+    if (!openMenu.isConnected || trigger.getAttribute('aria-expanded') !== 'true') return true;
+    ctx.dispatch(openMenu, key('Escape'));
+    const closed = await ctx.waitFor(
+      () => !openMenu.isConnected || trigger.getAttribute('aria-expanded') !== 'true',
+      { timeoutMs: budget(ctx, CLOSE_TIMEOUT_MS), intervalMs: POLL_MS },
+    );
+    return closed === true;
+  };
+
+  const before = read();
+  const previous = selectionOf(data, before);
+  const failClosed = async (
+    code: Parameters<OpContext['fail']>[0],
+    message: string,
+    details: Readonly<Record<string, unknown>> = {},
+  ): Promise<never> => {
+    await close();
+    return ctx.fail(code, message, {
+      ...details,
+      previous,
+      partial: changed,
+      statusText: readPicker(openMenu, data).status.text,
+    });
+  };
+
+  const checked = before.radios.filter((radio) => radio.checked);
+  const radioLabels = before.radios.map((radio) => radio.label);
+  if (checked.length !== 1) {
+    await failClosed('selector-missing', 'No single model is selected in the ChatGPT menu.', {
+      available: radioLabels,
+    });
+  }
+  if (!mergedLabels(data.models[target.modelId].labels).has(checked[0].label)) {
+    await failClosed(
+      'model-not-found',
+      `ChatGPT has ${checked[0].label} selected; switching models is not supported yet.`,
+      { available: radioLabels, selected: checked[0].label },
+    );
+  }
+
+  let steps = 0;
+  if (target.effortIndex !== null) {
+    const efforts = data.models[target.modelId].efforts ?? [];
+    const goal = target.effortIndex;
+    const slider = before.slider;
+    // The data's steps must be the page's steps, or the labels say nothing about the index.
+    if (!slider || slider.min !== 0 || slider.max !== efforts.length - 1 || goal > slider.max) {
+      await failClosed('effort-unavailable', 'ChatGPT does not offer the requested effort.', {
+        available: seenLabels,
+        valueMax: slider?.max ?? null,
+        expectedMax: efforts.length - 1,
+      });
+    }
+    let now = slider!.now;
+    while (now !== goal) {
+      if (steps > slider!.max) {
+        await failClosed('unverified', 'The effort slider did not reach the requested step.');
+      }
+      const current = readPicker(openMenu, data).slider;
+      if (!current) await failClosed('unverified', 'The effort slider disappeared.');
+      ctx.guard();
+      current!.element.focus();
+      ctx.dispatch(current!.element, key(goal > now ? 'ArrowRight' : 'ArrowLeft'));
+      steps += 1;
+      changed = true;
+      const from = now;
+      const moved = await ctx.waitFor(
+        () => {
+          const value = read().slider?.now;
+          return value !== undefined && value !== from ? { value } : null;
+        },
+        { timeoutMs: budget(ctx, STEP_TIMEOUT_MS), intervalMs: POLL_MS },
+      );
+      if (!moved) {
+        await failClosed('unverified', 'The effort slider did not move after a key press.', {
+          valueNow: from,
+          steps,
+        });
+      }
+      now = moved!.value;
+    }
+
+    const labels = mergedLabels(efforts[goal].labels);
+    const otherLabels = new Set(
+      efforts.flatMap((step, index) => (index === goal ? [] : [...mergedLabels(step.labels)])),
+    );
+    // The zh-CN page names some steps in English (measured: "High" for 高), so a restore
+    // only refuses a name that belongs to another step; a chosen preset must be named.
+    const named = (label: string | null): boolean =>
+      label !== null && (labels.has(label) || (target.byIndex && !otherLabels.has(label)));
+    const confirmed = await ctx.waitFor(
+      () => {
+        const reading = read();
+        const status = reading.status;
+        const ok =
+          reading.slider?.now === goal &&
+          named(status.label) &&
+          (status.position === null || status.position === goal + 1);
+        return ok ? reading : null;
+      },
+      { timeoutMs: budget(ctx, STATUS_TIMEOUT_MS), intervalMs: POLL_MS },
+    );
+    if (!confirmed) {
+      await failClosed('effort-unavailable', 'ChatGPT does not name the requested effort.', {
+        available: seenLabels,
+        valueNow: read().slider?.now ?? null,
+      });
+    }
+  }
+
+  const after = read();
+  const observed = selectionOf(data, after);
+  if (observed.modelId !== target.modelId) {
+    await failClosed('unverified', 'The model selection changed while it was being set.', {
+      observed,
+    });
+  }
+  const evidence = {
+    statusText: after.status.text,
+    seenLabels,
+    steps,
+    triggerText: triggerText(trigger),
+  };
+  if (!(await close())) {
+    ctx.fail('unverified', 'The ChatGPT model menu did not close.', {
+      partial: changed,
+      previous,
+      observed,
+    });
+  }
+  return { changed, previous, observed, evidence };
+}

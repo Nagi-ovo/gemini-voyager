@@ -22,6 +22,26 @@ const VALID = {
   conversationIdPattern: '^/a/chat/s/([^/?#]+)',
 };
 
+const MODEL_PICKER = {
+  format: 1,
+  triggerLabels: { en: ['Choose a model'] },
+  effortStatus: { en: '{label}, item {position} of {count}.' },
+  models: {
+    m1: {
+      labels: { en: ['Model One'] },
+      efforts: [
+        { id: 'low', labels: { en: ['Low'] } },
+        { id: 'high', labels: { en: ['High'] } },
+      ],
+    },
+    m2: { labels: { en: ['Model Two'] } },
+  },
+  presets: {
+    pro: { mode: 'chat', model: 'm1', effort: 'high' },
+    plain: { mode: 'chat', model: 'm2' },
+  },
+};
+
 function issuesOf(raw: unknown): string[] {
   const result = validateSiteAdapterData(raw);
   return result.success ? [] : result.error.map((issue) => issue.path);
@@ -177,10 +197,45 @@ describe('optional site sections', () => {
     expect(read.sectionIssues.map((issue) => issue.path)).toEqual(['bridge.allow[1]']);
   });
 
-  it('drops a modelPicker section no format of which this build reads', () => {
-    const read = readSiteAdapterData({ ...VALID, modelPicker: { format: 1 } });
+  it('drops a modelPicker section in a format this build does not read', () => {
+    const read = readSiteAdapterData({ ...VALID, modelPicker: { ...MODEL_PICKER, format: 2 } });
     expect(read.result.success && read.result.data.modelPicker).toBeUndefined();
-    expect(read.sectionIssues.map((issue) => issue.path)).toEqual(['modelPicker']);
+    expect(read.sectionIssues.map((issue) => issue.path)).toEqual(['modelPicker.format']);
+  });
+
+  it('keeps a format-1 modelPicker section through a publish round trip', () => {
+    const read = readSiteAdapterData({ ...VALID, modelPicker: MODEL_PICKER });
+    expect(read.sectionIssues).toEqual([]);
+    if (!read.result.success) throw new Error('fixture must validate');
+    expect(read.result.data.modelPicker).toEqual(MODEL_PICKER);
+    const again = readSiteAdapterData(
+      JSON.parse(JSON.stringify(siteAdapterToData(read.result.data))),
+    );
+    expect(again.result.success && again.result.data.modelPicker).toEqual(MODEL_PICKER);
+  });
+
+  it.each([
+    [
+      'a preset naming an effort its model lacks',
+      { presets: { pro: { mode: 'chat', model: 'm1', effort: 'max' } } },
+      'modelPicker.presets.pro.effort',
+    ],
+    [
+      'a preset naming an unknown model',
+      { presets: { pro: { mode: 'chat', model: 'm9' } } },
+      'modelPicker.presets.pro.model',
+    ],
+    [
+      'a status template without its label',
+      { effortStatus: { en: 'Item {position}' } },
+      'modelPicker.effortStatus.en',
+    ],
+    ['an unknown key', { menuSelector: '[role=menu]' }, 'modelPicker.menuSelector'],
+  ])('drops a modelPicker section with %s, keeping the adapter', (_label, patch, path) => {
+    const read = readSiteAdapterData({ ...VALID, modelPicker: { ...MODEL_PICKER, ...patch } });
+    expect(read.result.success).toBe(true);
+    expect(read.result.success && read.result.data.modelPicker).toBeUndefined();
+    expect(read.sectionIssues.map((issue) => issue.path)).toContain(path);
   });
 
   it('does not treat a bridge policy change as a different adapter, so plugins stay mounted', () => {

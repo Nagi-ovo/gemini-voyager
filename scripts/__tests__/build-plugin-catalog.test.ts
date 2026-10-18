@@ -381,7 +381,11 @@ describe('build-plugin-catalog', () => {
   it.each([
     ['an unknown policy format', { bridge: { format: 2, allow: [] } }, /bridge\.format/],
     ['a misspelled op', { bridge: { format: 1, allow: ['composer.sned'] } }, /bridge\.allow\[0\]/],
-    ['an unsupported modelPicker section', { modelPicker: { format: 1 } }, /modelPicker/],
+    [
+      'a modelPicker format this build does not read',
+      { modelPicker: { format: 2 } },
+      /modelPicker\.format/,
+    ],
   ])('fails the build on %s, which clients would silently drop', async (_label, site, pattern) => {
     const outDir = makeTempDir();
     const catalogDir = makeFixtureCatalog({ site });

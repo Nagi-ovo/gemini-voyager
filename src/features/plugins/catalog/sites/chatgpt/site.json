@@ -22,6 +22,89 @@
   "capabilities": ["chat", "sidebar", "composer", "darkMode"],
   "conversationIdPattern": "^(?:/u/[^/]+)?(?:/g/[^/]+)?/c/([^/?#]+)",
   "turnKeyAttributes": ["data-turn-key", "data-message-id"],
+  "modelPicker": {
+    "format": 1,
+    "triggerLabels": {
+      "zh-CN": ["选择 ChatGPT 模型"]
+    },
+    "effortStatus": {
+      "zh-CN": "{label}，第 {position} 项，共 {count} 项。"
+    },
+    "models": {
+      "gpt-6": {
+        "labels": {
+          "zh-CN": ["GPT-6"]
+        },
+        "efforts": [
+          {
+            "id": "instant",
+            "labels": {
+              "zh-CN": ["即时"]
+            }
+          },
+          {
+            "id": "medium",
+            "labels": {
+              "zh-CN": ["中"]
+            }
+          },
+          {
+            "id": "high",
+            "labels": {
+              "zh-CN": ["高"],
+              "en": ["High"]
+            }
+          },
+          {
+            "id": "extra-high",
+            "labels": {
+              "zh-CN": ["极高"],
+              "en": ["Extra High"]
+            }
+          },
+          {
+            "id": "pro",
+            "labels": {
+              "zh-CN": ["Pro"],
+              "en": ["Pro"]
+            }
+          }
+        ]
+      },
+      "gpt-5.6-sol": {
+        "labels": {
+          "zh-CN": ["GPT-5.6 Sol"]
+        }
+      }
+    },
+    "presets": {
+      "pro": {
+        "mode": "chat",
+        "model": "gpt-6",
+        "effort": "pro"
+      },
+      "extra-high": {
+        "mode": "chat",
+        "model": "gpt-6",
+        "effort": "extra-high"
+      },
+      "high": {
+        "mode": "chat",
+        "model": "gpt-6",
+        "effort": "high"
+      },
+      "medium": {
+        "mode": "chat",
+        "model": "gpt-6",
+        "effort": "medium"
+      },
+      "instant": {
+        "mode": "chat",
+        "model": "gpt-6",
+        "effort": "instant"
+      }
+    }
+  },
   "bridge": {
     "format": 1,
     "allow": [

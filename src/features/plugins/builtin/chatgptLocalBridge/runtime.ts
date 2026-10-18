@@ -53,6 +53,7 @@ import { type BlobChunkReader, readBlobReply } from './ops/blobBytes';
 import { runComposerAttach } from './ops/composerAttach';
 import { type ComposerActivity, runComposerSend } from './ops/composerSend';
 import { runConversationReady } from './ops/conversationReady';
+import { runModelSelect } from './ops/modelSelect';
 import { runTurnsRead } from './ops/turnsRead';
 import { runTurnsWaitReply } from './ops/turnsWaitReply';
 
@@ -216,6 +217,8 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
     switch (task.op) {
       case 'conversation.ready':
         return runConversationReady(ctx, task.params, snapshot);
+      case 'model.select':
+        return runModelSelect(ctx, task.params, snapshot);
       case 'composer.attach':
         return runComposerAttach(ctx, task.params, snapshot, activity, chunkReader(task.taskId));
       case 'composer.send':
