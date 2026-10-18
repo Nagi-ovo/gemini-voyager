@@ -65,6 +65,8 @@ export interface OpContextOptions {
   readonly grant: BridgeGrant;
   /** Ops that dispatch page events need a lease and a visible tab (spec §3.2, Q2). */
   readonly interactive: boolean;
+  /** An interactive op that may click in a background tab (the mode restore before close). */
+  readonly allowHidden?: boolean;
   readonly env: OpEnvironment;
   readonly onProgress?: (event: Readonly<Record<string, unknown>>) => void;
 }
@@ -136,7 +138,7 @@ export function createOpContext(options: OpContextOptions): OpContext {
         terminate('timeout', 'The page lease expired.', { reason: 'lease-expired' });
         stopped();
       }
-      if (env.isHidden()) {
+      if (env.isHidden() && !options.allowHidden) {
         terminate('tab-hidden', 'The ChatGPT tab must be in the foreground for this step.');
         stopped();
       }

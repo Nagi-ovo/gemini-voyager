@@ -76,6 +76,11 @@ export interface ConversationReadyParams {
    * in the other mode is switched with its own mode control, under a lease.
    */
   readonly ensureMode?: SwitchableMode;
+  /**
+   * The switch back before a bridge tab closes. It may click in a background
+   * tab: a long reply leaves the tab behind the person's own.
+   */
+  readonly restore?: boolean;
 }
 
 export interface ConversationReadyResult {

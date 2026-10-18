@@ -555,7 +555,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
       jobId: task.jobId,
       op: 'conversation.ready',
       opVersion: 1,
-      params: { ensureMode: tab.restoreMode },
+      params: { ensureMode: tab.restoreMode, restore: true },
       deadlineMs: Math.max(0, deadline - now()),
       issuedAt: now(),
     };

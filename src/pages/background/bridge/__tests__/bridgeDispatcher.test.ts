@@ -376,7 +376,10 @@ describe('bridge dispatcher', () => {
     const close = { ...task('conversation.close', 'T2'), params: { tabId } } as ValidatedBridgeTask;
     await t.dispatcher.onTask(close);
     const restore = t.page.starts()[1].message;
-    expect(restore.task).toMatchObject({ taskId: 'T2', params: { ensureMode: 'work' } });
+    expect(restore.task).toMatchObject({
+      taskId: 'T2',
+      params: { ensureMode: 'work', restore: true },
+    });
     expect(restore.grant).toMatchObject({ leaseId: expect.any(String) });
     expect(t.page.tabs.has(tabId)).toBe(true);
 

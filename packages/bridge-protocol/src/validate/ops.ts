@@ -161,7 +161,11 @@ const PARAM_READERS: { readonly [K in OpName]: Reader<OpParamsMap[K]> } = {
   'conversation.ready': (raw, path, issues) => {
     const rec = readObject(raw, path, issues);
     const ensureMode = optionalLiteral(rec, 'ensureMode', path, issues, SWITCHABLE_MODES);
-    const withMode = ensureMode === undefined ? {} : { ensureMode };
+    const restore = optionalBoolean(rec, 'restore', path, issues);
+    const withMode = {
+      ...(ensureMode === undefined ? {} : { ensureMode }),
+      ...(restore === undefined ? {} : { restore }),
+    };
     if (rec.expect === undefined) return withMode;
     const expectPath = at(path, 'expect');
     const expect = readObject(rec.expect, expectPath, issues);

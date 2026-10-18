@@ -100,6 +100,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/** The mode restore before close may click in a background tab (`ConversationReadyParams.restore`). */
+function isRestore(params: unknown): boolean {
+  return isRecord(params) && params.restore === true;
+}
+
 function readGrant(raw: unknown): BridgeGrant | null {
   if (!isRecord(raw)) return null;
   const { docNonce, deadline, leaseId } = raw;
@@ -240,6 +245,7 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
       op: task.op,
       grant,
       interactive,
+      allowHidden: task.op === 'conversation.ready' && isRestore(task.params),
       env,
       onProgress: (progress) =>
         void deliver(

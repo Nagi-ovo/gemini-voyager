@@ -149,6 +149,16 @@ describe('Local Bridge conversation.ready: mode', () => {
     expect(page.events().clicks).toBe(0);
     expect(page.mode()).toBe('work');
   });
+
+  it('restores the mode before close in a tab a long reply left in the background', async () => {
+    mount({ mode: 'chat' });
+    setVisibility('hidden');
+    bridge.start('conversation.ready', { ensureMode: 'work', restore: true });
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { mode: 'work' } });
+    expect(page.mode()).toBe('work');
+  });
 });
 
 describe('Local Bridge conversation.ready: deadline', () => {
