@@ -80,6 +80,8 @@ export interface DispatcherConfig {
   readonly closeMarginMs: number;
   /** How long a page gets to answer `op.cancel` before the stop counts as unconfirmed for now. */
   readonly cancelReplyTimeoutMs: number;
+  /** How often a close checks whether a timeout's mode switch-back has finished. */
+  readonly leftRestorePollMs: number;
   readonly supportedOps: ReadonlySet<OpName>;
 }
 
@@ -90,6 +92,7 @@ export const DEFAULT_DISPATCHER_CONFIG: DispatcherConfig = {
   deadlineGraceMs: 30_000,
   closeMarginMs: 2_000,
   cancelReplyTimeoutMs: LEASE_PROBE_TIMEOUT_MS,
+  leftRestorePollMs: 250,
   supportedOps: SUPPORTED_BRIDGE_OPS,
 };
 
@@ -215,6 +218,8 @@ const runsReady = (op: OpName): boolean =>
 const notCancelling = (record: BridgeTaskRecord): boolean => record.cancelling === undefined;
 
 type LeaseOutcome = { readonly lease: PageLease } | { readonly refused: TaskResultRequest };
+/** Marks the untracked mode switch-back that follows a timeout or abort. */
+const LEFT_RESTORE_SUFFIX = '.restore-mode';
 
 export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   const now = deps.now ?? (() => Date.now());
@@ -340,7 +345,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
 
   /**
    * After the job gave an op up (timeout, abort), switch its tab back to the mode a
-   * bridge op moved it from: a failed job leaves the tab open and never sends the
+   * bridge op moved it from: a failed job leaves the tab open and may never send the
    * close that would. Once, untracked, in a background tab too; a refusal is final.
    */
   const restoreLeftMode = async (ended: BridgeTaskRecord): Promise<void> => {
@@ -350,7 +355,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     const holder = holderOf(tab);
     if (!holder || !(await tabs.exists(tab.tabId))) return;
     if (await deps.policy.checkOp('conversation.ready')) return;
-    const taskId = `${ended.taskId}.restore-mode`;
+    const taskId = `${ended.taskId}${LEFT_RESTORE_SUFFIX}`;
     const got = await leaseFor(taskId, 'conversation.ready', holder);
     if ('refused' in got) return;
     const { leaseId, deadline } = got.lease;
@@ -591,6 +596,25 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   };
 
   /** Switch the tab back to the mode a bridge op switched it from; false when that cannot start. */
+  /**
+   * The CLI closes a failed job's tab, often while a timeout's switch-back still holds the
+   * page: wait for it, since closing the tab meanwhile would cut the switch short.
+   */
+  const leaseAfterLeftRestore = async (
+    taskId: string,
+    holder: ContentHolder,
+    until: number,
+  ): Promise<LeaseOutcome> => {
+    for (;;) {
+      const got = await leaseFor(taskId, 'conversation.ready', holder);
+      if (!('refused' in got)) return got;
+      const held = await lease.current();
+      const switchingBack = held?.taskId.endsWith(LEFT_RESTORE_SUFFIX) === true;
+      if (!switchingBack || now() >= until) return got;
+      await new Promise((resolve) => setTimeout(resolve, config.leftRestorePollMs));
+    }
+  };
+
   const restoreMode = async (
     task: Extract<ValidatedBridgeTask, { op: 'conversation.close' }>,
     tab: BridgeTabRecord,
@@ -601,7 +625,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     if (!(await tabs.exists(tab.tabId))) return false;
     const until = record.deadline - config.closeMarginMs;
     if (until <= now()) return false;
-    const got = await leaseFor(task.taskId, 'conversation.ready', holder);
+    const got = await leaseAfterLeftRestore(task.taskId, holder, until);
     if ('refused' in got) return false;
     const { leaseId } = got.lease;
     const running = await store.updateTask(

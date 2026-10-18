@@ -505,6 +505,34 @@ describe('bridge dispatcher', () => {
     expect(await t.lease.current()).toBeNull();
   });
 
+  it('lets a timeout finish switching the mode back before the close that follows closes the tab', async () => {
+    const t = setup({ probe: async () => 'stopped' });
+    const dispatcher = t.make(t.policy.checkOp, { leftRestorePollMs: 1 });
+    const tabId = await t.bridgeTab('doc-1', false);
+    await t.store.updateTab(tabId, { restoreMode: 'work' });
+    await dispatcher.onTask(task('turns.read', 'T1'));
+    t.advance(60_000 + 30_001);
+    await dispatcher.tick();
+    const switchBack = t.page.starts()[1].message.task as { taskId: string };
+
+    const close = { ...task('conversation.close', 'T2'), params: { tabId } } as ValidatedBridgeTask;
+    const closing = dispatcher.onTask(close);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(t.page.tabs.has(tabId)).toBe(true);
+    expect(t.resultOf('T2')).toBeUndefined();
+
+    await dispatcher.onDone(contentSender(tabId), {
+      taskId: switchBack.taskId,
+      docNonce: 'doc-1',
+      outcome: { ok: true, data: { ...READY, mode: 'work' } },
+    });
+    await closing;
+    expect(t.page.starts()[2]?.message.task).toMatchObject({
+      taskId: 'T2',
+      params: { ensureMode: 'work', restore: true },
+    });
+  });
+
   it('switches a tab back to its mode once the page confirms an aborted op stopped', async () => {
     const t = setup();
     const tabId = await t.bridgeTab();
