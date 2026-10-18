@@ -151,7 +151,10 @@ export async function runConversationReady(
   // `unknown` is reported as is: without positive evidence nothing is clicked.
   if (mode !== target && mode !== 'unknown') {
     const from = mode;
-    const control = findModeSwitch();
+    // The switch renders after the composer on a fresh tab, so one look can miss it.
+    const control = await ctx.waitFor(findModeSwitch, {
+      timeoutMs: budget(ctx, MODE_SWITCH_TIMEOUT_MS),
+    });
     if (!control) {
       ctx.fail(
         'mode-unavailable',

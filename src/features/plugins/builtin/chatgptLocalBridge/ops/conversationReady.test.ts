@@ -48,6 +48,22 @@ describe('Local Bridge conversation.ready: mode', () => {
     expect(page.events().clicks).toBe(1);
   });
 
+  it('finds a mode switch that renders after the composer on a fresh tab', async () => {
+    mount({ mode: 'work' });
+    const header = document.querySelector<HTMLElement>('[data-gv-fixture-header]')!;
+    const toggle = Array.from(header.childNodes);
+    header.replaceChildren();
+    setTimeout(() => header.append(...toggle), 1_500);
+    bridge.start('conversation.ready', {});
+    await vi.advanceTimersByTimeAsync(2_500);
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { mode: 'chat', switchedMode: { from: 'work', to: 'chat' } },
+    });
+    expect(page.events().clicks).toBe(1);
+  });
+
   it('leaves a chat-mode page alone', async () => {
     mount({ mode: 'chat' });
     bridge.start('conversation.ready', {});
@@ -74,7 +90,7 @@ describe('Local Bridge conversation.ready: mode', () => {
   it('fails closed without a click when the switch lacks its measured data-state', async () => {
     mount({ mode: 'work', modeSwitch: 'no-state' });
     bridge.start('conversation.ready', {});
-    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(6_000);
 
     expect(errorCode(bridge.outcome())).toBe('mode-unavailable');
     expect(page.events().clicks).toBe(0);
@@ -83,7 +99,7 @@ describe('Local Bridge conversation.ready: mode', () => {
   it('fails closed without a click when there is no switch at all', async () => {
     mount({ mode: 'work', modeSwitch: 'none' });
     bridge.start('conversation.ready', {});
-    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(6_000);
 
     expect(errorCode(bridge.outcome())).toBe('mode-unavailable');
     expect(page.events().clicks).toBe(0);
