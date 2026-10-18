@@ -180,6 +180,19 @@ describe('Local Bridge turns.read', () => {
     expect(reply.querySelector('h4')).not.toBeNull();
   });
 
+  it('leaves out the file card ChatGPT shows under a reply that cites a file', async () => {
+    page.setReply('turn-1', { text: 'From note.txt.', turnState: 'complete', replyId: 'r-1' });
+    const reply = document.querySelector('[data-chatgpt-selection-message-id="r-1"]')!;
+    const card = document.createElement('div');
+    // Measured live: a span with role=button, not a <button>, so the export does not skip it.
+    card.innerHTML =
+      '<div><span data-file-reference="true" role="button">note.txt</span></div><div>文档</div>';
+    reply.appendChild(card);
+    bridge.start('turns.read', { conversationId: 'conv-1', assistantTurnKey: 'r-1' });
+    const outcome = await readOutcome();
+    expect(outcome?.ok && (outcome.data as { markdown: string }).markdown).toBe('From note.txt.');
+  });
+
   it('refuses a reply that is still being written', async () => {
     page.setReply('turn-1', { text: 'partial', turnState: 'streaming', replyId: 'r-1' });
     bridge.start('turns.read', { conversationId: 'conv-1', assistantTurnKey: 'r-1' });

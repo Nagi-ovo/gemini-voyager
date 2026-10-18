@@ -39,6 +39,15 @@ function findReplyByKey(key: string): { item: HTMLElement; reply: HTMLElement } 
   return null;
 }
 
+// Measured 2026-10-18: the reply's text; file cards and source chips render beside it.
+const MARKDOWN_ROOT_SELECTOR = '[data-markdown-text-style="assistant-message"]';
+
+/** The reply's one Markdown body when it has exactly one, else the whole reply. */
+function replyBody(reply: HTMLElement): HTMLElement {
+  const roots = reply.querySelectorAll<HTMLElement>(MARKDOWN_ROOT_SELECTOR);
+  return roots.length === 1 ? roots[0] : withoutHeading(reply);
+}
+
 /** The reply without its role heading; a copy only when the heading sits inside it. */
 function withoutHeading(reply: HTMLElement): HTMLElement {
   if (!reply.querySelector(ASSISTANT_HEADING_SELECTOR)) return reply;
@@ -66,7 +75,7 @@ export async function runTurnsRead(
   }
 
   const extractor = createContentExtractor(buildChatGptAdapter(siteOf(adapter)));
-  const content = extractAssistantMessage(found.item, withoutHeading(found.reply), extractor);
+  const content = extractAssistantMessage(found.item, replyBody(found.reply), extractor);
   const markdown = content.text.trim().replace(HEADING_LINE, '').trim();
   const messageId = replyIdOf(found.reply);
   return {
