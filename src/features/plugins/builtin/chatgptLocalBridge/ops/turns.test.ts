@@ -106,25 +106,23 @@ describe('Local Bridge turns.waitReply', () => {
     expect(bridge.outcome()?.ok).toBe(true);
   });
 
-  it(
-    'waits through a long thinking phase, reporting progress every 15 s',
-    { timeout: 30_000 },
-    async () => {
-      bridge.start('turns.waitReply', WAIT);
-      // Pro thinks with the composer's stop control showing and no reply text yet.
-      page.showStopControl(true);
-      await vi.advanceTimersByTimeAsync(30 * 60_000);
-      expect(bridge.outcome()).toBeUndefined();
-      const progress = bridge.progress();
-      expect(progress.length).toBeGreaterThanOrEqual((30 * 60_000) / PROGRESS_EVERY_MS - 1);
-      expect(progress[0]).toMatchObject({ phase: 'thinking', textLength: 0 });
+  // Hours of thinking are covered by the clock-jump test below; ticking every poll through
+  // 30 minutes timed out on CI.
+  it('reports thinking progress every 15 s while the stop control shows', async () => {
+    bridge.start('turns.waitReply', WAIT);
+    // Pro thinks with the composer's stop control showing and no reply text yet.
+    page.showStopControl(true);
+    await vi.advanceTimersByTimeAsync(2 * 60_000);
+    expect(bridge.outcome()).toBeUndefined();
+    const progress = bridge.progress();
+    expect(progress.length).toBeGreaterThanOrEqual((2 * 60_000) / PROGRESS_EVERY_MS - 1);
+    expect(progress[0]).toMatchObject({ phase: 'thinking', textLength: 0 });
 
-      page.showStopControl(false);
-      page.setReply('turn-1', { text: 'Done.', turnState: 'complete', actions: true });
-      await vi.advanceTimersByTimeAsync(10_000);
-      expect(bridge.outcome()).toMatchObject({ ok: true, data: { assistantTurnKey: 'turn-1-r' } });
-    },
-  );
+    page.showStopControl(false);
+    page.setReply('turn-1', { text: 'Done.', turnState: 'complete', actions: true });
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { assistantTurnKey: 'turn-1-r' } });
+  });
 
   it('keeps waiting for a reply ChatGPT is still generating after 3 hours', async () => {
     bridge.start('turns.waitReply', WAIT);

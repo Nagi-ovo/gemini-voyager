@@ -148,6 +148,10 @@ describe.runIf(registered)('Local Bridge project.upload', () => {
   it('waits while the new row still shows as uploading', async () => {
     mount({ uploadBusyMs: 6_000 });
     bridge.start('project.upload', { projectId: PROJECT_A.id, blob: blobOf('paper.zip') });
+    // The sha256 check runs on real time; on a slow runner the fake clock would use up the wait first.
+    for (let step = 0; step < 200 && fixture.counts.uploadChanges === 0; step += 1)
+      await advance(100);
+    expect(fixture.counts.uploadChanges).toBe(1);
     await advance(4_000);
     expect(bridge.outcome()).toBeUndefined();
     await advance(8_000);
