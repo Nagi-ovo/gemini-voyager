@@ -128,6 +128,8 @@ export interface AttachmentInventory {
 }
 
 const CONTROL_SELECTOR = 'button, [role="button"]';
+/** Measured 2026-10-18: each attachment card is one child of the composer's attachment area. */
+const ATTACHMENT_CARD_SELECTOR = '[data-composer-attachments] > *';
 const MARKER_ATTRIBUTES = ['data-attachment-id', 'data-file-id'] as const;
 
 function controlLabel(element: Element): string {
@@ -154,7 +156,7 @@ export function inventoryAttachments(
   field: Element,
   expected: readonly string[],
 ): AttachmentInventory {
-  const controls = new Map<string, number>(expected.map((name) => [name, 0]));
+  const cards = new Map<string, Set<Element>>(expected.map((name) => [name, new Set()]));
   const templates: { prefix: string; suffix: string }[] = [];
   const others: string[] = [];
   let unexpected = 0;
@@ -166,7 +168,8 @@ export function inventoryAttachments(
     if (!label) continue;
     const named = expectedNamedBy(label, expected);
     if (named) {
-      controls.set(named, (controls.get(named) ?? 0) + 1);
+      // A live card names its file twice (preview and remove control): count cards, not controls.
+      cards.get(named)?.add(element.closest(ATTACHMENT_CARD_SELECTOR) ?? element);
       const shown = fold(named.trim());
       const at = label.indexOf(shown);
       if (at >= 0) {
@@ -207,7 +210,7 @@ export function inventoryAttachments(
 
   return {
     missing: expected.filter((name) => !findAttachmentCard(form, field, name).card),
-    ambiguous: expected.filter((name) => (controls.get(name) ?? 0) > 1),
+    ambiguous: expected.filter((name) => (cards.get(name)?.size ?? 0) > 1),
     unexpected,
   };
 }

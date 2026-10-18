@@ -104,6 +104,26 @@ describe('composer.send attachments', () => {
     expect(page.events().clicks).toBe(0);
   });
 
+  it('sends with the expected file whose live card names it in both its preview and remove controls', async () => {
+    page.form.prepend(liveAttachmentArea('note.txt'));
+    bridge.start('composer.send', { text: 'Read', expectAttachments: ['note.txt'] });
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(bridge.outcome()).toMatchObject({ ok: true });
+    expect(page.events().clicks).toBe(1);
+  });
+
+  it('refuses two live cards in the attachment area that both answer to the expected file', async () => {
+    const area = liveAttachmentArea('note.txt');
+    area.firstElementChild!.append(
+      liveAttachmentArea('note(2).txt').firstElementChild!.firstElementChild!,
+    );
+    page.form.prepend(area);
+    bridge.start('composer.send', { text: 'Read', expectAttachments: ['note.txt'] });
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(errorCode(bridge.outcome())).toBe('composer-busy');
+    expect(page.events().clicks).toBe(0);
+  });
+
   it('does not send an attachment that appeared while the prompt was being written', async () => {
     addCard('public-report.txt');
     const release = holdSend();
@@ -148,6 +168,17 @@ describe('composer.send mode', () => {
       composerLabels: ['Ask anything'],
     });
     expect(page.events()).toMatchObject({ execCommand: 0, clicks: 0 });
+  });
+
+  it('does not send once the tab switched to Work while the send control was getting ready', async () => {
+    const release = holdSend();
+    bridge.start('composer.send', { text: 'hi' });
+    await vi.advanceTimersByTimeAsync(500);
+    page.composer.setAttribute('aria-label', '使用 ChatGPT Work');
+    release();
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(errorCode(bridge.outcome())).toBe('mode-unavailable');
+    expect(page.events().clicks).toBe(0);
   });
 
   it('sends nothing into a ChatGPT Work composer', async () => {

@@ -83,8 +83,9 @@ export async function runComposerSend(
   if (!field) ctx.fail('selector-missing', 'The ChatGPT composer was not found.');
   // Fail closed on its own, whoever calls: only a composer that positively reads as chat
   // takes a prompt, never Work or one whose label this build has not measured (other UI languages).
-  const { mode, labels } = readMode(field);
-  if (mode !== 'chat') {
+  const checkChatMode = (): void => {
+    const { mode, labels } = readMode(field);
+    if (mode === 'chat') return;
     ctx.fail(
       mode === 'work' ? 'mode-unavailable' : 'mode-unknown',
       mode === 'work'
@@ -92,7 +93,8 @@ export async function runComposerSend(
         : 'The composer does not show chat mode under a label this build knows.',
       { mode, lang: readPageLanguage(), composerLabels: labels },
     );
-  }
+  };
+  checkChatMode();
   const form = composerFormOf(field);
   const expected = params.expectAttachments ?? [];
 
@@ -160,6 +162,8 @@ export async function runComposerSend(
   }
   // Files can be added while the control enables; only the expected set may go out.
   checkAttachments();
+  // The mode switch is outside the composer, so a switch to Work meanwhile is no recent input.
+  checkChatMode();
 
   ctx.click(button);
   ctx.endPageEvents();
