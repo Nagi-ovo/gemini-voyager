@@ -26,6 +26,23 @@ const NOTICE_SELECTOR =
 
 const fold = (text: string): string => text.normalize('NFC').toLowerCase();
 
+const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Whether `text` names the file `name`, also as ChatGPT renames a repeated upload:
+ * a second `note.txt` shows as `note(2).txt` once it has uploaded.
+ */
+export function namesFile(text: string, name: string): boolean {
+  const haystack = fold(text);
+  const wanted = fold(name.trim());
+  if (!wanted) return false;
+  if (haystack.includes(wanted)) return true;
+  const dot = wanted.lastIndexOf('.');
+  const stem = dot > 0 ? wanted.slice(0, dot) : wanted;
+  const extension = dot > 0 ? wanted.slice(dot) : '';
+  return new RegExp(`${escapeRegExp(stem)} ?\\(\\d+\\)${escapeRegExp(extension)}`).test(haystack);
+}
+
 function queryAll<T extends Element>(root: ParentNode, selector: string): T[] {
   try {
     return Array.from(root.querySelectorAll<T>(selector));
@@ -62,21 +79,18 @@ function labelOf(element: Element): string {
 
 /** Positive, structural evidence that the composer shows `name` as an attachment. */
 export function findAttachmentCard(form: Element, field: Element, name: string): AttachmentCard {
-  const wanted = fold(name.trim());
-  if (!wanted) return { card: false, removeControl: false };
+  if (!fold(name.trim())) return { card: false, removeControl: false };
   let card = false;
   let removeControl = false;
   for (const element of queryAll<HTMLElement>(form, '*')) {
     // The composer's own text, and every wrapper around it, say nothing about attachments.
     if (element === field || field.contains(element) || element.contains(field)) continue;
     if (element.closest(NOT_A_CARD)) continue;
-    if (!labelOf(element).includes(wanted) || !isRendered(element)) continue;
+    if (!namesFile(labelOf(element), name) || !isRendered(element)) continue;
     card = true;
     if (element instanceof HTMLButtonElement) {
-      const label = fold(
-        `${element.getAttribute('aria-label') ?? ''} ${element.getAttribute('title') ?? ''}`,
-      );
-      if (label.includes(wanted)) removeControl = true;
+      const label = `${element.getAttribute('aria-label') ?? ''} ${element.getAttribute('title') ?? ''}`;
+      if (namesFile(label, name)) removeControl = true;
     }
     if (removeControl) break;
   }
@@ -104,12 +118,11 @@ export function uploadBusySignals(form: Element, field: Element): string[] {
 
 /** Text of a rendered page notice (toast, alert) outside the form that names `name`. */
 export function rejectionNotice(form: Element, name: string): string | null {
-  const wanted = fold(name.trim());
-  if (!wanted) return null;
+  if (!fold(name.trim())) return null;
   for (const element of queryAll<HTMLElement>(document, NOTICE_SELECTOR)) {
     if (form.contains(element) || !isRendered(element)) continue;
     const text = (element.textContent ?? '').replace(/\s+/g, ' ').trim();
-    if (fold(text).includes(wanted)) return text.slice(0, 300);
+    if (namesFile(text, name)) return text.slice(0, 300);
   }
   return null;
 }

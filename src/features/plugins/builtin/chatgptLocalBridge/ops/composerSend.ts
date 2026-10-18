@@ -19,13 +19,11 @@ import {
   type ComposerSendResult,
   bridgeError,
 } from '@/features/bridge/protocol';
-import {
-  hasAttachmentPreview,
-  hasComposerAttachments,
-} from '@/features/plugins/builtin/chatgptTemporaryHandoff/composerDelivery';
+import { hasComposerAttachments } from '@/features/plugins/builtin/chatgptTemporaryHandoff/composerDelivery';
 import type { SiteAdapter } from '@/features/plugins/types';
 
 import { type OpContext, OpFailure, OpTermination } from '../opContext';
+import { findAttachmentCard } from './attachmentEvidence';
 import {
   composerFormOf,
   conversationItems,
@@ -81,7 +79,7 @@ export async function runComposerSend(
   if (expected.length === 0 && hasComposerAttachments(form)) {
     ctx.fail('composer-busy', 'The composer holds attachments.', { reason: 'attachments' });
   }
-  const missing = expected.filter((name) => !hasAttachmentPreview(field, name));
+  const missing = expected.filter((name) => !findAttachmentCard(form, field, name).card);
   if (missing.length > 0) {
     ctx.fail('attachment-rejected', 'An expected attachment is not in the composer.', { missing });
   }

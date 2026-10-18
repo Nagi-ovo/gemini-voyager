@@ -28,6 +28,8 @@ interface UploadBehavior {
   uploadMs?: number | null;
   /** Whether the send control turns enabled once the upload is done. */
   enablesSend?: boolean;
+  /** The name the card shows once uploaded: ChatGPT renames a repeated upload. */
+  uploadedName?: (name: string) => string;
 }
 
 let page: ChatGptPageFixture;
@@ -74,6 +76,11 @@ function renderUpload(): void {
       if (behavior.uploadMs === null) continue;
       setTimeout(() => {
         card.firstElementChild!.removeAttribute('aria-busy');
+        if (behavior.uploadedName) {
+          const shown = behavior.uploadedName(name);
+          card.querySelector('span')!.textContent = shown;
+          card.querySelector('button')!.setAttribute('aria-label', `移除 ${shown}`);
+        }
         if (behavior.enablesSend !== false) page.sendButton.disabled = false;
       }, behavior.uploadMs ?? 2_000);
     }
@@ -169,6 +176,19 @@ describe('Local Bridge composer.attach', () => {
     await vi.advanceTimersByTimeAsync(2_000);
     expect(bridge.outcome()).toMatchObject({ ok: true, data: { conversationId: 'conv-123' } });
     expect(page.events().clicks).toBe(1);
+  });
+
+  it('attaches and sends a file ChatGPT renamed because one of that name was uploaded before', async () => {
+    // Measured 2026-10-18: a second note.txt shows as note(2).txt once it has uploaded.
+    behavior = { uploadedName: (name) => name.replace(/\.txt$/, '(2).txt') };
+    bridge.start('composer.attach', { blobs: [blobOf('b1', 'note.txt', bytesOf(64))] });
+    await untilSettled(() => changes > 0);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(bridge.outcome()?.ok).toBe(true);
+
+    bridge.start('composer.send', { text: 'Read it', expectAttachments: ['note.txt'] });
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { conversationId: 'conv-123' } });
   });
 
   it('refuses bytes that do not match the registered sha256, before touching the page', async () => {
