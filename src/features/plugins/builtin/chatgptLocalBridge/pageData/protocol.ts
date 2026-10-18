@@ -23,6 +23,8 @@ export type DataObserverEvent =
   | { readonly type: 'ready' }
   /** The answer to `arm`: this browser runs the observer in the page. */
   | { readonly type: 'armed' }
+  /** The page's router moved (`pushState` / `replaceState`); carries nothing. */
+  | { readonly type: 'route' }
   | {
       readonly type: 'projects';
       readonly projects: readonly ProjectSummary[];
@@ -87,6 +89,7 @@ export function readDataObserverMessage(
   if (!isRecord(data) || data.source !== DATA_OBSERVER_SOURCE) return null;
   if (data.type === 'ready') return { type: 'ready' };
   if (data.type === 'armed') return { type: 'armed' };
+  if (data.type === 'route') return { type: 'route' };
   if (!isRecord(data.payload)) return null;
   if (data.type === 'projects') return readProjects(data.payload);
   if (data.type === 'files') return readFiles(data.payload);

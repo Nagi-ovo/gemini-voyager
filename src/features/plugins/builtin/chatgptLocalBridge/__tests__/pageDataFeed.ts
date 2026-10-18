@@ -18,6 +18,30 @@ export interface PageDataFeed {
   conversation(conversationId: string, currentNode: string): void;
 }
 
+/**
+ * Plays the observer's route reports for every page: the router's `pushState`
+ * and `replaceState` are followed by a `route` post, as the page-world
+ * observer sends one. Installed once per test file's window.
+ */
+export function playRouteReports(): void {
+  const marked = history as History & { gvRouteReports?: true };
+  if (marked.gvRouteReports) return;
+  marked.gvRouteReports = true;
+  for (const method of ['pushState', 'replaceState'] as const) {
+    const original = history[method].bind(history);
+    history[method] = (...args: Parameters<History['pushState']>) => {
+      original(...args);
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: { source: DATA_OBSERVER_SOURCE, type: 'route', payload: {} },
+          source: window,
+          origin: location.origin,
+        }),
+      );
+    };
+  }
+}
+
 /** Each mounted fixture replaces the last one's feed: an older page must not replay. */
 let activeFeed: object | null = null;
 

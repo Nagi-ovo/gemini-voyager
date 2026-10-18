@@ -12,7 +12,8 @@ export const CHATGPT_BRIDGE_ORIGIN = 'https://chatgpt.com';
 export interface TabsApi {
   create(props: { url: string; active: boolean }): Promise<{ id?: number } | undefined>;
   remove(tabId: number): Promise<void>;
-  get(tabId: number): Promise<{ id?: number; active?: boolean; url?: string } | undefined>;
+  /** `frozen` only where the browser reports it (Chrome 132 and later). */
+  get(tabId: number): Promise<{ id?: number; url?: string; frozen?: boolean } | undefined>;
   sendMessage(tabId: number, message: unknown, options?: { documentId?: string }): Promise<unknown>;
 }
 
@@ -67,8 +68,9 @@ export interface BridgeTabs {
   open(jobId: string, url: string, active: boolean): Promise<number>;
   /** False when the tab was already gone. */
   close(tabId: number): Promise<boolean>;
-  isActive(tabId: number): Promise<boolean>;
   exists(tabId: number): Promise<boolean>;
+  /** The browser froze the tab (it runs no task until it thaws); false where it cannot say. */
+  isFrozen(tabId: number): Promise<boolean>;
   send(holder: ContentHolder, message: unknown): Promise<unknown>;
   /** Ask whatever document the tab holds to say hello again; never throws. */
   requestHello(tabId: number): Promise<void>;
@@ -114,8 +116,8 @@ export function createBridgeTabs(deps: {
         return false;
       }
     },
-    isActive: async (tabId) => (await tabOf(tabId))?.active === true,
     exists: async (tabId) => (await tabOf(tabId)) !== undefined,
+    isFrozen: async (tabId) => (await tabOf(tabId))?.frozen === true,
     send: (holder, message) =>
       api.sendMessage(
         holder.tabId,

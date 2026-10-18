@@ -25,6 +25,8 @@
  */
 import { vi } from 'vitest';
 
+import { playRouteReports } from './pageDataFeed';
+
 export interface ReplyState {
   readonly text: string;
   /** `data-talvt-turn-state`; omitted renders no turn-state node. */
@@ -155,6 +157,7 @@ function renderTurn(turn: FixtureTurn): HTMLElement {
 }
 
 export function mountChatGptPage(options: PageOptions = {}): ChatGptPageFixture {
+  playRouteReports();
   history.replaceState(null, '', options.route ?? '/');
   document.title = 'ChatGPT';
   document.body.innerHTML = `

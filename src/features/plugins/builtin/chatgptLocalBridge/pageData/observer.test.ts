@@ -35,6 +35,9 @@ let pageFetch: Mock;
 let posted: string[] = [];
 let store: PageDataStore;
 const realFetch = window.fetch;
+// Each install wraps the page's history methods again; each test starts from the browser's own.
+const realPushState = history.pushState;
+const realReplaceState = history.replaceState;
 
 async function settle(): Promise<void> {
   for (let i = 0; i < 8; i += 1) await new Promise((r) => setTimeout(r, 0));
@@ -94,7 +97,27 @@ describe('chatgpt-bridge-data-observer', () => {
     for (const listener of installedListeners) window.removeEventListener('message', listener);
     window.removeEventListener('message', onMessage);
     window.fetch = realFetch;
+    history.pushState = realPushState;
+    history.replaceState = realReplaceState;
     vi.restoreAllMocks();
+  });
+
+  it("wakes the bridge's waits when the page's router moves, once armed", async () => {
+    history.pushState(null, '', '/c/before-arm');
+    await settle();
+    expect(posted.filter((message) => message.includes('"route"'))).toEqual([]);
+
+    startStore();
+    const wakes: string[] = [];
+    store.subscribe((reason) => wakes.push(reason));
+    await settle();
+    wakes.length = 0;
+    history.pushState(null, '', '/g/project');
+    history.replaceState(null, '', '/g/project?tab=sources');
+    await settle();
+
+    expect(`${location.pathname}${location.search}`).toBe('/g/project?tab=sources');
+    expect(wakes).toEqual(['route', 'route']);
   });
 
   it('calls the projects whole only once a sidebar page answers with no further cursor', async () => {

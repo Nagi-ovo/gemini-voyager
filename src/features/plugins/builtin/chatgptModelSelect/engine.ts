@@ -42,7 +42,8 @@ const STEP_TIMEOUT_MS = 2_500;
 const TRIGGER_TIMEOUT_MS = 5_000;
 const STATUS_TIMEOUT_MS = 1_500;
 const CLOSE_TIMEOUT_MS = 2_000;
-const POLL_MS = 100;
+/** The least gap between two looks at the picker; a step lands about 500 ms after its key. */
+const MIN_GAP_MS = 100;
 
 export interface ResolvedTarget {
   readonly modelId: string;
@@ -145,7 +146,7 @@ export async function selectModel(
   const awaitTrigger = (): Promise<HTMLElement | null> =>
     ctx.waitFor(() => findTrigger(scopeOf(), data, marker), {
       timeoutMs: budget(ctx, TRIGGER_TIMEOUT_MS),
-      intervalMs: POLL_MS,
+      minGapMs: MIN_GAP_MS,
     });
   /** Whether `button` is no longer the page's trigger (removed, or another took its place). */
   const replaced = (button: HTMLElement): boolean => {
@@ -160,7 +161,7 @@ export async function selectModel(
     ctx.dispatch(button, pointer('pointerup'));
     return ctx.waitFor(() => findOpenMenu(button) ?? (replaced(button) ? 'replaced' : null), {
       timeoutMs: budget(ctx, OPEN_TIMEOUT_MS),
-      intervalMs: POLL_MS,
+      minGapMs: MIN_GAP_MS,
     });
   };
 
@@ -199,7 +200,7 @@ export async function selectModel(
     ctx.dispatch(openMenu, key('Escape'));
     const closed = await ctx.waitFor(
       () => !openMenu.isConnected || menuTrigger.getAttribute('aria-expanded') !== 'true',
-      { timeoutMs: budget(ctx, CLOSE_TIMEOUT_MS), intervalMs: POLL_MS },
+      { timeoutMs: budget(ctx, CLOSE_TIMEOUT_MS), minGapMs: MIN_GAP_MS },
     );
     return closed === true;
   };
@@ -266,7 +267,7 @@ export async function selectModel(
           const value = read().slider?.now;
           return value !== undefined && value !== from ? { value } : null;
         },
-        { timeoutMs: budget(ctx, STEP_TIMEOUT_MS), intervalMs: POLL_MS },
+        { timeoutMs: budget(ctx, STEP_TIMEOUT_MS), minGapMs: MIN_GAP_MS },
       );
       if (!moved) {
         await failClosed('unverified', 'The effort slider did not move after a key press.', {
@@ -295,7 +296,7 @@ export async function selectModel(
           (status.position === null || status.position === goal + 1);
         return ok ? reading : null;
       },
-      { timeoutMs: budget(ctx, STATUS_TIMEOUT_MS), intervalMs: POLL_MS },
+      { timeoutMs: budget(ctx, STATUS_TIMEOUT_MS), minGapMs: MIN_GAP_MS },
     );
     if (!confirmed) {
       await failClosed('effort-unavailable', 'ChatGPT does not name the requested effort.', {

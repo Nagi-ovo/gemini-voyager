@@ -204,15 +204,18 @@ describe('Local Bridge conversation.ready: mode', () => {
     expect(page.events().clicks).toBe(1);
   });
 
-  it('refuses to switch in a hidden tab, before any click', async () => {
+  it('switches the mode in a background tab, with one click', async () => {
     mount({ mode: 'work' });
     setVisibility('hidden');
     bridge.start('conversation.ready', {});
-    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(1_000);
 
-    expect(errorCode(bridge.outcome())).toBe('tab-hidden');
-    expect(page.events().clicks).toBe(0);
-    expect(page.mode()).toBe('work');
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { mode: 'chat', switchedMode: { from: 'work', to: 'chat' } },
+    });
+    expect(page.events().clicks).toBe(1);
+    expect(page.mode()).toBe('chat');
   });
 
   it('restores the mode before close in a tab a long reply left in the background', async () => {

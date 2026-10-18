@@ -52,6 +52,8 @@ const UPLOAD_PROGRESS_EVERY_MS = 5_000;
 /** Kept back from the grant so the op reports its own failure before the lease runs out. */
 const DEADLINE_MARGIN_MS = 1_000;
 const BUSY_SELECTOR = '[aria-busy="true"], [role="progressbar"], progress';
+/** The settle windows and the progress beat run on the clock, which no wake reports. */
+const CLOCK_RECHECK_MS = 250;
 
 /** Each name as often in `rows` as in `names`. */
 function namesMatch(rows: readonly FileRow[], names: readonly string[]): boolean {
@@ -187,7 +189,7 @@ export async function runProjectUpload(
       stableSince ??= at;
       return at - stableSince >= SETTLE_MS ? mine[0] : null;
     },
-    { timeoutMs: Math.max(0, budget()) },
+    { timeoutMs: Math.max(0, budget()), recheckMs: CLOCK_RECHECK_MS },
   );
   const evidence = {
     bytes: params.blob.size,
@@ -288,7 +290,7 @@ export async function runProjectRemove(
       goneSince ??= at;
       return at - goneSince >= SETTLE_MS;
     },
-    { timeoutMs: timeLeft(ctx, REMOVE_TIMEOUT_MS) },
+    { timeoutMs: timeLeft(ctx, REMOVE_TIMEOUT_MS), recheckMs: CLOCK_RECHECK_MS },
   );
   if (!gone) {
     ctx.fail(

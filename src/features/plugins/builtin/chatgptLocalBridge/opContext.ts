@@ -23,10 +23,20 @@ import type { BridgeGrant } from '@/features/bridge/runtimeMessages';
 import { readConversationId } from '@/features/plugins/builtin/chatgptResponseNotification/page';
 
 import type { ChallengeKind } from './challengeGuard';
+import {
+  type Defer,
+  type PageWakeSubscribe,
+  type WaitOptions,
+  type WakeCounts,
+  createChannelDefer,
+  createWaker,
+} from './wake';
 
-/** A grant stops being usable this long before its deadline: clocks and delivery are not exact. */
-export const GRANT_MARGIN_MS = 250;
-const DEFAULT_POLL_MS = 250;
+/**
+ * A grant stops being usable this long before its deadline: clocks and delivery
+ * are not exact, and a hidden tab's wake can come up to a second late.
+ */
+export const GRANT_MARGIN_MS = 1_000;
 
 /** Thrown by `fail`: the op ends with this error and may have tidied up first. */
 export class OpFailure extends Error {
@@ -46,29 +56,38 @@ export class OpTermination extends Error {
 
 export interface OpEnvironment {
   readonly now: () => number;
+  /** Evidence only: every op runs in a background tab too. */
   readonly isHidden: () => boolean;
   readonly challenge: () => ChallengeKind | null;
   readonly hasExtensionContext: () => boolean;
   readonly pathname: () => string;
+  /** Where a wait's look runs after a wake; a message task unless the tests' clock drives it. */
+  readonly defer?: Defer;
 }
 
-export const defaultOpEnvironment = (challenge: () => ChallengeKind | null): OpEnvironment => ({
+const pageDefer = createChannelDefer();
+
+export const defaultOpEnvironment = (
+  challenge: () => ChallengeKind | null,
+  defer: Defer = pageDefer,
+): OpEnvironment => ({
   now: Date.now,
   isHidden: () => document.visibilityState === 'hidden',
   challenge,
   hasExtensionContext: hasValidExtensionContext,
   pathname: () => location.pathname,
+  defer,
 });
 
 export interface OpContextOptions {
   readonly taskId: string;
   readonly op: OpName;
   readonly grant: BridgeGrant;
-  /** Ops that dispatch page events need a lease and a visible tab (spec §3.2, Q2). */
+  /** Ops that dispatch page events need a lease (spec §3.2); a background tab is fine. */
   readonly interactive: boolean;
-  /** An interactive op that may click in a background tab (the mode restore before close). */
-  readonly allowHidden?: boolean;
   readonly env: OpEnvironment;
+  /** ChatGPT's answers and route reports, which wake a wait as page changes do. */
+  readonly subscribe?: PageWakeSubscribe;
   readonly onProgress?: (event: Readonly<Record<string, unknown>>) => void;
 }
 
@@ -93,11 +112,15 @@ export interface OpContext {
   /** The op is about to move the page to `pathname` itself; the guard accepts it from now on. */
   allowRoute(pathname: string): void;
   sleep(ms: number): Promise<void>;
-  /** Poll `probe` until it returns a value, or resolve `null` after `timeoutMs`. */
-  waitFor<T>(
-    probe: () => T | null | undefined | false,
-    options: { readonly timeoutMs: number; readonly intervalMs?: number },
-  ): Promise<T | null>;
+  /**
+   * Look at `probe` until it returns a value, or resolve `null` after `timeoutMs`:
+   * at once, then on each page change, page data or route report (see `wake.ts`).
+   */
+  waitFor<T>(probe: () => T | null | undefined | false, options: WaitOptions): Promise<T | null>;
+  /** The wakes of this op's waits so far, by reason. */
+  wakes(): WakeCounts;
+  /** The op ended: stop the waits' observers and listeners. */
+  dispose(): void;
   fail(code: ErrorCode, message: string, details?: Readonly<Record<string, unknown>>): never;
   terminate(code: ErrorCode, message: string, details?: Readonly<Record<string, unknown>>): void;
   progress(event: Readonly<Record<string, unknown>>): void;
@@ -115,6 +138,12 @@ export function createOpContext(options: OpContextOptions): OpContext {
   const allowedRoutes = new Set([env.pathname()]);
   let terminated: BridgeError | null = null;
   let pageEventsEnded = false;
+  const waker = createWaker({
+    now: env.now,
+    defer: env.defer ?? pageDefer,
+    signal: controller.signal,
+    subscribe: options.subscribe,
+  });
 
   const terminate = (
     code: ErrorCode,
@@ -143,10 +172,6 @@ export function createOpContext(options: OpContextOptions): OpContext {
       }
       if (env.now() >= grant.deadline - GRANT_MARGIN_MS) {
         terminate('timeout', 'The page lease expired.', { reason: 'lease-expired' });
-        stopped();
-      }
-      if (env.isHidden() && !options.allowHidden) {
-        terminate('tab-hidden', 'The ChatGPT tab must be in the foreground for this step.');
         stopped();
       }
     }
@@ -224,17 +249,9 @@ export function createOpContext(options: OpContextOptions): OpContext {
       allowedRoutes.add(pathname);
     },
     sleep,
-    async waitFor(probe, { timeoutMs, intervalMs = DEFAULT_POLL_MS }) {
-      const until = env.now() + timeoutMs;
-      for (;;) {
-        if (controller.signal.aborted) stopped();
-        const value = probe();
-        if (value !== null && value !== undefined && value !== false) return value;
-        const left = until - env.now();
-        if (left <= 0) return null;
-        await sleep(Math.min(intervalMs, left));
-      }
-    },
+    waitFor: (probe, waitOptions) => waker.wait(probe, waitOptions),
+    wakes: () => waker.counts(),
+    dispose: () => waker.dispose(),
     fail(code, message, details) {
       if (controller.signal.aborted) stopped();
       throw new OpFailure(bridgeError(code, message, details));

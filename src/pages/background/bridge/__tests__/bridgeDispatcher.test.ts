@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
 import {
   type ErrorCode,
@@ -190,12 +191,53 @@ describe('bridge dispatcher', () => {
     expect(t.resultOf('T1')).toEqual({ ok: true, data: SENT });
   });
 
-  it('refuses an interactive op in a background tab', async () => {
+  it('runs an interactive op in a background tab', async () => {
     const t = setup();
     await t.bridgeTab('doc-1', false);
     await t.dispatcher.onTask(task('composer.send', 'T1'));
-    expect(t.page.starts()).toHaveLength(0);
-    expect(t.resultOf('T1')).toMatchObject({ ok: false, error: { code: 'tab-hidden' } });
+    expect(t.page.starts()).toHaveLength(1);
+    expect(t.resultOf('T1')).toBeUndefined();
+  });
+
+  it('opens the bridge tab in the background', async () => {
+    const t = setup();
+    await t.dispatcher.onTask(task('conversation.open', 'T1'));
+    expect(t.page.api.create).toHaveBeenCalledWith({ url: 'https://chatgpt.com/', active: false });
+  });
+
+  it('reports a frozen tab instead of a lost document', async () => {
+    const info = vi.spyOn(logger, 'info');
+    const t = setup();
+    const tabId = await t.bridgeTab('doc-1', false);
+    await t.dispatcher.onTask({
+      ...task('turns.waitReply', 'T1'),
+      params: { conversationId: 'abc-123', afterUserTurnKey: 't-7' },
+      deadlineMs: WAIT_REPLY_MAX_TIMEOUT_MS + 30_000,
+    } as ValidatedBridgeTask);
+    const probes = () => t.page.sent.filter((s) => s.message.type === 'gv.bridge.lease.probe');
+    // Frozen, its document answers nothing.
+    t.page.tabs.get(tabId)!.frozen = true;
+    t.page.state.onMessage = () => {
+      throw new Error('Could not establish connection. Receiving end does not exist.');
+    };
+    t.advance(5 * 60_000);
+    await t.dispatcher.tick();
+
+    expect(t.server.results()).toEqual([]);
+    expect(probes()).toHaveLength(0);
+    expect((await t.dispatcher.current())?.taskId).toBe('T1');
+    expect(info).toHaveBeenCalledWith(expect.any(String), {
+      taskId: 'T1',
+      reason: 'tab-frozen',
+    });
+
+    // Thawed, it is probed again and answers.
+    t.page.tabs.get(tabId)!.frozen = false;
+    t.page.state.onMessage = () => ({ stopped: false });
+    await t.dispatcher.tick();
+    expect(probes()).toHaveLength(1);
+    expect(t.server.results()).toEqual([]);
+    info.mockRestore();
   });
 
   it('starts model.select in the page under its 25 s lease', async () => {
@@ -339,7 +381,7 @@ describe('bridge dispatcher', () => {
     const t = setup();
     await t.dispatcher.onTask(task('conversation.open', 'T1'));
     const created = vi.mocked(t.page.api.create).mock.calls[0][0];
-    expect(created).toEqual({ url: 'https://chatgpt.com/', active: true });
+    expect(created.url).toBe('https://chatgpt.com/');
     const tabId = (await t.store.getTab())!.tabId;
 
     expect(await t.dispatcher.onHello(contentSender(tabId + 5), 'stranger')).toBe(false);

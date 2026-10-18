@@ -9,6 +9,7 @@ import type { SiteAdapter } from '@/features/plugins/types';
 
 import { getDocNonce } from '../docIdentity';
 import { type BridgeRuntime, createBridgeRuntime } from '../runtime';
+import { type Defer, timerDefer } from '../wake';
 
 export interface Harness {
   readonly runtime: BridgeRuntime;
@@ -28,11 +29,13 @@ let nextTask = 0;
 /**
  * A runtime attached to the bundled ChatGPT adapter (or `adapter`, as remote
  * site data would replace it), recording what it sends the background;
- * `reply` plays the background's answer (blob reads).
+ * `reply` plays the background's answer (blob reads). Waits look after a wake
+ * on the fake clock (`defer`), where the page would run a message task.
  */
 export function createHarness(
   reply: (message: Record<string, unknown>) => unknown = () => undefined,
   adapter: SiteAdapter = chatgptAdapter,
+  defer: Defer = timerDefer,
 ): Harness {
   const sent: Record<string, unknown>[] = [];
   const runtime = createBridgeRuntime({
@@ -41,6 +44,7 @@ export function createHarness(
       return reply(message);
     },
     listen: false,
+    defer,
   });
   runtime.attach(adapter);
   let taskId = '';

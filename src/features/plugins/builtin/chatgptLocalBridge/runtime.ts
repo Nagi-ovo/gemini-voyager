@@ -58,6 +58,7 @@ import { runProjectOp } from './ops/projectRuntime';
 import { runTurnsRead } from './ops/turnsRead';
 import { runTurnsWaitReply } from './ops/turnsWaitReply';
 import { createPageDataStore } from './pageData/store';
+import type { Defer } from './wake';
 
 export const DETACH_GRACE_MS = 3_000;
 const OUTCOME_CACHE_SIZE = 16;
@@ -95,17 +96,14 @@ export interface BridgeRuntimeOptions {
   readonly send?: RuntimeSend;
   readonly env?: OpEnvironment;
   readonly now?: () => number;
+  /** Where waits look after a wake (see `wake.ts`); the tests' fake clock drives a timer instead. */
+  readonly defer?: Defer;
   /** Install the `chrome.runtime.onMessage` listener on first attach. */
   readonly listen?: boolean;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-/** The mode restore before close may click in a background tab (`ConversationReadyParams.restore`). */
-function isRestore(params: unknown): boolean {
-  return isRecord(params) && params.restore === true;
 }
 
 function readGrant(raw: unknown): BridgeGrant | null {
@@ -129,6 +127,19 @@ function readTask(raw: unknown): BridgeTask | null {
   return { taskId, jobId, op, opVersion, params: raw.params, deadlineMs, issuedAt };
 }
 
+/**
+ * How the op's waits were woken, kept with the result's own evidence; a result
+ * without evidence (or a failure) leaves them in the debug log.
+ */
+function withWakes(op: string, data: unknown, ctx: OpContext, hidden: boolean): unknown {
+  const wakes = ctx.wakes();
+  if (isRecord(data) && isRecord(data.evidence)) {
+    return { ...data, evidence: { ...data.evidence, wakes, hidden } };
+  }
+  logger.debug('Local bridge op wakes', { op, wakes, hidden });
+  return data;
+}
+
 function outcomeOf(error: unknown): BridgeOpOutcome {
   if (error instanceof OpFailure || error instanceof OpTermination) {
     return { ok: false, error: error.error };
@@ -141,7 +152,7 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
   const now = options.now ?? Date.now;
   // `adapter` is assigned once the plugin attaches; the guard reads it afresh.
   const challenge = createChallengeGuard(document, now, () => adapter?.pageHooks?.accountBlocked);
-  const env = options.env ?? defaultOpEnvironment(() => challenge.current());
+  const env = options.env ?? defaultOpEnvironment(() => challenge.current(), options.defer);
   const send: RuntimeSend =
     options.send ?? ((message) => chrome.runtime.sendMessage(message) as Promise<unknown>);
   let adapter: SiteAdapter | null = null;
@@ -255,8 +266,8 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
       op: task.op,
       grant,
       interactive,
-      allowHidden: task.op === 'conversation.ready' && isRestore(task.params),
       env,
+      subscribe: pageData.subscribe,
       onProgress: (progress) =>
         void deliver(
           { type: 'gv.bridge.op.progress', taskId: task.taskId, docNonce: getDocNonce(), progress },
@@ -275,7 +286,7 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
       const params = validateOpParams(task.op, task.params);
       if (!params.ok) ctx.fail('bad-request', 'Invalid op params.', { issues: params.issues });
       const validated = { ...task, params: params.value } as ValidatedBridgeTask;
-      const data = await execute(ctx, validated, adapter);
+      const data = withWakes(task.op, await execute(ctx, validated, adapter), ctx, env.isHidden());
       const checked = validateOpResult(task.op, data);
       outcome = checked.ok
         ? { ok: true, data: checked.value }
@@ -287,7 +298,9 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
           };
     } catch (error) {
       outcome = outcomeOf(error);
+      logger.debug('Local bridge op wakes', { op: task.op, wakes: ctx.wakes() });
     } finally {
+      ctx.dispose();
       stopWatching();
       if (running?.ctx === ctx) running = null;
     }

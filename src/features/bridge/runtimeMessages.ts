@@ -140,7 +140,7 @@ export type BridgeBackgroundToContentMessage =
 /**
  * Ops that dispatch page events and therefore need a lease (spec §3.2).
  * `conversation.ready` clicks the page's own mode switch when the tab is in
- * the other mode, so it is leased too; it refuses a hidden tab only then.
+ * the other mode, so it is leased too. A background tab runs every one of them.
  */
 export const LEASED_OPS: ReadonlySet<OpName> = new Set<OpName>([
   'conversation.ready',

@@ -6,8 +6,8 @@
  * preamble before a long thinking phase looks quiet too). Every check must
  * hold at once:
  * - the reply's action row has rendered and held for {@link BAR_CONFIRM_CYCLES}
- *   unchanged polls — the row can flash mid-thinking, so one sighting is not
- *   enough;
+ *   unchanged looks, each at least {@link CYCLE_MS} after the last one counted
+ *   — the row can flash mid-thinking, so one sighting is not enough;
  * - the reply's text has not changed for `stableMs`, and is not empty;
  * - no stop control in the composer, no thinking or streaming marker in the turn;
  * - the turn's `data-talvt-turn-state` reads `complete` when the turn carries
@@ -18,8 +18,16 @@
  * `stallMs` without any of these fails it (`reply-stalled`); `timeoutMs` is
  * the hard cap behind that.
  *
+ * Nothing polls: the wait looks when the reply's item or the composer form
+ * changes (at most once per {@link CYCLE_MS}), when the route or page data
+ * moves, every {@link CYCLE_MS} while the reply is finalizing, and at the next
+ * moment something is due: the end of `stableMs`, the progress beat, the
+ * stall, the timeout. A background tab needs no foreground for any of it.
+ * After a frozen stretch (`resume`), the activity clock restarts: the frozen
+ * time is the browser's, not a stall.
+ *
  * The page is never touched: no scroll, no click. Progress goes out every
- * {@link PROGRESS_EVERY_MS}; a hidden tab's throttled timers may stretch that.
+ * {@link PROGRESS_EVERY_MS}.
  */
 import {
   type TurnsWaitReplyParams,
@@ -33,8 +41,11 @@ import { hasReplyActions } from '@/features/plugins/builtin/chatgptResponseNotif
 import type { SiteAdapter } from '@/features/plugins/types';
 
 import type { OpContext } from '../opContext';
+import type { WakeScope } from '../wake';
 import {
+  composerFormOf,
   conversationItems,
+  findComposerField,
   findReply,
   hashText,
   hasStopControl,
@@ -50,7 +61,10 @@ import {
 
 export const PROGRESS_EVERY_MS = 15_000;
 export const BAR_CONFIRM_CYCLES = 3;
-const POLL_MS = 1_000;
+/** One confirmation cycle, and the least gap between two looks at a streaming reply. */
+const CYCLE_MS = 1_000;
+/** A look found the reply in another item, or its finalizing begin or end: watch anew. */
+const RESCOPE = Symbol('rescope');
 // ChatGPT's terminal failure copy and its usage-cap and throttling banners: its servers
 // send them in English (no UI language's messages hold them). The site's
 // `pageHooks.replyFailed` / `.rateLimit` replace these measured forms remotely.
@@ -76,6 +90,24 @@ interface Gate {
   contentKey: string;
   changedAt: number;
   barCycles: number;
+  /** When the last cycle was counted, or the count was reset. */
+  cycleAt: number;
+}
+
+/** What one wait watches: the reply's item (null until it is found) and whether it is finalizing. */
+interface Watch {
+  readonly item: HTMLElement | null;
+  readonly finalizing: boolean;
+}
+
+/** The reply's item, the list it sits in (a re-mounted item) and the composer form. */
+function scopeOf(watch: Watch, adapter: SiteAdapter | null): WakeScope[] | undefined {
+  const field = findComposerField(adapter);
+  if (!watch.item || !field) return undefined;
+  const scope: WakeScope[] = [{ element: watch.item }, { element: composerFormOf(field) }];
+  const list = watch.item.parentElement;
+  if (list) scope.push({ element: list, subtree: false, attributeFilter: [] });
+  return scope;
 }
 
 function findTarget(
@@ -126,14 +158,16 @@ export async function runTurnsWaitReply(
     });
   }
 
-  let gate: Gate = { contentKey: '', changedAt: startedAt, barCycles: 0 };
+  let gate: Gate = { contentKey: '', changedAt: startedAt, barCycles: 0, cycleAt: startedAt };
   let lastProgressAt = startedAt;
   let activeAt = startedAt;
   let sawStop = false;
   let phase: WaitReplyProgress['phase'] = 'thinking';
   let textLength = 0;
+  let watched: Watch = { item: null, finalizing: false };
+  let seen: Watch = watched;
 
-  for (;;) {
+  const look = (): { readonly result: TurnsWaitReplyResult } | typeof RESCOPE | null => {
     const now = ctx.now();
     if (!onRoute()) {
       ctx.fail('cancelled', 'The tab left the conversation.', {
@@ -160,10 +194,14 @@ export async function runTurnsWaitReply(
     const contentKey = reply ? `${replyIdOf(reply) ?? ''}|${hashText(text)}` : '';
     const changed = contentKey !== gate.contentKey;
     const quiet = !stop && !thinking && (turnState === null || isCompleteTurnState(turnState));
+    // A wake can come any time: a cycle counts only a full cycle after the last one.
+    const steady = bar && quiet && !changed;
+    const cycled = steady && now - gate.cycleAt >= CYCLE_MS;
     gate = {
       contentKey,
       changedAt: changed ? now : gate.changedAt,
-      barCycles: bar && quiet && !changed ? gate.barCycles + 1 : 0,
+      barCycles: !steady ? 0 : cycled ? gate.barCycles + 1 : gate.barCycles,
+      cycleAt: !steady || cycled ? now : gate.cycleAt,
     };
     textLength = text.length;
     if (changed || stop || thinking) activeAt = now;
@@ -178,15 +216,17 @@ export async function runTurnsWaitReply(
       now - gate.changedAt >= stableMs
     ) {
       return {
-        assistantTurnKey: replyIdOf(reply) ?? readTurnKey(target.item),
-        status: 'complete',
-        elapsedMs: now - startedAt,
-        evidence: {
-          turnState,
-          barCycles: gate.barCycles,
-          stableForMs: now - gate.changedAt,
-          sawStop,
-          itemKey: readTurnKey(target.item),
+        result: {
+          assistantTurnKey: replyIdOf(reply) ?? readTurnKey(target.item),
+          status: 'complete',
+          elapsedMs: now - startedAt,
+          evidence: {
+            turnState,
+            barCycles: gate.barCycles,
+            stableForMs: now - gate.changedAt,
+            sawStop,
+            itemKey: readTurnKey(target.item),
+          },
         },
       };
     }
@@ -218,6 +258,37 @@ export async function runTurnsWaitReply(
         textLength,
       });
     }
-    await ctx.sleep(Math.min(POLL_MS, Math.max(1, startedAt + timeoutMs - now)));
+    seen = { item: reply && target ? target.item : null, finalizing: phase === 'finalizing' };
+    return seen.item !== watched.item || seen.finalizing !== watched.finalizing ? RESCOPE : null;
+  };
+
+  // A frozen tab runs nothing; the time it spent frozen says nothing about the reply.
+  const onResume = (): void => {
+    activeAt = ctx.now();
+  };
+  document.addEventListener('resume', onResume);
+  try {
+    for (;;) {
+      watched = seen;
+      const now = ctx.now();
+      const stableAt = gate.changedAt + stableMs;
+      // The next moment a look is due without any wake; each one-shot, re-armed after the look.
+      const dueAt = Math.min(
+        lastProgressAt + PROGRESS_EVERY_MS,
+        activeAt + stallMs,
+        startedAt + timeoutMs,
+        stableAt > now ? stableAt : Number.POSITIVE_INFINITY,
+      );
+      const scope = scopeOf(watched, adapter);
+      const found = await ctx.waitFor(look, {
+        timeoutMs: Math.max(0, dueAt - now),
+        minGapMs: CYCLE_MS,
+        ...(scope ? { scope } : {}),
+        ...(watched.finalizing ? { recheckMs: CYCLE_MS } : {}),
+      });
+      if (found && found !== RESCOPE) return found.result;
+    }
+  } finally {
+    document.removeEventListener('resume', onResume);
   }
 }

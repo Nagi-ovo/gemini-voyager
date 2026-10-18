@@ -259,12 +259,12 @@ describe('Local Bridge composer.send', () => {
     noPageEvents();
   });
 
-  it('refuses a hidden tab before any page event', async () => {
+  it('sends a prompt in a background tab', async () => {
     setVisibility('hidden');
     bridge.start('composer.send', { text: 'hi' });
-    await vi.advanceTimersByTimeAsync(0);
-    expect(errorCode(bridge.outcome())).toBe('tab-hidden');
-    noPageEvents();
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { conversationId: 'conv-123' } });
+    expect(page.events().clicks).toBe(1);
   });
 
   it('sends nothing after a cancel while it waits for the composer', async () => {

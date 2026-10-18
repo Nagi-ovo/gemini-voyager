@@ -15,6 +15,8 @@ import {
   type PickerOptions,
   mountLiveModelPicker,
 } from '../__tests__/liveModelPicker';
+import { throttleChainedTimers } from '../__tests__/throttledTimers';
+import type { WakeCounts } from '../wake';
 
 vi.mock('@/utils/i18n', () => ({ getCurrentLanguage: vi.fn(async () => 'en') }));
 
@@ -63,6 +65,33 @@ describe('Local Bridge model.select: reaching an effort', () => {
       },
     });
     expect(picker.state()).toMatchObject({ effort: 4, open: false, keydowns: 3, overlapping: 0 });
+  });
+
+  it("selects the model in a tab hidden for minutes, waking on the page's own changes instead of a timer", async () => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    const clock = throttleChainedTimers();
+    try {
+      page = mountChatGptPage();
+      picker = mountLiveModelPicker(page.form, { effort: 1 });
+      bridge = createHarness(undefined, chatgptAdapter, clock.defer);
+      bridge.start(
+        'model.select',
+        { target: { preset: 'pro' } },
+        { deadline: Date.now() + 25_000 },
+      );
+      await clock.advance(10_000);
+    } finally {
+      clock.restore();
+    }
+
+    const outcome = bridge.outcome();
+    expect(outcome).toMatchObject({
+      ok: true,
+      data: { observed: { effortIndex: 4 }, evidence: { hidden: true } },
+    });
+    const { evidence } = (outcome?.ok ? outcome.data : {}) as { evidence?: { wakes: WakeCounts } };
+    expect(evidence?.wakes.mutation).toBeGreaterThan(0);
+    expect(picker.state()).toMatchObject({ effort: 4, open: false, overlapping: 0 });
   });
 
   it('waits for a picker that renders after the composer in a freshly opened tab', async () => {

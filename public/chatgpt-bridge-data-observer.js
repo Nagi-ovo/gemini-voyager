@@ -23,6 +23,10 @@
  * this: every report is kept for the document's life and posted again on arm.
  * Only ids and names leave the page, bounded in count and length.
  *
+ * - route: the page's router called history.pushState or replaceState. The
+ *   bridge's waits wake on it (a hidden tab's timers can sleep a minute); it
+ *   carries nothing, and the call itself goes through unchanged.
+ *
  * Validation and use live in
  * src/features/plugins/builtin/chatgptLocalBridge/pageData/.
  */
@@ -236,6 +240,21 @@
       return result;
     };
   }
+
+  /** Report a route change after the page's own call, which returns as it would. */
+  function watchHistory(method) {
+    var original = history[method];
+    if (typeof original !== 'function') return;
+    history[method] = function () {
+      var result = original.apply(this, arguments);
+      if (armed) post('route', {});
+      return result;
+    };
+  }
+  try {
+    watchHistory('pushState');
+    watchHistory('replaceState');
+  } catch (e) {}
 
   // A content script that started first is waiting for this to arm it.
   post('ready');

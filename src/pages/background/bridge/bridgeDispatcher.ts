@@ -73,9 +73,7 @@ export const SUPPORTED_BRIDGE_OPS: ReadonlySet<OpName> = new Set<OpName>([
 ]);
 
 export interface DispatcherConfig {
-  /** Q2: an interactive op in a background tab fails `tab-hidden` instead of running. */
-  readonly interactiveNeedsForeground: boolean;
-  /** Open bridge tabs in the foreground, where interactive ops are allowed. */
+  /** Open bridge tabs in the foreground; off: every op runs in a background tab. */
   readonly openTabActive: boolean;
   /**
    * A running op silent for this long gets a document probe. Background-tab
@@ -100,8 +98,7 @@ export interface DispatcherConfig {
 }
 
 export const DEFAULT_DISPATCHER_CONFIG: DispatcherConfig = {
-  interactiveNeedsForeground: true,
-  openTabActive: true,
+  openTabActive: false,
   silenceProbeMs: 120_000,
   deadlineGraceMs: 30_000,
   closeMarginMs: 2_000,
@@ -516,13 +513,6 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
       });
     }
     const leased = LEASED_OPS.has(task.op);
-    // `conversation.ready` clicks only to switch modes; the page refuses a hidden tab then.
-    const needsFront = leased && task.op !== 'conversation.ready';
-    if (needsFront && config.interactiveNeedsForeground && !(await tabs.isActive(holder.tabId))) {
-      return finish(task.taskId, fail('tab-hidden', 'Bring the bridge tab to the front.'), {
-        releaseLease: false,
-      });
-    }
     let leaseId: string | undefined;
     let deadline = record.deadline;
     if (leased) {
@@ -755,6 +745,12 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     const holder = holderOf(record);
     if (record.state !== 'running' || !holder || t - record.lastProgressAt < config.silenceProbeMs)
       return;
+    // A frozen tab runs nothing until it thaws, and a message to it may never be answered:
+    // hold the task (its deadline still counts) instead of calling its document lost.
+    if (await tabs.isFrozen(holder.tabId)) {
+      logger.info('Local bridge task held', { taskId: record.taskId, reason: 'tab-frozen' });
+      return;
+    }
     try {
       await tabs.send(holder, {
         type: 'gv.bridge.lease.probe',

@@ -55,6 +55,8 @@ export interface FakeTab {
   id: number;
   url: string;
   active: boolean;
+  /** As Chrome 132+ reports it; a frozen tab runs nothing until it thaws. */
+  frozen?: boolean;
 }
 
 /** Tabs API over an in-memory tab list; `onMessage` decides each content reply. */

@@ -7,6 +7,7 @@ import { chatgptAdapter } from '@/features/plugins/sites/adapters/chatgpt';
 import { type ChatGptPageFixture, mountChatGptPage } from '../__tests__/chatgptPageFixture';
 import { type Harness, createHarness, errorCode } from '../__tests__/harness';
 import { type PageDataFeed, createPageDataFeed } from '../__tests__/pageDataFeed';
+import { throttleChainedTimers } from '../__tests__/throttledTimers';
 import { BAR_CONFIRM_CYCLES, PROGRESS_EVERY_MS } from './turnsWaitReply';
 
 const toasts = vi.hoisted(() => ({ show: vi.fn() }));
@@ -156,19 +157,64 @@ describe('Local Bridge turns.waitReply', () => {
   it('fails as reply-stalled once the reply shows no activity for 20 minutes', async () => {
     bridge.start('turns.waitReply', WAIT);
     page.setReply('turn-1', { text: 'Half an answer', replyId: 'r-1' });
-    await vi.advanceTimersByTimeAsync(2_000);
-    vi.setSystemTime(Date.now() + 19 * 60_000);
-    await vi.advanceTimersByTimeAsync(2_000);
+    // A quiet page is looked at only on its beat and at its stall, so the clock runs for real.
+    await vi.advanceTimersByTimeAsync(19 * 60_000);
     expect(bridge.outcome()).toBeUndefined();
 
-    vi.setSystemTime(Date.now() + 60_000);
-    await vi.advanceTimersByTimeAsync(2_000);
+    await vi.advanceTimersByTimeAsync(2 * 60_000);
     const outcome = bridge.outcome();
     expect(errorCode(outcome)).toBe('reply-stalled');
     expect(outcome?.ok === false && outcome.error.details).toMatchObject({
       conversationId: 'conv-1',
       textLength: 'Half an answer'.length,
     });
+  });
+
+  it('waits for the reply in a background tab without the foreground', async () => {
+    const clock = throttleChainedTimers();
+    try {
+      bridge = createHarness(undefined, chatgptAdapter, clock.defer);
+      bridge.start('turns.waitReply', WAIT);
+      page.showStopControl(true);
+      for (let second = 0; second < 5; second += 1) {
+        page.setReply('turn-1', { text: `streamed part ${second}`, replyId: 'r-1' });
+        await clock.advance(1_000);
+      }
+      page.showStopControl(false);
+      page.setReply('turn-1', {
+        text: 'The answer.',
+        turnState: 'complete',
+        actions: true,
+        replyId: 'r-1',
+      });
+      await clock.advance((BAR_CONFIRM_CYCLES + 2) * 1_000);
+    } finally {
+      clock.restore();
+    }
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { assistantTurnKey: 'r-1', evidence: { hidden: true } },
+    });
+  });
+
+  it('does not read a frozen stretch as a stalled reply', async () => {
+    bridge.start('turns.waitReply', WAIT);
+    page.setReply('turn-1', { text: 'Half an answer', replyId: 'r-1' });
+    await vi.advanceTimersByTimeAsync(2_000);
+    // The browser froze the tab for 25 minutes: nothing ran, then the page resumes.
+    vi.setSystemTime(Date.now() + 25 * 60_000);
+    document.dispatchEvent(new Event('resume'));
+    await vi.advanceTimersByTimeAsync(PROGRESS_EVERY_MS);
+    expect(bridge.outcome()).toBeUndefined();
+
+    page.setReply('turn-1', {
+      text: 'Half an answer, then the rest.',
+      turnState: 'complete',
+      actions: true,
+      replyId: 'r-1',
+    });
+    await vi.advanceTimersByTimeAsync((BAR_CONFIRM_CYCLES + 2) * 1_000);
+    expect(bridge.outcome()?.ok).toBe(true);
   });
 
   it('names an alert it could not classify when the reply stalls behind it', async () => {

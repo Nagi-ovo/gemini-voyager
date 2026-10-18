@@ -47,6 +47,8 @@ const CARD_LOST_MS = 3_000;
 const UPLOAD_PROGRESS_EVERY_MS = 5_000;
 /** Kept back from the grant so the op reports its own failure before the lease runs out. */
 const DEADLINE_MARGIN_MS = 1_000;
+/** The settle and lost-card windows and the progress beat run on the clock, which no wake reports. */
+const CLOCK_RECHECK_MS = 250;
 
 function checkComposerFree(
   ctx: OpContext,
@@ -203,7 +205,7 @@ export async function runComposerAttach(
       stableSince ??= at;
       return at - stableSince >= SETTLE_MS ? { rejected: undefined } : null;
     },
-    { timeoutMs: Math.max(0, budget()) },
+    { timeoutMs: Math.max(0, budget()), recheckMs: CLOCK_RECHECK_MS },
   );
   const evidence = {
     files: names.length,

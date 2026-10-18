@@ -7,10 +7,18 @@
  * Kept for the document's life, like the runtime: an in-app visit to a
  * project or conversation seen before is served from the page's cache, with
  * no new request to observe.
+ *
+ * Each report also wakes the op's waits (`subscribe`), as do the observer's
+ * route reports: the page's router moved with `pushState` or `replaceState`.
  */
 import type { ProjectSummary } from '@/features/bridge/protocol';
 
-import { type FileListSource, postToDataObserver, readDataObserverMessage } from './protocol';
+import {
+  type DataObserverEvent,
+  type FileListSource,
+  postToDataObserver,
+  readDataObserverMessage,
+} from './protocol';
 
 export interface ProjectsReport {
   readonly projects: readonly ProjectSummary[];
@@ -32,9 +40,13 @@ export interface PageData {
   currentNode(conversationId: string): string | null;
 }
 
+export type PageDataWake = 'pageData' | 'route';
+
 export interface PageDataStore extends PageData {
   /** Listen and arm the observer; repeat calls do nothing. */
   start(): void;
+  /** Called after each report; the returned function stops it. */
+  subscribe(listener: (reason: PageDataWake) => void): () => void;
 }
 
 export function createPageDataStore(now: () => number = Date.now): PageDataStore {
@@ -43,17 +55,26 @@ export function createPageDataStore(now: () => number = Date.now): PageDataStore
   let projects: ProjectsReport | null = null;
   const files = new Map<string, FilesReport>();
   const conversations = new Map<string, string>();
+  const listeners = new Set<(reason: PageDataWake) => void>();
 
   const onMessage = (event: MessageEvent): void => {
     const report = readDataObserverMessage(event);
     if (!report) return;
-    observing = true;
+    // Only the observer's answers say it runs; route reports follow its `armed` anyway.
+    if (report.type !== 'route') observing = true;
+    record(report);
+    const reason: PageDataWake = report.type === 'route' ? 'route' : 'pageData';
+    for (const listener of listeners) listener(reason);
+  };
+
+  const record = (report: DataObserverEvent): void => {
     switch (report.type) {
       case 'ready':
         // The observer may load after this: its `ready` asks to be armed again.
         postToDataObserver('arm');
         return;
       case 'armed':
+      case 'route':
         return;
       case 'projects':
         projects = { projects: report.projects, complete: report.complete };
@@ -79,6 +100,10 @@ export function createPageDataStore(now: () => number = Date.now): PageDataStore
       postToDataObserver('arm');
     },
     observing: () => observing,
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
     projects: () => projects,
     files: (projectId) => files.get(projectId) ?? null,
     currentNode: (conversationId) => conversations.get(conversationId) ?? null,
