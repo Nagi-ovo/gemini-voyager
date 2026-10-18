@@ -65,7 +65,8 @@ function proLabels(data: ModelPickerSection): Set<string> {
 export function findProTrigger(adapter: SiteAdapter | null): HTMLElement | null {
   const data = pickerData(adapter);
   if (!data) return null;
-  const trigger = findTrigger(document, data);
+  const marker = (adapter ?? chatgptAdapter).pageHooks?.modelPickerTrigger;
+  const trigger = findTrigger(document, data, marker);
   if (!trigger?.closest('form')) return null;
   return proLabels(data).has(triggerText(trigger)) ? trigger : null;
 }

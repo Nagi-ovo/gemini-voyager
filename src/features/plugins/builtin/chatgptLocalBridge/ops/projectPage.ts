@@ -2,19 +2,14 @@
  * Read-only views of ChatGPT's projects for the `project.*` ops, driven by the
  * site's `projects` data (measured on chatgpt.com, zh-CN, 2026-10-18; see
  * `sites/sections/projectsData.ts`). Structure and attributes only, so every
- * UI language reads the same; text tells apart the two buttons of the
- * chat/Work pair and the composer's placeholder, from tables per language.
- *
- * In some languages the chat view tab and the chat mode button read the same
- * (「聊天」): the mode pair is found from its Work button outwards, among
- * buttons that carry the pressed attribute, so the two are never confused.
+ * UI language reads the same; the composer's placeholder is the one text,
+ * from tables per language. The chat/Work pair is in `modeSwitch.ts`.
  */
 import {
   PROJECT_ID_PATTERN,
   type ProjectFile,
   type ProjectSummary,
 } from '@/features/bridge/protocol';
-import type { ChatModesSection } from '@/features/plugins/sites/sections/chatModesData';
 import type { LocalizedLabels } from '@/features/plugins/sites/sections/modelPickerData';
 import type { ProjectsSection } from '@/features/plugins/sites/sections/projectsData';
 import type { SiteAdapter } from '@/features/plugins/types';
@@ -23,8 +18,6 @@ import { isRendered } from '@/pages/content/export/adapter/chatgptThread';
 import { GRANT_MARGIN_MS, type OpContext } from '../opContext';
 import { siteOf } from './pageReaders';
 
-/** How far up from one button of a pair the other may sit. */
-const PAIR_MAX_DEPTH = 3;
 const NAME = '{name}';
 const QUOTES = /[“”„‟″＂「」『』]/g;
 
@@ -99,71 +92,6 @@ export function titleName(data: ProjectsSection): string | null {
     if (name) return name;
   }
   return null;
-}
-
-/** The text a person sees (`innerText` skips visually hidden parts; jsdom only has `textContent`). */
-function textOf(element: HTMLElement): string {
-  return (element.innerText ?? element.textContent ?? '').trim();
-}
-
-/** The rendered buttons labelled `labels` that carry `attribute`. */
-function pressableButtons(
-  root: ParentNode,
-  labels: readonly string[],
-  attribute: string,
-): HTMLButtonElement[] {
-  return Array.from(root.querySelectorAll<HTMLButtonElement>(`button[${attribute}]`)).filter(
-    (button) => labels.includes(textOf(button)) && isRendered(button),
-  );
-}
-
-/** The one such button nearest to `anchor`, within a few ancestors; else null. */
-function partnerOf(
-  anchor: HTMLElement,
-  labels: readonly string[],
-  attribute: string,
-): HTMLButtonElement | null {
-  let container: Element | null = anchor.parentElement;
-  for (let depth = 1; container && depth <= PAIR_MAX_DEPTH; depth += 1) {
-    const near = pressableButtons(container, labels, attribute).filter(
-      (button) => button !== anchor,
-    );
-    if (near.length === 1) return near[0];
-    if (near.length > 1) return null;
-    container = container.parentElement;
-  }
-  return null;
-}
-
-export interface ModeSwitch {
-  readonly chat: HTMLButtonElement;
-  readonly work: HTMLButtonElement;
-}
-
-/** The project page's chat/Work pair: both carry the pressed attribute. */
-export function findProjectModeSwitch(
-  data: ProjectsSection,
-  modes: ChatModesSection,
-): ModeSwitch | null {
-  const attribute = data.modePressedAttribute;
-  const works = pressableButtons(document, allLabels(modes.work.switchLabels), attribute);
-  if (works.length !== 1) return null;
-  const chat = partnerOf(works[0], allLabels(modes.chat.switchLabels), attribute);
-  return chat ? { chat, work: works[0] } : null;
-}
-
-/** What the mode switch shows pressed; null when the page has no switch. */
-export function readProjectSwitch(
-  data: ProjectsSection,
-  modes: ChatModesSection,
-): 'chat' | 'work' | 'unknown' | null {
-  const control = findProjectModeSwitch(data, modes);
-  if (!control) return null;
-  const pressed = (button: HTMLButtonElement): boolean =>
-    button.getAttribute(data.modePressedAttribute) === 'true';
-  const chat = pressed(control.chat);
-  const work = pressed(control.work);
-  return chat && !work ? 'chat' : work && !chat ? 'work' : 'unknown';
 }
 
 export function composerSaysProjectChat(data: ProjectsSection, labels: readonly string[]): boolean {

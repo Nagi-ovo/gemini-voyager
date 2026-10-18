@@ -84,6 +84,6 @@ export function isSameSiteAdapter(a: SiteAdapter | null, b: SiteAdapter | null):
     JSON.stringify([...a.capabilities].sort()) === JSON.stringify([...b.capabilities].sort()) &&
     JSON.stringify(a.modelPicker ?? null) === JSON.stringify(b.modelPicker ?? null) &&
     JSON.stringify(a.projects ?? null) === JSON.stringify(b.projects ?? null) &&
-    JSON.stringify(a.chatModes ?? null) === JSON.stringify(b.chatModes ?? null)
+    JSON.stringify(a.pageHooks ?? null) === JSON.stringify(b.pageHooks ?? null)
   );
 }

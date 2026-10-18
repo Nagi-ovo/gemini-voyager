@@ -220,6 +220,19 @@ describe.runIf(registered)('Local Bridge project.open', () => {
     expect(fixture.mode()).toBe('chat');
   });
 
+  it('switches a Work project to chat in a language the site data has no words for, by its switch', async () => {
+    mount({ mode: 'work', language: 'de' });
+    bridge.start('project.open', { projectId: PROJECT_A.id, view: 'chat' });
+    await vi.advanceTimersByTimeAsync(3_000);
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { projectId: PROJECT_A.id, switchedMode: { from: 'work', to: 'chat' } },
+    });
+    expect(fixture.counts.workClicks).toBe(0);
+    expect(fixture.mode()).toBe('chat');
+  });
+
   it('opens the sources view of a project on a page in English', async () => {
     mount({ route: pagePath(PROJECT_A.id), language: 'en' });
     bridge.start('project.open', { projectId: PROJECT_A.id, view: 'sources' });

@@ -298,46 +298,50 @@ describe('optional site sections', () => {
     });
   });
 
-  describe('chatModes section', () => {
+  describe('pageHooks section', () => {
     const shipped = JSON.parse(
       readFileSync(join(__dirname, '../catalog/sites/chatgpt/site.json'), 'utf8'),
     ) as Record<string, unknown>;
-    const CHAT_MODES = shipped.chatModes as Record<string, unknown>;
+    const HOOKS = shipped.pageHooks as Record<string, unknown>;
+    const SWITCH = HOOKS.modeSwitch as Record<string, unknown>;
 
-    it('keeps the shipped ChatGPT chat modes through a publish round trip', () => {
-      const read = readSiteAdapterData({ ...VALID, chatModes: CHAT_MODES });
+    it('keeps the shipped ChatGPT page hooks through a publish round trip', () => {
+      const read = readSiteAdapterData({ ...VALID, pageHooks: HOOKS });
       expect(read.sectionIssues).toEqual([]);
       if (!read.result.success) throw new Error('fixture must validate');
-      expect(read.result.data.chatModes).toEqual(CHAT_MODES);
+      expect(read.result.data.pageHooks).toEqual(HOOKS);
       const again = readSiteAdapterData(
         JSON.parse(JSON.stringify(siteAdapterToData(read.result.data))),
       );
-      expect(again.result.success && again.result.data.chatModes).toEqual(CHAT_MODES);
+      expect(again.result.success && again.result.data.pageHooks).toEqual(HOOKS);
     });
 
     it.each([
-      ['an unknown format', { format: 2 }, 'chatModes.format'],
-      ['an unknown key', { home: {} }, 'chatModes.home'],
+      ['an unknown format', { format: 2 }, 'pageHooks.format'],
+      ['an unknown key', { home: {} }, 'pageHooks.home'],
       [
-        'an empty label',
-        { work: { composerLabels: { en: [''] }, switchLabels: { en: ['Work'] } } },
-        'chatModes.work.composerLabels.en',
+        'a selector that does not parse',
+        { modelPickerTrigger: 'button >> x' },
+        'pageHooks.modelPickerTrigger',
       ],
-    ])('drops a chatModes section with %s, keeping the adapter', (_label, patch, path) => {
-      const read = readSiteAdapterData({ ...VALID, chatModes: { ...CHAT_MODES, ...patch } });
+      [
+        'a switch order that is not chat and work',
+        { modeSwitch: { ...SWITCH, order: ['chat', 'chat'] } },
+        'pageHooks.modeSwitch.order',
+      ],
+      ['a pattern that could backtrack', { replyFailed: ['(a+)+$'] }, 'pageHooks.replyFailed[0]'],
+    ])('drops a pageHooks section with %s, keeping the adapter', (_label, patch, path) => {
+      const read = readSiteAdapterData({ ...VALID, pageHooks: { ...HOOKS, ...patch } });
       expect(read.result.success).toBe(true);
-      expect(read.result.success && read.result.data.chatModes).toBeUndefined();
+      expect(read.result.success && read.result.data.pageHooks).toBeUndefined();
       expect(read.sectionIssues.map((issue) => issue.path)).toContain(path);
     });
 
-    it('treats changed chat modes as a different adapter, so plugins pick them up', () => {
-      const before = validateSiteAdapterData({ ...VALID, chatModes: CHAT_MODES });
+    it('treats changed page hooks as a different adapter, so plugins pick them up', () => {
+      const before = validateSiteAdapterData({ ...VALID, pageHooks: HOOKS });
       const after = validateSiteAdapterData({
         ...VALID,
-        chatModes: {
-          ...CHAT_MODES,
-          chat: { composerLabels: { en: ['Ask'] }, switchLabels: { en: ['Chat'] } },
-        },
+        pageHooks: { ...HOOKS, modelPickerTrigger: 'button[data-picker]' },
       });
       if (!before.success || !after.success) throw new Error('fixtures must validate');
       expect(isSameSiteAdapter(before.data, after.data)).toBe(false);

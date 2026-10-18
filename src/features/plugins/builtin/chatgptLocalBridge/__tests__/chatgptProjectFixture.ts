@@ -150,6 +150,17 @@ const TEXTS = {
     kind: 'File',
     menu: ['Download', 'Delete'],
   },
+  de: {
+    home: 'ChatGPT fragen',
+    work: 'Lass ChatGPT eine Aufgabe erledigen',
+    chatIn: (name: string) => `Neuer Chat in ${name}`,
+    create: 'Neues Projekt',
+    views: ['Chats', 'Quellen'],
+    modes: ['Chat', 'Work'],
+    actions: (name: string) => `Aktionen für ${name}`,
+    kind: 'Datei',
+    menu: ['Herunterladen', 'Löschen'],
+  },
 } as const;
 
 export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageFixture {
@@ -185,6 +196,8 @@ export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageF
   nav.setAttribute('aria-label', '聊天历史');
   document.body.prepend(nav);
   const header = document.querySelector<HTMLElement>('[data-gv-fixture-header]')!;
+  // Measured: the chat/Work pair is a role=group in this header, on every page that has it.
+  header.setAttribute('data-app-shell-header-obstacle', 'true');
   const main = document.querySelector('main')!;
   const sources = document.createElement('section');
   main.prepend(sources);

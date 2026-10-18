@@ -132,7 +132,6 @@
       "chat": "[role=\"tablist\"] [role=\"tab\"][id$=\"-chats-tab\"]",
       "sources": "[role=\"tablist\"] [role=\"tab\"][id$=\"-sources-tab\"]"
     },
-    "modePressedAttribute": "aria-pressed",
     "chatComposerLabels": {
       "en": ["New chat in {name}"],
       "zh-CN": ["在“{name}”中新建聊天", "在\"{name}\"中新建聊天"],
@@ -153,60 +152,80 @@
       "removeIcon": "use[href$=\"#trash-light-16\"]"
     }
   },
-  "chatModes": {
+  "pageHooks": {
     "format": 1,
-    "chat": {
-      "composerLabels": {
-        "en": ["Ask ChatGPT"],
-        "zh-CN": ["询问 ChatGPT"],
-        "zh-TW": ["問問 ChatGPT"],
-        "ja-JP": ["ChatGPT に聞く"],
-        "ko-KR": ["ChatGPT에게 물어보세요"],
-        "fr-FR": ["Demander à ChatGPT"],
-        "es-ES": ["Pregunta a ChatGPT"],
-        "pt-BR": ["Pergunte ao ChatGPT"],
-        "ru-RU": ["Спросить ChatGPT"],
-        "ar": ["اسأل ChatGPT"]
+    "modeSwitch": {
+      "group": "[data-app-shell-header-obstacle] [role=\"group\"]",
+      "button": "button[aria-pressed]",
+      "pressedAttribute": "aria-pressed",
+      "order": ["chat", "work"]
+    },
+    "modes": {
+      "chat": {
+        "composerLabels": {
+          "en": ["Ask ChatGPT"],
+          "zh-CN": ["询问 ChatGPT"],
+          "zh-TW": ["問問 ChatGPT"],
+          "ja-JP": ["ChatGPT に聞く"],
+          "ko-KR": ["ChatGPT에게 물어보세요"],
+          "fr-FR": ["Demander à ChatGPT"],
+          "es-ES": ["Pregunta a ChatGPT"],
+          "pt-BR": ["Pergunte ao ChatGPT"],
+          "ru-RU": ["Спросить ChatGPT"],
+          "ar": ["اسأل ChatGPT"]
+        },
+        "switchLabels": {
+          "en": ["Chat"],
+          "zh-CN": ["聊天"],
+          "zh-TW": ["對話"],
+          "ja-JP": ["Chat"],
+          "ko-KR": ["Chat"],
+          "fr-FR": ["Chat"],
+          "es-ES": ["Chat"],
+          "pt-BR": ["Chat"],
+          "ru-RU": ["Чат"],
+          "ar": ["الدردشة"]
+        }
       },
-      "switchLabels": {
-        "en": ["Chat"],
-        "zh-CN": ["聊天"],
-        "zh-TW": ["對話"],
-        "ja-JP": ["Chat"],
-        "ko-KR": ["Chat"],
-        "fr-FR": ["Chat"],
-        "es-ES": ["Chat"],
-        "pt-BR": ["Chat"],
-        "ru-RU": ["Чат"],
-        "ar": ["الدردشة"]
+      "work": {
+        "composerLabels": {
+          "en": ["Work with ChatGPT"],
+          "zh-CN": ["使用 ChatGPT Work"],
+          "zh-TW": ["與 ChatGPT 一起工作"],
+          "ja-JP": ["Work モードで作成"],
+          "ko-KR": ["ChatGPT로 Work 시작"],
+          "fr-FR": ["Travailler avec ChatGPT"],
+          "es-ES": ["Trabajar con ChatGPT"],
+          "pt-BR": ["Trabalhe com o ChatGPT"],
+          "ru-RU": ["Работайте с ChatGPT"],
+          "ar": ["استخدم وضع العمل مع ChatGPT"]
+        },
+        "switchLabels": {
+          "en": ["Work"],
+          "zh-CN": ["工作"],
+          "zh-TW": ["工作"],
+          "ja-JP": ["Work"],
+          "ko-KR": ["Work"],
+          "fr-FR": ["Work"],
+          "es-ES": ["Work"],
+          "pt-BR": ["Work"],
+          "ru-RU": ["Работа"],
+          "ar": ["العمل"]
+        }
       }
     },
-    "work": {
-      "composerLabels": {
-        "en": ["Work with ChatGPT"],
-        "zh-CN": ["使用 ChatGPT Work"],
-        "zh-TW": ["與 ChatGPT 一起工作"],
-        "ja-JP": ["Work モードで作成"],
-        "ko-KR": ["ChatGPT로 Work 시작"],
-        "fr-FR": ["Travailler avec ChatGPT"],
-        "es-ES": ["Trabajar con ChatGPT"],
-        "pt-BR": ["Trabalhe com o ChatGPT"],
-        "ru-RU": ["Работайте с ChatGPT"],
-        "ar": ["استخدم وضع العمل مع ChatGPT"]
-      },
-      "switchLabels": {
-        "en": ["Work"],
-        "zh-CN": ["工作"],
-        "zh-TW": ["工作"],
-        "ja-JP": ["Work"],
-        "ko-KR": ["Work"],
-        "fr-FR": ["Work"],
-        "es-ES": ["Work"],
-        "pt-BR": ["Work"],
-        "ru-RU": ["Работа"],
-        "ar": ["العمل"]
-      }
-    }
+    "modelPickerTrigger": "button[aria-haspopup=\"menu\"][data-composer-navigation-target=\"reasoning\"]",
+    "replyFailed": ["^thinking failed[.!]?(?:\\s+retry)?$"],
+    "rateLimit": [
+      "too many requests",
+      "sending too many requests",
+      "temporarily limited access",
+      "please wait a few minutes",
+      "rate limit(?:ed)?",
+      "usage cap",
+      "you've reached"
+    ],
+    "accountBlocked": [["suspicious activity detected", "secure your account"]]
   },
   "bridge": {
     "format": 1,

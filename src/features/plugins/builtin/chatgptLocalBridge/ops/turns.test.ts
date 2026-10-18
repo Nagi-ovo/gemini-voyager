@@ -2,6 +2,8 @@
 // @vitest-environment-options { "url": "https://chatgpt.com/c/conv-1" }
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { chatgptAdapter } from '@/features/plugins/sites/adapters/chatgpt';
+
 import { type ChatGptPageFixture, mountChatGptPage } from '../__tests__/chatgptPageFixture';
 import { type Harness, createHarness, errorCode } from '../__tests__/harness';
 import { type PageDataFeed, createPageDataFeed } from '../__tests__/pageDataFeed';
@@ -167,6 +169,52 @@ describe('Local Bridge turns.waitReply', () => {
       conversationId: 'conv-1',
       textLength: 'Half an answer'.length,
     });
+  });
+
+  it('names an alert it could not classify when the reply stalls behind it', async () => {
+    bridge.start('turns.waitReply', WAIT);
+    page.setReply('turn-1', { text: 'Half an answer', replyId: 'r-1' });
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<div role="alert">Du hast dein Limit erreicht.</div>',
+    );
+    await vi.advanceTimersByTimeAsync(2_000);
+    vi.setSystemTime(Date.now() + 20 * 60_000);
+    await vi.advanceTimersByTimeAsync(2_000);
+    const outcome = bridge.outcome();
+    expect(errorCode(outcome)).toBe('reply-stalled');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({
+      alerts: ['Du hast dein Limit erreicht.'],
+    });
+  });
+
+  it('fails as rate-limited on a usage alert in the words the site data names', async () => {
+    bridge = createHarness(undefined, {
+      ...chatgptAdapter,
+      pageHooks: { ...chatgptAdapter.pageHooks!, rateLimit: ['limit erreicht'] },
+    });
+    bridge.start('turns.waitReply', WAIT);
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<div role="alert">Du hast dein Limit erreicht.</div>',
+    );
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(errorCode(bridge.outcome())).toBe('rate-limited');
+  });
+
+  it('fails as reply-failed on failure copy the site data names, instead of returning it', async () => {
+    bridge = createHarness(undefined, {
+      ...chatgptAdapter,
+      pageHooks: { ...chatgptAdapter.pageHooks!, replyFailed: ['^denken fehlgeschlagen$'] },
+    });
+    bridge.start('turns.waitReply', WAIT);
+    page.setReply('turn-1', {
+      text: 'Denken fehlgeschlagen',
+      turnState: 'complete',
+      actions: true,
+    });
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(errorCode(bridge.outcome())).toBe('reply-failed');
   });
 
   it('ends with challenge and a toast when a verification page replaces the thread', async () => {

@@ -38,6 +38,9 @@ const CHALLENGE_WIDGET_SELECTOR = [
 const CHALLENGE_SCRIPT_SELECTOR = 'script[src*="/challenge-platform/"]';
 const VERIFYING_COPY =
   /verify(ing)? you are human|checking your browser|needs to review the security of your connection|just a moment/;
+// ChatGPT's blocked-account page (its servers send it in English); `pageHooks.accountBlocked`
+// replaces these remotely. Lower case: the page text is compared lower-cased.
+const ACCOUNT_BLOCKED_PHRASES = [['suspicious activity detected', 'secure your account']];
 const SHORT_PAGE_CHARS = 600;
 export const WEAK_PERSIST_MS = 12_000;
 const OBSERVER_DEBOUNCE_MS = 300;
@@ -80,7 +83,7 @@ function pageText(doc: Document): string {
   return normalized(body ? (body.innerText ?? body.textContent ?? '') : '');
 }
 
-function readVerdict(doc: Document): Verdict {
+function readVerdict(doc: Document, blockedPhrases: readonly (readonly string[])[]): Verdict {
   const title = (doc.title || '').toLowerCase();
   const titleSaysChallenge =
     title.includes('just a moment') ||
@@ -89,8 +92,9 @@ function readVerdict(doc: Document): Verdict {
   const hasShell = doc.querySelector(APP_SHELL_SELECTOR) !== null;
   const text = hasShell ? shellText(doc) : pageText(doc);
   const shortPage = text.length < SHORT_PAGE_CHARS;
-  const accountBlocked =
-    text.includes('suspicious activity detected') && text.includes('secure your account');
+  const accountBlocked = blockedPhrases.some(
+    (group) => group.length > 0 && group.every((phrase) => text.includes(phrase)),
+  );
   if (hasShell) return { strong: false, weak: false, accountBlocked };
   const hasWidget = doc.querySelector(CHALLENGE_WIDGET_SELECTOR) !== null;
   return {
@@ -110,11 +114,13 @@ export interface ChallengeGuard {
 export function createChallengeGuard(
   doc: Document = document,
   now: () => number = Date.now,
+  /** The site's `pageHooks.accountBlocked`, read afresh; the measured phrases when absent. */
+  blockedPhrases: () => readonly (readonly string[])[] | undefined = () => undefined,
 ): ChallengeGuard {
   let weakSince: number | null = null;
 
   const current = (): ChallengeKind | null => {
-    const verdict = readVerdict(doc);
+    const verdict = readVerdict(doc, blockedPhrases() ?? ACCOUNT_BLOCKED_PHRASES);
     if (verdict.accountBlocked) return 'account-blocked';
     if (verdict.strong) return 'challenge';
     if (!verdict.weak) {

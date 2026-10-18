@@ -51,11 +51,25 @@ import {
 export const PROGRESS_EVERY_MS = 15_000;
 export const BAR_CONFIRM_CYCLES = 3;
 const POLL_MS = 1_000;
-// ChatGPT's terminal failure copy (oracle's measured English form); never retried here.
-const THINKING_FAILED = /^thinking failed[.!]?(?:\s+retry)?$/i;
-// Usage-cap and throttling banners, English forms; other UI languages are unverified.
-const RATE_LIMIT_COPY =
-  /too many requests|sending too many requests|temporarily limited access|please wait a few minutes|rate limit(?:ed)?|usage cap|you've reached/i;
+// ChatGPT's terminal failure copy and its usage-cap and throttling banners: its servers
+// send them in English (no UI language's messages hold them). The site's
+// `pageHooks.replyFailed` / `.rateLimit` replace these measured forms remotely.
+const THINKING_FAILED = [/^thinking failed[.!]?(?:\s+retry)?$/i];
+const RATE_LIMIT_COPY = [
+  /too many requests|sending too many requests|temporarily limited access|please wait a few minutes|rate limit(?:ed)?|usage cap|you've reached/i,
+];
+
+/** The site's patterns (checked safe when the site data was read), else the measured ones. */
+function patternsOf(sources: readonly string[] | undefined, fallback: readonly RegExp[]): RegExp[] {
+  if (!sources) return [...fallback];
+  return sources.flatMap((source) => {
+    try {
+      return [new RegExp(source, 'i')];
+    } catch {
+      return [];
+    }
+  });
+}
 const ALERT_SELECTOR = '[role="alert"], [aria-live="assertive"]';
 
 interface Gate {
@@ -81,13 +95,16 @@ function findTarget(
   return { item: items[index], reply: null };
 }
 
-function rateLimitBanner(): string | null {
-  for (const alert of document.querySelectorAll<HTMLElement>(ALERT_SELECTOR)) {
-    if (alert.closest('[data-turn-key]')) continue;
-    const text = (alert.textContent ?? '').replace(/\s+/g, ' ').trim();
-    if (text && RATE_LIMIT_COPY.test(text)) return text.slice(0, 300);
-  }
-  return null;
+/** The page's alerts outside the thread, as text: found by role, in every UI language. */
+function pageAlerts(): string[] {
+  return Array.from(document.querySelectorAll<HTMLElement>(ALERT_SELECTOR))
+    .filter((alert) => !alert.closest('[data-turn-key]'))
+    .map((alert) => (alert.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 300))
+    .filter(Boolean);
+}
+
+function rateLimitBanner(patterns: readonly RegExp[]): string | null {
+  return pageAlerts().find((text) => patterns.some((pattern) => pattern.test(text))) ?? null;
 }
 
 export async function runTurnsWaitReply(
@@ -96,6 +113,8 @@ export async function runTurnsWaitReply(
   adapter: SiteAdapter | null,
 ): Promise<TurnsWaitReplyResult> {
   const startedAt = ctx.now();
+  const failedCopy = patternsOf(adapter?.pageHooks?.replyFailed, THINKING_FAILED);
+  const limitCopy = patternsOf(adapter?.pageHooks?.rateLimit, RATE_LIMIT_COPY);
   const timeoutMs = params.timeoutMs ?? WAIT_REPLY_DEFAULT_TIMEOUT_MS;
   const stableMs = params.stableMs ?? WAIT_REPLY_DEFAULT_STABLE_MS;
   const stallMs = params.stallMs ?? WAIT_REPLY_DEFAULT_STALL_MS;
@@ -122,13 +141,13 @@ export async function runTurnsWaitReply(
         conversationId: params.conversationId,
       });
     }
-    const banner = rateLimitBanner();
+    const banner = rateLimitBanner(limitCopy);
     if (banner) ctx.fail('rate-limited', 'ChatGPT reports a usage limit.', { banner });
 
     const target = findTarget(params.afterUserTurnKey);
     const reply = target?.reply ?? null;
     const text = reply ? replyTextOf(reply) : '';
-    if (reply && THINKING_FAILED.test(text)) {
+    if (reply && failedCopy.some((pattern) => pattern.test(text))) {
       ctx.fail('reply-failed', 'ChatGPT could not finish the reply.', {
         conversationId: params.conversationId,
       });
@@ -188,6 +207,8 @@ export async function runTurnsWaitReply(
         phase,
         textLength,
         stalledForMs: now - activeAt,
+        // An alert the site data does not know (another language, new copy) is often the cause.
+        ...(pageAlerts().length > 0 ? { alerts: pageAlerts() } : {}),
       });
     }
     if (now - startedAt >= timeoutMs) {

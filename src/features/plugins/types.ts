@@ -18,8 +18,8 @@
 import type { TranslationKey } from '@/utils/translations';
 
 import type { BridgePolicySection } from './sites/sections/bridgePolicyData';
-import type { ChatModesSection } from './sites/sections/chatModesData';
 import type { ModelPickerSection } from './sites/sections/modelPickerData';
+import type { PageHooksSection } from './sites/sections/pageHooksData';
 import type { ProjectsSection } from './sites/sections/projectsData';
 
 // ---------------------------------------------------------------------------
@@ -96,10 +96,11 @@ export interface SiteAdapter {
    */
   readonly projects?: ProjectsSection;
   /**
-   * How the page shows chat and Work mode, for the Local Bridge. Optional and
-   * isolated like `modelPicker`; without it every mode reads as unknown.
+   * Page markers and text fallbacks for the Local Bridge and the model picker.
+   * Optional and isolated like `modelPicker`; without it the code's measured
+   * defaults stand in where it has them, and every mode reads as unknown.
    */
-  readonly chatModes?: ChatModesSection;
+  readonly pageHooks?: PageHooksSection;
   /**
    * Local Bridge kill switch: the ops this site's remote policy allows. Read by
    * the background's `bridgePolicy` straight from the catalog cache; content

@@ -15,8 +15,6 @@
  *   selectors for the dialog, its name input and its submit button;
  * - `titleTemplates`: `document.title` of a project page, with `{name}`;
  * - `views`: the chat and sources view tabs;
- * - `modePressedAttribute`: what marks the pressed button of the chat/Work
- *   pair, whose text is `chatModes.*.switchLabels`;
  * - `chatComposerLabels`: the composer placeholder in chat mode, with `{name}`
  *   (ChatGPT's message `chatgptProjectHome.composer.placeholder`);
  * - `sources`: the file input and row selectors; in a row, the element whose
@@ -70,7 +68,6 @@ export interface ProjectsSection {
   readonly createDialog: ProjectsCreateDialog;
   readonly titleTemplates: readonly string[];
   readonly views: { readonly chat: string; readonly sources: string };
-  readonly modePressedAttribute: string;
   readonly chatComposerLabels: LocalizedLabels;
   readonly sources: ProjectsSources;
 }
@@ -91,7 +88,6 @@ const SECTION_KEYS = [
   'createDialog',
   'titleTemplates',
   'views',
-  'modePressedAttribute',
   'chatComposerLabels',
   'sources',
 ];
@@ -236,7 +232,6 @@ export function readProjectsSection(
   if (sourcesQuery && !QUERY_PATTERN.test(sourcesQuery)) {
     reader.issue(`${path}.sourcesQuery`, 'must be one key=value pair');
   }
-  const attribute = reader.attribute(raw.modePressedAttribute, `${path}.modePressedAttribute`);
   const sidebar = reader.record(raw.sidebar, `${path}.sidebar`, [
     'row',
     'idAttribute',
@@ -279,7 +274,6 @@ export function readProjectsSection(
       chat: reader.selector(views.chat, `${path}.views.chat`),
       sources: reader.selector(views.sources, `${path}.views.sources`),
     },
-    modePressedAttribute: attribute,
     chatComposerLabels: reader.labels(raw.chatComposerLabels, `${path}.chatComposerLabels`, true),
     sources: {
       fileInput: reader.selector(sources.fileInput, `${path}.sources.fileInput`),

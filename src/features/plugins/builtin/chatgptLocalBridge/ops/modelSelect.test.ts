@@ -140,6 +140,23 @@ describe('Local Bridge model.select: UI languages the site data does not name', 
     expect(bridge.outcome()).toMatchObject({ ok: true, data: { observed: { effortIndex: 4 } } });
   });
 
+  it('finds the picker by the marker the site data names once ChatGPT renamed its own', async () => {
+    mount({ ...german, marked: false, effort: 1 });
+    page.form
+      .querySelector('button[aria-haspopup="menu"]')!
+      .setAttribute('data-composer-picker', 'reasoning');
+    bridge = createHarness(undefined, {
+      ...chatgptAdapter,
+      pageHooks: {
+        ...chatgptAdapter.pageHooks!,
+        modelPickerTrigger: 'button[aria-haspopup="menu"][data-composer-picker="reasoning"]',
+      },
+    });
+    await select({ target: { preset: 'pro' } });
+
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { observed: { effortIndex: 4 } } });
+  });
+
   it('finds no trigger when it carries neither the marker nor a known label', async () => {
     mount({ ...german, marked: false });
     await select({ target: { preset: 'pro' } });

@@ -49,13 +49,21 @@ export function mergedLabels(table: Readonly<Record<string, readonly string[]>>)
   return new Set(Object.values(table).flatMap((labels) => labels.map(normalizeLabel)));
 }
 
-/** ChatGPT's marker on the picker trigger, the same in every UI language. */
-const TRIGGER_MARKER = 'button[aria-haspopup="menu"][data-composer-navigation-target="reasoning"]';
+/**
+ * ChatGPT's marker on the picker trigger, the same in every UI language, as
+ * measured; the site's `pageHooks.modelPickerTrigger` replaces it remotely.
+ */
+export const DEFAULT_TRIGGER_MARKER =
+  'button[aria-haspopup="menu"][data-composer-navigation-target="reasoning"]';
 
 /** The one rendered picker trigger in `scope`, else null (none, or ambiguous). */
-export function findTrigger(scope: ParentNode, data: ModelPickerSection): HTMLElement | null {
+export function findTrigger(
+  scope: ParentNode,
+  data: ModelPickerSection,
+  marker: string = DEFAULT_TRIGGER_MARKER,
+): HTMLElement | null {
   // The aria-label is translated into each of ChatGPT's UI languages; the marker is not.
-  const marked = Array.from(scope.querySelectorAll<HTMLElement>(TRIGGER_MARKER)).filter(isRendered);
+  const marked = Array.from(scope.querySelectorAll<HTMLElement>(marker)).filter(isRendered);
   if (marked.length > 0) return marked.length === 1 ? marked[0] : null;
   const labels = mergedLabels(data.triggerLabels);
   const found = Array.from(

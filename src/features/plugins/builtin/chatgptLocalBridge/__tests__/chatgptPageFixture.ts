@@ -14,8 +14,11 @@
  *   `/c/<id>`;
  * - the chat/work switch is two role-less buttons reading exactly 「聊天」 and
  *   「工作」, each with a `data-state`; the composer's label names the mode
- *   (「询问 ChatGPT」 / 「使用 ChatGPT Work」). `language: 'en'` renders the
- *   English UI instead, with ChatGPT's own English texts.
+ *   (「询问 ChatGPT」 / 「使用 ChatGPT Work」). `modeSwitch: 'live'` renders it
+ *   as measured on 2026-10-18 instead: a `role=group` in the
+ *   `[data-app-shell-header-obstacle]` header, holding the two buttons with
+ *   `aria-pressed`. `language` renders ChatGPT's own texts of another UI
+ *   language: `en`, or `de`, which the site data has no words for.
  *
  * Every page event the bridge causes is counted, so a test can prove that a
  * stopped op caused none.
@@ -62,15 +65,18 @@ export interface PageOptions {
   readonly route?: string;
   readonly turns?: readonly FixtureTurn[];
   readonly mode?: FixtureMode;
-  /** `measured` (default) as seen live; `no-state` drops `data-state`; `none` renders no switch. */
-  readonly modeSwitch?: 'measured' | 'no-state' | 'none';
+  /**
+   * `measured` (default) as first seen, found by text; `live` as measured on
+   * 2026-10-18, found by structure; `no-state` drops `data-state`; `none` renders no switch.
+   */
+  readonly modeSwitch?: 'measured' | 'live' | 'no-state' | 'none';
   /** Whether a click on a mode button changes the mode (default true). */
   readonly switchWorks?: boolean;
   /** The UI language (default `zh-CN`). */
   readonly language?: FixtureLanguage;
 }
 
-export type FixtureLanguage = 'zh-CN' | 'en';
+export type FixtureLanguage = 'zh-CN' | 'en' | 'de';
 
 /** The composer's label per mode and the switch's button texts, from ChatGPT's own messages. */
 const MODE_TEXTS: Readonly<
@@ -85,6 +91,10 @@ const MODE_TEXTS: Readonly<
   },
   en: {
     composer: { chat: 'Ask ChatGPT', work: 'Work with ChatGPT' },
+    switch: { chat: 'Chat', work: 'Work' },
+  },
+  de: {
+    composer: { chat: 'ChatGPT fragen', work: 'Mit ChatGPT arbeiten' },
     switch: { chat: 'Chat', work: 'Work' },
   },
 };
@@ -179,9 +189,17 @@ export function mountChatGptPage(options: PageOptions = {}): ChatGptPageFixture 
   const switchKind = options.modeSwitch ?? 'measured';
   if (switchKind !== 'none') {
     const header = document.querySelector<HTMLElement>('[data-gv-fixture-header]')!;
-    header.innerHTML = `<div><span><button type="button">${texts.switch.chat}</button></span><span><button type="button">${texts.switch.work}</button></span></div>`;
+    const live = switchKind === 'live';
+    if (live) header.setAttribute('data-app-shell-header-obstacle', 'true');
+    header.innerHTML = `<div${live ? ' role="group"' : ''}><span><button type="button">${texts.switch.chat}</button></span><span><button type="button">${texts.switch.work}</button></span></div>`;
     const buttons = Array.from(header.querySelectorAll<HTMLButtonElement>('button'));
     const paint = (): void => {
+      if (live) {
+        buttons[0].setAttribute('aria-pressed', String(mode === 'chat'));
+        buttons[1].setAttribute('aria-pressed', String(mode === 'work'));
+        buttons.forEach((button) => button.setAttribute('data-state', 'closed'));
+        return;
+      }
       if (switchKind !== 'measured') return;
       buttons[0].setAttribute('data-state', mode === 'chat' ? 'on' : 'off');
       buttons[1].setAttribute('data-state', mode === 'work' ? 'on' : 'off');
@@ -191,8 +209,16 @@ export function mountChatGptPage(options: PageOptions = {}): ChatGptPageFixture 
       button.addEventListener('click', () => {
         if (options.switchWorks === false) return;
         // ChatGPT re-labels the composer a moment after the click.
+        const next: FixtureMode = index === 0 ? 'chat' : 'work';
+        if (live) {
+          // Measured: the pressed button flips at once, the placeholder a moment later.
+          mode = next;
+          paint();
+          setTimeout(() => composer.setAttribute('aria-label', texts.composer[next]), 300);
+          return;
+        }
         setTimeout(() => {
-          mode = index === 0 ? 'chat' : 'work';
+          mode = next;
           composer.setAttribute('aria-label', texts.composer[mode]);
           paint();
         }, 300);

@@ -38,6 +38,16 @@ describe('Local Bridge challenge guard', () => {
     expect(createChallengeGuard().current()).toBe('account-blocked');
   });
 
+  it('reports an account block in the words the site data names', () => {
+    document.title = 'ChatGPT';
+    document.body.innerHTML = '<main><p>Verdächtige Aktivität erkannt. Konto sichern.</p></main>';
+    expect(createChallengeGuard().current()).toBeNull();
+    const guard = createChallengeGuard(document, Date.now, () => [
+      ['verdächtige aktivität erkannt', 'konto sichern'],
+    ]);
+    expect(guard.current()).toBe('account-blocked');
+  });
+
   it('does not stop on an existing chat whose page data quotes the block notice', () => {
     // Measured live: a reopened chat embeds its turns, and Pro's notes, in <script> data.
     document.title = 'ChatGPT';

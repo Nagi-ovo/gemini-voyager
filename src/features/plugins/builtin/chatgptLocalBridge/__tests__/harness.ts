@@ -5,6 +5,7 @@ import type {
   BridgeOpStartAck,
 } from '@/features/bridge/runtimeMessages';
 import { chatgptAdapter } from '@/features/plugins/sites/adapters/chatgpt';
+import type { SiteAdapter } from '@/features/plugins/types';
 
 import { getDocNonce } from '../docIdentity';
 import { type BridgeRuntime, createBridgeRuntime } from '../runtime';
@@ -25,11 +26,13 @@ export interface Harness {
 let nextTask = 0;
 
 /**
- * A runtime attached to the bundled ChatGPT adapter, recording what it sends
- * the background; `reply` plays the background's answer (blob reads).
+ * A runtime attached to the bundled ChatGPT adapter (or `adapter`, as remote
+ * site data would replace it), recording what it sends the background;
+ * `reply` plays the background's answer (blob reads).
  */
 export function createHarness(
   reply: (message: Record<string, unknown>) => unknown = () => undefined,
+  adapter: SiteAdapter = chatgptAdapter,
 ): Harness {
   const sent: Record<string, unknown>[] = [];
   const runtime = createBridgeRuntime({
@@ -39,7 +42,7 @@ export function createHarness(
     },
     listen: false,
   });
-  runtime.attach(chatgptAdapter);
+  runtime.attach(adapter);
   let taskId = '';
   return {
     runtime,

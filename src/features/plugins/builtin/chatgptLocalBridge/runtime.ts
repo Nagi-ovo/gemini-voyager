@@ -139,7 +139,8 @@ function outcomeOf(error: unknown): BridgeOpOutcome {
 
 export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeRuntime {
   const now = options.now ?? Date.now;
-  const challenge = createChallengeGuard(document, now);
+  // `adapter` is assigned once the plugin attaches; the guard reads it afresh.
+  const challenge = createChallengeGuard(document, now, () => adapter?.pageHooks?.accountBlocked);
   const env = options.env ?? defaultOpEnvironment(() => challenge.current());
   const send: RuntimeSend =
     options.send ?? ((message) => chrome.runtime.sendMessage(message) as Promise<unknown>);

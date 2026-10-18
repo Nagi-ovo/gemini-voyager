@@ -188,6 +188,21 @@ describe('composer.send mode', () => {
     expect(bridge.outcome()).toMatchObject({ ok: true });
   });
 
+  it('sends a prompt on a page in a language the site data has no words for, by its switch', async () => {
+    page = mountChatGptPage({ language: 'de', modeSwitch: 'live' });
+    bridge.start('composer.send', { text: 'hi' });
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(bridge.outcome()).toMatchObject({ ok: true });
+  });
+
+  it('sends nothing into a Work composer in a language the site data has no words for', async () => {
+    page = mountChatGptPage({ language: 'de', modeSwitch: 'live', mode: 'work' });
+    bridge.start('composer.send', { text: 'hi' });
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(errorCode(bridge.outcome())).toBe('mode-unavailable');
+    expect(page.events()).toMatchObject({ execCommand: 0, clicks: 0 });
+  });
+
   it('sends nothing into a ChatGPT Work composer', async () => {
     page = mountChatGptPage({ mode: 'work' });
     bridge.start('composer.send', { text: 'hi' });

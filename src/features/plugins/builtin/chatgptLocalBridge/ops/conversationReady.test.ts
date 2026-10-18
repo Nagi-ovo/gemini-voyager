@@ -62,6 +62,30 @@ describe('Local Bridge conversation.ready: mode', () => {
     expect(page.events().clicks).toBe(1);
   });
 
+  it('switches a page in a language the site data has no words for, by its switch', async () => {
+    mount({ mode: 'work', language: 'de', modeSwitch: 'live' });
+    bridge.start('conversation.ready', {});
+    await vi.advanceTimersByTimeAsync(1_000);
+    document.documentElement.lang = '';
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { mode: 'chat', switchedMode: { from: 'work', to: 'chat' } },
+    });
+    expect(page.mode()).toBe('chat');
+    expect(page.events().clicks).toBe(1);
+  });
+
+  it('reads a page whose placeholder names the other mode than its switch as unknown, clicking nothing', async () => {
+    mount({ mode: 'chat', modeSwitch: 'live' });
+    page.composer.setAttribute('aria-label', '使用 ChatGPT Work');
+    bridge.start('conversation.ready', {});
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { mode: 'unknown' } });
+    expect(page.events().clicks).toBe(0);
+  });
+
   it('finds a mode switch that renders after the composer on a fresh tab', async () => {
     mount({ mode: 'work' });
     const header = document.querySelector<HTMLElement>('[data-gv-fixture-header]')!;
