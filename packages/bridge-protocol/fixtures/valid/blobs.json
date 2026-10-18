@@ -34,5 +34,14 @@
       "size": 512,
       "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     }
+  },
+  {
+    "name": "blob chunk",
+    "kind": "blobChunk",
+    "input": {
+      "blobId": "b_1",
+      "offset": 1048576,
+      "base64": "AAEC/w=="
+    }
   }
 ]

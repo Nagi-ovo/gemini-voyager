@@ -20,12 +20,18 @@ export interface Harness {
 
 let nextTask = 0;
 
-/** A runtime attached to the bundled ChatGPT adapter, recording what it sends the background. */
-export function createHarness(): Harness {
+/**
+ * A runtime attached to the bundled ChatGPT adapter, recording what it sends
+ * the background; `reply` plays the background's answer (blob reads).
+ */
+export function createHarness(
+  reply: (message: Record<string, unknown>) => unknown = () => undefined,
+): Harness {
   const sent: Record<string, unknown>[] = [];
   const runtime = createBridgeRuntime({
     send: async (message) => {
       sent.push(message);
+      return reply(message);
     },
     listen: false,
   });

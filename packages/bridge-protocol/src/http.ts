@@ -199,11 +199,25 @@ export interface BlobChunkRange {
   readonly length: number;
 }
 
-/** A chunk relayed between page and service worker as JSON (candidate A, spec §2.7). */
+/**
+ * A chunk as JSON (candidate A, spec §2.7): the `data` of
+ * `POST /v1/ext/blobs/:blobId/read`, which the service worker relays to the
+ * page unchanged. The page checks the whole blob's size and sha256.
+ */
 export interface BlobChunk {
   readonly blobId: string;
   readonly offset: number;
   readonly base64: string;
+}
+
+/** Longest `base64` a chunk of `MAX_BLOB_CHUNK_BYTES` encodes to. */
+export const MAX_BLOB_CHUNK_BASE64 = Math.ceil(MAX_BLOB_CHUNK_BYTES / 3) * 4;
+
+/** Bytes a padded base64 string decodes to, or undefined when its length cannot be base64. */
+export function base64DecodedLength(base64: string): number | undefined {
+  if (base64.length % 4 !== 0) return undefined;
+  const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
+  return (base64.length / 4) * 3 - padding;
 }
 
 export interface BlobCommitResponse {

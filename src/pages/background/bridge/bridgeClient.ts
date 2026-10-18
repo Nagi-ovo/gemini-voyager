@@ -11,6 +11,8 @@ import { EXTENSION_VERSION } from '@/core/utils/version';
 import {
   BRIDGE_HOST,
   BRIDGE_PATHS,
+  type BlobChunk,
+  type BlobChunkRange,
   type BridgeError,
   type HelloResponse,
   type MessageKind,
@@ -40,6 +42,8 @@ export type ClientResult<T> =
   | { readonly ok: false; readonly status: number; readonly error: BridgeError };
 
 const REQUEST_TIMEOUT_MS = 10_000;
+/** One attachment chunk from 127.0.0.1; generous, since serve reads it from disk. */
+const BLOB_READ_TIMEOUT_MS = 30_000;
 
 export function bridgeBaseUrl(port: number): string {
   return `http://${BRIDGE_HOST}:${port}`;
@@ -83,6 +87,12 @@ export interface BridgeClient {
     result: TaskResultRequest,
   ): Promise<ClientResult<unknown>>;
   unpair(connection: BridgeConnection): Promise<ClientResult<unknown>>;
+  /** One chunk of an upload blob, as base64 in the envelope (POST, so it carries the Origin). */
+  blobRead(
+    connection: BridgeConnection,
+    blobId: string,
+    range: BlobChunkRange,
+  ): Promise<ClientResult<BlobChunk>>;
 }
 
 export function createBridgeClient(
@@ -208,6 +218,16 @@ export function createBridgeClient(
     progress: (connection, taskId, seq, event) =>
       post(connection, bridgePath.taskProgress(taskId), { seq, event }),
     result: (connection, taskId, result) => post(connection, bridgePath.taskResult(taskId), result),
+    blobRead: async (connection, blobId, range) =>
+      nonNull(
+        await request(connection, {
+          method: 'POST',
+          path: bridgePath.blobRead(blobId),
+          body: range,
+          kind: 'blobChunk',
+          timeoutMs: BLOB_READ_TIMEOUT_MS,
+        }),
+      ),
     unpair: (connection) =>
       request(connection, {
         method: 'POST',

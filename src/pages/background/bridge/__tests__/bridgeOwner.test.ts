@@ -116,6 +116,44 @@ describe('bridge owner', () => {
     expect(posted?.headers.Authorization).toBe(`Bearer ${TOKEN}`);
   });
 
+  it('relays an upload chunk to the page holding the attach task, fetched with the token by POST', async () => {
+    const t = setup({
+      local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING },
+      session: {
+        [BRIDGE_SESSION_KEYS.task]: {
+          taskId: 'T1',
+          jobId: 'J1',
+          op: 'composer.attach',
+          state: 'running',
+          startedAt: 1,
+          deadline: Number.MAX_SAFE_INTEGER,
+          lastProgressAt: 1,
+          progressSeq: 0,
+          tabId: 100,
+          docNonce: 'doc-1',
+          blobs: [{ blobId: 'b1', size: 6 }],
+        },
+      },
+    });
+    t.routes['/v1/ext/blobs/b1/read'] = () =>
+      json({ ok: true, data: { blobId: 'b1', offset: 2, base64: 'AAEC' } });
+    const reply = await t.owner.handleMessage(
+      {
+        type: 'gv.bridge.blob.read',
+        taskId: 'T1',
+        docNonce: 'doc-1',
+        blobId: 'b1',
+        offset: 2,
+        length: 3,
+      },
+      contentSender(100),
+    );
+    expect(reply).toEqual({ ok: true, base64: 'AAEC' });
+    const fetched = t.requests.find((r) => r.path === '/v1/ext/blobs/b1/read');
+    expect(fetched?.body).toEqual({ offset: 2, length: 3 });
+    expect(fetched?.headers.Authorization).toBe(`Bearer ${TOKEN}`);
+  });
+
   it('pairs once when the permission arrives after the popup closed, and the late pair reuses that result', async () => {
     const t = setup();
     expect(await t.send({ type: 'gv.bridge.pairIntent', port: 47321, code: '1234-5678' })).toEqual({

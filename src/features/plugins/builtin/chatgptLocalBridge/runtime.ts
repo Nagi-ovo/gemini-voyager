@@ -49,6 +49,8 @@ import {
   createOpContext,
   defaultOpEnvironment,
 } from './opContext';
+import { type BlobChunkReader, readBlobReply } from './ops/blobBytes';
+import { runComposerAttach } from './ops/composerAttach';
 import { type ComposerActivity, runComposerSend } from './ops/composerSend';
 import { runConversationReady } from './ops/conversationReady';
 import { runTurnsRead } from './ops/turnsRead';
@@ -161,6 +163,32 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
     }
   };
 
+  /** Attachment bytes come from the background, which checks this document holds the task. */
+  const chunkReader =
+    (taskId: string): BlobChunkReader =>
+    async (blobId, offset, length) => {
+      try {
+        const reply = await send({
+          type: 'gv.bridge.blob.read',
+          taskId,
+          docNonce: getDocNonce(),
+          blobId,
+          offset,
+          length,
+        });
+        return readBlobReply(reply);
+      } catch (error) {
+        const reloaded = isExtensionContextInvalidatedError(error);
+        return {
+          ok: false,
+          error: bridgeError(
+            reloaded ? 'extension-reloaded' : 'server-unreachable',
+            'The attachment could not be read from the extension.',
+          ),
+        };
+      }
+    };
+
   const showChallengeToast = (kind: ChallengeKind): void => {
     void getCurrentLanguage()
       .catch(() => 'en' as const)
@@ -183,6 +211,8 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
     switch (task.op) {
       case 'conversation.ready':
         return runConversationReady(ctx, task.params, snapshot);
+      case 'composer.attach':
+        return runComposerAttach(ctx, task.params, snapshot, activity, chunkReader(task.taskId));
       case 'composer.send':
         return runComposerSend(ctx, task.params, snapshot, activity);
       case 'turns.waitReply':

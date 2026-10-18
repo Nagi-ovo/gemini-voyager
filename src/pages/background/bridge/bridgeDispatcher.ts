@@ -46,10 +46,10 @@ import type { BridgePolicy } from './bridgePolicy';
 import { type BridgeTabs, type ContentHolder, conversationUrl, senderIsHolder } from './bridgeTabs';
 import type { BridgeTabRecord, BridgeTaskRecord, BridgeTaskStore } from './bridgeTaskStore';
 import {
-  LEASE_DURATION_MS,
   LEASE_PROBE_TIMEOUT_MS,
   type PageLease,
   type PageLeaseArbiter,
+  leaseDurationFor,
 } from './pageLease';
 
 /** Ops this build can run: the service worker's own plus what the Phase B content runtime implements. */
@@ -57,6 +57,7 @@ export const SUPPORTED_BRIDGE_OPS: ReadonlySet<OpName> = new Set<OpName>([
   'conversation.open',
   'conversation.close',
   'conversation.ready',
+  'composer.attach',
   'composer.send',
   'turns.waitReply',
   'turns.read',
@@ -330,12 +331,13 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     taskId: string,
     op: OpName,
     holder: ContentHolder,
+    taskBudgetMs = 0,
   ): Promise<LeaseOutcome> => {
     const acquired = await lease.acquire({
       taskId,
       op,
       ...holder,
-      durationMs: LEASE_DURATION_MS[op] ?? 30_000,
+      durationMs: leaseDurationFor(op, taskBudgetMs),
     });
     if (acquired.ok) return { lease: acquired.lease };
     const message =
@@ -431,7 +433,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     let leaseId: string | undefined;
     let deadline = record.deadline;
     if (leased) {
-      const got = await leaseFor(task.taskId, task.op, holder);
+      const got = await leaseFor(task.taskId, task.op, holder, record.deadline - now());
       if ('refused' in got) return finish(task.taskId, got.refused, { releaseLease: false });
       leaseId = got.lease.leaseId;
       deadline = Math.min(deadline, got.lease.deadline);
@@ -682,6 +684,10 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
       deadline: startedAt + task.deadlineMs,
       lastProgressAt: startedAt,
       progressSeq: 0,
+      // The page may read exactly these blobs, and only while this task runs.
+      ...(task.op === 'composer.attach'
+        ? { blobs: task.params.blobs.map(({ blobId, size }) => ({ blobId, size })) }
+        : {}),
     };
     // Ack first: a catalog check below can outlast the server's 10 s ack window.
     await store.setTask(record);

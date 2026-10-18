@@ -29,5 +29,15 @@
       "mime": "text/csv"
     },
     "issuePath": "sha256"
+  },
+  {
+    "name": "blob chunk with a broken base64 tail",
+    "kind": "blobChunk",
+    "input": {
+      "blobId": "b_1",
+      "offset": 0,
+      "base64": "AAE"
+    },
+    "issuePath": "base64"
   }
 ]

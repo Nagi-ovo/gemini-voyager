@@ -4,6 +4,7 @@
  * up in URLs (`conversationId`, blob ids) are restricted to URL-safe tokens.
  */
 import {
+  MAX_ATTACHMENT_BYTES,
   MAX_ATTACHMENTS,
   WAIT_REPLY_MAX_TIMEOUT_MS,
   type BlobRef,
@@ -62,7 +63,7 @@ const readBlobRef: Reader<BlobRef> = (raw, path, issues) => {
   return {
     blobId: requireString(rec, 'blobId', path, issues, { pattern: ID_PATTERN }),
     name: requireString(rec, 'name', path, issues, FILE_NAME),
-    size: requireInt(rec, 'size', path, issues),
+    size: requireInt(rec, 'size', path, issues, { min: 1, max: MAX_ATTACHMENT_BYTES }),
     sha256: requireString(rec, 'sha256', path, issues, { pattern: SHA256_PATTERN }),
     mime: requireString(rec, 'mime', path, issues, { maxLength: 255 }),
   };

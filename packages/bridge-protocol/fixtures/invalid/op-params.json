@@ -243,5 +243,22 @@
       "assistantTurnKey": "t-8"
     },
     "issuePath": "candidate"
+  },
+  {
+    "name": "attachment over 64 MiB",
+    "kind": "opParams",
+    "op": "composer.attach",
+    "input": {
+      "blobs": [
+        {
+          "blobId": "b0",
+          "name": "proj.zip",
+          "size": 67108865,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mime": "application/zip"
+        }
+      ]
+    },
+    "issuePath": "blobs[0].size"
   }
 ]

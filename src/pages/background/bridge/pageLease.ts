@@ -62,6 +62,20 @@ export const LEASE_DURATION_MS: Readonly<Partial<Record<OpName, number>>> = {
   'composer.send': 30_000,
 };
 
+/** Longest lease an attachment upload may hold (a large zip uploads for minutes). */
+export const ATTACH_LEASE_MAX_MS = 10 * 60_000;
+
+/**
+ * Lease length for `op`. An upload follows the budget its task was given (the
+ * CLI sizes it by the bytes), never below the table and never above
+ * {@link ATTACH_LEASE_MAX_MS}; every other op keeps its fixed length.
+ */
+export function leaseDurationFor(op: OpName, taskBudgetMs: number): number {
+  const base = LEASE_DURATION_MS[op] ?? 30_000;
+  if (op !== 'composer.attach') return base;
+  return Math.min(ATTACH_LEASE_MAX_MS, Math.max(base, taskBudgetMs));
+}
+
 interface LockManagerLike {
   request<T>(name: string, callback: () => Promise<T>): Promise<T>;
 }

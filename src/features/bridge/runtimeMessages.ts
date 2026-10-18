@@ -55,13 +55,21 @@ export interface BridgeOpDoneMessage {
   docNonce: string;
   outcome: BridgeOpOutcome;
 }
+/**
+ * One chunk of an attachment the running `composer.attach` pulls (spec §2.7),
+ * answered with {@link BridgeBlobReadReply}. Only the task's holder document may
+ * read, and only the blobs its params name.
+ */
 export interface BridgeBlobReadMessage {
   type: 'gv.bridge.blob.read';
   taskId: string;
+  docNonce: string;
   blobId: string;
   offset: number;
   length: number;
 }
+/** `base64` decodes to exactly the requested length. */
+export type BridgeBlobReadReply = { ok: true; base64: string } | { ok: false; error: BridgeError };
 export interface BridgeBlobWriteMessage {
   type: 'gv.bridge.blob.write';
   taskId: string;

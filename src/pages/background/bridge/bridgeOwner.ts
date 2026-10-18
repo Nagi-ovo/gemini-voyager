@@ -38,6 +38,7 @@ import {
 } from '@/features/plugins/remote/hostCatalogSettings';
 import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
 
+import { createBlobRelay } from './bridgeBlobRelay';
 import { createBridgeClient } from './bridgeClient';
 import { SUPPORTED_BRIDGE_OPS, createBridgeDispatcher } from './bridgeDispatcher';
 import { createBridgePairing } from './bridgePairing';
@@ -179,6 +180,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
     ready: awaitReady,
     now,
   });
+  const blobRelay = createBlobRelay({ store, client, connection, ready: awaitReady, now });
 
   let loopGeneration = 0;
   let loop: Promise<void> | null = null;
@@ -356,6 +358,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
     hello: (sender, docNonce) => dispatcher.onHello(sender, docNonce),
     progress: (sender, message) => dispatcher.onProgress(sender, message),
     done: (sender, message) => dispatcher.onDone(sender, message),
+    blobRead: (sender, message) => blobRelay.read(sender, message),
   };
 
   const catalogKey = hostCatalogStorageKey(BRIDGE_POLICY_HOST);

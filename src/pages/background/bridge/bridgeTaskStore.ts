@@ -80,6 +80,13 @@ export interface BridgeTaskRecord {
    * The task stays in flight until its document confirms it stopped or is gone.
    */
   readonly cancelling?: ErrorCode;
+  /** `composer.attach`: the blobs its params name, the only ones its page may read. */
+  readonly blobs?: readonly BridgeTaskBlob[];
+}
+
+export interface BridgeTaskBlob {
+  readonly blobId: string;
+  readonly size: number;
 }
 
 export type BridgeTaskPhase = 'awaiting-hello' | 'ready' | 'restoring-mode' | 'closing';
@@ -114,6 +121,9 @@ const isInt = (value: unknown): value is number =>
 const isText = (value: unknown): value is string => typeof value === 'string' && value.length > 0;
 const optional = <T>(value: unknown, guard: (v: unknown) => v is T): boolean =>
   value === undefined || guard(value);
+const isTaskBlobs = (value: unknown): value is BridgeTaskBlob[] =>
+  Array.isArray(value) &&
+  value.every((blob) => isRecord(blob) && isText(blob.blobId) && isInt(blob.size));
 
 export function parseTaskRecord(raw: unknown): BridgeTaskRecord | null {
   if (!isRecord(raw)) return null;
@@ -132,7 +142,8 @@ export function parseTaskRecord(raw: unknown): BridgeTaskRecord | null {
     optional(raw.leaseId, isText) &&
     (raw.phase === undefined || PHASES.includes(raw.phase as BridgeTaskPhase)) &&
     optional(raw.expectConversationId, isText) &&
-    (raw.cancelling === undefined || isErrorCode(raw.cancelling));
+    (raw.cancelling === undefined || isErrorCode(raw.cancelling)) &&
+    optional(raw.blobs, isTaskBlobs);
   return ok ? (raw as unknown as BridgeTaskRecord) : null;
 }
 

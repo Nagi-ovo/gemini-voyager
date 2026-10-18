@@ -25,6 +25,8 @@ export function isOpName(value: unknown): value is OpName {
 }
 
 export const MAX_ATTACHMENTS = 10;
+/** Largest single attachment, zipped folders included (spec Q8). */
+export const MAX_ATTACHMENT_BYTES = 64 * 1024 * 1024;
 export const WAIT_REPLY_DEFAULT_TIMEOUT_MS = 90 * 60_000;
 export const WAIT_REPLY_MAX_TIMEOUT_MS = 180 * 60_000;
 export const WAIT_REPLY_DEFAULT_STABLE_MS = 1_500;

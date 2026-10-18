@@ -7,8 +7,10 @@ import { categoryOf, ERROR_CODES, isErrorCode, type BridgeError } from '../error
 import {
   PAIRING_CODE_PATTERN,
   PAIRING_TOKEN_PATTERN,
+  MAX_BLOB_CHUNK_BASE64,
   MAX_BLOB_CHUNK_BYTES,
   POLICY_STATES,
+  type BlobChunk,
   type BlobChunkRange,
   type BlobCommitResponse,
   type BlobCreateRequest,
@@ -132,6 +134,7 @@ export interface MessageMap {
   blobCreateRequest: BlobCreateRequest;
   blobCreateResponse: BlobCreateResponse;
   blobChunkRange: BlobChunkRange;
+  blobChunk: BlobChunk;
   blobCommitResponse: BlobCommitResponse;
   jobSubmitRequest: JobSubmitRequest;
   callRequest: CallRequest;
@@ -267,6 +270,18 @@ const READERS: { readonly [K in MessageKind]: Reader<MessageMap[K]> } = {
     return {
       offset: requireInt(rec, 'offset', path, issues),
       length: requireInt(rec, 'length', path, issues, { min: 1, max: MAX_BLOB_CHUNK_BYTES }),
+    };
+  },
+
+  blobChunk: (raw, path, issues) => {
+    const rec = readObject(raw, path, issues);
+    return {
+      blobId: requireString(rec, 'blobId', path, issues, ID),
+      offset: requireInt(rec, 'offset', path, issues),
+      base64: requireString(rec, 'base64', path, issues, {
+        pattern: /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/,
+        maxLength: MAX_BLOB_CHUNK_BASE64,
+      }),
     };
   },
 

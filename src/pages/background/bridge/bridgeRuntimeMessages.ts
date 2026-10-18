@@ -15,7 +15,7 @@ import {
   type UpgradeSide,
   bridgeError,
 } from '@/features/bridge/protocol';
-import { isBridgeMessageType } from '@/features/bridge/runtimeMessages';
+import { type BridgeBlobReadReply, isBridgeMessageType } from '@/features/bridge/runtimeMessages';
 
 import { isTrustedExtensionPageSender } from '../runtimeMessageRouting';
 import { isBridgeContentSender } from './bridgeTabs';
@@ -59,6 +59,16 @@ export interface BridgeMessageOwner {
     sender: chrome.runtime.MessageSender,
     message: { taskId: string; docNonce: string; outcome: unknown },
   ): Promise<boolean>;
+  blobRead(
+    sender: chrome.runtime.MessageSender,
+    message: {
+      taskId: string;
+      docNonce: string;
+      blobId: unknown;
+      offset: unknown;
+      length: unknown;
+    },
+  ): Promise<BridgeBlobReadReply>;
 }
 
 /** Message types the background answers; the routing table lists the same set. */
@@ -129,10 +139,20 @@ export function createBridgeRuntimeMessageHandler(
             : owner.progress(sender, { ...base, progress: fields.progress });
         return handled.then((ok) => ({ ok }));
       }
-      // Blob relay arrives with uploads and downloads (Phase C).
+      if (type === 'gv.bridge.blob.read') {
+        if (!isId(fields.taskId) || !isId(fields.docNonce)) return Promise.resolve({ ok: false });
+        return owner.blobRead(sender, {
+          taskId: fields.taskId,
+          docNonce: fields.docNonce,
+          blobId: fields.blobId,
+          offset: fields.offset,
+          length: fields.length,
+        });
+      }
+      // Downloads (page → serve) arrive with files.download.
       return Promise.resolve({
         ok: false,
-        error: bridgeError('unsupported-op', 'Blob transfer is not available in this build.'),
+        error: bridgeError('unsupported-op', 'Blob upload is not available in this build.'),
       });
     }
     return null;
