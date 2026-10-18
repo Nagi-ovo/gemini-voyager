@@ -10939,3 +10939,34 @@ a.gv-rp-item-source:hover {
   outline: 2px solid var(--gv-rp-accent);
   outline-offset: 1px;
 }
+
+/* ChatGPT · Pro usage this week: a quiet chip right after the composer's model picker. */
+.gv-chatgpt-pro-usage {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  align-self: center;
+  max-width: 260px;
+  height: 22px;
+  margin-inline-start: 6px;
+  padding: 0 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+}
+
+html[data-gv-scheme='light'] .gv-chatgpt-pro-usage {
+  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.035);
+  color: rgba(0, 0, 0, 0.62);
+}

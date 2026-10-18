@@ -3,6 +3,7 @@ import browser from 'webextension-polyfill';
 import { logger } from '@/core/services/LoggerService';
 import { isFirefox } from '@/core/utils/browser';
 import { customWebsiteOriginPatterns } from '@/core/utils/customWebsites';
+import { isChatGptProUsageSupported } from '@/features/plugins/builtin/chatgptProUsage/manifest';
 import {
   partitionPluginOriginPatterns,
   pluginsToOriginPatterns,
@@ -11,6 +12,10 @@ import { matchesAnyPattern } from '@/features/plugins/sites/matchPattern';
 import { listPluginManifests } from '@/features/plugins/sources/defaultSources';
 import type { PluginManifest } from '@/features/plugins/types';
 
+import {
+  CHATGPT_PRO_USAGE_MAIN_SCRIPT_ID,
+  syncChatGptProUsageObserver,
+} from './chatgptProUsageRegistration';
 import { unregisterRegisteredContentScripts } from './contentScriptRegistration';
 import { loadEnabledPlugins } from './enabledPlugins';
 import { createPromptNudgeRegistration } from './promptNudgeRegistration';
@@ -309,9 +314,19 @@ export function createSiteAccessRegistration() {
       PLUGIN_CONTENT_SCRIPT_ID,
       PLUGIN_EMBEDDED_CONTENT_SCRIPT_ID,
       CLAUDE_USAGE_MAIN_SCRIPT_ID,
+      CHATGPT_PRO_USAGE_MAIN_SCRIPT_ID,
     ]);
 
     if (!grantedMatches.length) return;
+
+    // Before the content scripts below, so a page loading now gets the observer at document_start.
+    await syncChatGptProUsageObserver({
+      scripting: chrome.scripting,
+      enabledPlugins,
+      grantedOrigins: grantedMatches,
+      supportsMainWorld: isChatGptProUsageSupported(),
+      queryTabs: (url) => chrome.tabs.query({ url }),
+    });
 
     const runAt =
       manifestContentScript.run_at === 'document_start'

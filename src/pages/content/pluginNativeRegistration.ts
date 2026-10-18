@@ -11,6 +11,8 @@ import {
 } from '@/features/plugins/builtin/chatgptExport/runtime';
 import { activateChatGptFolders } from '@/features/plugins/builtin/chatgptFolders';
 import { activateChatGptLocalBridge } from '@/features/plugins/builtin/chatgptLocalBridge';
+import { activateChatGptProUsage } from '@/features/plugins/builtin/chatgptProUsage';
+import { isChatGptProUsageSupported } from '@/features/plugins/builtin/chatgptProUsage/manifest';
 import { activateChatGptResponseNotification } from '@/features/plugins/builtin/chatgptResponseNotification';
 import { activateChatGptTemporaryHandoff } from '@/features/plugins/builtin/chatgptTemporaryHandoff';
 import {
@@ -115,6 +117,10 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   'voyager.chatgpt-local-bridge': {
     activate: activateChatGptLocalBridge,
   },
+  // Bound only where its manifest is listed, or the binding check reports a stray handler.
+  ...(isChatGptProUsageSupported()
+    ? { 'voyager.chatgpt-pro-usage': { activate: activateChatGptProUsage } }
+    : {}),
   // Owned by `sites/featureOwners.ts`: mounted only once the plugin owns Gemini's chat width.
   'voyager.gemini-chat-width': {
     activate: activateGeminiChatWidth,

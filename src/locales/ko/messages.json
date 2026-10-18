@@ -4284,5 +4284,25 @@
   "bridgeErrorAction": {
     "message": "실패했습니다. 다시 시도하세요.",
     "description": "Error after unpairing or turning on updates failed"
+  },
+  "chatgptProUsageWeek": {
+    "message": "이번 주 Pro {count}회",
+    "description": "Label beside ChatGPT's model picker: Pro messages sent this week. {count} is a number."
+  },
+  "chatgptProUsageLeft": {
+    "message": "Pro {left}/{limit} 남음",
+    "description": "Label beside ChatGPT's model picker once the Pro limit is known. {left} and {limit} are numbers."
+  },
+  "chatgptProUsageResets": {
+    "message": "{time} 초기화",
+    "description": "Appended to the Pro usage label. {time} is a short local date and time."
+  },
+  "chatgptProUsageHint": {
+    "message": "이 브라우저에서 보낸 GPT-6 Pro 메시지를 센 값입니다. 다른 기기나 앱에서 보낸 메시지는 포함되지 않습니다.",
+    "description": "Tooltip of the ChatGPT Pro usage label."
+  },
+  "chatgptProUsageNoneLeft": {
+    "message": "Pro 모두 사용함",
+    "description": "Label beside ChatGPT's model picker while ChatGPT says Pro is used up and the limit is unknown."
   }
 }

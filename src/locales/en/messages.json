@@ -4284,5 +4284,25 @@
   "bridgeErrorAction": {
     "message": "That didn’t work. Try again.",
     "description": "Error after unpairing or turning on updates failed"
+  },
+  "chatgptProUsageWeek": {
+    "message": "Pro this week: {count}",
+    "description": "Label beside ChatGPT's model picker: Pro messages sent this week. {count} is a number."
+  },
+  "chatgptProUsageLeft": {
+    "message": "Pro {left}/{limit} left",
+    "description": "Label beside ChatGPT's model picker once the Pro limit is known. {left} and {limit} are numbers."
+  },
+  "chatgptProUsageResets": {
+    "message": "resets {time}",
+    "description": "Appended to the Pro usage label. {time} is a short local date and time."
+  },
+  "chatgptProUsageHint": {
+    "message": "Counted from GPT-6 Pro messages sent in this browser. Messages from other devices or apps are not included.",
+    "description": "Tooltip of the ChatGPT Pro usage label."
+  },
+  "chatgptProUsageNoneLeft": {
+    "message": "Pro: none left",
+    "description": "Label beside ChatGPT's model picker while ChatGPT says Pro is used up and the limit is unknown."
   }
 }

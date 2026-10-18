@@ -52,3 +52,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Inspired by
+
+- The ChatGPT Pro usage plugin (`src/features/plugins/builtin/chatgptProUsage/`,
+  `public/chatgpt-pro-usage-observer.js`) is an independent rewrite inspired by
+  [Temult/chatgpt-pro-quota-ledger](https://github.com/Temult/chatgpt-pro-quota-ledger)
+  (MIT, Copyright (c) 2026 ChatGPT Pro Quota Ledger contributors); no code is copied.

@@ -4284,5 +4284,25 @@
   "bridgeErrorAction": {
     "message": "操作沒有成功，請重試。",
     "description": "Error after unpairing or turning on updates failed"
+  },
+  "chatgptProUsageWeek": {
+    "message": "Pro 本週 {count} 次",
+    "description": "Label beside ChatGPT's model picker: Pro messages sent this week. {count} is a number."
+  },
+  "chatgptProUsageLeft": {
+    "message": "Pro 剩 {left}/{limit}",
+    "description": "Label beside ChatGPT's model picker once the Pro limit is known. {left} and {limit} are numbers."
+  },
+  "chatgptProUsageResets": {
+    "message": "重設 {time}",
+    "description": "Appended to the Pro usage label. {time} is a short local date and time."
+  },
+  "chatgptProUsageHint": {
+    "message": "依這個瀏覽器中送出的 GPT-6 Pro 訊息統計，不含其他裝置或應用程式中的傳送。",
+    "description": "Tooltip of the ChatGPT Pro usage label."
+  },
+  "chatgptProUsageNoneLeft": {
+    "message": "Pro 已用完",
+    "description": "Label beside ChatGPT's model picker while ChatGPT says Pro is used up and the limit is unknown."
   }
 }

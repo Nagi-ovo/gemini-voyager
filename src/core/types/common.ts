@@ -249,6 +249,10 @@ export const StorageKeys = {
   GV_CLAUDE_USAGE_REFRESH_LOCK: 'gvClaudeUsageRefreshLock',
   // User-dragged position of the Claude usage mini-bar ({ x, y } viewport px).
   GV_CLAUDE_USAGE_POS: 'gvClaudeUsagePos',
+  // ChatGPT Pro sends this browser saw (chrome.storage.local, never synced or backed up).
+  // { version: 1, sends: Array<{ at, key }> (last 45 days), limit, resetsAt } — see
+  // src/features/plugins/builtin/chatgptProUsage/usageStore.ts.
+  GV_CHATGPT_PRO_USAGE: 'gvChatGptProUsage',
   // 'above-recents' (default) anchors the folder panel just above the Recents
   // expandable-section; 'above-notebooks' anchors it above the Notebooks
   // section instead. Persisted in chrome.storage.local since it's a UI-only

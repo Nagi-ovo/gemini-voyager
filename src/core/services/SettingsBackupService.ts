@@ -426,6 +426,11 @@ export const NON_SETTINGS_BACKUP_POLICIES = {
     disposition: 'local-data',
     reason: 'Message timestamp history is local data, not a setting.',
   },
+  [StorageKeys.GV_CHATGPT_PRO_USAGE]: {
+    storage: 'local',
+    disposition: 'local-data',
+    reason: 'ChatGPT Pro send counts are what this browser saw, kept on this device only.',
+  },
   [StorageKeys.CATALOG_MESSAGE_TIMESTAMPS_PREFIX]: {
     storage: 'local',
     disposition: 'local-data',

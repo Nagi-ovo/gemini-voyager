@@ -4284,5 +4284,25 @@
   "bridgeErrorAction": {
     "message": "لم ينجح ذلك. حاول مجددًا.",
     "description": "Error after unpairing or turning on updates failed"
+  },
+  "chatgptProUsageWeek": {
+    "message": "Pro هذا الأسبوع: {count}",
+    "description": "Label beside ChatGPT's model picker: Pro messages sent this week. {count} is a number."
+  },
+  "chatgptProUsageLeft": {
+    "message": "Pro: متبقٍ {left}/{limit}",
+    "description": "Label beside ChatGPT's model picker once the Pro limit is known. {left} and {limit} are numbers."
+  },
+  "chatgptProUsageResets": {
+    "message": "يُعاد التعيين {time}",
+    "description": "Appended to the Pro usage label. {time} is a short local date and time."
+  },
+  "chatgptProUsageHint": {
+    "message": "محسوب من رسائل GPT-6 Pro المرسلة من هذا المتصفح. لا تُحتسب الرسائل المرسلة من أجهزة أو تطبيقات أخرى.",
+    "description": "Tooltip of the ChatGPT Pro usage label."
+  },
+  "chatgptProUsageNoneLeft": {
+    "message": "Pro: نفد الرصيد",
+    "description": "Label beside ChatGPT's model picker while ChatGPT says Pro is used up and the limit is unknown."
   }
 }
