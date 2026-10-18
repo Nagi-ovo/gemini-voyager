@@ -215,6 +215,7 @@
       }
     },
     "modelPickerTrigger": "button[aria-haspopup=\"menu\"][data-composer-navigation-target=\"reasoning\"]",
+    "effortControl": "[role=\"menuitem\"][data-reasoning-slider=\"true\"]",
     "replyFailed": ["^thinking failed[.!]?(?:\\s+retry)?$"],
     "rateLimit": [
       "too many requests",

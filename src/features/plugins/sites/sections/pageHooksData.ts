@@ -21,6 +21,8 @@
  *   where the page has no switch (an existing conversation), or the switch
  *   is not found;
  * - `modelPickerTrigger`: the model picker button, in every UI language;
+ * - `effortControl`: the effort row in the picker's menu, which takes the arrow
+ *   keys when its slider did not render (a tab that was never shown);
  * - `replyFailed` / `rateLimit`: patterns (case-insensitive) over a failed
  *   reply's text and over a page alert's text; ChatGPT's servers send these
  *   in English;
@@ -53,6 +55,7 @@ export interface PageHooksSection {
   readonly modeSwitch: ModeSwitchHooks;
   readonly modes: { readonly chat: ModeLabels; readonly work: ModeLabels };
   readonly modelPickerTrigger: string;
+  readonly effortControl: string;
   readonly replyFailed: readonly string[];
   readonly rateLimit: readonly string[];
   readonly accountBlocked: readonly (readonly string[])[];
@@ -68,6 +71,7 @@ const SECTION_KEYS = [
   'modeSwitch',
   'modes',
   'modelPickerTrigger',
+  'effortControl',
   'replyFailed',
   'rateLimit',
   'accountBlocked',
@@ -212,6 +216,7 @@ export function readPageHooksSection(
       work: reader.modeLabels(modesRaw.work, `${at('modes')}.work`),
     },
     modelPickerTrigger: reader.selector(raw.modelPickerTrigger, at('modelPickerTrigger')),
+    effortControl: reader.selector(raw.effortControl, at('effortControl')),
     replyFailed: reader.list(raw.replyFailed, at('replyFailed'), (value, itemAt) =>
       reader.pattern(value, itemAt),
     ),

@@ -463,6 +463,7 @@
         "modeSwitch",
         "modes",
         "modelPickerTrigger",
+        "effortControl",
         "replyFailed",
         "rateLimit",
         "accountBlocked"
@@ -611,6 +612,12 @@
           "minLength": 1,
           "maxLength": 200,
           "description": "CSS selector of the model picker button, in every UI language."
+        },
+        "effortControl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "CSS selector of the effort row in the picker menu, which takes the arrow keys when its slider did not render."
         },
         "replyFailed": {
           "type": "array",

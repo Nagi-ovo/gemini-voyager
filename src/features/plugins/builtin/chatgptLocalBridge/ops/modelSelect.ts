@@ -40,6 +40,7 @@ export async function runModelSelect(
     target,
     () => findComposerField(adapter)?.closest('form') ?? document,
     adapter?.pageHooks?.modelPickerTrigger,
+    adapter?.pageHooks?.effortControl,
   );
   return params.capturePrevious ? { ...result, previous } : result;
 }

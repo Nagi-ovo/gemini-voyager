@@ -10,7 +10,12 @@
  *   own export menu is another `role=menu` on the same page;
  * - inside it, `role=menuitemradio` radios (in a collapsed, `aria-hidden`
  *   sub-panel) name the model, one `role=slider` holds the effort step, and
- *   `role=status` names that step.
+ *   `role=status` names that step;
+ * - a tab that was never shown can render the slider's row
+ *   (`data-reasoning-slider`) without the `role=slider` inside it (measured on
+ *   a bridge tab opened in the background). The row takes the same arrow keys,
+ *   and its status says the step as two numbers, its place and the count of
+ *   steps, in every UI language: those stand in for the slider then.
  */
 import type { ModelPickerSection } from '@/features/plugins/sites/sections/modelPickerData';
 import { isRendered } from '@/pages/content/export/adapter/chatgptThread';
@@ -132,13 +137,42 @@ export function readStatus(menu: HTMLElement, data: ModelPickerSection): PickerS
   return { text, label: null, position: null };
 }
 
+/**
+ * ChatGPT's marker on the effort row, the same in every UI language, as
+ * measured; the site's `pageHooks.effortControl` replaces it remotely.
+ */
+export const DEFAULT_EFFORT_CONTROL = '[role="menuitem"][data-reasoning-slider="true"]';
+
+/** The step a status names by its two numbers (place, count), in either order; else null. */
+export function statusStep(text: string): { readonly now: number; readonly max: number } | null {
+  const numbers = (text.match(/\d+/g) ?? []).map(Number);
+  if (numbers.length !== 2) return null;
+  const position = Math.min(numbers[0], numbers[1]);
+  const count = Math.max(numbers[0], numbers[1]);
+  return position >= 1 ? { now: position - 1, max: count - 1 } : null;
+}
+
+/** The effort row standing in for a slider that did not render; null unless it is unambiguous. */
+function rowSlider(menu: HTMLElement, control: string, status: PickerStatus): PickerSlider | null {
+  const rows = menu.querySelectorAll<HTMLElement>(control);
+  if (rows.length !== 1) return null;
+  const step = statusStep(status.text);
+  // The site data's template, when it matched, names the place too: the two must agree.
+  if (!step || (status.position !== null && status.position - 1 !== step.now)) return null;
+  return { element: rows[0], now: step.now, min: 0, max: step.max };
+}
+
 function readNumber(element: Element, name: string): number | null {
   const raw = element.getAttribute(name);
   if (raw === null || !/^\d{1,3}$/.test(raw.trim())) return null;
   return Number(raw);
 }
 
-export function readPicker(menu: HTMLElement, data: ModelPickerSection): PickerReading {
+export function readPicker(
+  menu: HTMLElement,
+  data: ModelPickerSection,
+  effortControl: string = DEFAULT_EFFORT_CONTROL,
+): PickerReading {
   const radios = Array.from(menu.querySelectorAll('[role="menuitemradio"]')).map((radio) => ({
     label: normalizeLabel(radio.textContent ?? ''),
     checked: radio.getAttribute('aria-checked') === 'true',
@@ -152,5 +186,7 @@ export function readPicker(menu: HTMLElement, data: ModelPickerSection): PickerR
     const max = readNumber(element, 'aria-valuemax');
     if (now !== null && min !== null && max !== null) slider = { element, now, min, max };
   }
-  return { radios, slider, status: readStatus(menu, data) };
+  const status = readStatus(menu, data);
+  if (sliders.length === 0) slider = rowSlider(menu, effortControl, status);
+  return { radios, slider, status };
 }

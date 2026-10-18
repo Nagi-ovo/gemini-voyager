@@ -6,8 +6,10 @@
  *   menu, which renders elsewhere in the body;
  * - Voyager's own export menu is another `role=menu` on the same page;
  * - the effort slider is an `aria-hidden` `role=slider` inside the 「强度」
- *   menuitem, which takes ArrowLeft/ArrowRight one step at a time and moves
- *   `aria-valuenow` and the `role=status` text about 500 ms later;
+ *   menuitem (`data-reasoning-slider`), which takes ArrowLeft/ArrowRight one
+ *   step at a time and moves `aria-valuenow` and the `role=status` text about
+ *   500 ms later. A bridge tab opened in the background rendered that row
+ *   without the slider inside (`sliderRendered: false`);
  * - the model radios sit in a collapsed `aria-hidden` sub-panel;
  * - Escape on the menu closes it. The selection is account-wide, so it
  *   survives closing and reopening.
@@ -31,6 +33,8 @@ export interface PickerOptions {
   readonly triggerLabel?: string;
   /** ChatGPT's `data-composer-navigation-target` marker on the trigger. */
   readonly marked?: boolean;
+  /** False: the row renders without its `role=slider`, as in a tab that was never shown. */
+  readonly sliderRendered?: boolean;
   /** The status line for a step, as another UI language words it. */
   readonly status?: (label: string, position: number, count: number) => string;
 }
@@ -114,9 +118,13 @@ export function mountLiveModelPicker(
       <div role="menuitem" aria-label="选择模型"><span>${labels[effort]}</span></div>
       <span aria-live="polite" role="status">${statusText(labels, effort)}</span>
       <span>使用左右方向键调整强度</span>
-      <div role="menuitem" aria-keyshortcuts="ArrowLeft ArrowRight" aria-label="强度">
-        <canvas></canvas>
-        <span role="slider" aria-valuemin="0" aria-valuemax="${labels.length - 1}" aria-valuenow="${effort}" aria-hidden="true" tabindex="-1"></span>
+      <div role="menuitem" aria-keyshortcuts="ArrowLeft ArrowRight" aria-label="强度" data-reasoning-slider="true">
+        ${
+          options.sliderRendered === false
+            ? '<span></span>'
+            : `<canvas></canvas>
+        <span role="slider" aria-valuemin="0" aria-valuemax="${labels.length - 1}" aria-valuenow="${effort}" aria-hidden="true" tabindex="-1"></span>`
+        }
       </div>
       <div aria-hidden="true">
         <span>已锁定，打开访问权限选项</span>
@@ -135,7 +143,7 @@ export function mountLiveModelPicker(
       setTimeout(() => {
         pending = false;
         effort = Math.min(labels.length - 1, Math.max(0, effort + delta));
-        current.querySelector('[role="slider"]')!.setAttribute('aria-valuenow', String(effort));
+        current.querySelector('[role="slider"]')?.setAttribute('aria-valuenow', String(effort));
         current.querySelector('[role="status"]')!.textContent = statusText(labels, effort);
         paintTrigger();
       }, STEP_DELAY_MS);

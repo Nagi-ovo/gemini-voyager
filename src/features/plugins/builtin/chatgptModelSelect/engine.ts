@@ -142,6 +142,8 @@ export async function selectModel(
   scopeOf: () => ParentNode,
   /** The site's trigger marker (`pageHooks.modelPickerTrigger`), else the measured one. */
   marker?: string,
+  /** The site's effort row marker (`pageHooks.effortControl`), else the measured one. */
+  effortControl?: string,
 ): Promise<Omit<ModelSelectResult, 'previous'> & { previous: ModelSelection }> {
   const awaitTrigger = (): Promise<HTMLElement | null> =>
     ctx.waitFor(() => findTrigger(scopeOf(), data, marker), {
@@ -189,7 +191,7 @@ export async function selectModel(
   let changed = false;
   const seenLabels: string[] = [];
   const read = (): PickerReading => {
-    const reading = readPicker(openMenu, data);
+    const reading = readPicker(openMenu, data, effortControl);
     const label = reading.status.label;
     if (label && !seenLabels.includes(label)) seenLabels.push(label);
     return reading;
@@ -217,7 +219,7 @@ export async function selectModel(
       ...details,
       previous,
       partial: changed,
-      statusText: readPicker(openMenu, data).status.text,
+      statusText: readPicker(openMenu, data, effortControl).status.text,
     });
   };
 
@@ -254,7 +256,7 @@ export async function selectModel(
       if (steps > slider!.max) {
         await failClosed('unverified', 'The effort slider did not reach the requested step.');
       }
-      const current = readPicker(openMenu, data).slider;
+      const current = readPicker(openMenu, data, effortControl).slider;
       if (!current) await failClosed('unverified', 'The effort slider disappeared.');
       ctx.guard();
       current!.element.focus();

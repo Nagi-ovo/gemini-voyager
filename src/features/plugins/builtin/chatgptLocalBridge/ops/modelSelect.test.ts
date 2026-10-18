@@ -162,6 +162,29 @@ describe('Local Bridge model.select: UI languages the site data does not name', 
     expect(bridge.outcome()).toMatchObject({ ok: true, data: { observed: { effortIndex: 3 } } });
   });
 
+  it('reaches Pro in a tab that never rendered the effort slider, by its row and status', async () => {
+    mount({ effort: 1, sliderRendered: false });
+    await select({ target: { preset: 'pro' } });
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { changed: true, observed: { effortIndex: 4 } },
+    });
+    expect(picker.state()).toMatchObject({ effort: 4, open: false });
+  });
+
+  it('reaches Pro without the slider on a page whose status puts the count first', async () => {
+    mount({
+      ...german,
+      effort: 1,
+      sliderRendered: false,
+      status: (label, position, count) => `${label}: ${count} Stufen, Stufe ${position}`,
+    });
+    await select({ target: { preset: 'pro' } });
+
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { observed: { effortIndex: 4 } } });
+  });
+
   it('still finds a trigger without the marker by its label', async () => {
     mount({ marked: false, effort: 1 });
     await select({ target: { preset: 'pro' } });
