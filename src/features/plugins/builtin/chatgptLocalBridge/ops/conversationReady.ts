@@ -41,6 +41,8 @@ export const MODE_SWITCH_LABELS: Readonly<Record<SwitchableMode, string>> = {
 const MODE_SWITCH_STATE_ATTRIBUTE = 'data-state';
 /** How far up from one mode button the shared container may sit. */
 const MODE_SWITCH_MAX_DEPTH = 3;
+/** Measured on 2026-10-18: the sidebar's home link, an in-app route to the new-chat page. */
+const HOME_LINK_SELECTOR = 'nav a[href="/"]';
 // Structural first; ChatGPT's earlier test ids as a fallback. Unverified on the current DOM.
 const LOGIN_CONTROL_SELECTOR = [
   'a[href*="/auth/login"]',
@@ -151,6 +153,15 @@ export async function runConversationReady(
   // `unknown` is reported as is: without positive evidence nothing is clicked.
   if (mode !== target && mode !== 'unknown') {
     const from = mode;
+    // The switch exists on the new-chat page only: a tab left on a conversation
+    // (the restore before close) goes home through the page's own link first.
+    if (location.pathname !== '/' && expected === undefined) {
+      const home = document.querySelector<HTMLAnchorElement>(HOME_LINK_SELECTOR);
+      if (home && isRendered(home)) {
+        ctx.allowRoute('/');
+        ctx.click(home);
+      }
+    }
     // The switch renders after the composer on a fresh tab, so one look can miss it.
     const control = await ctx.waitFor(findModeSwitch, {
       timeoutMs: budget(ctx, MODE_SWITCH_TIMEOUT_MS),

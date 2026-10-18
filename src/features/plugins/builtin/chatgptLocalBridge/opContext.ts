@@ -87,6 +87,8 @@ export interface OpContext {
   insertText(field: HTMLElement, text: string): boolean;
   /** No more page events from here on; the route may change (a sent new chat gets its id). */
   endPageEvents(): void;
+  /** The op is about to move the page to `pathname` itself; the guard accepts it from now on. */
+  allowRoute(pathname: string): void;
   sleep(ms: number): Promise<void>;
   /** Poll `probe` until it returns a value, or resolve `null` after `timeoutMs`. */
   waitFor<T>(
@@ -101,7 +103,7 @@ export interface OpContext {
 export function createOpContext(options: OpContextOptions): OpContext {
   const { env, grant, interactive } = options;
   const controller = new AbortController();
-  const routeAtStart = env.pathname();
+  const allowedRoutes = new Set([env.pathname()]);
   let terminated: BridgeError | null = null;
   let pageEventsEnded = false;
 
@@ -144,7 +146,7 @@ export function createOpContext(options: OpContextOptions): OpContext {
       terminate(challenge, 'ChatGPT is asking the person to act on this page.');
       stopped();
     }
-    if (env.pathname() !== routeAtStart) {
+    if (!allowedRoutes.has(env.pathname())) {
       terminate('cancelled', 'The page left the route the op started on.', {
         reason: 'route-changed',
       });
@@ -202,6 +204,9 @@ export function createOpContext(options: OpContextOptions): OpContext {
     },
     endPageEvents() {
       pageEventsEnded = true;
+    },
+    allowRoute(pathname) {
+      allowedRoutes.add(pathname);
     },
     sleep,
     async waitFor(probe, { timeoutMs, intervalMs = DEFAULT_POLL_MS }) {

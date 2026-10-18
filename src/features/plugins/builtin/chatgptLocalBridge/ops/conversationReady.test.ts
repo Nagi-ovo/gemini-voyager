@@ -87,6 +87,31 @@ describe('Local Bridge conversation.ready: mode', () => {
     expect(page.mode()).toBe('work');
   });
 
+  it('goes home through the page link to restore the mode from a conversation', async () => {
+    mount({ mode: 'chat', route: '/c/conv-1' });
+    // Measured live: the switch renders on the new-chat page only.
+    const header = document.querySelector<HTMLElement>('[data-gv-fixture-header]')!;
+    const toggle = Array.from(header.childNodes);
+    header.replaceChildren();
+    const nav = document.createElement('nav');
+    nav.innerHTML = '<a href="/" aria-label="首页">ChatGPT</a>';
+    nav.querySelector('a')!.addEventListener('click', (event) => {
+      event.preventDefault();
+      history.pushState(null, '', '/');
+      setTimeout(() => header.append(...toggle), 600);
+    });
+    document.body.prepend(nav);
+    bridge.start('conversation.ready', { ensureMode: 'work' });
+    await vi.advanceTimersByTimeAsync(2_000);
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { mode: 'work', switchedMode: { from: 'chat', to: 'work' } },
+    });
+    expect(location.pathname).toBe('/');
+    expect(page.events().clicks).toBe(2);
+  });
+
   it('fails closed without a click when the switch lacks its measured data-state', async () => {
     mount({ mode: 'work', modeSwitch: 'no-state' });
     bridge.start('conversation.ready', {});
