@@ -10,7 +10,8 @@ export const MAX_WEEKLY_PRO_LIMIT = 10_000;
 // Read here rather than through getVoyagerBuildTarget: the builtin list runs this at import,
 // and many suites mock '@/core/utils/browser' without that export.
 function buildTarget(): VoyagerBuildTarget {
-  const target = import.meta.env.VOYAGER_BUILD_TARGET;
+  // Optional: the docs build runs this under Node, where import.meta.env is undefined.
+  const target = import.meta.env?.VOYAGER_BUILD_TARGET;
   return target === 'edge' || target === 'firefox' || target === 'safari' ? target : 'chrome';
 }
 
