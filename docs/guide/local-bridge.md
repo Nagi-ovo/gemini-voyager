@@ -62,3 +62,10 @@ voyager ask --project "论文" "论证最薄弱的地方在哪？"
 回答存成 `response.md`，默认用聊天模式下的 GPT-6 Pro。
 
 很长的回答怎么等、每个退出码的意思、全部命令，见 [CLI 的 README](https://github.com/voyager-crew/voyager-cli/blob/main/README_ZH.md)。给 Claude Code、Codex 等 agent 用的说明在 [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md)。
+
+## 须知与免责
+
+- Voyager 和 Voyager CLI 是社区开源项目，与 OpenAI 无关，也没有得到 OpenAI 的认可。
+- 本地桥会在你自己登录的浏览器里自动操作 ChatGPT 网页版。OpenAI 的[使用条款](https://openai.com/policies/terms-of-use/)限制以自动或程序化的方式提取输出，使用前请自行判断是否符合条款；账号因此受到的任何限制，由你自己承担。
+- 同类工具也是这样处理的：例如 [oracle](https://github.com/steipete/oracle) 把浏览器模式作为需要主动开启的实验功能，并建议在意风险的人改用 API。需要有保障的用法，请使用 OpenAI API。
+- 本地桥是给你在自己电脑上、为自己方便而用的：只连你自己的账号，不要拿它对外提供服务、共享账号或转卖额度，也只用于合法用途。

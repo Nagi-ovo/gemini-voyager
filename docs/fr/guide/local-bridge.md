@@ -62,3 +62,10 @@ voyager ask --project "Thèse" "Où l’argumentation est-elle la plus faible ?"
 La réponse est enregistrée dans `response.md`, et les questions utilisent par défaut GPT-6 Pro en mode chat.
 
 Pour attendre une longue réponse, le sens de chaque code de sortie et toutes les commandes, voir le [README du CLI](https://github.com/voyager-crew/voyager-cli#readme). Les instructions pour Claude Code, Codex et les autres agents sont dans [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md).
+
+## Avertissement
+
+- Voyager et Voyager CLI sont des projets open source communautaires. Ils ne sont ni affiliés à OpenAI ni approuvés par OpenAI.
+- Le pont automatise ChatGPT sur le web dans votre propre navigateur connecté. Les [conditions d'utilisation](https://openai.com/policies/terms-of-use/) d'OpenAI limitent l'extraction de résultats par des moyens automatisés ou programmatiques : jugez vous-même si votre usage les respecte avant de vous y fier. Toute restriction appliquée à votre compte en conséquence est à vos risques.
+- Les outils similaires adoptent la même position : [oracle](https://github.com/steipete/oracle), par exemple, fait de son mode navigateur une fonction expérimentale à activer soi-même et oriente vers l'API ceux qui veulent éviter ce risque. Pour un usage pris en charge, utilisez l'API OpenAI.
+- Le pont sert à votre propre confort, sur votre propre ordinateur : n'y connectez que votre compte, ne l'utilisez pas pour servir d'autres personnes, partager un compte ou revendre votre usage, et uniquement à des fins légales.

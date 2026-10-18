@@ -62,3 +62,10 @@ voyager ask --project "Tesis" "¿Dónde es más débil el argumento?"
 La respuesta se guarda como `response.md`, y las preguntas usan por defecto GPT-6 Pro en modo chat.
 
 Cómo esperar respuestas largas, qué significa cada código de salida y todos los comandos están en el [README del CLI](https://github.com/voyager-crew/voyager-cli#readme). Las instrucciones para Claude Code, Codex y otros agentes están en [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md).
+
+## Aviso
+
+- Voyager y Voyager CLI son proyectos comunitarios de código abierto. No están afiliados a OpenAI ni cuentan con su aprobación.
+- El puente automatiza ChatGPT en la web dentro de tu propio navegador con sesión iniciada. Los [Términos de uso](https://openai.com/policies/terms-of-use/) de OpenAI restringen la extracción de resultados por medios automáticos o programáticos, así que decide por tu cuenta si tu uso los cumple antes de depender de él. Cualquier limitación que reciba tu cuenta por ello corre de tu cuenta.
+- Las herramientas similares adoptan la misma postura: [oracle](https://github.com/steipete/oracle), por ejemplo, deja su modo navegador como una función experimental que hay que activar y recomienda la API a quien quiera evitar el riesgo. Si necesitas una vía con soporte, usa la API de OpenAI.
+- El puente es para tu propia comodidad en tu propio ordenador: conecta solo tu cuenta, no lo uses para dar servicio a otras personas, compartir una cuenta o revender tu uso, y úsalo solo con fines legales.

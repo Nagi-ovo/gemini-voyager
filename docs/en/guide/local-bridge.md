@@ -62,3 +62,10 @@ voyager ask --project "Thesis" "Where is the argument weakest?"
 The reply is saved as `response.md`, and asks use GPT-6 Pro in chat mode by default.
 
 For waiting on long answers, what each exit code means and every command, see the [CLI README](https://github.com/voyager-crew/voyager-cli#readme). Instructions for Claude Code, Codex and other agents are in [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md).
+
+## Disclaimer
+
+- Voyager and Voyager CLI are community open-source projects. They are not affiliated with or endorsed by OpenAI.
+- The bridge automates ChatGPT on the web in your own signed-in browser. OpenAI's [Terms of Use](https://openai.com/policies/terms-of-use/) restrict extracting output by automated or programmatic means, so decide for yourself whether your use complies before you rely on it. Any limits placed on your account as a result are your own risk.
+- Similar tools take the same line: [oracle](https://github.com/steipete/oracle), for example, makes its browser mode an opt-in experimental feature and points people who want to avoid the risk to the API. If you need a supported route, use the OpenAI API.
+- The bridge is for your own convenience on your own computer: connect only your own account, do not use it to serve other people, share an account or resell usage, and use it only for lawful purposes.

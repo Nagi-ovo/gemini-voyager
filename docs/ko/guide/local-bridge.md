@@ -62,3 +62,10 @@ voyager ask --project "Thesis" "논증이 가장 약한 곳은 어디야?"
 답변은 `response.md`로 저장되며, 기본으로 채팅 모드의 GPT-6 Pro를 씁니다.
 
 긴 답변을 기다리는 법, 각 종료 코드의 의미, 전체 명령은 [CLI README](https://github.com/voyager-crew/voyager-cli#readme)를 보세요. Claude Code, Codex 등 에이전트용 안내는 [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md)에 있습니다.
+
+## 주의 사항 및 면책
+
+- Voyager와 Voyager CLI는 커뮤니티 오픈 소스 프로젝트로, OpenAI와 관련이 없으며 OpenAI의 승인을 받지 않았습니다.
+- 브리지는 직접 로그인한 브라우저에서 웹 버전 ChatGPT를 자동으로 조작합니다. OpenAI [이용 약관](https://openai.com/policies/terms-of-use/)은 자동화되거나 프로그래밍 방식으로 출력을 추출하는 것을 제한하므로, 사용 전에 약관에 맞는지 스스로 판단하세요. 이로 인해 계정에 제한이 생기더라도 그 위험은 본인이 집니다.
+- 비슷한 도구도 같은 입장입니다. 예를 들어 [oracle](https://github.com/steipete/oracle)는 브라우저 모드를 직접 켜야 하는 실험 기능으로 두고, 위험을 피하고 싶은 사람에게는 API를 권합니다. 보장된 방법이 필요하다면 OpenAI API를 사용하세요.
+- 브리지는 자신의 컴퓨터에서 자신의 편의를 위해 쓰는 도구입니다. 본인 계정만 연결하고, 다른 사람에게 서비스를 제공하거나 계정을 공유하거나 사용량을 되파는 데 쓰지 말며, 합법적인 목적에만 사용하세요.

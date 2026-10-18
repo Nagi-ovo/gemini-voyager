@@ -62,3 +62,10 @@ voyager ask --project "Thesis" "論証がいちばん弱いのはどこ？"
 回答は `response.md` として保存されます。既定ではチャットモードの GPT-6 Pro を使います。
 
 長い回答の待ち方、各終了コードの意味、すべてのコマンドは [CLI の README](https://github.com/voyager-crew/voyager-cli#readme) を参照してください。Claude Code や Codex などのエージェント向けの説明は [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md) にあります。
+
+## 注意事項と免責
+
+- Voyager と Voyager CLI はコミュニティによるオープンソースプロジェクトで、OpenAI とは無関係であり、OpenAI の承認も受けていません。
+- ブリッジは、あなた自身がログインしているブラウザで Web 版 ChatGPT を自動操作します。OpenAI の[利用規約](https://openai.com/policies/terms-of-use/)は、自動的またはプログラムによる出力の抽出を制限しています。規約に沿うかどうかはご自身で判断したうえでお使いください。その結果アカウントに制限がかかっても、自己責任となります。
+- 同種のツールも同じ扱いです。たとえば [oracle](https://github.com/steipete/oracle) は、ブラウザモードを明示的に有効にする実験的機能とし、リスクを避けたい人には API を勧めています。確実な方法が必要なら、OpenAI API をお使いください。
+- ブリッジは、ご自身のコンピューターでご自身の便利のために使うものです。接続するのはご自身のアカウントだけにし、他人へのサービス提供、アカウントの共有、利用枠の転売には使わず、合法的な目的にのみ使用してください。

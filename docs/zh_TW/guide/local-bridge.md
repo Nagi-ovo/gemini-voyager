@@ -62,3 +62,10 @@ voyager ask --project "論文" "論證最薄弱的地方在哪？"
 回答會存成 `response.md`，預設使用聊天模式下的 GPT-6 Pro。
 
 很長的回答怎麼等、每個結束代碼的意思、全部指令，請見 [CLI 的 README](https://github.com/voyager-crew/voyager-cli/blob/main/README_ZH.md)。給 Claude Code、Codex 等 agent 用的說明在 [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md)。
+
+## 須知與免責
+
+- Voyager 和 Voyager CLI 是社群開源專案，與 OpenAI 無關，也沒有獲得 OpenAI 的認可。
+- 本機橋接會在你自己登入的瀏覽器中自動操作 ChatGPT 網頁版。OpenAI 的[使用條款](https://openai.com/policies/terms-of-use/)限制以自動或程式化的方式擷取輸出，使用前請自行判斷是否符合條款；帳號因此受到的任何限制，由你自行承擔。
+- 同類工具也是這樣處理的：例如 [oracle](https://github.com/steipete/oracle) 把瀏覽器模式作為需要主動開啟的實驗功能，並建議在意風險的人改用 API。需要有保障的用法，請使用 OpenAI API。
+- 本機橋接是給你在自己電腦上、為自己方便而用的：只連你自己的帳號，不要拿它對外提供服務、共享帳號或轉賣額度，也只用於合法用途。
