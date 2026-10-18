@@ -87,10 +87,34 @@ describe('evaluateBridgePolicy', () => {
       state: 'denied',
       code: 'policy-stale',
     });
-    expect(evaluate({ entry: entry(site(500, ['composer.send'])) }).verdict).toMatchObject({
+  });
+
+  it('runs the first bridge release on the catalog published from its own commit', () => {
+    const { verdict, nextHighWater } = evaluate({ entry: entry(site(500, ['composer.send'])) });
+    expect(verdict).toMatchObject({ state: 'allowed', source: 'remote', revision: 500 });
+    expect(nextHighWater).toEqual({ revision: 500, allow: ['composer.send'] });
+  });
+
+  it('calls a catalog older than this build stale', () => {
+    expect(evaluate({ entry: entry(site(499, ['composer.send'])) }).verdict).toMatchObject({
       state: 'denied',
       code: 'policy-stale',
     });
+  });
+
+  it('still expires, and still keeps the high-water mark for, a catalog of the build revision', () => {
+    const old = entry(site(500, ['composer.send']), { fetchedAt: NOW - 25 * HOUR });
+    expect(evaluate({ entry: old }).verdict).toMatchObject({ code: 'policy-stale' });
+    const behind = evaluate({
+      entry: entry(site(500, ['composer.send'])),
+      highWater: { revision: 501, allow: ['composer.send'] },
+    });
+    expect(behind.verdict).toMatchObject({ code: 'policy-stale' });
+  });
+
+  it('keeps a dev build on its packaged policy when the remote one is unstamped too', () => {
+    const { verdict } = evaluate({ packaged: PACKAGED_DEV, entry: entry(site(0, [])) });
+    expect(verdict).toMatchObject({ state: 'allowed', source: 'packaged' });
   });
 
   it('lets an unstamped (dev) build use its packaged policy when no remote one applies', () => {

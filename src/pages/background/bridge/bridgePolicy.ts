@@ -7,9 +7,10 @@
  *      127.0.0.1 host permissions are granted;
  *   2. the cached chatgpt.com catalog entry was fetched by this extension
  *      version and carries a valid site with a valid `bridge` section;
- *   3. its revision is strictly newer than the packaged site (so the packaged
- *      copy never authorizes a production build) and not older than the
- *      highest revision accepted so far (the high-water mark);
+ *   3. its revision is stamped and not older than the packaged site (the
+ *      packaged copy itself never authorizes a production build; an equal
+ *      revision is the catalog published from the same commit) and not older
+ *      than the highest revision accepted so far (the high-water mark);
  *   4. it was fetched within the last 24 h (the accepted revocation delay);
  *   5. the op is in `bridge.allow`.
  * Anything else denies. A deny is never undone by a 404, bad data or the
@@ -112,11 +113,13 @@ export function evaluateBridgePolicy(input: PolicyEvaluationInput): PolicyEvalua
 
   const revision = site.catalogRevision ?? 0;
   const fetchedAt = entry.fetchedAt;
-  if (revision <= floor) {
+  // A release and its catalog share one revision, so `<=` turned every first bridge build off.
+  // Unstamped remote data (0) still never passes for published policy.
+  if (revision === 0 || revision < floor) {
     return {
       verdict: packagedFallback(
         input,
-        deny('policy-stale', 'catalog is not newer than this build', revision, fetchedAt),
+        deny('policy-stale', 'catalog is older than this build', revision, fetchedAt),
       ),
     };
   }
