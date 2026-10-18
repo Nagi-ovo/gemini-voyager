@@ -57,6 +57,7 @@ import { runModelSelect } from './ops/modelSelect';
 import { runProjectOp } from './ops/projectRuntime';
 import { runTurnsRead } from './ops/turnsRead';
 import { runTurnsWaitReply } from './ops/turnsWaitReply';
+import { createPageDataStore } from './pageData/store';
 
 export const DETACH_GRACE_MS = 3_000;
 const OUTCOME_CACHE_SIZE = 16;
@@ -149,6 +150,7 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
   let running: RunningOp | null = null;
   let lastUserInputAt = Number.NEGATIVE_INFINITY;
   let toaster: Toaster | null = null;
+  const pageData = createPageDataStore(now);
   const outcomes = new Map<string, BridgeOpOutcome>();
   /** Tasks cancelled here; an `op.start` for one (it can arrive after its cancel) is refused. */
   const cancelled = new Set<string>();
@@ -227,10 +229,10 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
       case 'turns.waitReply':
         return runTurnsWaitReply(ctx, task.params, snapshot);
       case 'turns.read':
-        return runTurnsRead(ctx, task.params, snapshot);
+        return runTurnsRead(ctx, task.params, snapshot, pageData);
       default:
         return (
-          runProjectOp(ctx, task, snapshot, chunkReader(task.taskId)) ??
+          runProjectOp(ctx, task, snapshot, chunkReader(task.taskId), pageData) ??
           ctx.fail('unsupported-op', `This page does not run ${task.op}.`)
         );
     }
@@ -334,12 +336,14 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
 
   // Installed once and kept for the document's lifetime, like the runtime itself: the 8 s
   // composer-input window must span a remount, and a disabled bridge still answers
-  // `op.start` (not-attached) and `lease.probe` (stopped) explicitly.
+  // `op.start` (not-attached) and `lease.probe` (stopped) explicitly. The page data is
+  // the document's too: a revisit served from the page's cache sends nothing new to observe.
   const installDocumentListeners = (): void => {
     if (documentListenersInstalled) return;
     documentListenersInstalled = true;
     for (const type of USER_INPUT_EVENTS) document.addEventListener(type, noteUserInput, true);
     if (options.listen !== false) chrome.runtime.onMessage.addListener(onMessage);
+    pageData.start();
   };
 
   const runtime: BridgeRuntime = {

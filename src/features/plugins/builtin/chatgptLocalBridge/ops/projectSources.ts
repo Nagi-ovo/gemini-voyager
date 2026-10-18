@@ -11,6 +11,11 @@
  * - 「删除」 in a row's menu removes the file at once: no confirmation, no
  *   toast, no undo. `project.remove` presses it once, for a name listed
  *   exactly once, and succeeds only when the row stays gone.
+ *
+ * The list loads after the view, from a request that can take seconds; a
+ * project with no files shows no row at all. So the rows count only once they
+ * name the files ChatGPT sent for the project (`PageData.files`), and an upload
+ * or removal only once ChatGPT's answer to it lists the change.
  */
 import type {
   ProjectFilesParams,
@@ -25,7 +30,9 @@ import type { SiteAdapter } from '@/features/plugins/types';
 import { isRendered } from '@/pages/content/export/adapter/chatgptThread';
 
 import type { OpContext } from '../opContext';
+import type { PageData } from '../pageData/store';
 import { type BlobChunkReader, fetchBlobFile } from './blobBytes';
+import { requirePageObserver } from './pageObserver';
 import {
   type FileRow,
   allLabels,
@@ -39,11 +46,7 @@ import {
 } from './projectPage';
 
 export const SETTLE_MS = 1_500;
-/** The list loads after the view; a project with no files shows no row at all. */
-const LIST_SETTLE_MS = 2_000;
-/** A row dated this long before the upload is an older file the page kept, not the upload. */
-const OLDER_THAN_UPLOAD_MS = 10 * 60_000;
-const LIST_TIMEOUT_MS = 10_000;
+const LIST_TIMEOUT_MS = 20_000;
 const MENU_TIMEOUT_MS = 3_000;
 const REMOVE_TIMEOUT_MS = 10_000;
 const UPLOAD_PROGRESS_EVERY_MS = 5_000;
@@ -51,44 +54,65 @@ const UPLOAD_PROGRESS_EVERY_MS = 5_000;
 const DEADLINE_MARGIN_MS = 1_000;
 const BUSY_SELECTOR = '[aria-busy="true"], [role="progressbar"], progress';
 
-const signature = (rows: readonly FileRow[]): string =>
-  JSON.stringify(rows.map((row) => [row.name, row.uploadedAt]));
+/** Each name as often in `rows` as in `names`. */
+function namesMatch(rows: readonly FileRow[], names: readonly string[]): boolean {
+  if (rows.length !== names.length) return false;
+  const left = rows.map((row) => row.name).sort();
+  return [...names].sort().every((name, index) => name === left[index]);
+}
 
-/** The sources view's rows once they have stopped changing. */
-async function settledRows(ctx: OpContext, data: ProjectsSection): Promise<FileRow[]> {
-  let last = '';
-  let since = ctx.now();
-  await ctx.waitFor(
+/** The sources view's rows once they show the file list ChatGPT sent for the project. */
+async function loadedRows(
+  ctx: OpContext,
+  data: ProjectsSection,
+  pageData: PageData,
+  projectId: string,
+): Promise<FileRow[]> {
+  // Two seconds without a change once passed for a whole list; a slow answer showed none.
+  const rows = await ctx.waitFor(
     () => {
-      const now = signature(fileRows(data));
-      if (now !== last) {
-        last = now;
-        since = ctx.now();
-      }
-      return ctx.now() - since >= LIST_SETTLE_MS;
+      const listed = pageData.files(projectId);
+      const shown = fileRows(data);
+      return listed && namesMatch(shown, listed.names) ? shown : null;
     },
     { timeoutMs: timeLeft(ctx, LIST_TIMEOUT_MS) },
   );
-  return fileRows(data);
+  if (!rows) {
+    ctx.fail('unverified', "The project's file list could not be confirmed as loaded.", {
+      reason: 'list-unconfirmed',
+      listedByChatGpt: pageData.files(projectId)?.names.length ?? null,
+      shown: fileRows(data).length,
+    });
+  }
+  return rows;
+}
+
+/** ChatGPT's own file list for the project, when it arrived at or after `since`. */
+function answerSince(pageData: PageData, projectId: string, since: number) {
+  const listed = pageData.files(projectId);
+  return listed && listed.source === 'project' && listed.receivedAt >= since ? listed : null;
 }
 
 async function openSources(
   ctx: OpContext,
   params: { readonly projectId: string },
   adapter: SiteAdapter | null,
+  pageData: PageData,
 ): Promise<{ data: ProjectsSection; rows: FileRow[] }> {
   const data = requireProjectsData(ctx, adapter);
   requireProjectPage(ctx, data, params.projectId);
+  await requirePageObserver(ctx, pageData);
   await ensureSourcesView(ctx, data);
-  return { data, rows: await settledRows(ctx, data) };
+  return { data, rows: await loadedRows(ctx, data, pageData, params.projectId) };
 }
 
 export async function runProjectFiles(
   ctx: OpContext,
   params: ProjectFilesParams,
   adapter: SiteAdapter | null,
+  pageData: PageData,
 ): Promise<ProjectFilesResult> {
-  const { rows } = await openSources(ctx, params, adapter);
+  const { rows } = await openSources(ctx, params, adapter, pageData);
   return { projectId: params.projectId, files: filesOf(rows) };
 }
 
@@ -97,9 +121,10 @@ export async function runProjectUpload(
   params: ProjectUploadParams,
   adapter: SiteAdapter | null,
   readChunk: BlobChunkReader,
+  pageData: PageData,
 ): Promise<ProjectUploadResult> {
   const { name } = params.blob;
-  const { data, rows } = await openSources(ctx, params, adapter);
+  const { data, rows } = await openSources(ctx, params, adapter, pageData);
   const refuseListed = (listed: readonly FileRow[]): void => {
     if (!listed.some((row) => row.name === name)) return;
     ctx.fail(
@@ -138,9 +163,13 @@ export async function runProjectUpload(
   let busySeen = false;
   let copies = 0;
   let busy = false;
+  let accepted = false;
   const settled = await ctx.waitFor(
     () => {
       const at = ctx.now();
+      // The row shows at once; ChatGPT's answer to the upload names the file seconds later.
+      const answer = answerSince(pageData, params.projectId, dispatchedAt);
+      accepted = !!answer && answer.names.filter((listed) => listed === name).length === 1;
       const mine = fileRows(data).filter((row) => row.name === name);
       copies = mine.length;
       busy = mine.some(
@@ -152,7 +181,7 @@ export async function runProjectUpload(
         lastProgressAt = at;
         ctx.progress({ phase: 'uploading', elapsedMs: at - dispatchedAt, shown: copies > 0, busy });
       }
-      if (copies !== 1 || busy) {
+      if (copies !== 1 || busy || !accepted) {
         stableSince = null;
         return null;
       }
@@ -166,6 +195,7 @@ export async function runProjectUpload(
     shownMs: shownAt === null ? null : shownAt - dispatchedAt,
     busySeen,
     copies,
+    accepted,
   };
   if (!settled) {
     if (shownAt === null) {
@@ -175,21 +205,10 @@ export async function runProjectUpload(
       busy ? 'timeout' : 'unverified',
       copies > 1
         ? 'The project lists the uploaded name more than once.'
-        : 'The upload could not be confirmed as finished.',
+        : copies === 1 && !accepted
+          ? "ChatGPT's answer to the upload did not list the file."
+          : 'The upload could not be confirmed as finished.',
       evidence,
-    );
-  }
-  const listedAt = settled.uploadedAt === null ? Number.NaN : Date.parse(settled.uploadedAt);
-  // A list still loading at the name check can show the old file only now: it is no proof.
-  if (listedAt < dispatchedAt - OLDER_THAN_UPLOAD_MS) {
-    ctx.fail(
-      'unverified',
-      `The project lists an older ${name}; ChatGPT kept it and ignored the upload.`,
-      {
-        ...evidence,
-        reason: 'older-file',
-        uploadedAt: settled.uploadedAt,
-      },
     );
   }
   return {
@@ -229,8 +248,9 @@ export async function runProjectRemove(
   ctx: OpContext,
   params: ProjectRemoveParams,
   adapter: SiteAdapter | null,
+  pageData: PageData,
 ): Promise<ProjectRemoveResult> {
-  const { data, rows } = await openSources(ctx, params, adapter);
+  const { data, rows } = await openSources(ctx, params, adapter, pageData);
   const matching = rows.filter((row) => row.name === params.name);
   if (matching.length === 0) {
     ctx.fail('not-found', `${params.name} is not in the project.`, {
@@ -254,11 +274,16 @@ export async function runProjectRemove(
   ctx.click(item);
   // Removal is immediate and final: nothing more is pressed, whatever follows.
   ctx.endPageEvents();
+  const clickedAt = ctx.now();
   let goneSince: number | null = null;
+  let accepted = false;
   const gone = await ctx.waitFor(
     () => {
       const at = ctx.now();
-      if (fileRows(data).some((row) => row.name === params.name)) {
+      // The row goes at once; ChatGPT's answer to the removal comes after it.
+      const answer = answerSince(pageData, params.projectId, clickedAt);
+      accepted = !!answer && !answer.names.includes(params.name);
+      if (!accepted || fileRows(data).some((row) => row.name === params.name)) {
         goneSince = null;
         return null;
       }
@@ -268,10 +293,17 @@ export async function runProjectRemove(
     { timeoutMs: timeLeft(ctx, REMOVE_TIMEOUT_MS) },
   );
   if (!gone) {
-    ctx.fail('unverified', `${params.name} is still listed after the removal.`, {
-      removed: 'unknown',
-      dialog: !!document.querySelector('[role="alertdialog"], [role="dialog"]'),
-    });
+    ctx.fail(
+      'unverified',
+      accepted
+        ? `${params.name} is still listed after the removal.`
+        : `ChatGPT's answer to the removal did not arrive or still lists ${params.name}.`,
+      {
+        removed: 'unknown',
+        accepted,
+        dialog: !!document.querySelector('[role="alertdialog"], [role="dialog"]'),
+      },
+    );
   }
   return {
     projectId: params.projectId,

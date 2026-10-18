@@ -11,6 +11,7 @@ import {
 import type { SiteAdapter } from '@/features/plugins/types';
 
 import type { OpContext } from '../opContext';
+import type { PageData } from '../pageData/store';
 import type { BlobChunkReader } from './blobBytes';
 import { runProjectCreate, runProjectList, runProjectOpen } from './projectNavigation';
 import { runProjectFiles, runProjectRemove, runProjectUpload } from './projectSources';
@@ -29,26 +30,33 @@ export function runProjectOp(
   task: ProjectTask,
   adapter: SiteAdapter | null,
   readChunk: BlobChunkReader,
+  pageData: PageData,
 ): Promise<ProjectResult> | null {
   if (!isProjectOpName(task.op)) return null;
   const params = task.params as ProjectOpParamsMap[typeof task.op];
   switch (task.op) {
     case 'project.list':
-      return runProjectList(ctx, params as ProjectOpParamsMap['project.list'], adapter);
+      return runProjectList(ctx, params as ProjectOpParamsMap['project.list'], adapter, pageData);
     case 'project.create':
       return runProjectCreate(ctx, params as ProjectOpParamsMap['project.create'], adapter);
     case 'project.open':
       return runProjectOpen(ctx, params as ProjectOpParamsMap['project.open'], adapter);
     case 'project.files':
-      return runProjectFiles(ctx, params as ProjectOpParamsMap['project.files'], adapter);
+      return runProjectFiles(ctx, params as ProjectOpParamsMap['project.files'], adapter, pageData);
     case 'project.upload':
       return runProjectUpload(
         ctx,
         params as ProjectOpParamsMap['project.upload'],
         adapter,
         readChunk,
+        pageData,
       );
     case 'project.remove':
-      return runProjectRemove(ctx, params as ProjectOpParamsMap['project.remove'], adapter);
+      return runProjectRemove(
+        ctx,
+        params as ProjectOpParamsMap['project.remove'],
+        adapter,
+        pageData,
+      );
   }
 }

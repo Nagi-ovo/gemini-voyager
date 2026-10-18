@@ -22,8 +22,12 @@
  *   a word. Each row: name, kind, `<time datetime>`, and
  *   `button[aria-label="<name> 的操作"][aria-haspopup=menu]`, whose menu opens
  *   on pointerdown and whose 「删除」 removes the file at once, unconfirmed.
+ * - ChatGPT's answers, as the page data observer reports them: the sidebar's
+ *   projects, a sources view's file list, and the file list in its answer to an
+ *   upload (once the row stops uploading) or a removal (shortly after the row goes).
  */
 import { type ChatGptPageFixture, mountChatGptPage } from './chatgptPageFixture';
+import { type PageDataFeed, createPageDataFeed } from './pageDataFeed';
 
 export interface FixtureProject {
   readonly id: string;
@@ -69,10 +73,25 @@ export interface ProjectPageOptions {
   readonly removeWorks?: boolean;
   /** Delay before a created project's route; null: the route never changes (default 600 ms). */
   readonly createRoutesAfterMs?: number | null;
+  /** When ChatGPT answers the sidebar's project request; null: never (default: at once). */
+  readonly projectsAnswerAfterMs?: number | null;
+  /** Whether that answer ends the list (default true); false: more pages to load on demand. */
+  readonly projectsComplete?: boolean;
+  /**
+   * When ChatGPT answers a project's file request after its sources view renders;
+   * null: never (default: as the list loads).
+   */
+  readonly filesAnswerAfterMs?: number | null;
+  /** Whether ChatGPT answers an upload or a removal with the project's files (default true). */
+  readonly changesAnswered?: boolean;
+  /** Whether the browser runs the page data observer (default true; false: Firefox before 128). */
+  readonly pageObserver?: boolean;
 }
 
 export interface ProjectPageFixture {
   readonly page: ChatGptPageFixture;
+  /** What the page data observer reports from ChatGPT's answers. */
+  readonly feed: PageDataFeed;
   files(): string[];
   mode(): ProjectMode;
   readonly counts: {
@@ -114,6 +133,12 @@ export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageF
   };
   const created: FixtureProject[] = [];
   const chatLabel = (name: string): string => `在“${name}”中新建聊天`;
+  const feed = createPageDataFeed({ running: options.pageObserver ?? true });
+  const answerFiles = (project: FixtureProject): void =>
+    feed.files(
+      project.id,
+      files.map((file) => file.name),
+    );
 
   const nav = document.createElement('nav');
   nav.setAttribute('aria-label', '聊天历史');
@@ -221,6 +246,8 @@ export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageF
         const index = files.findIndex((file) => file.name === name);
         if (index >= 0) files[index] = { name, uploadedAt: '2026-10-18T09:30:00.000Z' };
         renderRows();
+        const project = current();
+        if (project && options.changesAnswered !== false) answerFiles(project);
       }, busyMs);
     }, options.uploadShowsAfterMs ?? 800);
   };
@@ -270,6 +297,11 @@ export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageF
           renderRows();
         }, options.listLoadsAfterMs);
       }
+      const answerAfter =
+        options.filesAnswerAfterMs === undefined
+          ? (options.listLoadsAfterMs ?? 0)
+          : options.filesAnswerAfterMs;
+      if (answerAfter !== null) setTimeout(() => answerFiles(project), answerAfter);
       return;
     }
     const [chatMode, workMode] = Array.from(
@@ -333,6 +365,8 @@ export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageF
       const index = files.findIndex((file) => file.name === name);
       if (index >= 0) files.splice(index, 1);
       renderRows();
+      const project = current();
+      if (project && options.changesAnswered !== false) setTimeout(() => answerFiles(project), 300);
     });
     document.body.appendChild(menu);
     button.setAttribute('aria-controls', menu.id);
@@ -365,6 +399,18 @@ export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageF
   });
 
   renderSidebar();
+  const projectsAfter =
+    options.projectsAnswerAfterMs === undefined ? 0 : options.projectsAnswerAfterMs;
+  if (projectsAfter !== null) {
+    setTimeout(
+      () =>
+        feed.projects(
+          projects.map(({ id, name }) => ({ projectId: id, name })),
+          options.projectsComplete ?? true,
+        ),
+      projectsAfter,
+    );
+  }
   if (!rowsLoaded) {
     setTimeout(() => {
       rowsLoaded = true;
@@ -374,6 +420,7 @@ export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageF
   render();
   return {
     page,
+    feed,
     files: () => files.map((file) => file.name),
     mode: () => mode,
     counts,

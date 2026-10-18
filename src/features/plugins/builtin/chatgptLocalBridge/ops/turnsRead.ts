@@ -4,9 +4,11 @@
  * backend JSON. The localized role heading ("ChatGPT 说：") is left out by
  * structure; a heading text line is dropped only as a fallback.
  *
- * With `latest` it reads the conversation's last turn, once the thread has
- * stopped mounting turns. That turn must show a finished reply: one still being
- * written is `unverified`, never an earlier reply in its place.
+ * With `latest` it reads the conversation's last turn, once that turn's reply
+ * is the message ChatGPT says the conversation ends on (`current_node`, from
+ * the page's own request; `PageData.currentNode`). That turn must show a
+ * finished reply: one still being written is `unverified`, never an earlier
+ * reply in its place.
  *
  * Phase B reports no file candidates; `files.download` arrives in Phase C.
  */
@@ -17,7 +19,9 @@ import type { SiteAdapter } from '@/features/plugins/types';
 import { extractAssistantMessage } from '@/pages/content/export/adapter/chatgptThread';
 import { buildChatGptAdapter } from '@/pages/content/export/adapter/platform/chatgpt';
 
-import type { OpContext } from '../opContext';
+import { GRANT_MARGIN_MS, type OpContext } from '../opContext';
+import type { PageData } from '../pageData/store';
+import { requirePageObserver } from './pageObserver';
 import {
   ASSISTANT_HEADING_SELECTOR,
   conversationItems,
@@ -45,10 +49,7 @@ function findReplyByKey(key: string): { item: HTMLElement; reply: HTMLElement } 
   return null;
 }
 
-const SETTLE_POLL_MS = 500;
-/** Polls in a row the thread's last turn must stay the same before it counts as the last. */
-const SETTLE_POLLS = 3;
-const SETTLE_TIMEOUT_MS = 15_000;
+const LATEST_TIMEOUT_MS = 20_000;
 
 interface FoundReply {
   readonly item: HTMLElement;
@@ -67,29 +68,32 @@ function requireConversation(ctx: OpContext, conversationId: string): void {
   });
 }
 
-/** The last mounted turn, once the opened thread stops adding turns; null when none mounts. */
-async function settledLastItem(
+/** The last mounted turn, once its reply is the message the conversation ends on. */
+async function currentLastItem(
   ctx: OpContext,
   conversationId: string,
+  pageData: PageData,
 ): Promise<HTMLElement | null> {
-  let previous: string | null = null;
-  let same = 0;
-  const settled = await ctx.waitFor(
+  // Three polls without a change once passed for the end of the thread; a slow history
+  // answer showed an older reply that long.
+  const found = await ctx.waitFor(
     () => {
       // A passive op has no route guard, and an in-app navigation keeps the document:
       // without this the thread settles on the other conversation's turns.
       requireConversation(ctx, conversationId);
-      const items = conversationItems();
-      const last = items.at(-1);
-      if (!last) return null;
-      const key = `${items.length}|${readTurnKey(last)}|${findReply(last) ? 'r' : ''}`;
-      same = key === previous ? same + 1 : 0;
-      previous = key;
-      return same + 1 >= SETTLE_POLLS ? last : null;
+      const currentNode = pageData.currentNode(conversationId);
+      const last = conversationItems().at(-1);
+      const reply = last ? findReply(last) : null;
+      return currentNode && reply && replyIdOf(reply) === currentNode ? last : null;
     },
-    { timeoutMs: SETTLE_TIMEOUT_MS, intervalMs: SETTLE_POLL_MS },
+    {
+      timeoutMs: Math.max(
+        0,
+        Math.min(LATEST_TIMEOUT_MS, ctx.grant.deadline - GRANT_MARGIN_MS - ctx.now()),
+      ),
+    },
   );
-  return settled ?? null;
+  return found ?? null;
 }
 
 /**
@@ -101,16 +105,12 @@ async function findLatestReply(
   ctx: OpContext,
   conversationId: string,
   adapter: SiteAdapter | null,
+  pageData: PageData,
 ): Promise<FoundReply> {
-  const item = await settledLastItem(ctx, conversationId);
-  if (!item) {
-    if (conversationItems().length > 0) {
-      ctx.fail('unverified', 'The conversation kept changing while it was read.', {
-        reason: 'thread-unsettled',
-      });
-    }
-    ctx.fail('selector-missing', 'The conversation shows no turns.');
-  }
+  await requirePageObserver(ctx, pageData);
+  const current = await currentLastItem(ctx, conversationId, pageData);
+  const item = current ?? conversationItems().at(-1);
+  if (!item) ctx.fail('selector-missing', 'The conversation shows no turns.');
   const reply = findReply(item);
   const state = turnStateOf(item);
   const unfinished =
@@ -124,6 +124,12 @@ async function findLatestReply(
       reason: 'still-generating',
       turnState: state,
       hasReply: reply !== null,
+    });
+  }
+  if (!current) {
+    ctx.fail('unverified', 'The conversation could not be confirmed as loaded to its end.', {
+      reason: 'history-unconfirmed',
+      knownEnd: pageData.currentNode(conversationId) !== null,
     });
   }
   return { item, reply, turnKey: replyIdOf(reply) ?? readTurnKey(item) };
@@ -164,6 +170,7 @@ export async function runTurnsRead(
   ctx: OpContext,
   params: TurnsReadParams,
   adapter: SiteAdapter | null,
+  pageData: PageData,
 ): Promise<TurnsReadResult> {
   if (settledConversationId() !== params.conversationId) {
     ctx.fail('unverified', 'The tab shows another conversation.', {
@@ -173,7 +180,7 @@ export async function runTurnsRead(
   }
   const found =
     'latest' in params
-      ? await findLatestReply(ctx, params.conversationId, adapter)
+      ? await findLatestReply(ctx, params.conversationId, adapter, pageData)
       : await findKeyedReply(ctx, params.assistantTurnKey, adapter);
   requireConversation(ctx, params.conversationId);
 

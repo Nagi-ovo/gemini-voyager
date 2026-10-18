@@ -71,12 +71,12 @@ describe.runIf(registered)('Local Bridge project.list', () => {
     });
   });
 
-  it('still finds the projects when the sidebar renders its rows after the page', async () => {
-    mount({ sidebarRowsAfterMs: 3_000 });
+  it("waits for ChatGPT's answer instead of taking the rows shown so far as the whole list", async () => {
+    mount({ projectsAnswerAfterMs: 6_000 });
     bridge.start('project.list', {});
-    await vi.advanceTimersByTimeAsync(1_000);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(bridge.outcome()).toBeUndefined();
-    await vi.advanceTimersByTimeAsync(4_000);
+    await vi.advanceTimersByTimeAsync(5_000);
 
     expect(bridge.outcome()).toMatchObject({
       ok: true,
@@ -84,25 +84,64 @@ describe.runIf(registered)('Local Bridge project.list', () => {
     });
   });
 
-  it('reports an empty project group as no projects only after waiting for rows', async () => {
+  it('lists every project ChatGPT names, even before the sidebar renders its rows', async () => {
+    mount({ sidebarRowsAfterMs: 60_000 });
+    bridge.start('project.list', {});
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: {
+        projects: [
+          { projectId: PROJECT_A.id, name: PROJECT_A.name },
+          { projectId: PROJECT_B.id, name: PROJECT_B.name },
+        ],
+      },
+    });
+  });
+
+  it('reports an account with no projects as an empty list once ChatGPT says so', async () => {
     mount({ projects: [] });
     bridge.start('project.list', {});
-    await vi.advanceTimersByTimeAsync(5_000);
-    expect(bridge.outcome()).toBeUndefined();
-    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.advanceTimersByTimeAsync(1_000);
 
     expect(bridge.outcome()).toMatchObject({ ok: true, data: { projects: [] } });
   });
 
-  it('fails sidebar-not-ready, not an empty list, when the sidebar shows no project group', async () => {
-    mount({ projectGroup: false });
+  it("keeps a sidebar project ChatGPT's earlier answer did not name, such as one made in this tab", async () => {
+    mount();
+    await vi.advanceTimersByTimeAsync(100);
+    fixture.feed.projects([{ projectId: PROJECT_A.id, name: PROJECT_A.name }]);
     bridge.start('project.list', {});
-    await vi.advanceTimersByTimeAsync(15_000);
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { projects: [{ projectId: PROJECT_A.id }, { projectId: PROJECT_B.id }] },
+    });
+  });
+
+  it('refuses a list ChatGPT has more pages of, instead of a partial one', async () => {
+    mount({ projectsComplete: false });
+    bridge.start('project.list', {});
+    await vi.advanceTimersByTimeAsync(1_000);
 
     const outcome = bridge.outcome();
-    expect(errorCode(outcome)).toBe('selector-missing');
+    expect(errorCode(outcome)).toBe('unverified');
     expect(outcome?.ok === false && outcome.error.details).toMatchObject({
-      reason: 'sidebar-not-ready',
+      reason: 'too-many-projects',
+    });
+  });
+
+  it("fails unverified, never an empty list, when ChatGPT's project answer never arrives", async () => {
+    mount({ projectsAnswerAfterMs: null });
+    bridge.start('project.list', {});
+    await vi.advanceTimersByTimeAsync(25_000);
+
+    const outcome = bridge.outcome();
+    expect(errorCode(outcome)).toBe('unverified');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({
+      reason: 'list-unconfirmed',
     });
   });
 });

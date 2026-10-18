@@ -20,7 +20,7 @@ function scripting() {
 }
 
 describe('syncBridgeAccountObserver', () => {
-  it("registers the page observer at document_start on the bridge's granted ChatGPT origins only", async () => {
+  it("registers the page observers at document_start on the bridge's granted ChatGPT origins only", async () => {
     const registry = scripting();
     await syncBridgeAccountObserver({
       scripting: registry as never,
@@ -34,7 +34,7 @@ describe('syncBridgeAccountObserver', () => {
     ];
     expect(scripts).toEqual([
       expect.objectContaining({
-        js: ['chatgpt-account-observer.js'],
+        js: ['chatgpt-account-observer.js', 'chatgpt-bridge-data-observer.js'],
         matches: ['https://chatgpt.com/*'],
         world: 'MAIN',
         runAt: 'document_start',
@@ -60,10 +60,10 @@ describe('syncBridgeAccountObserver', () => {
     expect(registry.registerContentScripts).not.toHaveBeenCalled();
   });
 
-  it('runs where the bridge runs with MAIN-world scripts: Chrome and Edge', () => {
+  it('runs wherever the bridge runs: Chrome, Edge and Firefox, never Safari', () => {
     expect(isBridgeAccountObserverSupported('chrome')).toBe(true);
     expect(isBridgeAccountObserverSupported('edge')).toBe(true);
-    expect(isBridgeAccountObserverSupported('firefox')).toBe(false);
+    expect(isBridgeAccountObserverSupported('firefox')).toBe(true);
     expect(isBridgeAccountObserverSupported('safari')).toBe(false);
   });
 });

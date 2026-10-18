@@ -23,7 +23,9 @@ import type { SiteAdapter } from '@/features/plugins/types';
 import { isRendered } from '@/pages/content/export/adapter/chatgptThread';
 
 import type { OpContext } from '../opContext';
+import type { PageData } from '../pageData/store';
 import { readMode, readPageLanguage, switchProjectToChat } from './conversationReady';
+import { requirePageObserver } from './pageObserver';
 import { findComposerField } from './pageReaders';
 import {
   ensureSourcesView,
@@ -39,10 +41,8 @@ import {
 } from './projectPage';
 
 const SIDEBAR_TIMEOUT_MS = 10_000;
-/** How long the sidebar may take to show its project rows after the page loaded. */
-const SIDEBAR_ROWS_TIMEOUT_MS = 8_000;
-/** Rows render in batches: the list counts once it has not changed for this long. */
-const SIDEBAR_SETTLE_MS = 750;
+/** How long ChatGPT may take to answer the sidebar's project request after the page loaded. */
+const PROJECTS_TIMEOUT_MS = 20_000;
 const DIALOG_TIMEOUT_MS = 5_000;
 const SUBMIT_ENABLED_TIMEOUT_MS = 3_000;
 const CREATED_TIMEOUT_MS = 20_000;
@@ -54,39 +54,38 @@ export async function runProjectList(
   ctx: OpContext,
   _params: ProjectListParams,
   adapter: SiteAdapter | null,
+  pageData: PageData,
 ): Promise<ProjectListResult> {
   const data = requireProjectsData(ctx, adapter);
   const started = ctx.now();
-  // A fresh tab shows the group's header (and its create button) before the rows: an
-  // empty read then is no proof the account has no project.
-  let count = 0;
-  let since = started;
-  const settled = await ctx.waitFor(
-    () => {
-      const now = ctx.now();
-      const rows = sidebarProjects(data).length;
-      if (rows !== count) {
-        count = rows;
-        since = now;
-      }
-      return rows > 0 && now - since >= SIDEBAR_SETTLE_MS ? true : null;
-    },
-    { timeoutMs: timeLeft(ctx, SIDEBAR_ROWS_TIMEOUT_MS + SIDEBAR_SETTLE_MS) },
-  );
-  const createButton = !!findCreateButton(data);
-  const projects = sidebarProjects(data).map(({ projectId, name }) => ({ projectId, name }));
-  const evidence = { createButton, items: projects.length, waitedMs: ctx.now() - started };
-  if (settled || projects.length > 0) return { projects, evidence };
-  // No row for the whole wait. Only a shown group with its create button says "no projects";
-  // without one the sidebar is collapsed (a narrow window) or still loading.
-  if (!createButton) {
+  await requirePageObserver(ctx, pageData);
+  // Rows render in batches; a quiet 750 ms once passed for the whole list. ChatGPT's own
+  // answer says when the list is whole.
+  const listed = await ctx.waitFor(() => pageData.projects(), {
+    timeoutMs: timeLeft(ctx, PROJECTS_TIMEOUT_MS),
+  });
+  const shown = sidebarProjects(data).map(({ projectId, name }) => ({ projectId, name }));
+  const evidence = { items: shown.length, waitedMs: ctx.now() - started };
+  if (!listed) {
+    ctx.fail('unverified', "ChatGPT's project list did not arrive.", {
+      ...evidence,
+      reason: 'list-unconfirmed',
+    });
+  }
+  if (!listed.complete) {
     ctx.fail(
-      'selector-missing',
-      "The sidebar's projects are not shown (collapsed or still loading); open the sidebar, or name the project by its g-p- id.",
-      { ...evidence, reason: 'sidebar-not-ready' },
+      'unverified',
+      'This account has more than 20 projects; ChatGPT loads the rest only on demand, so the list cannot be confirmed whole. Remove some projects, or name the project by its g-p- id.',
+      { ...evidence, listed: listed.projects.length, reason: 'too-many-projects' },
     );
   }
-  return { projects, evidence };
+  // A project made in this tab shows in the sidebar before ChatGPT is asked for the list again.
+  const known = new Set(listed.projects.map((project) => project.projectId));
+  const projects = [
+    ...listed.projects,
+    ...shown.filter((project) => !known.has(project.projectId)),
+  ];
+  return { projects, evidence: { ...evidence, items: projects.length } };
 }
 
 /** React keeps the input's value itself: set it through the native setter, then tell it. */

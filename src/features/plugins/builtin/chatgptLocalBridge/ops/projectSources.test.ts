@@ -126,6 +126,44 @@ describe.runIf(registered)('Local Bridge project.files', () => {
     expect(new URLSearchParams(location.search).get('tab')).toBe('sources');
   });
 
+  it('never reports a slow file list as an empty project', async () => {
+    mount({ listLoadsAfterMs: 6_000 });
+    bridge.start('project.files', { projectId: PROJECT_A.id });
+    await advance(3_000);
+    expect(bridge.outcome()).toBeUndefined();
+    await advance(5_000);
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { files: [{ name: 'repo.zip' }, { name: 'notes.md' }] },
+    });
+  });
+
+  it("fails unverified, never an empty list, when ChatGPT's file answer never arrives", async () => {
+    mount({ files: [], filesAnswerAfterMs: null });
+    bridge.start('project.files', { projectId: PROJECT_A.id });
+    await advance(25_000);
+
+    const outcome = bridge.outcome();
+    expect(errorCode(outcome)).toBe('unverified');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({
+      reason: 'list-unconfirmed',
+    });
+  });
+
+  it("says at once, before any page event, when the browser cannot watch ChatGPT's answers", async () => {
+    mount({ route: `/g/${PROJECT_A.id}/project`, pageObserver: false });
+    bridge.start('project.files', { projectId: PROJECT_A.id });
+    await advance(4_000);
+
+    const outcome = bridge.outcome();
+    expect(errorCode(outcome)).toBe('unsupported-op');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({
+      reason: 'page-observer-missing',
+    });
+    expect(fixture.page.events().clicks).toBe(0);
+  });
+
   it('refuses a tab that shows another project, before any page event', async () => {
     mount();
     bridge.start('project.files', { projectId: PROJECT_B.id });
@@ -176,17 +214,26 @@ describe.runIf(registered)('Local Bridge project.upload', () => {
     expect(reads()).toHaveLength(0);
   });
 
-  it('does not take an older file the list showed late for the upload ChatGPT ignored', async () => {
-    vi.setSystemTime(new Date('2026-10-18T12:00:00.000Z'));
+  it('refuses a name a slow file list shows only late, instead of uploading a copy ChatGPT would ignore', async () => {
     mount({ listLoadsAfterMs: 6_000 });
     bridge.start('project.upload', { projectId: PROJECT_A.id, blob: blobOf('repo.zip') });
-    await untilHandedOver();
-    await advance(12_000);
+    await advance(8_000);
 
     const outcome = bridge.outcome();
-    expect(fixture.counts.ignoredUploads).toBe(1);
+    expect(errorCode(outcome)).toBe('bad-request');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({ reason: 'name-exists' });
+    expect(fixture.counts).toMatchObject({ uploadChanges: 0, ignoredUploads: 0 });
+  });
+
+  it("does not report an upload ChatGPT's answer never confirmed", async () => {
+    mount({ changesAnswered: false });
+    bridge.start('project.upload', { projectId: PROJECT_A.id, blob: blobOf('paper.zip') });
+    await untilHandedOver();
+    await advance(30_000);
+
+    const outcome = bridge.outcome();
     expect(errorCode(outcome)).toBe('unverified');
-    expect(outcome?.ok === false && outcome.error.details).toMatchObject({ reason: 'older-file' });
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({ accepted: false });
   });
 
   it('fails attachment-rejected when the file never shows in the list', async () => {
@@ -222,6 +269,16 @@ describe.runIf(registered)('Local Bridge project.remove', () => {
     expect(errorCode(bridge.outcome())).toBe('not-found');
     expect(fixture.counts.menuOpens).toBe(0);
     expect(fixture.page.events().clicks).toBe(0);
+  });
+
+  it("does not report a removal ChatGPT's answer never confirmed", async () => {
+    mount({ changesAnswered: false });
+    bridge.start('project.remove', { projectId: PROJECT_A.id, name: 'notes.md' });
+    await advance(15_000);
+
+    const outcome = bridge.outcome();
+    expect(errorCode(outcome)).toBe('unverified');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({ accepted: false });
   });
 
   it('reports a file still listed after 「删除」 as unverified', async () => {
