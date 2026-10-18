@@ -226,8 +226,16 @@ const PARAM_READERS: { readonly [K in OpName]: Reader<OpParamsMap[K]> } = {
   },
   'turns.read': (raw, path, issues) => {
     const rec = readObject(raw, path, issues);
+    const conversationId = readConversationId(rec, path, issues);
+    if (rec.latest !== undefined) {
+      if (rec.latest !== true) fail(issues, at(path, 'latest'), 'must be true');
+      if (rec.assistantTurnKey !== undefined) {
+        fail(issues, path, 'give either assistantTurnKey or latest, not both');
+      }
+      return { conversationId, latest: true };
+    }
     return {
-      conversationId: readConversationId(rec, path, issues),
+      conversationId,
       assistantTurnKey: requireString(rec, 'assistantTurnKey', path, issues, TURN_KEY),
     };
   },

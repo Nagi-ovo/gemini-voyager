@@ -195,10 +195,14 @@ export interface WaitReplyProgress {
 
 // turns.read (passive)
 
-export interface TurnsReadParams {
-  readonly conversationId: string;
-  readonly assistantTurnKey: string;
-}
+/**
+ * One finished reply: the one `turns.waitReply` named, or with `latest` the
+ * conversation's last turn, which must have finished (a reply still being
+ * written is `unverified`, never an earlier reply instead).
+ */
+export type TurnsReadParams =
+  | { readonly conversationId: string; readonly assistantTurnKey: string }
+  | { readonly conversationId: string; readonly latest: true };
 
 export type FileCandidateKind = 'sandbox' | 'estuary' | 'button';
 

@@ -260,5 +260,35 @@
       ]
     },
     "issuePath": "blobs[0].size"
+  },
+  {
+    "name": "read with both a turn key and latest",
+    "kind": "opParams",
+    "op": "turns.read",
+    "input": {
+      "conversationId": "abc-123",
+      "assistantTurnKey": "t-8",
+      "latest": true
+    },
+    "issuePath": "$"
+  },
+  {
+    "name": "read with latest false",
+    "kind": "opParams",
+    "op": "turns.read",
+    "input": {
+      "conversationId": "abc-123",
+      "latest": false
+    },
+    "issuePath": "latest"
+  },
+  {
+    "name": "read with neither a turn key nor latest",
+    "kind": "opParams",
+    "op": "turns.read",
+    "input": {
+      "conversationId": "abc-123"
+    },
+    "issuePath": "assistantTurnKey"
   }
 ]

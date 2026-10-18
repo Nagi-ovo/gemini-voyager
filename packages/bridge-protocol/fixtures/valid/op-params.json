@@ -135,6 +135,15 @@
     }
   },
   {
+    "name": "read the latest reply",
+    "kind": "opParams",
+    "op": "turns.read",
+    "input": {
+      "conversationId": "abc-123",
+      "latest": true
+    }
+  },
+  {
     "name": "download",
     "kind": "opParams",
     "op": "files.download",

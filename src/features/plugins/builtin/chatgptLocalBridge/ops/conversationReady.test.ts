@@ -112,6 +112,18 @@ describe('Local Bridge conversation.ready: mode', () => {
     expect(page.events().clicks).toBe(2);
   });
 
+  it('refuses an existing work-mode conversation at once, without a click, even beside a switch', async () => {
+    mount({ mode: 'work', route: '/c/conv-1' });
+    bridge.start('conversation.ready', { expect: { conversationId: 'conv-1' } });
+    await vi.advanceTimersByTimeAsync(0);
+
+    const outcome = bridge.outcome();
+    expect(errorCode(outcome)).toBe('mode-unavailable');
+    expect(outcome?.ok === false && outcome.error.message).toMatch(/Work conversation/);
+    expect(page.events().clicks).toBe(0);
+    expect(page.mode()).toBe('work');
+  });
+
   it('fails closed without a click when the switch lacks its measured data-state', async () => {
     mount({ mode: 'work', modeSwitch: 'no-state' });
     bridge.start('conversation.ready', {});

@@ -12,6 +12,10 @@
  * when the composer positively shows the other mode. The switch must look like
  * the measured one (see {@link findModeSwitch}); anything less, or a switch the
  * composer does not confirm, is `mode-unavailable`. Nothing is clicked twice.
+ *
+ * An existing conversation (`expect.conversationId`) keeps the mode it was
+ * started in, and its page has no switch: one positively in the other mode is
+ * `mode-unavailable` at once, with no click and no wait for a switch.
  */
 import type {
   ChatMode,
@@ -153,9 +157,23 @@ export async function runConversationReady(
   // `unknown` is reported as is: without positive evidence nothing is clicked.
   if (mode !== target && mode !== 'unknown') {
     const from = mode;
+    if (expected !== undefined) {
+      ctx.fail(
+        'mode-unavailable',
+        from === 'work'
+          ? 'This is a ChatGPT Work conversation; the bridge works only in chat-mode conversations.'
+          : `This conversation is in ${from} mode, not ${target} mode; an existing conversation cannot be switched.`,
+        {
+          mode: from,
+          conversationId: expected,
+          reason: 'conversation-mode',
+          composerLabels: labels,
+        },
+      );
+    }
     // The switch exists on the new-chat page only: a tab left on a conversation
     // (the restore before close) goes home through the page's own link first.
-    if (location.pathname !== '/' && expected === undefined) {
+    if (location.pathname !== '/') {
       const home = document.querySelector<HTMLAnchorElement>(HOME_LINK_SELECTOR);
       if (home && isRendered(home)) {
         ctx.allowRoute('/');

@@ -226,3 +226,44 @@ describe('Local Bridge conversation.ready', () => {
     expect(errorCode(bridge.outcome())).toBe('login-required');
   });
 });
+
+describe('Local Bridge turns.read latest', () => {
+  const LATEST = { conversationId: 'conv-1', latest: true } as const;
+
+  it("reads the conversation's last reply, not an earlier one", async () => {
+    page.setReply('turn-1', {
+      text: 'new answer',
+      turnState: 'complete',
+      actions: true,
+      replyId: 'r-1',
+    });
+    bridge.start('turns.read', LATEST);
+    await vi.advanceTimersByTimeAsync(2_000);
+    const outcome = await readOutcome();
+    expect(outcome).toMatchObject({ ok: true, data: { turnKey: 'r-1', markdown: 'new answer' } });
+  });
+
+  it('refuses while the last reply is still being written, instead of reading the one before', async () => {
+    page.setReply('turn-1', { text: 'partial', turnState: 'streaming', replyId: 'r-1' });
+    bridge.start('turns.read', LATEST);
+    await vi.advanceTimersByTimeAsync(2_000);
+    const outcome = bridge.outcome();
+    expect(errorCode(outcome)).toBe('unverified');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({
+      reason: 'still-generating',
+    });
+  });
+
+  it('refuses when the last prompt has no reply yet', async () => {
+    bridge.start('turns.read', LATEST);
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(errorCode(bridge.outcome())).toBe('unverified');
+  });
+
+  it('refuses a reply that has text but no action row yet', async () => {
+    page.setReply('turn-1', { text: 'almost', replyId: 'r-1' });
+    bridge.start('turns.read', LATEST);
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(errorCode(bridge.outcome())).toBe('unverified');
+  });
+});
