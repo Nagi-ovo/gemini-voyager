@@ -18,6 +18,7 @@ import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
 import { getVoyagerBuildTarget, isEdge } from '@/core/utils/browser';
 import { EXTENSION_VERSION } from '@/core/utils/version';
+import { currentAccountPlan, readAccountPlanStore } from '@/features/bridge/accountPlanStore';
 import {
   type BridgeBrowser,
   type ErrorCode,
@@ -182,6 +183,16 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
   });
   const blobRelay = createBlobRelay({ store, client, connection, ready: awaitReady, now });
 
+  // The plan the bridge's ChatGPT pages last showed; it rides on every poll.
+  const readAccount = async () => {
+    try {
+      const stored = await env.local.get(StorageKeys.BRIDGE_ACCOUNT_PLANS);
+      return currentAccountPlan(readAccountPlanStore(stored[StorageKeys.BRIDGE_ACCOUNT_PLANS]));
+    } catch {
+      return null;
+    }
+  };
+
   let loopGeneration = 0;
   let loop: Promise<void> | null = null;
   let loopRunsGeneration = -1;
@@ -227,6 +238,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
           capabilities: { ops },
           inflight: await dispatcher.inflight(),
           policy: { revision: verdict.revision ?? 0, state: policyLabel(verdict) },
+          account: await readAccount(),
         },
         pollAbort.signal,
       );

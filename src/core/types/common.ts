@@ -422,6 +422,11 @@ export const StorageKeys = {
   BRIDGE_POLICY_HIGH_WATER: 'gvBridgePolicyHighWater',
   // Op results the server could not take yet (JSON only, at most 5 / 1 MiB).
   BRIDGE_OUTBOX: 'gvBridgeOutbox',
+  // The ChatGPT plan each account's pages last showed, written by the Local Bridge content
+  // script (chrome.storage.local, never synced or backed up). Keyed by a hash of the
+  // account id; plan fields only, no id, e-mail or token — see
+  // src/features/bridge/accountPlanStore.ts.
+  BRIDGE_ACCOUNT_PLANS: 'gvBridgeAccountPlans',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

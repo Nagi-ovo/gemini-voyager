@@ -37,6 +37,7 @@
 		B60723EE2FB752BD00F3A4FD /* icon-32.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723E12FB752BD00F3A4FD /* icon-32.png */; };
 		B60723EF2FB752BD00F3A4FD /* src in Resources */ = {isa = PBXBuildFile; fileRef = B60723E22FB752BD00F3A4FD /* src */; };
 		B60723F02FB752BD00F3A4FD /* claude-usage-observer.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723F52FB752BD00F3A4FD /* claude-usage-observer.js */; };
+		C7A1E0032FB8000000F3A4FD /* chatgpt-account-observer.js in Resources */ = {isa = PBXBuildFile; fileRef = C7A1E0042FB8000000F3A4FD /* chatgpt-account-observer.js */; };
 		C7A1E0012FB8000000F3A4FD /* chatgpt-pro-usage-observer.js in Resources */ = {isa = PBXBuildFile; fileRef = C7A1E0022FB8000000F3A4FD /* chatgpt-pro-usage-observer.js */; };
 		B60723F12FB752BD00F3A4FD /* conversation-history-observer.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723F62FB752BD00F3A4FD /* conversation-history-observer.js */; };
 		B60723F22FB752BD00F3A4FD /* fable-verified-badge.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723F72FB752BD00F3A4FD /* fable-verified-badge.png */; };
@@ -106,6 +107,7 @@
 		B60723E12FB752BD00F3A4FD /* icon-32.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-32.png"; path = "../../dist_safari/icon-32.png"; sourceTree = "<group>"; };
 		B60723E22FB752BD00F3A4FD /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; name = src; path = ../../dist_safari/src; sourceTree = "<group>"; };
 		B60723F52FB752BD00F3A4FD /* claude-usage-observer.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "claude-usage-observer.js"; path = "../../dist_safari/claude-usage-observer.js"; sourceTree = "<group>"; };
+		C7A1E0042FB8000000F3A4FD /* chatgpt-account-observer.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "chatgpt-account-observer.js"; path = "../../dist_safari/chatgpt-account-observer.js"; sourceTree = "<group>"; };
 		C7A1E0022FB8000000F3A4FD /* chatgpt-pro-usage-observer.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "chatgpt-pro-usage-observer.js"; path = "../../dist_safari/chatgpt-pro-usage-observer.js"; sourceTree = "<group>"; };
 		B60723F62FB752BD00F3A4FD /* conversation-history-observer.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "conversation-history-observer.js"; path = "../../dist_safari/conversation-history-observer.js"; sourceTree = "<group>"; };
 		B60723F72FB752BD00F3A4FD /* fable-verified-badge.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "fable-verified-badge.png"; path = "../../dist_safari/fable-verified-badge.png"; sourceTree = "<group>"; };
@@ -208,6 +210,7 @@
 				B60723E12FB752BD00F3A4FD /* icon-32.png */,
 				B60723E22FB752BD00F3A4FD /* src */,
 				B60723F52FB752BD00F3A4FD /* claude-usage-observer.js */,
+				C7A1E0042FB8000000F3A4FD /* chatgpt-account-observer.js */,
 				C7A1E0022FB8000000F3A4FD /* chatgpt-pro-usage-observer.js */,
 				B60723F62FB752BD00F3A4FD /* conversation-history-observer.js */,
 				B60723F72FB752BD00F3A4FD /* fable-verified-badge.png */,
@@ -354,6 +357,7 @@
 				B60723EA2FB752BD00F3A4FD /* fonts in Resources */,
 				B60723EC2FB752BD00F3A4FD /* fetchInterceptor.js in Resources */,
 				B60723F02FB752BD00F3A4FD /* claude-usage-observer.js in Resources */,
+				C7A1E0032FB8000000F3A4FD /* chatgpt-account-observer.js in Resources */,
 				C7A1E0012FB8000000F3A4FD /* chatgpt-pro-usage-observer.js in Resources */,
 				B60723F12FB752BD00F3A4FD /* conversation-history-observer.js in Resources */,
 				B60723F22FB752BD00F3A4FD /* fable-verified-badge.png in Resources */,

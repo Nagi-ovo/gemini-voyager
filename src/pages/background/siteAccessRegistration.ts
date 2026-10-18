@@ -13,6 +13,11 @@ import { listPluginManifests } from '@/features/plugins/sources/defaultSources';
 import type { PluginManifest } from '@/features/plugins/types';
 
 import {
+  BRIDGE_ACCOUNT_MAIN_SCRIPT_ID,
+  isBridgeAccountObserverSupported,
+  syncBridgeAccountObserver,
+} from './bridge/accountObserverRegistration';
+import {
   CHATGPT_PRO_USAGE_MAIN_SCRIPT_ID,
   syncChatGptProUsageObserver,
 } from './chatgptProUsageRegistration';
@@ -315,6 +320,7 @@ export function createSiteAccessRegistration() {
       PLUGIN_EMBEDDED_CONTENT_SCRIPT_ID,
       CLAUDE_USAGE_MAIN_SCRIPT_ID,
       CHATGPT_PRO_USAGE_MAIN_SCRIPT_ID,
+      BRIDGE_ACCOUNT_MAIN_SCRIPT_ID,
     ]);
 
     if (!grantedMatches.length) return;
@@ -325,6 +331,13 @@ export function createSiteAccessRegistration() {
       enabledPlugins,
       grantedOrigins: grantedMatches,
       supportsMainWorld: isChatGptProUsageSupported(),
+      queryTabs: (url) => chrome.tabs.query({ url }),
+    });
+    await syncBridgeAccountObserver({
+      scripting: chrome.scripting,
+      enabledPlugins,
+      grantedOrigins: grantedMatches,
+      supportsMainWorld: isBridgeAccountObserverSupported(),
       queryTabs: (url) => chrome.tabs.query({ url }),
     });
 

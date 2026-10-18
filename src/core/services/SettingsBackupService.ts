@@ -538,6 +538,11 @@ export const NON_SETTINGS_BACKUP_POLICIES = {
     disposition: 'device-local',
     reason: "Bridge results waiting for this device's local server; meaningless elsewhere.",
   },
+  [StorageKeys.BRIDGE_ACCOUNT_PLANS]: {
+    storage: 'local',
+    disposition: 'cache',
+    reason: 'The ChatGPT plan its pages last showed; the next page load observes it again.',
+  },
 } as const satisfies Record<NonSettingsStorageKey, NonSettingsBackupPolicy>;
 
 export const BACKUPABLE_SYNC_SETTINGS_KEYS = Object.keys(BACKUPABLE_SYNC_SETTINGS_DEFAULTS);

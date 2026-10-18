@@ -2,6 +2,7 @@
  * HTTP surface of `voyager serve` (spec §2.1–§2.4): endpoints, envelope, task
  * delivery and the CLI-side job model. `serve` binds 127.0.0.1 only.
  */
+import type { AccountPlan } from './account';
 import type { BridgeError, ErrorCode } from './errors';
 import type { OpName, OpParamsMap } from './ops';
 import type { ProtocolRange } from './version';
@@ -141,6 +142,8 @@ export interface PollRequest {
   readonly capabilities: { readonly ops: readonly OpCapability[] };
   readonly inflight: readonly { readonly taskId: string; readonly state: InflightState }[];
   readonly policy: PolicyReport;
+  /** The plan the ChatGPT pages last showed; null when none was seen yet. */
+  readonly account?: AccountPlan | null;
 }
 
 /** Wire form of a task; `params` is checked against `op` on arrival. */
@@ -245,6 +248,8 @@ export interface StatusResponse {
     readonly version: string | null;
     readonly browser: BridgeBrowser | null;
     readonly policy: PolicyReport | null;
+    /** The ChatGPT plan the extension last reported; null before it reported one. */
+    readonly account?: AccountPlan | null;
   };
   readonly activeJob?: { readonly jobId: string; readonly op?: OpName };
   readonly serverVersion: string;

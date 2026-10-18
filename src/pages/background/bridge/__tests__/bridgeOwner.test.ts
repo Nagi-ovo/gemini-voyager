@@ -286,6 +286,44 @@ describe('bridge owner', () => {
     expect(t.local.values[StorageKeys.BRIDGE_PAIRING]).toBeUndefined();
   });
 
+  it("tells the server the plan of the account the bridge's pages last used, with each poll", async () => {
+    const plan = { planType: 'pro', planDisplayName: 'Pro', observedAt: 1_792_000_000_000 };
+    const t = setup({
+      local: {
+        [StorageKeys.BRIDGE_PAIRING]: PAIRING,
+        [StorageKeys.PLUGINS_STATE]: { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } },
+        [StorageKeys.BRIDGE_ACCOUNT_PLANS]: {
+          version: 1,
+          accounts: { aaaaaaaa: plan, bbbbbbbb: { planType: 'plus', observedAt: 1 } },
+          current: 'aaaaaaaa',
+        },
+      },
+    });
+    t.origins.add('http://127.0.0.1/*');
+    t.routes['/v1/ext/poll'] = () => json({ ok: true, data: { kind: 'unpaired' } });
+    await t.owner.wake();
+
+    expect(t.requests.find((r) => r.path === '/v1/ext/poll')?.body).toMatchObject({
+      account: plan,
+    });
+  });
+
+  it('polls with no plan before any page showed one', async () => {
+    const t = setup({
+      local: {
+        [StorageKeys.BRIDGE_PAIRING]: PAIRING,
+        [StorageKeys.PLUGINS_STATE]: { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } },
+      },
+    });
+    t.origins.add('http://127.0.0.1/*');
+    t.routes['/v1/ext/poll'] = () => json({ ok: true, data: { kind: 'unpaired' } });
+    await t.owner.wake();
+
+    expect(t.requests.find((r) => r.path === '/v1/ext/poll')?.body).toMatchObject({
+      account: null,
+    });
+  });
+
   it('stops the task of a pairing another server replaced and runs nothing its old poll brings', async () => {
     const t = setup({
       local: {

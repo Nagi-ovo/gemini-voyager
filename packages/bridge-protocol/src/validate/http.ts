@@ -3,6 +3,7 @@
  * CLI send; the extension checks what the server answers, including every
  * task's params before any page code sees them.
  */
+import { readAccountPlan } from '../account';
 import { categoryOf, ERROR_CODES, isErrorCode, type BridgeError } from '../errors';
 import {
   PAIRING_CODE_PATTERN,
@@ -217,6 +218,8 @@ const READERS: { readonly [K in MessageKind]: Reader<MessageMap[K]> } = {
         revision: requireInt(policy, 'revision', policyPath, issues),
         state: requireLiteral(policy, 'state', policyPath, issues, POLICY_STATES),
       },
+      // Lenient: an odd plan field is dropped and never fails the poll.
+      ...(rec.account === undefined ? {} : { account: readAccountPlan(rec.account) }),
     };
   },
 

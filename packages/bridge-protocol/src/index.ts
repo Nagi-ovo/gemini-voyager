@@ -3,6 +3,7 @@
  * extension and `voyager serve` (Local Bridge v1). Types, constants and
  * validators only; no transport, no chrome APIs, no imports from the extension.
  */
+export * from './account';
 export * from './errors';
 export * from './http';
 export * from './ops';
