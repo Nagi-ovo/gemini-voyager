@@ -77,6 +77,22 @@ describe('validators', () => {
     expect(result).toEqual({ ok: true, value: { text: 'hi' } });
   });
 
+  it('takes a poll that names an op it does not know, without that op', () => {
+    const result = validateMessage('pollRequest', {
+      capabilities: {
+        ops: [
+          { name: 'conversation.ready', v: 1 },
+          { name: 'from.a.newer.extension', v: 1 },
+        ],
+      },
+      inflight: [],
+      policy: { revision: 1, state: 'allowed' },
+    });
+    expect(result.ok && result.value.capabilities.ops).toEqual([
+      { name: 'conversation.ready', v: 1 },
+    ]);
+  });
+
   it('reports every issue of a message at once', () => {
     const result = validateMessage('pairRequest', { code: '1', browser: 'ie' });
     expect(result.ok).toBe(false);

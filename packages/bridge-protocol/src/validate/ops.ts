@@ -4,10 +4,12 @@
  * up in URLs (`conversationId`, blob ids) are restricted to URL-safe tokens.
  */
 import {
+  CATALOG_HOST_PATTERN,
   MAX_ATTACHMENT_BYTES,
   MAX_ATTACHMENTS,
   WAIT_REPLY_MAX_TIMEOUT_MS,
   type BlobRef,
+  type CatalogRefreshStatus,
   type ChatMode,
   type ConversationReadyResult,
   type FileCandidate,
@@ -54,6 +56,14 @@ const TURN_KEY = { maxLength: 256 } as const;
 const LABEL = { maxLength: 200, allowEmpty: true } as const;
 const FILE_NAME = { pattern: /^[^/\\\0]+$/, maxLength: 255 } as const;
 const MAX_FILE_CANDIDATES = 100;
+const CATALOG_HOST = { pattern: CATALOG_HOST_PATTERN, maxLength: 253 } as const;
+const CATALOG_STATUSES: readonly CatalogRefreshStatus[] = [
+  'updated',
+  'unchanged',
+  'missing',
+  'failed',
+  'disabled',
+];
 
 function readConversationId(rec: Record<string, unknown>, path: string, issues: Issue[]): string {
   return requireString(rec, 'conversationId', path, issues, { pattern: ID_PATTERN });
@@ -262,6 +272,11 @@ const PARAM_READERS: { readonly [K in OpName]: Reader<OpParamsMap[K]> } = {
       candidate: readFileCandidate(rec.candidate, at(path, 'candidate'), issues),
     };
   },
+  'catalog.refresh': (raw, path, issues) => {
+    const rec = readObject(raw, path, issues);
+    const host = optionalString(rec, 'host', path, issues, CATALOG_HOST);
+    return host === undefined ? {} : { host };
+  },
 };
 
 const readDownloaded: Reader<FilesDownloadResult> = (raw, path, issues) => {
@@ -374,6 +389,19 @@ const RESULT_READERS: { readonly [K in OpName]: Reader<OpResultMap[K]> } = {
     };
   },
   'files.download': readDownloaded,
+  'catalog.refresh': (raw, path, issues) => {
+    const rec = readObject(raw, path, issues);
+    const checkedAt = optionalInt(rec, 'checkedAt', path, issues);
+    const reason = optionalString(rec, 'reason', path, issues, { maxLength: 1_000 });
+    return {
+      host: requireString(rec, 'host', path, issues, CATALOG_HOST),
+      status: requireLiteral(rec, 'status', path, issues, CATALOG_STATUSES),
+      revision: nullableInt(rec, 'revision', path, issues),
+      ...(checkedAt === undefined ? {} : { checkedAt }),
+      ...(reason === undefined ? {} : { reason }),
+      extensionVersion: requireString(rec, 'extensionVersion', path, issues, { maxLength: 64 }),
+    };
+  },
 };
 
 /** Reader for `op`'s params, for embedding in a larger message (a task, a call). */

@@ -13,6 +13,7 @@ Once you turn it on and pair, Voyager offers a set of ChatGPT page actions to lo
 - Read the latest reply of an existing conversation
 - List and create projects
 - List, upload and remove project files (removal is immediate and permanent)
+- Fetch the page data again now (the site data Voyager uses to recognize ChatGPT’s pages), instead of waiting for the next scheduled check
 
 ## How it behaves
 

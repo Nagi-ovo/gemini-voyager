@@ -13,6 +13,7 @@ Depois de ativado e pareado, o Voyager oferece aos programas locais deste comput
 - Ler a última resposta de uma conversa existente
 - Listar e criar projetos
 - Listar, enviar e remover arquivos de um projeto (a remoção é imediata e permanente)
+- Buscar de novo agora os dados de página (os dados do site com que o Voyager reconhece as páginas do ChatGPT), sem esperar a próxima verificação agendada
 
 ## Como ela se comporta
 

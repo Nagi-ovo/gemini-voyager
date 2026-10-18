@@ -13,6 +13,7 @@ Une fois activé et associé, Voyager met un ensemble d’actions sur la page Ch
 - Lire la dernière réponse d’une conversation existante
 - Lister et créer des projets
 - Lister, téléverser et supprimer les fichiers d’un projet (la suppression est immédiate et définitive)
+- Récupérer à nouveau les données de page tout de suite (les données du site qui permettent à Voyager de reconnaître les pages de ChatGPT), sans attendre la prochaine vérification planifiée
 
 ## Comment il se comporte
 

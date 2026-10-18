@@ -13,6 +13,7 @@ Cuando lo activas y lo vinculas, Voyager pone a disposición de los programas lo
 - Leer la última respuesta de una conversación existente
 - Listar y crear proyectos
 - Listar, subir y eliminar archivos de un proyecto (eliminar es inmediato y permanente)
+- Volver a descargar ahora los datos de página (los datos del sitio con los que Voyager reconoce las páginas de ChatGPT), sin esperar a la próxima comprobación programada
 
 ## Cómo se comporta
 

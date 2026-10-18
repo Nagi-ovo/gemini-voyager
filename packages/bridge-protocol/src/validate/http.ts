@@ -194,9 +194,14 @@ const READERS: { readonly [K in MessageKind]: Reader<MessageMap[K]> } = {
     const caps = readObject(rec.capabilities, capsPath, issues);
     const policyPath = at(path, 'policy');
     const policy = readObject(rec.policy, policyPath, issues);
+    // An op this protocol does not know is one a newer extension offers: skip it,
+    // so a new op never stops an older serve from taking the rest of the poll.
+    const offered = Array.isArray(caps.ops)
+      ? caps.ops.filter((op) => !isRecord(op) || typeof op.name !== 'string' || isOpName(op.name))
+      : caps.ops;
     return {
       capabilities: {
-        ops: requireArray(caps, 'ops', capsPath, issues, readOpCapability, {
+        ops: requireArray({ ops: offered }, 'ops', capsPath, issues, readOpCapability, {
           max: OP_NAMES.length,
         }),
       },

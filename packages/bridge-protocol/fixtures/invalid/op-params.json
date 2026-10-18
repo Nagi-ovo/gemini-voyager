@@ -311,5 +311,32 @@
       "conversationId": "abc-123"
     },
     "issuePath": "assistantTurnKey"
+  },
+  {
+    "name": "refresh a host with a path",
+    "kind": "opParams",
+    "op": "catalog.refresh",
+    "input": {
+      "host": "chatgpt.com/hosts"
+    },
+    "issuePath": "host"
+  },
+  {
+    "name": "refresh an uppercase host",
+    "kind": "opParams",
+    "op": "catalog.refresh",
+    "input": {
+      "host": "ChatGPT.com"
+    },
+    "issuePath": "host"
+  },
+  {
+    "name": "refresh a host without a dot",
+    "kind": "opParams",
+    "op": "catalog.refresh",
+    "input": {
+      "host": "localhost"
+    },
+    "issuePath": "host"
   }
 ]

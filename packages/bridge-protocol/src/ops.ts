@@ -2,7 +2,8 @@
  * The neutral primitives the extension executes (spec §3.4). The extension
  * knows nothing about `ask` or `pro`: a CLI model preset reaches it as
  * `{ preset }` and the site data expands it. Every op, including the ones the
- * service worker runs itself, has to be in the site's `bridge.allow`.
+ * service worker runs itself, has to be in the site's `bridge.allow`, except
+ * the {@link POLICY_EXEMPT_OPS}.
  */
 
 import { PROJECT_OP_NAMES, type ProjectOpParamsMap, type ProjectOpResultMap } from './projectOps';
@@ -18,6 +19,7 @@ export const OP_NAMES = [
   'turns.waitReply',
   'turns.read',
   'files.download',
+  'catalog.refresh',
   ...PROJECT_OP_NAMES,
 ] as const;
 
@@ -25,6 +27,17 @@ export type OpName = (typeof OP_NAMES)[number];
 
 export function isOpName(value: unknown): value is OpName {
   return typeof value === 'string' && (OP_NAMES as readonly string[]).includes(value);
+}
+
+/**
+ * Ops the site policy does not gate. The policy comes from the cached catalog,
+ * so an op that re-fetches the catalog must run while that policy is stale,
+ * broken or silent about it; the bridge still has to be on and paired.
+ */
+export const POLICY_EXEMPT_OPS: readonly OpName[] = ['catalog.refresh'];
+
+export function isPolicyExemptOp(op: unknown): boolean {
+  return (POLICY_EXEMPT_OPS as readonly unknown[]).includes(op);
 }
 
 export const MAX_ATTACHMENTS = 10;
@@ -264,6 +277,41 @@ export type FilesDownloadResult =
   /** (ii) the browser saved the file; the server copies it from this path. */
   | (DownloadedFile & { readonly path: string });
 
+// catalog.refresh (run by the service worker; no tab, no page lease)
+
+/** The host whose site data (`hosts/<host>.json`) a refresh fetches when none is given. */
+export const CATALOG_REFRESH_DEFAULT_HOST = 'chatgpt.com';
+
+/** A lowercase DNS hostname with at least one dot, at most 253 characters. */
+export const CATALOG_HOST_PATTERN =
+  /^(?=.{1,253}$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/;
+
+export interface CatalogRefreshParams {
+  /** Default {@link CATALOG_REFRESH_DEFAULT_HOST}. */
+  readonly host?: string;
+}
+
+/**
+ * - `updated` / `unchanged`: fetched; the cached site data changed or not;
+ * - `missing`: nothing is published for the host (404);
+ * - `failed`: the fetch or its data failed; the cache keeps what it had;
+ * - `disabled`: this extension build has no online site data.
+ */
+export type CatalogRefreshStatus = 'updated' | 'unchanged' | 'missing' | 'failed' | 'disabled';
+
+/** A fetch that failed is a result with `status: 'failed'`, not an error. */
+export interface CatalogRefreshResult {
+  readonly host: string;
+  readonly status: CatalogRefreshStatus;
+  /** The cached site's `catalogRevision` after the refresh; null when it has none. */
+  readonly revision: number | null;
+  readonly checkedAt?: number;
+  /** Why it failed; diagnostic only. */
+  readonly reason?: string;
+  /** The running extension's version (the pairing only knows the one it paired with). */
+  readonly extensionVersion: string;
+}
+
 export interface OpParamsMap extends ProjectOpParamsMap {
   'conversation.open': ConversationOpenParams;
   'conversation.close': ConversationCloseParams;
@@ -275,6 +323,7 @@ export interface OpParamsMap extends ProjectOpParamsMap {
   'turns.waitReply': TurnsWaitReplyParams;
   'turns.read': TurnsReadParams;
   'files.download': FilesDownloadParams;
+  'catalog.refresh': CatalogRefreshParams;
 }
 
 export interface OpResultMap extends ProjectOpResultMap {
@@ -288,4 +337,5 @@ export interface OpResultMap extends ProjectOpResultMap {
   'turns.waitReply': TurnsWaitReplyResult;
   'turns.read': TurnsReadResult;
   'files.download': FilesDownloadResult;
+  'catalog.refresh': CatalogRefreshResult;
 }

@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
+import { bridgeError } from '@/features/bridge/protocol';
+import { BUNDLED_SITE_ADAPTERS } from '@/features/plugins/catalog/sites';
+import type { HostCatalogRefreshResult } from '@/features/plugins/remote/hostCatalogRefresh';
 
 import { createBridgeOwner } from '../bridgeOwner';
 import { BRIDGE_PLUGIN_ID } from '../bridgePolicy';
@@ -65,6 +68,13 @@ function setup(
   const settings = { onlineUpdatesEnabled: options.onlineUpdatesEnabled ?? true };
   /** What the online-update switch read when each catalog check ran. */
   const refreshes: boolean[] = [];
+  const catalog = {
+    refreshNow: vi.fn(async (_host: string): Promise<HostCatalogRefreshResult> => ({
+      ok: true,
+      status: 'unchanged',
+      checkedAt: 5,
+    })),
+  };
   const owner = createBridgeOwner({
     session,
     local,
@@ -74,6 +84,7 @@ function setup(
     refreshCatalog: async () => {
       refreshes.push(settings.onlineUpdatesEnabled);
     },
+    refreshCatalogNow: (host) => catalog.refreshNow(host),
     loadOnlineUpdatesEnabled: async () => settings.onlineUpdatesEnabled,
     saveOnlineUpdatesEnabled: async (enabled) => {
       settings.onlineUpdatesEnabled = enabled;
@@ -84,7 +95,19 @@ function setup(
   });
   const send = async (message: Record<string, unknown>, sender = popup) =>
     (await owner.handleMessage(message, sender)) as Record<string, unknown>;
-  return { session, local, page, origins, routes, requests, owner, send, settings, refreshes };
+  return {
+    session,
+    local,
+    page,
+    origins,
+    routes,
+    requests,
+    owner,
+    send,
+    settings,
+    refreshes,
+    catalog,
+  };
 }
 
 describe('bridge owner', () => {
@@ -283,6 +306,85 @@ describe('bridge owner', () => {
       policy: { state: 'allowed' },
       capabilities: { ops: expect.arrayContaining([{ name: 'composer.send', v: 1 }]) },
     });
+    expect(t.local.values[StorageKeys.BRIDGE_PAIRING]).toBeUndefined();
+  });
+
+  it('offers catalog.refresh and runs it although the policy does not list it', async () => {
+    const packaged = BUNDLED_SITE_ADAPTERS.find((site) => site.id === 'chatgpt');
+    expect(packaged?.bridge?.allow).not.toContain('catalog.refresh');
+    const t = setup({
+      local: {
+        [StorageKeys.BRIDGE_PAIRING]: PAIRING,
+        [StorageKeys.PLUGINS_STATE]: { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } },
+      },
+    });
+    t.origins.add('http://127.0.0.1/*');
+    t.origins.delete('https://chatgpt.com/*');
+    let polls = 0;
+    t.routes['/v1/ext/poll'] = () =>
+      json({
+        ok: true,
+        data:
+          polls++ === 0
+            ? {
+                kind: 'task',
+                task: {
+                  taskId: 'T1',
+                  jobId: 'J1',
+                  op: 'catalog.refresh',
+                  opVersion: 1,
+                  params: {},
+                  deadlineMs: 30_000,
+                  issuedAt: 1,
+                },
+              }
+            : { kind: 'unpaired' },
+      });
+    await t.owner.wake();
+
+    // No chatgpt.com access: the page ops go, the refresh, which needs no page, stays.
+    expect(t.requests.find((r) => r.path === '/v1/ext/poll')?.body).toMatchObject({
+      capabilities: { ops: [{ name: 'catalog.refresh', v: 1 }] },
+    });
+    expect(t.catalog.refreshNow).toHaveBeenCalledWith('chatgpt.com');
+    expect(t.requests.find((r) => r.path === '/v1/ext/tasks/T1/result')?.body).toMatchObject({
+      ok: true,
+      data: { host: 'chatgpt.com', status: 'unchanged', checkedAt: 5 },
+    });
+  });
+
+  it('keeps polling a CLI 0.1.0 serve that refuses the poll over catalog.refresh, without it', async () => {
+    const t = setup({
+      local: {
+        [StorageKeys.BRIDGE_PAIRING]: PAIRING,
+        [StorageKeys.PLUGINS_STATE]: { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } },
+      },
+    });
+    t.origins.add('http://127.0.0.1/*');
+    // As serve 0.1.0 answers: one op it does not know makes the whole poll invalid.
+    t.routes['/v1/ext/poll'] = (body) => {
+      const ops = (body as { capabilities: { ops: { name: string }[] } }).capabilities.ops;
+      const index = ops.findIndex((op) => op.name === 'catalog.refresh');
+      if (index < 0) return json({ ok: true, data: { kind: 'unpaired' } });
+      return json(
+        {
+          ok: false,
+          error: bridgeError('bad-request', 'invalid poll', {
+            issues: [{ path: `capabilities.ops[${index}].name`, message: 'unknown value' }],
+          }),
+        },
+        400,
+      );
+    };
+    await t.owner.wake();
+
+    const polls = t.requests.filter((r) => r.path === '/v1/ext/poll');
+    expect(polls).toHaveLength(2);
+    const offered = (polls[1].body as { capabilities: { ops: { name: string }[] } }).capabilities
+      .ops;
+    expect(offered.map((op) => op.name)).not.toContain('catalog.refresh');
+    expect(offered.length).toBeGreaterThan(0);
+    // The serve's answer to the second poll arrived: it dropped the pairing.
     expect(t.local.values[StorageKeys.BRIDGE_PAIRING]).toBeUndefined();
   });
 

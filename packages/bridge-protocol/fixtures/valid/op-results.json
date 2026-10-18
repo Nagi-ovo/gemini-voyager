@@ -182,5 +182,30 @@
       "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
       "mime": "text/csv"
     }
+  },
+  {
+    "name": "refresh that updated the site data",
+    "kind": "opResult",
+    "op": "catalog.refresh",
+    "input": {
+      "host": "chatgpt.com",
+      "status": "updated",
+      "revision": 42,
+      "checkedAt": 1792000000000,
+      "extensionVersion": "2.2.0"
+    }
+  },
+  {
+    "name": "refresh whose fetch failed",
+    "kind": "opResult",
+    "op": "catalog.refresh",
+    "input": {
+      "host": "chatgpt.com",
+      "status": "failed",
+      "revision": null,
+      "checkedAt": 1792000000000,
+      "reason": "HTTP 503",
+      "extensionVersion": "2.2.0"
+    }
   }
 ]

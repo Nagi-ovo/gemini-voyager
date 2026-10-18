@@ -28,6 +28,7 @@ export const OP_VERSIONS: Readonly<Record<OpName, number>> = {
   'turns.waitReply': 1,
   'turns.read': 1,
   'files.download': 1,
+  'catalog.refresh': 1,
   ...PROJECT_OP_VERSIONS,
 };
 

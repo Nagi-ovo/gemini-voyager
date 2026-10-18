@@ -149,5 +149,28 @@
       "category": "user-action",
       "message": "Cloudflare challenge on the page"
     }
+  },
+  {
+    "name": "a poll naming an op a newer extension offers",
+    "kind": "pollRequest",
+    "input": {
+      "capabilities": {
+        "ops": [
+          {
+            "name": "conversation.ready",
+            "v": 1
+          },
+          {
+            "name": "ask",
+            "v": 1
+          }
+        ]
+      },
+      "inflight": [],
+      "policy": {
+        "revision": 1,
+        "state": "allowed"
+      }
+    }
   }
 ]

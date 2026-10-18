@@ -169,5 +169,19 @@
         "controlRef": "turn-3:file-0"
       }
     }
+  },
+  {
+    "name": "refresh the default host",
+    "kind": "opParams",
+    "op": "catalog.refresh",
+    "input": {}
+  },
+  {
+    "name": "refresh a named host",
+    "kind": "opParams",
+    "op": "catalog.refresh",
+    "input": {
+      "host": "chatgpt.com"
+    }
   }
 ]

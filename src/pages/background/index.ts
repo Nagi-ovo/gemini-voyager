@@ -50,6 +50,7 @@ startQueueOwners();
 // Local Bridge to `voyager serve`: inert until the builtin is on and a pairing exists.
 const handleBridgeMessage = startBridgeOwner({
   refreshCatalog: (host) => hostCatalogRefresher.refresh(host),
+  refreshCatalogNow: (host) => hostCatalogRefresher.refresh(host, { force: true }),
 });
 
 if (getVoyagerBuildTarget() === 'safari') {

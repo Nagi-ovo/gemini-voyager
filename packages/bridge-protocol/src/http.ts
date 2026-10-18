@@ -138,7 +138,7 @@ export interface PolicyReport {
 }
 
 export interface PollRequest {
-  /** Ops the code supports, intersected with the ops the policy allows. */
+  /** Ops the code supports, intersected with the ops the policy allows, plus `POLICY_EXEMPT_OPS`. */
   readonly capabilities: { readonly ops: readonly OpCapability[] };
   readonly inflight: readonly { readonly taskId: string; readonly state: InflightState }[];
   readonly policy: PolicyReport;

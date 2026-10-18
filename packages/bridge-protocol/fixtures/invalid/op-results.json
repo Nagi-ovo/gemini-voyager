@@ -124,5 +124,28 @@
       "mime": "text/plain"
     },
     "issuePath": "$"
+  },
+  {
+    "name": "refresh with a status a forced refresh never has",
+    "kind": "opResult",
+    "op": "catalog.refresh",
+    "input": {
+      "host": "chatgpt.com",
+      "status": "skipped",
+      "revision": null,
+      "extensionVersion": "2.2.0"
+    },
+    "issuePath": "status"
+  },
+  {
+    "name": "refresh without the extension version",
+    "kind": "opResult",
+    "op": "catalog.refresh",
+    "input": {
+      "host": "chatgpt.com",
+      "status": "unchanged",
+      "revision": 7
+    },
+    "issuePath": "extensionVersion"
   }
 ]

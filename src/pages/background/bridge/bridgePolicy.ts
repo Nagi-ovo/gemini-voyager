@@ -13,13 +13,19 @@
  *      than the highest revision accepted so far (the high-water mark);
  *   4. it was fetched within the last 24 h (the accepted revocation delay);
  *   5. the op is in `bridge.allow`.
- * Anything else denies. A deny is never undone by a 404, bad data or the
+ * Anything else denies. `POLICY_EXEMPT_OPS` need only the builtin on and the
+ * 127.0.0.1 permission. A deny is never undone by a 404, bad data or the
  * packaged copy: those only ever deny themselves. Unstamped builds (packaged
  * revision 0: dev and tests) also accept the packaged section when no remote
  * policy applies, so the bridge can be developed before it is published.
  */
 import { StorageKeys } from '@/core/types/common';
-import { type ErrorCode, type OpName, isOpName } from '@/features/bridge/protocol';
+import {
+  type ErrorCode,
+  type OpName,
+  isOpName,
+  isPolicyExemptOp,
+} from '@/features/bridge/protocol';
 import { CHATGPT_LOCAL_BRIDGE_PLUGIN_ID } from '@/features/plugins/builtin/chatgptLocalBridge/manifest';
 import {
   type HostCatalogCacheEntry,
@@ -254,6 +260,12 @@ export function createBridgePolicy(deps: BridgePolicyDeps): BridgePolicy {
     checkOp: async (op) => {
       const gate = await status();
       if (!gate.enabled) return { code: 'bridge-disabled', message: 'The ChatGPT bridge is off.' };
+      // The policy comes from the catalog `catalog.refresh` fetches: gating it locks a stale one in.
+      if (isPolicyExemptOp(op)) {
+        return gate.permissions.loopback
+          ? null
+          : { code: 'permission-missing', message: 'Missing 127.0.0.1 access.' };
+      }
       if (!gate.permissions.chatgpt || !gate.permissions.loopback) {
         return { code: 'permission-missing', message: 'Missing chatgpt.com or 127.0.0.1 access.' };
       }

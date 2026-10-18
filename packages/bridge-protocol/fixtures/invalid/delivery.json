@@ -20,26 +20,6 @@
     "issuePath": "inflight[0].state"
   },
   {
-    "name": "unknown op capability",
-    "kind": "pollRequest",
-    "input": {
-      "capabilities": {
-        "ops": [
-          {
-            "name": "ask",
-            "v": 1
-          }
-        ]
-      },
-      "inflight": [],
-      "policy": {
-        "revision": 1,
-        "state": "allowed"
-      }
-    },
-    "issuePath": "capabilities.ops[0].name"
-  },
-  {
     "name": "policy reported as a bare boolean",
     "kind": "pollRequest",
     "input": {

@@ -45,6 +45,7 @@ import type { BridgeClient, PairedConnection } from './bridgeClient';
 import type { BridgePolicy } from './bridgePolicy';
 import { type BridgeTabs, type ContentHolder, conversationUrl, senderIsHolder } from './bridgeTabs';
 import type { BridgeTabRecord, BridgeTaskRecord, BridgeTaskStore } from './bridgeTaskStore';
+import type { CatalogRefreshRunner } from './catalogRefreshOp';
 import {
   LEASE_PROBE_TIMEOUT_MS,
   type PageLease,
@@ -68,6 +69,7 @@ export const SUPPORTED_BRIDGE_OPS: ReadonlySet<OpName> = new Set<OpName>([
   'project.files',
   'project.upload',
   'project.remove',
+  'catalog.refresh',
 ]);
 
 export interface DispatcherConfig {
@@ -117,6 +119,8 @@ export interface DispatcherDeps {
   readonly client: Pick<BridgeClient, 'ack' | 'progress' | 'result'>;
   readonly connection: () => Promise<PairedConnection | null>;
   readonly ready: () => Promise<void>;
+  /** Runs `catalog.refresh` in the service worker; without it the op is unsupported. */
+  readonly refreshCatalog?: CatalogRefreshRunner;
   readonly now?: () => number;
   readonly config?: Partial<DispatcherConfig>;
 }
@@ -821,13 +825,20 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
         { releaseLease: false },
       );
     }
-    if (task.jobId !== lastJobId) {
+    // A refresh of its own is about to run: an unforced one first would only delay it.
+    if (task.jobId !== lastJobId && task.op !== 'catalog.refresh') {
       lastJobId = task.jobId;
       await deps.policy.refreshIfOld();
     }
     const denied = await deps.policy.checkOp(task.op);
     if (denied) {
       return finish(task.taskId, fail(denied.code, denied.message), { releaseLease: false });
+    }
+    if (task.op === 'catalog.refresh') {
+      const refreshed = deps.refreshCatalog
+        ? await deps.refreshCatalog(task.params)
+        : fail('unsupported-op', 'This build cannot refresh the catalog.');
+      return finish(task.taskId, refreshed, { releaseLease: false });
     }
     if (task.op === 'conversation.open') return openConversation(task);
     if (task.op === 'conversation.close') return closeConversation(task);

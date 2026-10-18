@@ -21,18 +21,22 @@ import { EXTENSION_VERSION } from '@/core/utils/version';
 import { currentAccountPlan, readAccountPlanStore } from '@/features/bridge/accountPlanStore';
 import {
   type BridgeBrowser,
+  type BridgeError,
   type ErrorCode,
   OP_VERSIONS,
   bridgeError,
   type OpCapability,
+  type OpName,
   type PolicyState,
   type UpgradeSide,
+  isPolicyExemptOp,
 } from '@/features/bridge/protocol';
 import { BUNDLED_SITE_ADAPTERS } from '@/features/plugins/catalog/sites';
 import {
   hostCatalogStorageKey,
   loadHostCatalogCache,
 } from '@/features/plugins/remote/hostCatalogCache';
+import type { HostCatalogRefreshResult } from '@/features/plugins/remote/hostCatalogRefresh';
 import {
   loadPluginCatalogSettings,
   savePluginCatalogSettings,
@@ -57,6 +61,7 @@ import {
 } from './bridgeRuntimeMessages';
 import { type TabsApi, createBridgeTabs } from './bridgeTabs';
 import { type StorageAreaLike, createBridgeTaskStore, createMemoryArea } from './bridgeTaskStore';
+import { createCatalogRefreshRunner } from './catalogRefreshOp';
 import { type LeaseProbeOutcome, createPageLeaseArbiter } from './pageLease';
 
 export const BRIDGE_WAKE_ALARM = 'gv-bridge-wake';
@@ -70,6 +75,8 @@ export interface BridgeOwnerEnv {
   readonly fetch: typeof fetch;
   readonly hasOrigin: (pattern: string) => Promise<boolean>;
   readonly refreshCatalog: () => Promise<unknown>;
+  /** A forced catalog check of any host, for the `catalog.refresh` op. */
+  readonly refreshCatalogNow: (host: string) => Promise<HostCatalogRefreshResult>;
   readonly loadOnlineUpdatesEnabled: () => Promise<boolean>;
   /** Write the "plugin online updates" switch the catalog refresher obeys. */
   readonly saveOnlineUpdatesEnabled: (enabled: boolean) => Promise<void>;
@@ -104,6 +111,21 @@ const policyLabel = (verdict: PolicyVerdict): PolicyState =>
 
 function isUpgradeSide(value: unknown): value is UpgradeSide {
   return value === 'extension' || value === 'cli';
+}
+
+/** The offered ops a serve's `bad-request` names as invalid, by their place in the poll. */
+function refusedOps(error: BridgeError, offered: readonly OpCapability[]): OpName[] {
+  if (error.code !== 'bad-request') return [];
+  const issues = error.details?.issues;
+  if (!Array.isArray(issues)) return [];
+  return issues.flatMap((issue: unknown) => {
+    const path =
+      typeof issue === 'object' && issue !== null ? (issue as { path?: unknown }).path : null;
+    const index =
+      typeof path === 'string' ? /^capabilities\.ops\[(\d+)\]/.exec(path)?.[1] : undefined;
+    const op = index === undefined ? undefined : offered[Number(index)];
+    return op ? [op.name] : [];
+  });
 }
 
 export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
@@ -179,6 +201,11 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
     client,
     connection,
     ready: awaitReady,
+    refreshCatalog: createCatalogRefreshRunner({
+      refresh: env.refreshCatalogNow,
+      loadEntry: loadHostCatalogCache,
+      extensionVersion: EXTENSION_VERSION,
+    }),
     now,
   });
   const blobRelay = createBlobRelay({ store, client, connection, ready: awaitReady, now });
@@ -217,6 +244,8 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
   const runLoop = async (generation: number): Promise<void> => {
     await ready;
     let backoff = 0;
+    /** Ops this serve refused to hear of: an older CLI rejects a poll naming an op it does not know. */
+    let unknownToServer = new Set<OpName>();
     while (generation === loopGeneration) {
       const record = await pairing.load();
       if (!record) return;
@@ -226,11 +255,11 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       await dispatcher.drainOutbox();
       const verdict = gate.verdict;
       const allowed = verdict.state === 'allowed' ? verdict.allow : [];
-      const ops: OpCapability[] = gate.permissions.chatgpt
-        ? [...SUPPORTED_BRIDGE_OPS]
-            .filter((op) => allowed.includes(op))
-            .map((name) => ({ name, v: OP_VERSIONS[name] }))
-        : [];
+      // Offered under a denying policy too: they are how a stale or broken policy gets fixed.
+      const ops: OpCapability[] = [...SUPPORTED_BRIDGE_OPS]
+        .filter((op) => isPolicyExemptOp(op) || (gate.permissions.chatgpt && allowed.includes(op)))
+        .filter((op) => !unknownToServer.has(op))
+        .map((name) => ({ name, v: OP_VERSIONS[name] }));
       pollAbort = new AbortController();
       const reply = await client.poll(
         record,
@@ -246,12 +275,20 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       if (generation !== loopGeneration) return;
       if (!reply.ok) {
         if (reply.error.code === 'cancelled') return;
+        const refused = refusedOps(reply.error, ops);
+        if (refused.length > 0) {
+          // CLI 0.1.0 drops the whole poll over one new op: offer the rest without it.
+          unknownToServer = new Set([...unknownToServer, ...refused]);
+          continue;
+        }
         noteError(reply.error);
         if (reply.error.code !== 'server-unreachable') {
           server = 'online';
           return; // unauthorized or protocol-mismatch: wait for the person
         }
         server = 'offline';
+        // The serve that comes back may be a newer one.
+        unknownToServer = new Set();
         backoff = backoff === 0 ? BACKOFF_START_MS : backoff * 2;
         if (backoff > BACKOFF_MAX_MS) return; // the wake alarm takes over
         await sleep(backoff);
@@ -480,6 +517,7 @@ function detectBrowser(): BridgeBrowser {
  */
 export function startBridgeOwner(options: {
   readonly refreshCatalog: (host: string) => Promise<unknown>;
+  readonly refreshCatalogNow: (host: string) => Promise<HostCatalogRefreshResult>;
 }): BridgeOwner['handleMessage'] {
   if (getVoyagerBuildTarget() === 'safari') return createBridgeRuntimeMessageHandler(null);
   const local = chromeArea(chrome.storage?.local);
@@ -507,6 +545,7 @@ export function startBridgeOwner(options: {
     hasOrigin: async (pattern) =>
       (await chrome.permissions?.contains({ origins: [pattern] })) === true,
     refreshCatalog: () => options.refreshCatalog(BRIDGE_POLICY_HOST),
+    refreshCatalogNow: options.refreshCatalogNow,
     loadOnlineUpdatesEnabled: async () => (await loadPluginCatalogSettings()).onlineUpdatesEnabled,
     saveOnlineUpdatesEnabled: (enabled) =>
       savePluginCatalogSettings({ onlineUpdatesEnabled: enabled }),
