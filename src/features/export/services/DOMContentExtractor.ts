@@ -39,6 +39,15 @@ export interface ContentExtractor {
   extractAssistantContent(element: HTMLElement): ExtractedContent;
 }
 
+const PROSE_BLOCK_SELECTOR = 'p, h1, h2, h3, h4, h5, h6, ul, ol, pre, blockquote, hr';
+
+/** Whether `container` holds prose blocks outside its tables, i.e. is more than a table's frame. */
+function hasBlocksBesideTable(container: Element): boolean {
+  return Array.from(container.querySelectorAll(PROSE_BLOCK_SELECTOR)).some(
+    (block) => !block.closest('table, table-block'),
+  );
+}
+
 export function createContentExtractor(dialect: ExportContentDialect): ContentExtractor {
   function extractAssistantContent(element: HTMLElement): ExtractedContent {
     const result: ExtractedContent = {
@@ -335,12 +344,14 @@ export function createContentExtractor(dialect: ExportContentDialect): ContentEx
 
       // Table block (check for nested table-block first)
       const tableBlock = child.querySelector('table-block');
-      if (
-        tagName === 'table' ||
-        tagName === 'table-block' ||
-        tableBlock ||
-        child.querySelector('table')
-      ) {
+      const isTable = tagName === 'table' || tagName === 'table-block';
+      // A wrapper around the whole reply also "contains a table": exporting it as one
+      // dropped every heading, paragraph and list beside the table.
+      if (!isTable && (tableBlock || child.querySelector('table')) && hasBlocksBesideTable(child)) {
+        processNodes(child, htmlParts, textParts, flags, processedImageSrcs);
+        continue;
+      }
+      if (isTable || tableBlock || child.querySelector('table')) {
         const elementToExtract = (tableBlock || child) as HTMLElement;
         const tableContent = extractTable(elementToExtract, dialect);
         if (tableContent.hasFormulas) flags.hasFormulas = true;

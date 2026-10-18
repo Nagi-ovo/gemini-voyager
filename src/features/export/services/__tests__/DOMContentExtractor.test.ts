@@ -22,6 +22,33 @@ describe('DOMContentExtractor', () => {
     expect(extracted.text).toContain('> Quoted line two.');
   });
 
+  it('keeps the prose around a table when a wrapper holds the whole reply', () => {
+    // ChatGPT 2026-10: no .markdown class; the table sits among the reply's blocks.
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <div><div data-markdown-text-style="assistant-message">
+        <h2>Overall</h2>
+        <p>The architecture is clear.</p>
+        <div data-markdown-table="true"><div data-horizontal-scroll="true">
+          <table><thead><tr><th>Part</th><th>Verdict</th></tr></thead>
+          <tbody><tr><td>Background</td><td>Clear</td></tr></tbody></table>
+        </div></div>
+        <p>Two adjustments are worth making.</p>
+        <ul><li>Split the core services.</li></ul>
+      </div></div>
+    `;
+
+    const { text } = extractor.extractAssistantContent(assistant);
+
+    expect(text).toContain('## Overall');
+    expect(text).toContain('The architecture is clear.');
+    expect(text).toContain('| Background | Clear |');
+    expect(text).toContain('Two adjustments are worth making.');
+    expect(text).toContain('Split the core services.');
+    expect(text.indexOf('The architecture is clear.')).toBeLessThan(text.indexOf('| Background'));
+    expect(text.indexOf('| Background')).toBeLessThan(text.indexOf('Two adjustments'));
+  });
+
   it('exports ordinary prose rendered inside an open shadow root', () => {
     const assistant = document.createElement('div');
     assistant.innerHTML = `<message-content><div class="markdown"><shadow-answer></shadow-answer></div></message-content>`;
