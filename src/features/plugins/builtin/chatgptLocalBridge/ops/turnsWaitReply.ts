@@ -13,6 +13,11 @@
  * - the turn's `data-talvt-turn-state` reads `complete` when the turn carries
  *   one (its generating value was never observed, so any other value vetoes).
  *
+ * There is no fixed time limit while ChatGPT works on the reply: a stop
+ * control, a thinking marker or changing text counts as activity. Only
+ * `stallMs` without any of these fails it (`reply-stalled`); `timeoutMs` is
+ * the hard cap behind that.
+ *
  * The page is never touched: no scroll, no click. Progress goes out every
  * {@link PROGRESS_EVERY_MS}; a hidden tab's throttled timers may stretch that.
  */
@@ -20,6 +25,7 @@ import {
   type TurnsWaitReplyParams,
   type TurnsWaitReplyResult,
   WAIT_REPLY_DEFAULT_STABLE_MS,
+  WAIT_REPLY_DEFAULT_STALL_MS,
   WAIT_REPLY_DEFAULT_TIMEOUT_MS,
   type WaitReplyProgress,
 } from '@/features/bridge/protocol';
@@ -92,6 +98,7 @@ export async function runTurnsWaitReply(
   const startedAt = ctx.now();
   const timeoutMs = params.timeoutMs ?? WAIT_REPLY_DEFAULT_TIMEOUT_MS;
   const stableMs = params.stableMs ?? WAIT_REPLY_DEFAULT_STABLE_MS;
+  const stallMs = params.stallMs ?? WAIT_REPLY_DEFAULT_STALL_MS;
   const onRoute = (): boolean => settledConversationId() === params.conversationId;
   if (!onRoute()) {
     ctx.fail('unverified', 'The tab shows another conversation.', {
@@ -102,6 +109,7 @@ export async function runTurnsWaitReply(
 
   let gate: Gate = { contentKey: '', changedAt: startedAt, barCycles: 0 };
   let lastProgressAt = startedAt;
+  let activeAt = startedAt;
   let sawStop = false;
   let phase: WaitReplyProgress['phase'] = 'thinking';
   let textLength = 0;
@@ -139,6 +147,7 @@ export async function runTurnsWaitReply(
       barCycles: bar && quiet && !changed ? gate.barCycles + 1 : 0,
     };
     textLength = text.length;
+    if (changed || stop || thinking) activeAt = now;
 
     if (
       target &&
@@ -172,6 +181,14 @@ export async function runTurnsWaitReply(
     if (now - lastProgressAt >= PROGRESS_EVERY_MS) {
       lastProgressAt = now;
       ctx.progress({ phase, textLength, elapsedMs: now - startedAt });
+    }
+    if (now - activeAt >= stallMs) {
+      ctx.fail('reply-stalled', 'The reply showed no activity for too long.', {
+        conversationId: params.conversationId,
+        phase,
+        textLength,
+        stalledForMs: now - activeAt,
+      });
     }
     if (now - startedAt >= timeoutMs) {
       ctx.fail('timeout', 'The reply did not finish in time.', {

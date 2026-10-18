@@ -476,7 +476,14 @@ export function startBridgeOwner(options: {
     session: chromeArea(chrome.storage?.session) ?? createMemoryArea(),
     local,
     tabs: {
-      create: (props) => chrome.tabs.create(props),
+      create: async (props) => {
+        const tab = await chrome.tabs.create(props);
+        // A Pro reply can take hours in a background tab; Memory Saver would discard it mid-wait.
+        if (tab.id !== undefined) {
+          await chrome.tabs.update(tab.id, { autoDiscardable: false }).catch(() => undefined);
+        }
+        return tab;
+      },
       remove: (tabId) => chrome.tabs.remove(tabId),
       get: (tabId) => chrome.tabs.get(tabId),
       sendMessage: (tabId, message, sendOptions) =>

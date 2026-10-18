@@ -58,6 +58,8 @@ export const ERROR_CATEGORIES = {
   'document-lost': 'transient',
   'extension-reloaded': 'transient',
   'server-unreachable': 'transient',
+  /** The reply showed no activity for its stall window; the prompt was sent, so never resend it. */
+  'reply-stalled': 'transient',
   cancelled: 'transient',
 } as const satisfies Record<string, ErrorCategory>;
 

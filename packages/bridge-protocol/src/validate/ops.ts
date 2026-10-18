@@ -224,11 +224,16 @@ const PARAM_READERS: { readonly [K in OpName]: Reader<OpParamsMap[K]> } = {
       min: 1,
       max: WAIT_REPLY_MAX_TIMEOUT_MS,
     });
+    const stallMs = optionalInt(rec, 'stallMs', path, issues, {
+      min: 1,
+      max: WAIT_REPLY_MAX_TIMEOUT_MS,
+    });
     const stableMs = optionalInt(rec, 'stableMs', path, issues, { max: 60_000 });
     return {
       conversationId: readConversationId(rec, path, issues),
       afterUserTurnKey: requireString(rec, 'afterUserTurnKey', path, issues, TURN_KEY),
       ...(timeoutMs === undefined ? {} : { timeoutMs }),
+      ...(stallMs === undefined ? {} : { stallMs }),
       ...(stableMs === undefined ? {} : { stableMs }),
     };
   },

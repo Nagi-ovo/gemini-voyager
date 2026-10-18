@@ -111,17 +111,64 @@ describe('Local Bridge turns.waitReply', () => {
     { timeout: 30_000 },
     async () => {
       bridge.start('turns.waitReply', WAIT);
+      // Pro thinks with the composer's stop control showing and no reply text yet.
+      page.showStopControl(true);
       await vi.advanceTimersByTimeAsync(30 * 60_000);
       expect(bridge.outcome()).toBeUndefined();
       const progress = bridge.progress();
       expect(progress.length).toBeGreaterThanOrEqual((30 * 60_000) / PROGRESS_EVERY_MS - 1);
       expect(progress[0]).toMatchObject({ phase: 'thinking', textLength: 0 });
 
+      page.showStopControl(false);
       page.setReply('turn-1', { text: 'Done.', turnState: 'complete', actions: true });
       await vi.advanceTimersByTimeAsync(10_000);
       expect(bridge.outcome()).toMatchObject({ ok: true, data: { assistantTurnKey: 'turn-1-r' } });
     },
   );
+
+  it('keeps waiting for a reply ChatGPT is still generating after 3 hours', async () => {
+    bridge.start('turns.waitReply', WAIT);
+    page.showStopControl(true);
+    // A hidden tab's timers drift; the clock jumps between polls instead of ticking each second.
+    for (let step = 0; step < 9; step += 1) {
+      vi.setSystemTime(Date.now() + 20 * 60_000);
+      await vi.advanceTimersByTimeAsync(2_000);
+    }
+    page.showStopControl(false);
+    for (let step = 0; step < 4; step += 1) {
+      page.setReply('turn-1', { text: `streamed part ${step}`, replyId: 'r-1' });
+      vi.setSystemTime(Date.now() + 15 * 60_000);
+      await vi.advanceTimersByTimeAsync(2_000);
+    }
+    expect(bridge.outcome()).toBeUndefined();
+
+    page.setReply('turn-1', {
+      text: 'The answer.',
+      turnState: 'complete',
+      actions: true,
+      replyId: 'r-1',
+    });
+    await vi.advanceTimersByTimeAsync((BAR_CONFIRM_CYCLES + 3) * 1_000);
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { assistantTurnKey: 'r-1' } });
+  });
+
+  it('fails as reply-stalled once the reply shows no activity for 20 minutes', async () => {
+    bridge.start('turns.waitReply', WAIT);
+    page.setReply('turn-1', { text: 'Half an answer', replyId: 'r-1' });
+    await vi.advanceTimersByTimeAsync(2_000);
+    vi.setSystemTime(Date.now() + 19 * 60_000);
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(bridge.outcome()).toBeUndefined();
+
+    vi.setSystemTime(Date.now() + 60_000);
+    await vi.advanceTimersByTimeAsync(2_000);
+    const outcome = bridge.outcome();
+    expect(errorCode(outcome)).toBe('reply-stalled');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({
+      conversationId: 'conv-1',
+      textLength: 'Half an answer'.length,
+    });
+  });
 
   it('ends with challenge and a toast when a verification page replaces the thread', async () => {
     bridge.start('turns.waitReply', WAIT);

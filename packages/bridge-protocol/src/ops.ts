@@ -27,8 +27,14 @@ export function isOpName(value: unknown): value is OpName {
 export const MAX_ATTACHMENTS = 10;
 /** Largest single attachment, zipped folders included (spec Q8). */
 export const MAX_ATTACHMENT_BYTES = 64 * 1024 * 1024;
-export const WAIT_REPLY_DEFAULT_TIMEOUT_MS = 90 * 60_000;
-export const WAIT_REPLY_MAX_TIMEOUT_MS = 180 * 60_000;
+/**
+ * A reply's hard cap. A reply ChatGPT is still working on is waited for until
+ * then; the real limit is {@link WAIT_REPLY_DEFAULT_STALL_MS} without activity.
+ */
+export const WAIT_REPLY_MAX_TIMEOUT_MS = 12 * 60 * 60_000;
+export const WAIT_REPLY_DEFAULT_TIMEOUT_MS = WAIT_REPLY_MAX_TIMEOUT_MS;
+/** How long a reply may show no activity at all before it fails `reply-stalled`. */
+export const WAIT_REPLY_DEFAULT_STALL_MS = 20 * 60_000;
 export const WAIT_REPLY_DEFAULT_STABLE_MS = 1_500;
 
 /** Facts an op saw on the page, kept for diagnosis; never interpreted by the caller. */
@@ -175,11 +181,18 @@ export interface ComposerSendResult {
 
 // turns.waitReply (passive)
 
+/**
+ * Waits while ChatGPT is still working on the reply: its stop control or a
+ * thinking marker shows, or its text keeps changing. Fails `reply-stalled` after
+ * `stallMs` with none of these, and `timeout` at `timeoutMs` whatever happens.
+ */
 export interface TurnsWaitReplyParams {
   readonly conversationId: string;
   readonly afterUserTurnKey: string;
-  /** Default `WAIT_REPLY_DEFAULT_TIMEOUT_MS`, at most `WAIT_REPLY_MAX_TIMEOUT_MS`. */
+  /** Hard cap. Default and maximum `WAIT_REPLY_MAX_TIMEOUT_MS`. */
   readonly timeoutMs?: number;
+  /** Default `WAIT_REPLY_DEFAULT_STALL_MS`, at most `WAIT_REPLY_MAX_TIMEOUT_MS`. */
+  readonly stallMs?: number;
   /** Default `WAIT_REPLY_DEFAULT_STABLE_MS`. */
   readonly stableMs?: number;
 }

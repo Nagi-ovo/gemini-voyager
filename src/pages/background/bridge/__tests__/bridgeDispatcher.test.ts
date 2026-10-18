@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
-import type { ErrorCode, OpName, ValidatedBridgeTask } from '@/features/bridge/protocol';
+import {
+  type ErrorCode,
+  type OpName,
+  type ValidatedBridgeTask,
+  WAIT_REPLY_MAX_TIMEOUT_MS,
+} from '@/features/bridge/protocol';
 import type { HostCatalogCacheEntry } from '@/features/plugins/remote/hostCatalogCache';
 
 import { type DispatcherConfig, createBridgeDispatcher } from '../bridgeDispatcher';
@@ -277,6 +282,39 @@ describe('bridge dispatcher', () => {
     expect(await t.lease.current()).toBeNull();
     await t.dispatcher.onTask(task('composer.send', 'T3'));
     expect(t.page.starts()).toHaveLength(2);
+  });
+
+  it('keeps a reply wait running for 3 hours in a background tab whose progress comes late', async () => {
+    const t = setup();
+    const tabId = await t.bridgeTab('doc-1', false);
+    await t.dispatcher.onTask({
+      ...task('turns.waitReply', 'T1'),
+      params: { conversationId: 'abc-123', afterUserTurnKey: 't-7' },
+      deadlineMs: WAIT_REPLY_MAX_TIMEOUT_MS + 30_000,
+    } as ValidatedBridgeTask);
+    expect(t.page.starts()).toHaveLength(1);
+    expect(await t.lease.current()).toBeNull();
+
+    // A throttled hidden tab reports every few minutes, past the silence probe's window.
+    for (let minute = 0; minute < 180; minute += 3) {
+      t.advance(3 * 60_000);
+      await t.dispatcher.tick();
+      await t.dispatcher.onProgress(contentSender(tabId), {
+        taskId: 'T1',
+        docNonce: 'doc-1',
+        progress: { phase: 'thinking', textLength: 0, elapsedMs: (minute + 3) * 60_000 },
+      });
+    }
+    expect(t.server.results()).toEqual([]);
+    expect(t.page.sent.some((s) => s.message.type === 'gv.bridge.op.cancel')).toBe(false);
+
+    const reply = { assistantTurnKey: 't-8', status: 'complete', elapsedMs: 3 * 3_600_000 };
+    await t.dispatcher.onDone(contentSender(tabId), {
+      taskId: 'T1',
+      docNonce: 'doc-1',
+      outcome: { ok: true, data: { ...reply, evidence: {} } },
+    });
+    expect(t.resultOf('T1')).toMatchObject({ ok: true, data: reply });
   });
 
   it('stops a running op when the policy turns it off', async () => {

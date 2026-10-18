@@ -234,15 +234,26 @@
     "issuePath": "expect.conversationId"
   },
   {
-    "name": "wait longer than 180 minutes",
+    "name": "wait longer than 12 hours",
     "kind": "opParams",
     "op": "turns.waitReply",
     "input": {
       "conversationId": "abc",
       "afterUserTurnKey": "t-7",
-      "timeoutMs": 10800001
+      "timeoutMs": 43200001
     },
     "issuePath": "timeoutMs"
+  },
+  {
+    "name": "wait with an empty stall window",
+    "kind": "opParams",
+    "op": "turns.waitReply",
+    "input": {
+      "conversationId": "abc",
+      "afterUserTurnKey": "t-7",
+      "stallMs": 0
+    },
+    "issuePath": "stallMs"
   },
   {
     "name": "download without a candidate",

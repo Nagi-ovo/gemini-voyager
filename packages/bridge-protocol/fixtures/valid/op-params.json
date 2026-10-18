@@ -132,7 +132,8 @@
     "input": {
       "conversationId": "abc-123",
       "afterUserTurnKey": "t-7",
-      "timeoutMs": 5400000,
+      "timeoutMs": 43200000,
+      "stallMs": 1200000,
       "stableMs": 1500
     }
   },
