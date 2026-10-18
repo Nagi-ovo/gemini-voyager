@@ -1,0 +1,64 @@
+# ChatGPT ローカルブリッジ
+
+「ChatGPT · ローカルブリッジ」は Voyager の公式プラグインです。初期状態ではオフです。
+
+オンにしてペアリングすると、Voyager はこのコンピューター上のローカルプログラムに、ChatGPT のページ操作をひとそろい提供します。プログラムがやりたいことを伝えると、Voyager が自分で開いたタブで、ブラウザでいつもログインしている ChatGPT を使って実行します。ChatGPT から見れば、あなたのブラウザからのごく普通のチャットです。
+
+## 提供する操作
+
+- 会話を開く：新しい会話、または既存の会話
+- モデルを選ぶ：チャットモードでのみ選択し、ChatGPT を Work モードに切り替えることはありません
+- プロンプトを送る（添付ファイル付きも可）
+- 回答を待って読み取る
+- 既存の会話の最新の回答を読み取る
+- プロジェクトの一覧と作成
+- プロジェクトのファイルの一覧、アップロード、削除（削除はすぐに反映され、元に戻せません）
+
+## 動作のルール
+
+**ローカルだけ。** ブリッジがローカルプログラムとやり取りするのは `127.0.0.1` 経由だけで、ペアリングが済んでからです。
+
+**専用のタブ。** 各ジョブは Voyager が開いた ChatGPT のタブで実行され、終わるとタブは閉じます。
+
+**一度に 1 ジョブ。** 同時に動くジョブは 1 つだけです。
+
+**ログインと認証はあなた自身で。** ChatGPT がログインや認証チャレンジを求めたら、ブリッジは止まってそう伝えます。回避しようとはしません。
+
+**プランも表示。** どの結果にも、ページが最後に報告した ChatGPT のプラン（`Pro Lite ($100)`、`Pro ($200)` など）が含まれます。
+
+**ブラウザ。** Chrome でテスト済みです。Edge 版と Firefox 版の Voyager にもブリッジは入っていますが、Safari 版にはありません。
+
+## リファレンス実装：Voyager CLI
+
+[Voyager CLI](https://github.com/voyager-crew/voyager-cli)（npm `@voyager-crew/cli`、コマンド `voyager`）は、これらの操作の上に作られたリファレンスクライアントです。ターミナルから ChatGPT に質問したり、コーディングエージェントに任せたりできます。
+
+### 3 ステップで接続
+
+1. CLI をインストールします（Node.js 20.3 以降が必要）。
+
+   ```sh
+   npm install -g @voyager-crew/cli
+   ```
+
+2. Voyager のポップアップで **プラグイン** を開き、**ChatGPT · ローカルブリッジ** をオンにして chatgpt.com へのアクセスを許可します。
+3. 一度だけペアリングします。
+
+   ```sh
+   voyager pair
+   ```
+
+   表示された 8 文字のコードを、ポップアップの「ローカルブリッジ」の設定に入力します。
+
+### 使用例
+
+```sh
+voyager ask "このスタックトレースを説明して" --attach crash.log
+voyager ask --chat <link|id> "エッジケースは？"     # 既存の会話で続けて質問
+voyager read <link|id>                              # 会話の最新の回答を保存
+voyager project upload "Thesis" ./thesis            # プロジェクト内のどのチャットからも読める
+voyager ask --project "Thesis" "論証がいちばん弱いのはどこ？"
+```
+
+回答は `response.md` として保存されます。既定ではチャットモードの GPT-6 Pro を使います。
+
+長い回答の待ち方、各終了コードの意味、すべてのコマンドは [CLI の README](https://github.com/voyager-crew/voyager-cli#readme) を参照してください。Claude Code や Codex などのエージェント向けの説明は [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md) にあります。

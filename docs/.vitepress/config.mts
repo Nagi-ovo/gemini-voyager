@@ -155,6 +155,7 @@ export default defineConfig({
             text: '插件',
             items: [
               { text: '插件一览', link: '/guide/plugins' },
+              { text: 'ChatGPT 本地桥', link: '/guide/local-bridge' },
               { text: '编写自己的插件', link: '/guide/write-a-plugin' },
               { text: '插件贡献说明', link: '/guide/plugin-contribution' },
             ],
@@ -242,6 +243,7 @@ export default defineConfig({
             text: '外掛',
             items: [
               { text: '外掛一覽', link: '/zh_TW/guide/plugins' },
+              { text: 'ChatGPT 本機橋接', link: '/zh_TW/guide/local-bridge' },
               { text: '撰寫自己的外掛', link: '/zh_TW/guide/write-a-plugin' },
               { text: '外掛貢獻說明', link: '/zh_TW/guide/plugin-contribution' },
             ],
@@ -330,6 +332,7 @@ export default defineConfig({
             text: 'Plugins',
             items: [
               { text: 'All plugins', link: '/en/guide/plugins' },
+              { text: 'ChatGPT Local Bridge', link: '/en/guide/local-bridge' },
               { text: 'Write Your Own Plugin', link: '/en/guide/write-a-plugin' },
               { text: 'Plugin Contribution', link: '/en/guide/plugin-contribution' },
             ],
@@ -417,6 +420,7 @@ export default defineConfig({
             text: 'プラグイン',
             items: [
               { text: 'プラグイン一覧', link: '/ja/guide/plugins' },
+              { text: 'ChatGPT ローカルブリッジ', link: '/ja/guide/local-bridge' },
               { text: '自分でプラグインを作る', link: '/ja/guide/write-a-plugin' },
               { text: 'プラグイン貢献ガイド', link: '/ja/guide/plugin-contribution' },
             ],
@@ -504,6 +508,7 @@ export default defineConfig({
             text: '플러그인',
             items: [
               { text: '플러그인 목록', link: '/ko/guide/plugins' },
+              { text: 'ChatGPT 로컬 브리지', link: '/ko/guide/local-bridge' },
               { text: '직접 플러그인 만들기', link: '/ko/guide/write-a-plugin' },
               { text: '플러그인 기여 가이드', link: '/ko/guide/plugin-contribution' },
             ],
@@ -594,6 +599,7 @@ export default defineConfig({
             text: 'Plugins',
             items: [
               { text: 'Tous les plugins', link: '/fr/guide/plugins' },
+              { text: 'Pont local ChatGPT', link: '/fr/guide/local-bridge' },
               { text: 'Écrire son propre plugin', link: '/fr/guide/write-a-plugin' },
               { text: 'Contribution Plugins', link: '/fr/guide/plugin-contribution' },
             ],
@@ -690,6 +696,7 @@ export default defineConfig({
             text: 'Plugins',
             items: [
               { text: 'Todos los plugins', link: '/es/guide/plugins' },
+              { text: 'Puente local de ChatGPT', link: '/es/guide/local-bridge' },
               { text: 'Escribe tu propio plugin', link: '/es/guide/write-a-plugin' },
               { text: 'Contribuir plugins', link: '/es/guide/plugin-contribution' },
             ],
@@ -780,6 +787,7 @@ export default defineConfig({
             text: 'Plugins',
             items: [
               { text: 'Todos os plugins', link: '/pt/guide/plugins' },
+              { text: 'Ponte local do ChatGPT', link: '/pt/guide/local-bridge' },
               { text: 'Escreva o seu próprio plugin', link: '/pt/guide/write-a-plugin' },
               { text: 'Contribuir plugins', link: '/pt/guide/plugin-contribution' },
             ],
@@ -871,6 +879,7 @@ export default defineConfig({
             text: 'الإضافات',
             items: [
               { text: 'كل الإضافات', link: '/ar/guide/plugins' },
+              { text: 'الجسر المحلي لـ ChatGPT', link: '/ar/guide/local-bridge' },
               { text: 'اكتب إضافتك الخاصة', link: '/ar/guide/write-a-plugin' },
               { text: 'المساهمة في الإضافات', link: '/ar/guide/plugin-contribution' },
             ],
@@ -967,6 +976,7 @@ export default defineConfig({
             text: 'Плагины',
             items: [
               { text: 'Все плагины', link: '/ru/guide/plugins' },
+              { text: 'Локальный мост ChatGPT', link: '/ru/guide/local-bridge' },
               { text: 'Создание своего плагина', link: '/ru/guide/write-a-plugin' },
               { text: 'Участие в плагинах', link: '/ru/guide/plugin-contribution' },
             ],

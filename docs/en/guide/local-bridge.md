@@ -1,0 +1,64 @@
+# ChatGPT Local Bridge
+
+ChatGPT · Local Bridge is an official Voyager plugin. It's off by default.
+
+Once you turn it on and pair, Voyager offers a set of ChatGPT page actions to local programs on this computer. A program says what it wants done, and Voyager does it in a tab of its own, using the ChatGPT you're already signed in to in your browser. To ChatGPT, it's an ordinary chat from your own browser.
+
+## What it offers
+
+- Open a conversation: a new one, or an existing one
+- Pick the model: in chat mode only; it never switches ChatGPT to Work mode
+- Send a prompt, with attachments
+- Wait for the reply and read it
+- Read the latest reply of an existing conversation
+- List and create projects
+- List, upload and remove project files (removal is immediate and permanent)
+
+## How it behaves
+
+**Local only.** The bridge talks to programs on this computer over `127.0.0.1` only, and only after pairing.
+
+**Its own tab.** Each job runs in a ChatGPT tab Voyager opens, and the tab closes when it's done.
+
+**One job at a time.** Only one job runs at once.
+
+**Sign-ins and challenges are yours.** If ChatGPT asks you to sign in or solve a challenge, the bridge stops and says so. It never works around it.
+
+**Your plan, named.** Every result names your ChatGPT plan (`Pro Lite ($100)`, `Pro ($200)`, …) as the page last reported it.
+
+**Browsers.** Tested in Chrome. Edge and Firefox builds of Voyager include the bridge too; Safari does not.
+
+## Reference usage: Voyager CLI
+
+[Voyager CLI](https://github.com/voyager-crew/voyager-cli) (npm `@voyager-crew/cli`, command `voyager`) is a reference client built on these actions: ask ChatGPT from your terminal, or let your coding agent do it.
+
+### Three steps
+
+1. Install the CLI (Node.js 20.3 or later):
+
+   ```sh
+   npm install -g @voyager-crew/cli
+   ```
+
+2. In the Voyager popup, open **Plugins**, turn on **ChatGPT · Local Bridge** and allow access to chatgpt.com.
+3. Pair them once:
+
+   ```sh
+   voyager pair
+   ```
+
+   Enter the eight-character code it prints in the Local bridge settings in the popup.
+
+### A few examples
+
+```sh
+voyager ask "Explain this stack trace" --attach crash.log
+voyager ask --chat <link|id> "And the edge cases?"  # follow up in a conversation
+voyager read <link|id>                              # save a conversation's latest reply
+voyager project upload "Thesis" ./thesis            # every chat in the project can read it
+voyager ask --project "Thesis" "Where is the argument weakest?"
+```
+
+The reply is saved as `response.md`, and asks use GPT-6 Pro in chat mode by default.
+
+For waiting on long answers, what each exit code means and every command, see the [CLI README](https://github.com/voyager-crew/voyager-cli#readme). Instructions for Claude Code, Codex and other agents are in [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md).
