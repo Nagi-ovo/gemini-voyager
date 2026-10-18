@@ -78,7 +78,7 @@
 
 - **📂 [文件夹管理](https://voyager.nagi.fun/guide/folders)**: 支持 **最多三级的文件夹层级**，并可拖拽整理对话。
   - **Gemini**: 支持 **多账号隔离模式** 及 **自定义文件夹颜色**。
-- **💡 [提示词库](https://voyager.nagi.fun/guide/prompts)**: 跨平台同步提示词，支持 Gemini、AI Studio 及 [自定义网站](https://voyager.nagi.fun/guide/prompts#任何网站都能用)。
+- **💡 [提示词库](https://voyager.nagi.fun/guide/prompts)**: 跨平台同步提示词，支持 Gemini、AI Studio 及 [自定义网站](https://voyager.nagi.fun/guide/prompts#任何网站皆可用)。
 - **☁️ [云同步](https://voyager.nagi.fun/guide/cloud-sync)**: 通过 Google Drive 同步文件夹和提示词，Safari 上还可使用 iCloud。
 - **🗑️ [批量删除](https://voyager.nagi.fun/guide/batch-delete)**: 批量删除对话。
 - **📐 [公式复制](https://voyager.nagi.fun/guide/formula-copy)**: 点击公式即可复制为 LaTeX、MathML（Word）或适用于 Notion 的公式。

@@ -78,7 +78,7 @@
 
 - **📂 [폴더 관리](https://voyager.nagi.fun/ko/guide/folders)**: 드래그 앤 드롭을 지원하는 최대 3단계 폴더 계층 구조로 대화를 정리하세요.
   - **Gemini**: **계정 분리 모드** 및 **사용자 지정 폴더 색상**을 지원합니다.
-- **💡 [프롬프트 저장소](https://voyager.nagi.fun/ko/guide/prompts)**: Gemini, AI Studio 및 [사용자 지정 웹사이트](https://voyager.nagi.fun/ko/guide/prompts#어디에서나-사용하기)에서 프롬프트를 저장하고 재사용하세요.
+- **💡 [프롬프트 저장소](https://voyager.nagi.fun/ko/guide/prompts)**: Gemini, AI Studio 및 [사용자 지정 웹사이트](https://voyager.nagi.fun/ko/guide/prompts#어디서나-사용-가능)에서 프롬프트를 저장하고 재사용하세요.
 - **☁️ [클라우드 동기화](https://voyager.nagi.fun/ko/guide/cloud-sync)**: Google Drive를 통해 폴더와 프롬프트를 동기화하거나, Safari에서는 iCloud를 사용하세요.
 - **🗑️ [일괄 삭제](https://voyager.nagi.fun/ko/guide/batch-delete)**: 여러 대화를 한꺼번에 삭제합니다.
 - **📐 [수식 복사](https://voyager.nagi.fun/ko/guide/formula-copy)**: 수식을 클릭해 LaTeX, MathML(Word), 또는 Notion용 수식으로 복사하세요.

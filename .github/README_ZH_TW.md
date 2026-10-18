@@ -84,7 +84,7 @@
 
 - **📂 [資料夾整理](https://voyager.nagi.fun/zh_TW/guide/folders)**：將對話整理到最多三層的資料夾階層中，支援拖放操作。
   - **Gemini**：支援 **帳號隔離模式** 與 **自訂資料夾顏色**。
-- **💡 [提示詞寶庫](https://voyager.nagi.fun/zh_TW/guide/prompts)**：在 Gemini、AI Studio 以及[自訂網站](https://voyager.nagi.fun/zh_TW/guide/prompts#任何網站皆可使用)中儲存並重複使用提示詞。
+- **💡 [提示詞寶庫](https://voyager.nagi.fun/zh_TW/guide/prompts)**：在 Gemini、AI Studio 以及[自訂網站](https://voyager.nagi.fun/zh_TW/guide/prompts#任何網站皆可用)中儲存並重複使用提示詞。
 - **☁️ [雲端同步](https://voyager.nagi.fun/zh_TW/guide/cloud-sync)**：透過 Google 雲端硬碟同步資料夾與提示詞，Safari 上則可使用 iCloud。
 - **🗑️ [批次刪除](https://voyager.nagi.fun/zh_TW/guide/batch-delete)**：一次批次刪除多則對話。
 - **📐 [公式複製](https://voyager.nagi.fun/zh_TW/guide/formula-copy)**：點擊公式即可將它複製為 LaTeX、MathML（Word）或適用於 Notion 的數學格式。
