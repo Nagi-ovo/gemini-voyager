@@ -1,7 +1,6 @@
 {
   "name": "@voyager-crew/bridge-protocol",
   "version": "0.1.0",
-  "private": true,
   "description": "Wire types and validators shared by the Voyager extension and voyager serve",
   "license": "MIT",
   "author": "Jesse Zhang",
@@ -19,5 +18,8 @@
     "src",
     "fixtures"
   ],
-  "sideEffects": false
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  }
 }
