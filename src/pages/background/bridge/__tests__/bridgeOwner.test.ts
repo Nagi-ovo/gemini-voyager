@@ -43,11 +43,22 @@ function setup(
       }),
     '/v1/pair': () => json({ ok: true, data: { token: TOKEN, serverId: 'srv1' } }),
   };
-  const requests: { path: string; body: unknown; headers: Record<string, string> }[] = [];
+  const requests: {
+    path: string;
+    port: number;
+    body: unknown;
+    headers: Record<string, string>;
+  }[] = [];
   const fetchImpl = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
-    const path = new URL(String(url)).pathname;
+    const parsed = new URL(String(url));
+    const path = parsed.pathname;
     const body = init?.body ? (JSON.parse(String(init.body)) as unknown) : undefined;
-    requests.push({ path, body, headers: (init?.headers ?? {}) as Record<string, string> });
+    requests.push({
+      path,
+      port: Number(parsed.port),
+      body,
+      headers: (init?.headers ?? {}) as Record<string, string>,
+    });
     const route = routes[path];
     return route ? route(body) : json({ ok: true, data: {} });
   });
@@ -92,6 +103,7 @@ describe('bridge owner', () => {
           progressSeq: 0,
           tabId: 100,
           docNonce: 'doc-1',
+          serverId: 'srv1',
         },
       },
     });
@@ -131,6 +143,7 @@ describe('bridge owner', () => {
           progressSeq: 0,
           tabId: 100,
           docNonce: 'doc-1',
+          serverId: 'srv1',
           blobs: [{ blobId: 'b1', size: 6 }],
         },
       },
@@ -271,6 +284,69 @@ describe('bridge owner', () => {
       capabilities: { ops: expect.arrayContaining([{ name: 'composer.send', v: 1 }]) },
     });
     expect(t.local.values[StorageKeys.BRIDGE_PAIRING]).toBeUndefined();
+  });
+
+  it('stops the task of a pairing another server replaced and runs nothing its old poll brings', async () => {
+    const t = setup({
+      local: {
+        [StorageKeys.BRIDGE_PAIRING]: PAIRING,
+        [StorageKeys.PLUGINS_STATE]: { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } },
+      },
+      session: {
+        [BRIDGE_SESSION_KEYS.task]: {
+          taskId: 'T1',
+          jobId: 'J1',
+          op: 'turns.read',
+          state: 'running',
+          startedAt: 1,
+          deadline: Number.MAX_SAFE_INTEGER,
+          lastProgressAt: 1,
+          progressSeq: 0,
+          serverId: 'srv1',
+        },
+      },
+    });
+    t.origins.add('http://127.0.0.1/*');
+    let answerPoll!: (response: Response) => void;
+    t.routes['/v1/ext/poll'] = () =>
+      new Promise<Response>((resolve) => {
+        answerPoll = resolve;
+      });
+    void t.owner.wake();
+    await vi.waitFor(() => expect(t.requests.some((r) => r.path === '/v1/ext/poll')).toBe(true));
+    t.routes['/v1/ext/poll'] = () => new Promise<Response>(() => {});
+
+    const replaced = { ...PAIRING, serverId: 'srv2', port: 47322 };
+    t.local.values[StorageKeys.BRIDGE_PAIRING] = replaced;
+    t.owner.onStorageChanged(
+      { [StorageKeys.BRIDGE_PAIRING]: { oldValue: PAIRING, newValue: replaced } },
+      'local',
+    );
+    answerPoll(
+      json({
+        ok: true,
+        data: {
+          kind: 'task',
+          task: {
+            taskId: 'T9',
+            jobId: 'J9',
+            op: 'turns.read',
+            opVersion: 1,
+            params: { conversationId: 'abc-123', assistantTurnKey: 't-8' },
+            deadlineMs: 60_000,
+            issuedAt: 1,
+          },
+        },
+      }),
+    );
+    // The next poll goes to the new server, after whatever the old poll brought was handled.
+    await vi.waitFor(() =>
+      expect(t.requests.filter((r) => r.path === '/v1/ext/poll').length).toBeGreaterThan(1),
+    );
+    await vi.waitFor(async () =>
+      expect((await t.send({ type: 'gv.bridge.status' })).data).not.toHaveProperty('activeTask'),
+    );
+    expect(t.requests.filter((r) => r.path.startsWith('/v1/ext/tasks/'))).toEqual([]);
   });
 
   it('does not contact the server while the builtin is off', async () => {

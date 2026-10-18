@@ -124,7 +124,13 @@ export function contentSender(tabId: number, documentId?: string): chrome.runtim
 export function fakeServer() {
   const calls: { kind: 'ack' | 'progress' | 'result'; taskId: string; body?: unknown }[] = [];
   const ok = <T>(data: T): ClientResult<T> => ({ ok: true, status: 200, data });
-  const state = { unreachable: false };
+  const state = {
+    unreachable: false,
+    /** What the server answers an ack with, when not a plain ok. */
+    ackReply: null as ClientResult<unknown> | null,
+  };
+  /** The port each result was posted to. */
+  const resultPorts: number[] = [];
   const unreachable = (): ClientResult<unknown> => ({
     ok: false,
     status: 0,
@@ -133,18 +139,20 @@ export function fakeServer() {
   const client = {
     ack: vi.fn(async (_c: BridgeConnection, taskId: string) => {
       calls.push({ kind: 'ack', taskId });
+      if (state.ackReply) return state.ackReply;
       return state.unreachable ? unreachable() : ok({});
     }),
     progress: vi.fn(async (_c: BridgeConnection, taskId: string, seq: number, event: unknown) => {
       calls.push({ kind: 'progress', taskId, body: { seq, event } });
       return ok({});
     }),
-    result: vi.fn(async (_c: BridgeConnection, taskId: string, body: unknown) => {
+    result: vi.fn(async (connection: BridgeConnection, taskId: string, body: unknown) => {
       if (state.unreachable) return unreachable();
       calls.push({ kind: 'result', taskId, body });
+      resultPorts.push(connection.port);
       return ok({});
     }),
   };
   const results = () => calls.filter((c) => c.kind === 'result');
-  return { client, calls, state, results };
+  return { client, calls, state, results, resultPorts };
 }

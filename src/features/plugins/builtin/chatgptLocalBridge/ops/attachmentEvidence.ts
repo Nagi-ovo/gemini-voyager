@@ -29,18 +29,38 @@ const fold = (text: string): string => text.normalize('NFC').toLowerCase();
 const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
+ * A file name ends where no name character follows; `a.txt.zip` is another file.
+ * The start is a consumed boundary, not a lookbehind, which older Safari cannot parse.
+ */
+const NAME_START = '(?:^|[^\\p{L}\\p{N}_.\\-])';
+const NAME_END = '(?![\\p{L}\\p{N}_\\-]|\\.[\\p{L}\\p{N}])';
+/** Something shaped like a file name: an extension that starts with a letter, so `GPT-5.5` is none. */
+const FILE_TOKEN = /\S\.\p{L}[\p{L}\p{N}]{0,9}(?![\p{L}\p{N}])/u;
+
+export type FileNameMatch = 'exact' | 'renamed';
+
+/** How `text` names the file `name`: as written, or as ChatGPT renames a repeated upload. */
+export function matchFileName(text: string, name: string): FileNameMatch | null {
+  const haystack = fold(text);
+  const wanted = fold(name.trim());
+  if (!wanted) return null;
+  // Bounded on both sides: `Remove private-report.txt` must not count as `report.txt`.
+  if (new RegExp(`${NAME_START}${escapeRegExp(wanted)}${NAME_END}`, 'u').test(haystack)) {
+    return 'exact';
+  }
+  const dot = wanted.lastIndexOf('.');
+  const stem = dot > 0 ? wanted.slice(0, dot) : wanted;
+  const extension = dot > 0 ? wanted.slice(dot) : '';
+  const renamed = `${NAME_START}${escapeRegExp(stem)} ?\\(\\d+\\)${escapeRegExp(extension)}${NAME_END}`;
+  return new RegExp(renamed, 'u').test(haystack) ? 'renamed' : null;
+}
+
+/**
  * Whether `text` names the file `name`, also as ChatGPT renames a repeated upload:
  * a second `note.txt` shows as `note(2).txt` once it has uploaded.
  */
 export function namesFile(text: string, name: string): boolean {
-  const haystack = fold(text);
-  const wanted = fold(name.trim());
-  if (!wanted) return false;
-  if (haystack.includes(wanted)) return true;
-  const dot = wanted.lastIndexOf('.');
-  const stem = dot > 0 ? wanted.slice(0, dot) : wanted;
-  const extension = dot > 0 ? wanted.slice(dot) : '';
-  return new RegExp(`${escapeRegExp(stem)} ?\\(\\d+\\)${escapeRegExp(extension)}`).test(haystack);
+  return matchFileName(text, name) !== null;
 }
 
 function queryAll<T extends Element>(root: ParentNode, selector: string): T[] {
@@ -95,6 +115,100 @@ export function findAttachmentCard(form: Element, field: Element, name: string):
     if (removeControl) break;
   }
   return { card, removeControl };
+}
+
+export interface AttachmentInventory {
+  /** Expected files no card shows. */
+  readonly missing: readonly string[];
+  /** Expected files more than one card answers to, so the one we attached cannot be told apart. */
+  readonly ambiguous: readonly string[];
+  /** Attachments no expected file accounts for (counted, never named: they are the person's). */
+  readonly unexpected: number;
+}
+
+const CONTROL_SELECTOR = 'button, [role="button"]';
+const MARKER_ATTRIBUTES = ['data-attachment-id', 'data-file-id'] as const;
+
+function controlLabel(element: Element): string {
+  const own = `${element.getAttribute('aria-label') ?? ''} ${element.getAttribute('title') ?? ''}`;
+  return fold(own.trim() ? own : (element.textContent ?? ''))
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** The expected file a label names: an exact name wins over a renamed one. */
+function expectedNamedBy(label: string, expected: readonly string[]): string | null {
+  const exact = expected.find((name) => matchFileName(label, name) === 'exact');
+  return exact ?? expected.find((name) => matchFileName(label, name) === 'renamed') ?? null;
+}
+
+/**
+ * Every attachment the composer shows, held against the files the task expects.
+ * Sources: the cards' controls (a label that names a file, or that reads like the
+ * remove control of an expected card with another name in it), the files the form's
+ * inputs hold, and structural attachment markers.
+ */
+export function inventoryAttachments(
+  form: Element,
+  field: Element,
+  expected: readonly string[],
+): AttachmentInventory {
+  const controls = new Map<string, number>(expected.map((name) => [name, 0]));
+  const templates: { prefix: string; suffix: string }[] = [];
+  const others: string[] = [];
+  let unexpected = 0;
+
+  for (const element of queryAll<HTMLElement>(form, CONTROL_SELECTOR)) {
+    if (element === field || field.contains(element) || element.contains(field)) continue;
+    if (element.matches('[type="submit"]') || !isRendered(element)) continue;
+    const label = controlLabel(element);
+    if (!label) continue;
+    const named = expectedNamedBy(label, expected);
+    if (named) {
+      controls.set(named, (controls.get(named) ?? 0) + 1);
+      const shown = fold(named.trim());
+      const at = label.indexOf(shown);
+      if (at >= 0) {
+        const prefix = label.slice(0, at);
+        const suffix = label.slice(at + shown.length);
+        if (prefix.trim() || suffix.trim()) templates.push({ prefix, suffix });
+      }
+    } else if (FILE_TOKEN.test(label)) {
+      unexpected += 1;
+    } else {
+      others.push(label);
+    }
+  }
+  // A control shaped like an expected card's remove control (`移除 <name>`) is another card.
+  for (const label of others) {
+    const shaped = templates.some(
+      ({ prefix, suffix }) =>
+        label.length > prefix.length + suffix.length &&
+        label.startsWith(prefix) &&
+        label.endsWith(suffix),
+    );
+    if (shaped) unexpected += 1;
+  }
+
+  for (const input of queryAll<HTMLInputElement>(form, FILE_INPUT_SELECTOR)) {
+    for (const file of Array.from(input.files ?? [])) {
+      if (!expected.some((name) => fold(name.trim()) === fold(file.name))) unexpected += 1;
+    }
+  }
+
+  const markers = new Set<string>();
+  for (const attribute of MARKER_ATTRIBUTES) {
+    for (const element of queryAll(form, `[${attribute}]`)) {
+      if (!field.contains(element)) markers.add(`${attribute}=${element.getAttribute(attribute)}`);
+    }
+  }
+  unexpected += Math.max(0, markers.size - expected.length);
+
+  return {
+    missing: expected.filter((name) => !findAttachmentCard(form, field, name).card),
+    ambiguous: expected.filter((name) => (controls.get(name) ?? 0) > 1),
+    unexpected,
+  };
 }
 
 function isUnfinishedProgress(element: Element): boolean {

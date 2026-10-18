@@ -37,6 +37,11 @@ export interface BridgeConnection {
   readonly protocol?: number;
 }
 
+/** A connection of a stored pairing: results and tasks belong to its server. */
+export interface PairedConnection extends BridgeConnection {
+  readonly serverId: string;
+}
+
 export type ClientResult<T> =
   | { readonly ok: true; readonly status: number; readonly data: T }
   | { readonly ok: false; readonly status: number; readonly error: BridgeError };
@@ -105,25 +110,17 @@ export function createBridgeClient(
     const controller = new AbortController();
     const abort = () => controller.abort();
     options.signal?.addEventListener('abort', abort, { once: true });
+    if (options.signal?.aborted) abort();
     const timer = setTimeout(abort, options.timeoutMs ?? REQUEST_TIMEOUT_MS);
-    const headers: Record<string, string> = {
-      [PROTOCOL_HEADER]: String(connection.protocol ?? PROTOCOL.max),
-    };
-    if (options.body !== undefined) headers['Content-Type'] = 'application/json';
-    if (connection.token) headers.Authorization = `Bearer ${connection.token}`;
-
-    let response: Response;
-    try {
-      response = await fetchImpl(`${bridgeBaseUrl(connection.port)}${options.path}`, {
-        method: options.method,
-        headers,
-        ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
-        credentials: 'omit',
-        cache: 'no-store',
-        redirect: 'error',
-        signal: controller.signal,
+    // Settles once the request is stopped, so a body that never ends cannot outlive it.
+    const stopped = new Promise<never>((_resolve, reject) => {
+      if (controller.signal.aborted) reject(new Error('aborted'));
+      controller.signal.addEventListener('abort', () => reject(new Error('aborted')), {
+        once: true,
       });
-    } catch (error) {
+    });
+    stopped.catch(() => undefined);
+    const failure = (error: unknown): ClientResult<never> => {
       const aborted = options.signal?.aborted === true;
       return {
         ok: false,
@@ -133,19 +130,54 @@ export function createBridgeClient(
           aborted ? 'Request stopped.' : `voyager serve is not reachable: ${String(error)}`,
         ),
       };
+    };
+    const headers: Record<string, string> = {
+      [PROTOCOL_HEADER]: String(connection.protocol ?? PROTOCOL.max),
+    };
+    if (options.body !== undefined) headers['Content-Type'] = 'application/json';
+    if (connection.token) headers.Authorization = `Bearer ${connection.token}`;
+
+    // The timer and the caller's abort cover the body too: headers alone do not end a request.
+    try {
+      let response: Response;
+      try {
+        response = await Promise.race([
+          fetchImpl(`${bridgeBaseUrl(connection.port)}${options.path}`, {
+            method: options.method,
+            headers,
+            ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
+            credentials: 'omit',
+            cache: 'no-store',
+            redirect: 'error',
+            signal: controller.signal,
+          }),
+          stopped,
+        ]);
+      } catch (error) {
+        return failure(error);
+      }
+
+      if (response.status === 204) return { ok: true, status: 204, data: null };
+      let raw: unknown;
+      try {
+        raw = await Promise.race([response.json(), stopped]);
+      } catch (error) {
+        if (controller.signal.aborted) return failure(error);
+        raw = undefined;
+      }
+      return readReply(response, raw, options.kind);
     } finally {
       clearTimeout(timer);
       options.signal?.removeEventListener('abort', abort);
     }
+  }
 
-    if (response.status === 204) return { ok: true, status: 204, data: null };
-    let raw: unknown;
-    try {
-      raw = await response.json();
-    } catch {
-      raw = undefined;
-    }
-    if (options.kind === null) {
+  function readReply<K extends MessageKind | null>(
+    response: Response,
+    raw: unknown,
+    kind: K,
+  ): ClientResult<Payload<K> | null> {
+    if (kind === null) {
       // The payload is not read; only a well-formed error envelope is surfaced.
       const envelope = validateEnvelope(raw, 'taskResult');
       if (envelope.ok && !envelope.value.ok) {
@@ -154,7 +186,7 @@ export function createBridgeClient(
       if (response.ok) return { ok: true, status: response.status, data: raw as Payload<K> };
       return { ok: false, status: response.status, error: statusError(response.status) };
     }
-    const envelope = validateEnvelope(raw, options.kind as MessageKind);
+    const envelope = validateEnvelope(raw, kind as MessageKind);
     if (!envelope.ok) {
       return {
         ok: false,

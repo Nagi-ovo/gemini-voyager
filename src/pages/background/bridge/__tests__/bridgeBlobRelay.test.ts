@@ -43,7 +43,8 @@ async function setup(deadlineMs?: number) {
     probe: async () => 'no-answer',
     now,
   });
-  const connection = async () => ({ port: 47321, token: 't' });
+  const pairing = { current: { serverId: 'srv-a', port: 47321, token: 't' } };
+  const connection = async () => pairing.current;
   const dispatcher = createBridgeDispatcher({
     store,
     lease,
@@ -88,6 +89,7 @@ async function setup(deadlineMs?: number) {
     served,
     read,
     relay,
+    pairing,
     tabId: tab.id,
     advance: (ms: number) => (clock += ms),
   };
@@ -102,6 +104,14 @@ describe('bridge blob relay', () => {
     expect(t.served).toEqual([{ blobId: 'b1', offset: 1_048_576, length: 1_048_576 }]);
     // A long upload counts as progress, so the silence probe leaves it alone.
     expect((await t.store.getTask())?.lastProgressAt).toBe(1_800_000_005_000);
+  });
+
+  it('reads nothing for a task of an earlier pairing from the server paired since', async () => {
+    const t = await setup();
+    t.pairing.current = { serverId: 'srv-b', port: 47322, token: 'u' };
+    const reply = await t.read(0, 1024);
+    expect(reply).toMatchObject({ ok: false, error: { code: 'not-paired' } });
+    expect(t.served).toEqual([]);
   });
 
   it('refuses another document, another task and a blob the task did not name', async () => {

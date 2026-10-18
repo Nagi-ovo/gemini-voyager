@@ -112,6 +112,12 @@ export function createBridgePairing(deps: BridgePairingDeps): BridgePairing {
   const now = deps.now ?? (() => Date.now());
   const INTENT = BRIDGE_SESSION_KEYS.pairIntent;
   let attempt: PairingAttempt = { state: 'idle' };
+  /**
+   * Bumped by every new pair request, unpair and forget: a pair request answers only
+   * while it is still the latest, so a late reply can neither replace a newer pairing
+   * nor bring back one the person removed.
+   */
+  let epoch = 0;
   /** Recent codes and the attempt each started, keyed `port:code`. */
   const used = new Map<string, Promise<PairingAttempt>>();
 
@@ -127,16 +133,22 @@ export function createBridgePairing(deps: BridgePairingDeps): BridgePairing {
   const load = async (): Promise<BridgePairingRecord | null> =>
     parsePairing((await deps.local.get(StorageKeys.BRIDGE_PAIRING))[StorageKeys.BRIDGE_PAIRING]);
 
-  const run = async (port: number, code: string): Promise<PairingAttempt> => {
+  const run = async (port: number, code: string, mine: number): Promise<PairingAttempt> => {
     attempt = { state: 'pending', at: now() };
+    const superseded = (): PairingAttempt => ({
+      state: 'failed',
+      at: now(),
+      error: bridgeError('cancelled', 'A newer pairing or an unpair replaced this one.'),
+    });
+    const failMine: typeof fail = (...args) => (mine === epoch ? fail(...args) : superseded());
     if (!(await deps.hasLoopbackPermission())) {
-      return fail('permission-missing', 'Allow access to 127.0.0.1 to pair.');
+      return failMine('permission-missing', 'Allow access to 127.0.0.1 to pair.');
     }
     const hello = await deps.client.hello(port);
-    if (!hello.ok) return fail(hello.error.code, hello.error.message, hello.error.details);
+    if (!hello.ok) return failMine(hello.error.code, hello.error.message, hello.error.details);
     const negotiation = negotiateProtocol({ extension: PROTOCOL, cli: hello.data.protocol });
     if (!negotiation.ok) {
-      return fail(
+      return failMine(
         'protocol-mismatch',
         `Update ${negotiation.upgrade === 'extension' ? 'Voyager' : 'voyager-cli'}.`,
         {
@@ -150,7 +162,14 @@ export function createBridgePairing(deps: BridgePairingDeps): BridgePairing {
       browser: deps.browser,
       extensionVersion: EXTENSION_VERSION,
     });
-    if (!paired.ok) return fail(paired.error.code, paired.error.message, paired.error.details);
+    if (mine !== epoch) {
+      // Superseded: hand the token back, and leave the newer state and its outcome alone.
+      if (paired.ok) {
+        void deps.client.unpair({ ...connection, token: paired.data.token }).catch(() => undefined);
+      }
+      return superseded();
+    }
+    if (!paired.ok) return failMine(paired.error.code, paired.error.message, paired.error.details);
     const record: BridgePairingRecord = {
       serverId: paired.data.serverId,
       port,
@@ -159,6 +178,8 @@ export function createBridgePairing(deps: BridgePairingDeps): BridgePairing {
       protocol: negotiation.selected,
     };
     await deps.local.set({ [StorageKeys.BRIDGE_PAIRING]: record });
+    // An unpair that started during the write removes the record after it; do not announce it.
+    if (mine !== epoch) return superseded();
     attempt = { state: 'paired', at: record.pairedAt };
     logger.info('Local bridge paired', { serverId: record.serverId, port });
     deps.onPaired();
@@ -181,13 +202,23 @@ export function createBridgePairing(deps: BridgePairingDeps): BridgePairing {
     const key = `${read.port}:${read.code}`;
     const earlier = used.get(key);
     if (earlier) return earlier;
+    epoch += 1;
+    const mine = epoch;
     // Registered before the first await: a concurrent caller with this code must find it.
     const started = (async () => {
       // Whoever pairs first consumes the intent, so a later grant cannot replay it.
       await deps.session.remove(INTENT);
-      return run(read.port, read.code);
+      return run(read.port, read.code, mine);
     })()
-      .catch((error: unknown) => fail('server-unreachable', String(error)))
+      .catch((error: unknown) =>
+        mine === epoch
+          ? fail('server-unreachable', String(error))
+          : ({
+              state: 'failed',
+              at: now(),
+              error: bridgeError('cancelled', String(error)),
+            } as const),
+      )
       .then((outcome) => {
         // A failed try must not hold the code: otherwise clicking Pair again
         // answers with the old failure and never reaches the server.
@@ -223,15 +254,18 @@ export function createBridgePairing(deps: BridgePairingDeps): BridgePairing {
     completeIntent,
     pair,
     unpair: async () => {
+      epoch += 1;
       const record = await load();
+      // Forget it here first: a server that never answers must not keep this browser paired.
+      await deps.local.remove(StorageKeys.BRIDGE_PAIRING);
+      attempt = { state: 'idle' };
       if (record) {
         const reply = await deps.client.unpair(record).catch(() => null);
         if (!reply?.ok) logger.info('Local bridge unpaired while the server was unreachable');
       }
-      await deps.local.remove(StorageKeys.BRIDGE_PAIRING);
-      attempt = { state: 'idle' };
     },
     forget: async () => {
+      epoch += 1;
       await deps.local.remove(StorageKeys.BRIDGE_PAIRING);
       attempt = { state: 'idle' };
     },

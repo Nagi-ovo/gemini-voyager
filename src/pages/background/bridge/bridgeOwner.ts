@@ -41,7 +41,7 @@ import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
 import { createBlobRelay } from './bridgeBlobRelay';
 import { createBridgeClient } from './bridgeClient';
 import { SUPPORTED_BRIDGE_OPS, createBridgeDispatcher } from './bridgeDispatcher';
-import { createBridgePairing } from './bridgePairing';
+import { createBridgePairing, parsePairing } from './bridgePairing';
 import {
   BRIDGE_PLUGIN_ID,
   BRIDGE_POLICY_HOST,
@@ -256,8 +256,10 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
         await pairing.forget();
         return;
       }
-      if (message.kind === 'abort') await dispatcher.onAbort(message.taskId, message.reason);
-      else await dispatcher.onTask(message.task);
+      // Tagged with the pairing this poll used: a reply of a replaced pairing runs nothing.
+      if (message.kind === 'abort')
+        await dispatcher.onAbort(message.taskId, message.reason, record);
+      else await dispatcher.onTask(message.task, record);
     }
   };
 
@@ -388,7 +390,19 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       if (paired && paired.newValue === undefined) {
         void shutDown('not-paired', 'The bridge was unpaired.');
       } else if (paired) {
-        void wake();
+        const was = parsePairing(paired.oldValue);
+        const is = parsePairing(paired.newValue);
+        if (was && is && was.serverId !== is.serverId) {
+          // Another server: the old poll and the task it sent must not carry over to it.
+          void shutDown('not-paired', 'The bridge was paired with another server.').then(() =>
+            wake(),
+          );
+        } else if (was && is && was.token !== is.token) {
+          stop(); // the old poll's token is gone; poll again with the new one
+          void wake();
+        } else {
+          void wake();
+        }
       }
       if (changes[catalogKey]) void dispatcher.recheckPolicy();
     },

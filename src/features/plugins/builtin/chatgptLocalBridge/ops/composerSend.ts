@@ -6,9 +6,10 @@
  * told about, or input from them in the last {@link RECENT_INPUT_MS} makes this
  * `composer-busy`, and their draft is never cleared.
  *
- * Confirmation needs both halves the result reports: a new prompt in the thread
- * whose text starts like ours, and a route whose conversation id the server has
- * named (a new chat passes through a provisional `local-…` id first). Once the
+ * Confirmation needs both halves the result reports, read together from the page
+ * as it is: our new prompt, still the newest in the visible thread, and the route
+ * of that same conversation, named by the server (an existing chat keeps its id; a
+ * new chat passes through a provisional `local-…` id first). Once the
  * click went out, every failure — a terminate included — is `send-unverified`:
  * the prompt may have been sent, so the caller must never send it again.
  */
@@ -19,11 +20,12 @@ import {
   type ComposerSendResult,
   bridgeError,
 } from '@/features/bridge/protocol';
+import { readConversationId } from '@/features/plugins/builtin/chatgptResponseNotification/page';
 import { hasComposerAttachments } from '@/features/plugins/builtin/chatgptTemporaryHandoff/composerDelivery';
 import type { SiteAdapter } from '@/features/plugins/types';
 
 import { type OpContext, OpFailure, OpTermination } from '../opContext';
-import { findAttachmentCard } from './attachmentEvidence';
+import { inventoryAttachments } from './attachmentEvidence';
 import {
   composerFormOf,
   conversationItems,
@@ -76,13 +78,29 @@ export async function runComposerSend(
   if (normalizeForCompare(readComposer(field)) !== '') {
     ctx.fail('composer-busy', 'The composer holds a draft.', { reason: 'draft' });
   }
-  if (expected.length === 0 && hasComposerAttachments(form)) {
-    ctx.fail('composer-busy', 'The composer holds attachments.', { reason: 'attachments' });
-  }
-  const missing = expected.filter((name) => !findAttachmentCard(form, field, name).card);
-  if (missing.length > 0) {
-    ctx.fail('attachment-rejected', 'An expected attachment is not in the composer.', { missing });
-  }
+  const checkAttachments = (): void => {
+    if (expected.length === 0) {
+      if (hasComposerAttachments(form)) {
+        ctx.fail('composer-busy', 'The composer holds attachments.', { reason: 'attachments' });
+      }
+      return;
+    }
+    // The whole set, not only the expected files: a file beside them would go out too.
+    const { missing, ambiguous, unexpected } = inventoryAttachments(form, field, expected);
+    if (missing.length > 0) {
+      ctx.fail('attachment-rejected', 'An expected attachment is not in the composer.', {
+        missing,
+      });
+    }
+    if (unexpected > 0 || ambiguous.length > 0) {
+      ctx.fail('composer-busy', 'The composer holds attachments this task did not attach.', {
+        reason: 'attachments',
+        unexpected,
+        ambiguous,
+      });
+    }
+  };
+  checkAttachments();
   if (activity.hadRecentUserInput(RECENT_INPUT_MS)) {
     ctx.fail('composer-busy', 'The person is using the composer.', { reason: 'recent-input' });
   }
@@ -92,6 +110,9 @@ export async function runComposerSend(
 
   const baseline = new Set(conversationItems().map(readTurnKey));
   const wanted = normalizeForCompare(params.text);
+  // The conversation the prompt goes to: an existing chat keeps its id; a new one has none yet.
+  const startId = settledConversationId();
+  const startRoute = readConversationId();
   ctx.insertText(field, params.text);
   // The editor may commit its transaction a frame later than the command returns.
   const filled = await ctx.waitFor(() => normalizeForCompare(readComposer(field)) === wanted, {
@@ -116,12 +137,16 @@ export async function runComposerSend(
   ) {
     ctx.fail('composer-busy', 'The person is using the composer.', { reason: 'recent-input' });
   }
+  // Files can be added while the control enables; only the expected set may go out.
+  checkAttachments();
 
   ctx.click(button);
   ctx.endPageEvents();
   const prefix = wanted.slice(0, PROMPT_PREFIX_CHARS);
+  const route = followConversation(startId, startRoute);
   let userTurnKey: string | null = null;
   let conversationId: string | null = null;
+  let left = false;
   const confirmMs = Math.min(
     CONFIRM_MAX_MS,
     Math.max(CONFIRM_MIN_MS, ctx.grant.deadline - ctx.now()),
@@ -129,22 +154,67 @@ export async function runComposerSend(
   try {
     const confirmed = await ctx.waitFor(
       () => {
-        // The newest prompt only: an older, identical one may mount as the thread scrolls.
-        const turn = conversationItems()
-          .filter((item) => userTextOf(item) !== null)
-          .at(-1);
-        if (turn && !baseline.has(readTurnKey(turn)) && userTextOf(turn)?.startsWith(prefix)) {
-          userTurnKey ??= readTurnKey(turn) || null;
+        const observed = route.observe();
+        if (observed === LEFT) {
+          left = true;
+          return LEFT;
         }
-        conversationId = settledConversationId();
-        return userTurnKey && conversationId ? { userTurnKey, conversationId } : null;
+        conversationId = observed;
+        // Both halves are read from the page as it is now, never from an earlier look:
+        // a prompt seen in one chat must not confirm a send under another chat's id.
+        const prompts = conversationItems().filter((item) => userTextOf(item) !== null);
+        const newest = prompts.at(-1);
+        const key = newest ? readTurnKey(newest) : '';
+        const ours =
+          !!newest && !!key && !baseline.has(key) && !!userTextOf(newest)?.startsWith(prefix);
+        if (ours && userTurnKey === null) userTurnKey = key;
+        const holds = ours && key === userTurnKey;
+        // A new chat holds our prompt alone; another chat with these words does not pass.
+        const fresh = startId !== null || prompts.length === 1;
+        return holds && fresh && conversationId ? { userTurnKey: key, conversationId } : null;
       },
       { timeoutMs: confirmMs },
     );
-    if (confirmed) return { ...confirmed, url: location.href };
+    if (confirmed && confirmed !== LEFT) return { ...confirmed, url: location.href };
   } catch (error) {
     const cause = error instanceof OpTermination || error instanceof OpFailure ? error.error : null;
     sendUnverified(cause, { userTurnKey, conversationId });
   }
-  return sendUnverified(null, { userTurnKey, conversationId });
+  return sendUnverified(null, {
+    userTurnKey,
+    conversationId,
+    ...(left ? { reason: 'conversation-changed' } : {}),
+  });
+}
+
+const LEFT = Symbol('left');
+
+/**
+ * The route's conversation after the send: the settled id it confirms under, or
+ * `LEFT` once the page shows another conversation. An existing chat must keep
+ * its id; a new chat may only go `/` → provisional `local-…` → one settled id.
+ */
+function followConversation(startId: string | null, startRoute: string | null) {
+  let bound = startId;
+  let last = startRoute;
+  let gone = false;
+  return {
+    observe(): string | null | typeof LEFT {
+      if (gone) return LEFT;
+      const routeId = readConversationId();
+      if (bound !== null) {
+        if (routeId !== bound) gone = true;
+        return gone ? LEFT : bound;
+      }
+      if (routeId !== last) {
+        const named = settledConversationId();
+        const provisional = routeId !== null && routeId.startsWith('local-');
+        const fromNew = last === null || last.startsWith('local-');
+        if (named && fromNew) bound = named;
+        else if (!(provisional && last === null)) gone = true;
+        last = routeId;
+      }
+      return gone ? LEFT : bound;
+    },
+  };
 }

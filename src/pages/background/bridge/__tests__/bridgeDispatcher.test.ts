@@ -44,6 +44,9 @@ function task(op: OpName, taskId: string, jobId = 'J1'): ValidatedBridgeTask {
   } as ValidatedBridgeTask;
 }
 
+const SERVER_A = { serverId: 'srv-a', port: 47321, token: 't' };
+const SERVER_B = { serverId: 'srv-b', port: 47322, token: 'u' };
+
 interface SetupOptions {
   readonly probe?: () => Promise<LeaseProbeOutcome>;
 }
@@ -68,6 +71,7 @@ function setup(options: SetupOptions = {}) {
     now,
   });
   const tabs = createBridgeTabs({ store, api: page.api, now });
+  const pairing = { current: SERVER_A as typeof SERVER_A | null };
   const make = (
     checkOp: (op: OpName) => Promise<{ code: ErrorCode; message: string } | null> = policy.checkOp,
     config?: Partial<DispatcherConfig>,
@@ -78,7 +82,7 @@ function setup(options: SetupOptions = {}) {
       policy: { checkOp, refreshIfOld: policy.refreshIfOld },
       tabs,
       client: server.client,
-      connection: async () => ({ port: 47321, token: 't' }),
+      connection: async () => pairing.current,
       ready: async () => {},
       now,
       ...(config ? { config } : {}),
@@ -104,6 +108,7 @@ function setup(options: SetupOptions = {}) {
     lease,
     dispatcher,
     make,
+    pairing,
     bridgeTab,
     resultOf,
     advance: (ms: number) => {
@@ -596,5 +601,84 @@ describe('bridge dispatcher', () => {
     entry = { ...entry, site: site(10, ['composer.send']) } as unknown as HostCatalogCacheEntry;
     await dispatcher.onTask(task('composer.send', 'T2'));
     expect(t.resultOf('T2')?.error?.code).toBe('policy-stale');
+  });
+
+  it('never runs a task whose ack the server refused', async () => {
+    for (const code of ['gone', 'unauthorized', 'not-found', 'server-unreachable'] as const) {
+      const t = setup();
+      await t.bridgeTab();
+      t.server.state.ackReply = {
+        ok: false,
+        status: code === 'server-unreachable' ? 0 : 410,
+        error: { code, category: 'data', message: 'refused' },
+      };
+      await t.dispatcher.onTask(task('composer.send', 'T1'));
+      expect(t.page.starts()).toEqual([]);
+      expect(t.page.api.create).not.toHaveBeenCalled();
+      expect(await t.lease.current()).toBeNull();
+      expect(await t.dispatcher.current()).toBeNull();
+      expect(t.policy.checkOp).not.toHaveBeenCalled();
+    }
+  });
+
+  it('never opens a tab for a conversation.open whose ack the server refused', async () => {
+    const t = setup();
+    t.server.state.ackReply = {
+      ok: false,
+      status: 410,
+      error: { code: 'gone', category: 'data', message: 'ended' },
+    };
+    await t.dispatcher.onTask(task('conversation.open', 'T1'));
+    expect(t.page.api.create).not.toHaveBeenCalled();
+  });
+
+  it('never hands a stored result of an earlier pairing to the server paired after it', async () => {
+    const t = setup();
+    const tabId = await t.bridgeTab();
+    await t.dispatcher.onTask(task('turns.read', 'T1'));
+    t.server.state.unreachable = true;
+    await t.dispatcher.onDone(contentSender(tabId), {
+      taskId: 'T1',
+      docNonce: 'doc-1',
+      outcome: { ok: true, data: READ },
+    });
+    expect(t.local.values[StorageKeys.BRIDGE_OUTBOX]).toHaveLength(1);
+
+    // Unpair A, pair B; B comes up reachable.
+    t.pairing.current = SERVER_B;
+    t.server.state.unreachable = false;
+    expect(await t.dispatcher.inflight()).toEqual([]);
+    expect(await t.dispatcher.drainOutbox()).toBe(true);
+    expect(t.server.results()).toEqual([]);
+    expect(t.local.values[StorageKeys.BRIDGE_OUTBOX] ?? []).toEqual([]);
+  });
+
+  it('reports a running task only to the server that sent it', async () => {
+    const t = setup();
+    const tabId = await t.bridgeTab();
+    await t.dispatcher.onTask(task('turns.read', 'T1'));
+    t.pairing.current = SERVER_B;
+    expect(await t.dispatcher.inflight()).toEqual([]);
+    await t.dispatcher.onProgress(contentSender(tabId), {
+      taskId: 'T1',
+      docNonce: 'doc-1',
+      progress: { phase: 'reading' },
+    });
+    await t.dispatcher.onDone(contentSender(tabId), {
+      taskId: 'T1',
+      docNonce: 'doc-1',
+      outcome: { ok: true, data: READ },
+    });
+    expect(t.server.calls.filter((call) => call.kind !== 'ack')).toEqual([]);
+    expect(t.server.resultPorts).toEqual([]);
+  });
+
+  it('runs nothing from a poll of a pairing that has since been replaced', async () => {
+    const t = setup();
+    await t.bridgeTab();
+    t.pairing.current = SERVER_B;
+    await t.dispatcher.onTask(task('turns.read', 'T1'), SERVER_A);
+    expect(t.page.starts()).toEqual([]);
+    expect(t.server.calls).toEqual([]);
   });
 });

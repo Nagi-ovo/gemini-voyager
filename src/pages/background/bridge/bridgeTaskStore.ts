@@ -82,6 +82,8 @@ export interface BridgeTaskRecord {
   readonly cancelling?: ErrorCode;
   /** `composer.attach`: the blobs its params name, the only ones its page may read. */
   readonly blobs?: readonly BridgeTaskBlob[];
+  /** The paired server that sent the task; only it hears about the task. */
+  readonly serverId?: string;
 }
 
 export interface BridgeTaskBlob {
@@ -107,6 +109,8 @@ export interface OutboxEntry {
   readonly taskId: string;
   readonly result: TaskResultRequest;
   readonly at: number;
+  /** The server the result is for; an entry without one is never handed to anybody. */
+  readonly serverId?: string;
 }
 
 export const OUTBOX_MAX_ENTRIES = 5;
@@ -143,7 +147,8 @@ export function parseTaskRecord(raw: unknown): BridgeTaskRecord | null {
     (raw.phase === undefined || PHASES.includes(raw.phase as BridgeTaskPhase)) &&
     optional(raw.expectConversationId, isText) &&
     (raw.cancelling === undefined || isErrorCode(raw.cancelling)) &&
-    optional(raw.blobs, isTaskBlobs);
+    optional(raw.blobs, isTaskBlobs) &&
+    optional(raw.serverId, isText);
   return ok ? (raw as unknown as BridgeTaskRecord) : null;
 }
 
@@ -163,7 +168,11 @@ function parseOutbox(raw: unknown): OutboxEntry[] {
   if (!Array.isArray(raw)) return [];
   return raw.filter(
     (entry): entry is OutboxEntry =>
-      isRecord(entry) && isText(entry.taskId) && isRecord(entry.result) && isInt(entry.at),
+      isRecord(entry) &&
+      isText(entry.taskId) &&
+      isRecord(entry.result) &&
+      isInt(entry.at) &&
+      optional(entry.serverId, isText),
   );
 }
 

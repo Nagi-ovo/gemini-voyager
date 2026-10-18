@@ -17,7 +17,7 @@ import {
 } from '@/features/bridge/protocol';
 import type { BridgeBlobReadReply } from '@/features/bridge/runtimeMessages';
 
-import type { BridgeClient, BridgeConnection } from './bridgeClient';
+import type { BridgeClient, PairedConnection } from './bridgeClient';
 import { senderIsHolder } from './bridgeTabs';
 import type { BridgeTaskStore } from './bridgeTaskStore';
 
@@ -32,7 +32,7 @@ export interface BlobReadRequest {
 export interface BlobRelayDeps {
   readonly store: Pick<BridgeTaskStore, 'getTask' | 'updateTask'>;
   readonly client: Pick<BridgeClient, 'blobRead'>;
-  readonly connection: () => Promise<BridgeConnection | null>;
+  readonly connection: () => Promise<PairedConnection | null>;
   readonly ready: () => Promise<void>;
   readonly now?: () => number;
 }
@@ -78,7 +78,10 @@ export function createBlobRelay(deps: BlobRelayDeps): BlobRelay {
         return refuse(bridgeError('bad-request', 'The chunk lies outside the blob.'));
       }
       const connection = await deps.connection();
-      if (!connection) return refuse(bridgeError('not-paired', 'The bridge is not paired.'));
+      // A task of an earlier pairing never reads from the server paired since.
+      if (!connection || connection.serverId !== record.serverId) {
+        return refuse(bridgeError('not-paired', 'The bridge is not paired.'));
+      }
       const reply = await deps.client.blobRead(connection, blob.blobId, { offset, length });
       if (!reply.ok) return refuse(reply.error);
       const chunk = reply.data;

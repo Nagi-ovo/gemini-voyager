@@ -41,7 +41,7 @@ import {
   LEASED_OPS,
 } from '@/features/bridge/runtimeMessages';
 
-import type { BridgeClient, BridgeConnection } from './bridgeClient';
+import type { BridgeClient, PairedConnection } from './bridgeClient';
 import type { BridgePolicy } from './bridgePolicy';
 import { type BridgeTabs, type ContentHolder, conversationUrl, senderIsHolder } from './bridgeTabs';
 import type { BridgeTabRecord, BridgeTaskRecord, BridgeTaskStore } from './bridgeTaskStore';
@@ -99,16 +99,17 @@ export interface DispatcherDeps {
   readonly policy: Pick<BridgePolicy, 'checkOp' | 'refreshIfOld'>;
   readonly tabs: BridgeTabs;
   readonly client: Pick<BridgeClient, 'ack' | 'progress' | 'result'>;
-  readonly connection: () => Promise<BridgeConnection | null>;
+  readonly connection: () => Promise<PairedConnection | null>;
   readonly ready: () => Promise<void>;
   readonly now?: () => number;
   readonly config?: Partial<DispatcherConfig>;
 }
 
 export interface BridgeDispatcher {
-  onTask(task: ValidatedBridgeTask): Promise<void>;
+  /** `from`: the pairing whose poll brought the task (the current one when omitted). */
+  onTask(task: ValidatedBridgeTask, from?: PairedConnection): Promise<void>;
   /** The server gave the task up: stop it, and report it once its page confirms. */
-  onAbort(taskId: string, reason: ErrorCode): Promise<void>;
+  onAbort(taskId: string, reason: ErrorCode, from?: PairedConnection): Promise<void>;
   onHello(sender: chrome.runtime.MessageSender, docNonce: string): Promise<boolean>;
   onProgress(sender: chrome.runtime.MessageSender, message: ContentReport): Promise<boolean>;
   onDone(sender: chrome.runtime.MessageSender, message: ContentDone): Promise<boolean>;
@@ -221,9 +222,22 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   const { store, lease, tabs, client } = deps;
   let lastJobId: string | null = null;
 
-  /** Hand a result to the server; true once it has answered for it (or nobody is left to tell). */
-  const deliver = async (taskId: string, result: TaskResultRequest): Promise<boolean> => {
+  /** The current pairing while it is still the one `serverId` names, else null. */
+  const ownConnection = async (serverId: string | undefined): Promise<PairedConnection | null> => {
     const connection = await deps.connection();
+    return connection && serverId !== undefined && connection.serverId === serverId
+      ? connection
+      : null;
+  };
+
+  /** Hand a result to the server; true once it has answered for it (or nobody is left to tell). */
+  const deliver = async (
+    taskId: string,
+    result: TaskResultRequest,
+    serverId: string | undefined,
+  ): Promise<boolean> => {
+    // Only the server that sent the task may see its result; after a re-pairing it is dropped.
+    const connection = await ownConnection(serverId);
     if (connection) {
       const reply = await client.result(connection, taskId, result);
       // Unreachable: the outbox keeps it, and it is handed over before the next poll.
@@ -250,19 +264,29 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   ): Promise<boolean> => {
     const record = await store.getTask();
     if (!record || record.taskId !== taskId) return false;
-    const ended = await store.finishTask({ taskId, result, at: now() });
+    const owner = record.serverId;
+    const ended = await store.finishTask({
+      taskId,
+      result,
+      at: now(),
+      ...(owner ? { serverId: owner } : {}),
+    });
     if (!ended) return false;
     if (!ended.stored)
       logger.warn('Bridge outbox full; reporting without a stored copy', { taskId });
     if (options.releaseLease && record.leaseId) await lease.release(record.leaseId);
-    await deliver(taskId, result);
+    await deliver(taskId, result, owner);
     return true;
   };
 
   /** Answer a task that never got a record (busy, unsupported). */
-  const refuse = async (taskId: string, result: TaskResultRequest): Promise<void> => {
-    await store.pushOutbox({ taskId, result, at: now() });
-    await deliver(taskId, result);
+  const refuse = async (
+    taskId: string,
+    result: TaskResultRequest,
+    serverId: string,
+  ): Promise<void> => {
+    await store.pushOutbox({ taskId, result, at: now(), serverId });
+    await deliver(taskId, result, serverId);
   };
 
   const cancelMessage = (taskId: string, code: ErrorCode): BridgeOpCancelMessage => ({
@@ -657,21 +681,27 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     await finish(record.taskId, fail(code, message), { releaseLease: false });
   };
 
-  const intake = async (task: ValidatedBridgeTask): Promise<unknown> => {
+  const intake = async (task: ValidatedBridgeTask, from?: PairedConnection): Promise<unknown> => {
     await deps.ready();
     const current = await store.getTask();
-    const connection = await deps.connection();
+    const paired = await deps.connection();
+    const connection = from ?? paired;
+    // A poll of a pairing replaced meanwhile: its server is not the one this browser serves now.
+    if (!connection || !paired) return;
+    if (connection.serverId !== paired.serverId || connection.token !== paired.token) return;
+    const { serverId } = connection;
     if (current?.taskId === task.taskId) {
       // A redelivery of the task we run: confirm again, run nothing.
-      if (connection) await client.ack(connection, task.taskId);
+      if (current.serverId === serverId) await client.ack(connection, task.taskId);
       return;
     }
     if (!(await store.markSeen(task.taskId))) return; // seen before: never run twice
-    if (current) return refuse(task.taskId, fail('busy', 'Another task is running.'));
+    if (current) return refuse(task.taskId, fail('busy', 'Another task is running.'), serverId);
     if (!config.supportedOps.has(task.op) || !supportsOpVersion(task.op, task.opVersion)) {
       return refuse(
         task.taskId,
         fail('unsupported-op', `${task.op} v${task.opVersion} is not supported.`),
+        serverId,
       );
     }
     const startedAt = now();
@@ -684,6 +714,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
       deadline: startedAt + task.deadlineMs,
       lastProgressAt: startedAt,
       progressSeq: 0,
+      serverId,
       // The page may read exactly these blobs, and only while this task runs.
       ...(task.op === 'composer.attach'
         ? { blobs: task.params.blobs.map(({ blobId, size }) => ({ blobId, size })) }
@@ -691,7 +722,15 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     };
     // Ack first: a catalog check below can outlast the server's 10 s ack window.
     await store.setTask(record);
-    if (connection) await client.ack(connection, task.taskId);
+    const ack = await client.ack(connection, task.taskId);
+    // The server may have ended or disowned the task since the poll: only its ack lets it run.
+    if (!ack.ok) {
+      return finish(
+        task.taskId,
+        fail(ack.error.code, `voyager serve did not confirm the task: ${ack.error.message}`),
+        { releaseLease: false },
+      );
+    }
     if (task.jobId !== lastJobId) {
       lastJobId = task.jobId;
       await deps.policy.refreshIfOld();
@@ -706,12 +745,14 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   };
 
   return {
-    onTask: async (task) => {
-      await intake(task);
+    onTask: async (task, from) => {
+      await intake(task, from);
     },
 
-    onAbort: async (taskId, reason) => {
+    onAbort: async (taskId, reason, from) => {
       await deps.ready();
+      const record = await store.getTask();
+      if (from && record?.taskId === taskId && record.serverId !== from.serverId) return;
       await cancel(taskId, reason);
     },
 
@@ -742,7 +783,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
       if (!senderIsHolder(sender, message.docNonce, record)) return false;
       const seq = record.progressSeq + 1;
       await store.updateTask(record.taskId, { lastProgressAt: now(), progressSeq: seq });
-      const connection = await deps.connection();
+      const connection = await ownConnection(record.serverId);
       if (connection && isRecord(message.progress)) {
         await client.progress(connection, record.taskId, seq, message.progress);
       }
@@ -820,11 +861,17 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
       // Record first, outbox second: a result only ever moves from the one to the other.
       const record = await store.getTask();
       const outbox = await store.listOutbox();
-      const list: { taskId: string; state: InflightState }[] = outbox.map((entry) => ({
-        taskId: entry.taskId,
-        state: 'running',
-      }));
-      if (record && !list.some((entry) => entry.taskId === record.taskId)) {
+      // Only the tasks of the server polled now: another server never learns their ids.
+      const serverId = (await deps.connection())?.serverId;
+      const list: { taskId: string; state: InflightState }[] = outbox
+        .filter((entry) => serverId !== undefined && entry.serverId === serverId)
+        .map((entry) => ({ taskId: entry.taskId, state: 'running' }));
+      if (
+        record &&
+        serverId !== undefined &&
+        record.serverId === serverId &&
+        !list.some((entry) => entry.taskId === record.taskId)
+      ) {
         list.push({ taskId: record.taskId, state: record.state });
       }
       return list.slice(0, 8);
@@ -833,7 +880,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     drainOutbox: async () => {
       if (!(await deps.connection())) return false;
       for (const entry of await store.listOutbox()) {
-        if (!(await deliver(entry.taskId, entry.result))) return false;
+        if (!(await deliver(entry.taskId, entry.result, entry.serverId))) return false;
       }
       return true;
     },

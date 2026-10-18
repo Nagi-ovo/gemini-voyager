@@ -181,6 +181,10 @@ export interface BridgePolicy {
 export function createBridgePolicy(deps: BridgePolicyDeps): BridgePolicy {
   const now = deps.now ?? (() => Date.now());
   let highWaterWrite: Promise<unknown> = Promise.resolve();
+  /** The highest mark this worker accepted, kept even when storing it failed. */
+  let acceptedHighWater: PolicyHighWater | null = null;
+  const higher = (a: PolicyHighWater | null, b: PolicyHighWater | null) =>
+    !a ? b : !b || a.revision >= b.revision ? a : b;
 
   const readLocal = async (key: string): Promise<unknown> => (await deps.local.get(key))[key];
 
@@ -193,18 +197,23 @@ export function createBridgePolicy(deps: BridgePolicyDeps): BridgePolicy {
       entry,
       extensionVersion: deps.extensionVersion,
       packaged: deps.packaged,
-      highWater: parseHighWater(rawHighWater),
+      // A revoke whose write failed still counts: the stored mark alone may be behind.
+      highWater: higher(parseHighWater(rawHighWater), acceptedHighWater),
       now: now(),
     });
     const next = evaluation.nextHighWater;
     if (next) {
+      acceptedHighWater = higher(acceptedHighWater, next);
       // Raise only: a concurrent evaluation that saw an older entry must not lower the mark.
-      highWaterWrite = highWaterWrite.then(async () => {
+      const write = async () => {
         const stored = parseHighWater(await readLocal(StorageKeys.BRIDGE_POLICY_HIGH_WATER));
         if (stored && stored.revision >= next.revision) return;
         await deps.local.set({ [StorageKeys.BRIDGE_POLICY_HIGH_WATER]: next });
-      });
-      await highWaterWrite.catch(() => undefined);
+      };
+      // Run after a failed write too: a rejected chain would silently skip every later raise.
+      const run = highWaterWrite.then(write, write);
+      highWaterWrite = run.catch(() => undefined);
+      await highWaterWrite;
     }
     return evaluation.verdict;
   };

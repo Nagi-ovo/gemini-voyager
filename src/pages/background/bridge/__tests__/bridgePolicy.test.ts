@@ -171,6 +171,39 @@ describe('createBridgePolicy', () => {
     expect((await policy.checkOp('composer.send'))?.code).toBe('policy-stale');
   });
 
+  it('still refuses an older allow after one high-water write failed', async () => {
+    const { state, policy, local } = setup();
+    state.entry = entry(site(501, ['composer.send']));
+    expect(await policy.checkOp('composer.send')).toBeNull();
+
+    local.failNextSet = true;
+    state.entry = entry(site(502, []));
+    expect((await policy.checkOp('composer.send'))?.code).toBe('policy-denied');
+
+    state.entry = entry(site(503, []));
+    expect((await policy.checkOp('composer.send'))?.code).toBe('policy-denied');
+    expect(local.values[StorageKeys.BRIDGE_POLICY_HIGH_WATER]).toEqual({
+      revision: 503,
+      allow: [],
+    });
+
+    state.entry = entry(site(501, ['composer.send']));
+    expect((await policy.checkOp('composer.send'))?.code).toBe('policy-stale');
+  });
+
+  it('refuses an older allow after a revoke whose high-water write failed', async () => {
+    const { state, policy, local } = setup();
+    state.entry = entry(site(501, ['composer.send']));
+    expect(await policy.checkOp('composer.send')).toBeNull();
+
+    local.failNextSet = true;
+    state.entry = entry(site(502, []));
+    expect((await policy.checkOp('composer.send'))?.code).toBe('policy-denied');
+
+    state.entry = entry(site(501, ['composer.send']));
+    expect((await policy.checkOp('composer.send'))?.code).toBe('policy-stale');
+  });
+
   it('keeps the high-water mark across a 404 and a broken file', async () => {
     const { state, policy, local } = setup();
     state.entry = entry(site(502, []));
