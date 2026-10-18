@@ -111,7 +111,7 @@
     }
   },
   "projects": {
-    "format": 1,
+    "format": 2,
     "projectPagePattern": "^/g/(g-p-[0-9a-f]{32})(?:-[^/?#]*)?/project/?$",
     "projectRoutePattern": "^/g/(g-p-[0-9a-f]{32})(?:-[^/?#]*)?(?:/|$)",
     "projectPath": "/g/{projectId}/project",
@@ -121,43 +121,90 @@
       "idAttribute": "data-app-action-sidebar-project-id",
       "labelAttribute": "data-app-action-sidebar-project-label"
     },
-    "createButtonLabels": {
-      "zh-CN": ["添加新项目"]
-    },
+    "createButton": "button[data-app-action-sidebar-project-create]",
     "createDialog": {
       "dialog": "[role=\"dialog\"]",
       "nameInput": "input[name=\"project-name\"]",
       "submit": "button[type=\"submit\"]"
     },
     "titleTemplates": ["ChatGPT - {name}"],
-    "viewLabels": {
-      "chat": {
-        "zh-CN": ["聊天"]
-      },
-      "sources": {
-        "zh-CN": ["来源"]
-      }
-    },
-    "modeLabels": {
-      "chat": {
-        "zh-CN": ["聊天"]
-      },
-      "work": {
-        "zh-CN": ["工作"]
-      }
+    "views": {
+      "chat": "[role=\"tablist\"] [role=\"tab\"][id$=\"-chats-tab\"]",
+      "sources": "[role=\"tablist\"] [role=\"tab\"][id$=\"-sources-tab\"]"
     },
     "modePressedAttribute": "aria-pressed",
     "chatComposerLabels": {
-      "zh-CN": ["在“{name}”中新建聊天", "在\"{name}\"中新建聊天"]
+      "en": ["New chat in {name}"],
+      "zh-CN": ["在“{name}”中新建聊天", "在\"{name}\"中新建聊天"],
+      "zh-TW": ["在 {name} 中開始新對話"],
+      "ja-JP": ["{name} で新しいチャット"],
+      "ko-KR": ["{name}의 새 채팅"],
+      "fr-FR": ["Nouveau chat dans {name}"],
+      "es-ES": ["Nuevo chat en {name}"],
+      "pt-BR": ["Novo chat em {name}"],
+      "ru-RU": ["Новый чат в {name}"],
+      "ar": ["دردشة جديدة في {name}"]
     },
     "sources": {
       "fileInput": "main input[type=\"file\"]",
       "row": "main li",
-      "rowActionsLabel": {
-        "zh-CN": "{name} 的操作"
+      "rowName": "[title]",
+      "rowActions": "button[aria-haspopup=\"menu\"]",
+      "removeIcon": "use[href$=\"#trash-light-16\"]"
+    }
+  },
+  "chatModes": {
+    "format": 1,
+    "chat": {
+      "composerLabels": {
+        "en": ["Ask ChatGPT"],
+        "zh-CN": ["询问 ChatGPT"],
+        "zh-TW": ["問問 ChatGPT"],
+        "ja-JP": ["ChatGPT に聞く"],
+        "ko-KR": ["ChatGPT에게 물어보세요"],
+        "fr-FR": ["Demander à ChatGPT"],
+        "es-ES": ["Pregunta a ChatGPT"],
+        "pt-BR": ["Pergunte ao ChatGPT"],
+        "ru-RU": ["Спросить ChatGPT"],
+        "ar": ["اسأل ChatGPT"]
       },
-      "removeLabels": {
-        "zh-CN": ["删除"]
+      "switchLabels": {
+        "en": ["Chat"],
+        "zh-CN": ["聊天"],
+        "zh-TW": ["對話"],
+        "ja-JP": ["Chat"],
+        "ko-KR": ["Chat"],
+        "fr-FR": ["Chat"],
+        "es-ES": ["Chat"],
+        "pt-BR": ["Chat"],
+        "ru-RU": ["Чат"],
+        "ar": ["الدردشة"]
+      }
+    },
+    "work": {
+      "composerLabels": {
+        "en": ["Work with ChatGPT"],
+        "zh-CN": ["使用 ChatGPT Work"],
+        "zh-TW": ["與 ChatGPT 一起工作"],
+        "ja-JP": ["Work モードで作成"],
+        "ko-KR": ["ChatGPT로 Work 시작"],
+        "fr-FR": ["Travailler avec ChatGPT"],
+        "es-ES": ["Trabajar con ChatGPT"],
+        "pt-BR": ["Trabalhe com o ChatGPT"],
+        "ru-RU": ["Работайте с ChatGPT"],
+        "ar": ["استخدم وضع العمل مع ChatGPT"]
+      },
+      "switchLabels": {
+        "en": ["Work"],
+        "zh-CN": ["工作"],
+        "zh-TW": ["工作"],
+        "ja-JP": ["Work"],
+        "ko-KR": ["Work"],
+        "fr-FR": ["Work"],
+        "es-ES": ["Work"],
+        "pt-BR": ["Work"],
+        "ru-RU": ["Работа"],
+        "ar": ["العمل"]
       }
     }
   },

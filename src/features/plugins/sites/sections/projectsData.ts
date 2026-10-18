@@ -5,27 +5,33 @@
  * dropped (only the project ops report `unsupported-data`), and `catalog:build`
  * refuses to publish one.
  *
- * Format 1 (measured on chatgpt.com, zh-CN, 2026-10-18):
+ * Format 2 (measured on chatgpt.com, zh-CN, 2026-10-18; format 1 found its
+ * controls by their zh-CN text, and clients that read it skip this one):
  * - `projectPagePattern` / `projectRoutePattern`: route regexes whose group 1
  *   is the project id (`/g/<id>/project`; any `/g/<id>[-<slug>]/…` route);
  *   `projectPath` builds a project page path from `{projectId}`;
  *   `sourcesQuery` is the query the sources view adds (`tab=sources`);
- * - `createButtonLabels`: the sidebar button's `aria-label`; `createDialog`:
+ * - `createButton`: the sidebar's new-project button; `createDialog`:
  *   selectors for the dialog, its name input and its submit button;
  * - `titleTemplates`: `document.title` of a project page, with `{name}`;
- * - `viewLabels` / `modeLabels`: the exact text of the chat/sources and
- *   chat/Work buttons; the mode buttons carry `modePressedAttribute`;
- * - `chatComposerLabels`: the composer placeholder in chat mode, with `{name}`;
- * - `sources`: the file input and row selectors, the row's actions button
- *   label (with `{name}`) and the menu item that removes a file.
+ * - `views`: the chat and sources view tabs;
+ * - `modePressedAttribute`: what marks the pressed button of the chat/Work
+ *   pair, whose text is `chatModes.*.switchLabels`;
+ * - `chatComposerLabels`: the composer placeholder in chat mode, with `{name}`
+ *   (ChatGPT's message `chatgptProjectHome.composer.placeholder`);
+ * - `sources`: the file input and row selectors; in a row, the element whose
+ *   `title` names the file and its actions menu button; in that menu, the icon
+ *   of the item that removes the file.
  *
- * Label tables are keyed by UI locale, and every locale is merged when read.
+ * Only the composer placeholder is text: everything else is structure, so it
+ * holds in every UI language. Its table is keyed by UI locale, and every
+ * locale is merged when read.
  */
 import type { ManifestIssue } from '../../manifest/validate';
 import { isSafeRegexSource } from '../safeRegex';
 import type { LocalizedLabels } from './modelPickerData';
 
-export const PROJECTS_FORMATS = [1] as const;
+export const PROJECTS_FORMATS = [2] as const;
 export type ProjectsFormat = (typeof PROJECTS_FORMATS)[number];
 
 export interface ProjectsCreateDialog {
@@ -37,9 +43,12 @@ export interface ProjectsCreateDialog {
 export interface ProjectsSources {
   readonly fileInput: string;
   readonly row: string;
-  /** Per locale: the row's menu button `aria-label`, a template with `{name}`. */
-  readonly rowActionsLabel: Readonly<Record<string, string>>;
-  readonly removeLabels: LocalizedLabels;
+  /** Inside a row: the element whose `title` is the file's name. */
+  readonly rowName: string;
+  /** Inside a row: the button that opens its menu. */
+  readonly rowActions: string;
+  /** Inside a menu item: the icon of the one that removes the file. */
+  readonly removeIcon: string;
 }
 
 /** A project's row in the sidebar: not a link, so its id and name are attributes. */
@@ -57,11 +66,10 @@ export interface ProjectsSection {
   readonly projectPath: string;
   readonly sourcesQuery: string;
   readonly sidebar: ProjectsSidebar;
-  readonly createButtonLabels: LocalizedLabels;
+  readonly createButton: string;
   readonly createDialog: ProjectsCreateDialog;
   readonly titleTemplates: readonly string[];
-  readonly viewLabels: { readonly chat: LocalizedLabels; readonly sources: LocalizedLabels };
-  readonly modeLabels: { readonly chat: LocalizedLabels; readonly work: LocalizedLabels };
+  readonly views: { readonly chat: string; readonly sources: string };
   readonly modePressedAttribute: string;
   readonly chatComposerLabels: LocalizedLabels;
   readonly sources: ProjectsSources;
@@ -79,11 +87,10 @@ const SECTION_KEYS = [
   'projectPath',
   'sourcesQuery',
   'sidebar',
-  'createButtonLabels',
+  'createButton',
   'createDialog',
   'titleTemplates',
-  'viewLabels',
-  'modeLabels',
+  'views',
   'modePressedAttribute',
   'chatComposerLabels',
   'sources',
@@ -240,16 +247,16 @@ export function readProjectsSection(
     'nameInput',
     'submit',
   ]);
-  const views = reader.record(raw.viewLabels, `${path}.viewLabels`, ['chat', 'sources']);
-  const modes = reader.record(raw.modeLabels, `${path}.modeLabels`, ['chat', 'work']);
+  const views = reader.record(raw.views, `${path}.views`, ['chat', 'sources']);
   const sources = reader.record(raw.sources, `${path}.sources`, [
     'fileInput',
     'row',
-    'rowActionsLabel',
-    'removeLabels',
+    'rowName',
+    'rowActions',
+    'removeIcon',
   ]);
   const section: ProjectsSection = {
-    format: 1,
+    format: 2,
     projectPagePattern: reader.pattern(raw.projectPagePattern, `${path}.projectPagePattern`),
     projectRoutePattern: reader.pattern(raw.projectRoutePattern, `${path}.projectRoutePattern`),
     projectPath,
@@ -259,7 +266,7 @@ export function readProjectsSection(
       idAttribute: reader.attribute(sidebar.idAttribute, `${path}.sidebar.idAttribute`),
       labelAttribute: reader.attribute(sidebar.labelAttribute, `${path}.sidebar.labelAttribute`),
     },
-    createButtonLabels: reader.labels(raw.createButtonLabels, `${path}.createButtonLabels`),
+    createButton: reader.selector(raw.createButton, `${path}.createButton`),
     createDialog: {
       dialog: reader.selector(dialog.dialog, `${path}.createDialog.dialog`),
       nameInput: reader.selector(dialog.nameInput, `${path}.createDialog.nameInput`),
@@ -268,25 +275,18 @@ export function readProjectsSection(
     titleTemplates: reader.list(raw.titleTemplates, `${path}.titleTemplates`, (value, at) =>
       reader.template(value, at),
     ),
-    viewLabels: {
-      chat: reader.labels(views.chat, `${path}.viewLabels.chat`),
-      sources: reader.labels(views.sources, `${path}.viewLabels.sources`),
-    },
-    modeLabels: {
-      chat: reader.labels(modes.chat, `${path}.modeLabels.chat`),
-      work: reader.labels(modes.work, `${path}.modeLabels.work`),
+    views: {
+      chat: reader.selector(views.chat, `${path}.views.chat`),
+      sources: reader.selector(views.sources, `${path}.views.sources`),
     },
     modePressedAttribute: attribute,
     chatComposerLabels: reader.labels(raw.chatComposerLabels, `${path}.chatComposerLabels`, true),
     sources: {
       fileInput: reader.selector(sources.fileInput, `${path}.sources.fileInput`),
       row: reader.selector(sources.row, `${path}.sources.row`),
-      rowActionsLabel: reader.localized(
-        sources.rowActionsLabel,
-        `${path}.sources.rowActionsLabel`,
-        (value, at) => reader.template(value, at),
-      ),
-      removeLabels: reader.labels(sources.removeLabels, `${path}.sources.removeLabels`),
+      rowName: reader.selector(sources.rowName, `${path}.sources.rowName`),
+      rowActions: reader.selector(sources.rowActions, `${path}.sources.rowActions`),
+      removeIcon: reader.selector(sources.removeIcon, `${path}.sources.removeIcon`),
     },
   };
   if (reader.issues.length > 0) return { issues: reader.issues };

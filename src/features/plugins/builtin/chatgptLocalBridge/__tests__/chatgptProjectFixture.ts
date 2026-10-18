@@ -1,7 +1,9 @@
 /**
  * A jsdom model of ChatGPT's projects as measured live on 2026-10-18 (zh-CN UI),
- * on top of {@link mountChatGptPage}:
- * - the sidebar's project group: a header with `button[aria-label="添加新项目"]`
+ * on top of {@link mountChatGptPage}; `language: 'en'` renders the English UI,
+ * with ChatGPT's own English texts where they were taken from its messages:
+ * - the sidebar's project group: a header with
+ *   `button[data-app-action-sidebar-project-create][aria-label="添加新项目"]`
  *   and a `role=list` of `role=listitem` entries. A project's entry is no link:
  *   `div[data-sidebar-project-container-id="project:<id>"]` holds a
  *   `div[role=button][aria-expanded]` row carrying
@@ -12,21 +14,28 @@
  *   by React, a submit button disabled until a name is typed); submitting moves
  *   the route in-app to the new project's page and its title to
  *   `ChatGPT - <name>`;
- * - a project page has two button pairs: views 「聊天」/「来源」 (the sources view
- *   adds `?tab=sources`) and modes 「聊天」/「工作」 with `aria-pressed`. The page
+ * - a project page has two button pairs: the view tabs 「聊天」/「来源」
+ *   (`role=tab`, ids ending `-chats-tab` / `-sources-tab`, in a `role=tablist`;
+ *   the sources view adds `?tab=sources`) and the modes 「聊天」/「工作」 with
+ *   `aria-pressed`. The page
  *   often opens in Work mode; in chat mode the composer reads
  *   「在“<name>”中新建聊天」. (The Work-mode label was not measured; the fixture
  *   uses one the bridge cannot know, so the switch must be what decides.)
  * - the sources view has five file inputs; the first in `main` outside any
  *   form takes uploads. A file under a name already listed is ignored without
- *   a word. Each row: name, kind, `<time datetime>`, and
- *   `button[aria-label="<name> 的操作"][aria-haspopup=menu]`, whose menu opens
- *   on pointerdown and whose 「删除」 removes the file at once, unconfirmed.
+ *   a word. Each row: an icon, `div[title=<name>]`, kind, `<time datetime>`,
+ *   and `button[aria-label="<name> 的操作"][aria-haspopup=menu]`, whose menu
+ *   opens on pointerdown; its items draw sprite icons (`#arrow-down-lg-light-16`,
+ *   `#trash-light-16`), and 「删除」 removes the file at once, unconfirmed.
  * - ChatGPT's answers, as the page data observer reports them: the sidebar's
  *   projects, a sources view's file list, and the file list in its answer to an
  *   upload (once the row stops uploading) or a removal (shortly after the row goes).
  */
-import { type ChatGptPageFixture, mountChatGptPage } from './chatgptPageFixture';
+import {
+  type ChatGptPageFixture,
+  type FixtureLanguage,
+  mountChatGptPage,
+} from './chatgptPageFixture';
 import { type PageDataFeed, createPageDataFeed } from './pageDataFeed';
 
 export interface FixtureProject {
@@ -86,6 +95,8 @@ export interface ProjectPageOptions {
   readonly changesAnswered?: boolean;
   /** Whether the browser runs the page data observer (default true; false: Firefox before 128). */
   readonly pageObserver?: boolean;
+  /** The UI language (default `zh-CN`). */
+  readonly language?: FixtureLanguage;
 }
 
 export interface ProjectPageFixture {
@@ -110,11 +121,41 @@ export interface ProjectPageFixture {
 }
 
 const PROJECT_PAGE = /^\/g\/(g-p-[0-9a-f]{32})(?:-[^/]*)?\/project\/?$/;
-const WORK_LABEL = '让 ChatGPT 处理一项任务';
-const HOME_LABEL = '询问 ChatGPT';
+const SPRITE = '/cdn/assets/icons-a2f88694b9ccf6a5.svg';
+
+/**
+ * The page's texts. The project's Work label was not measured, so each is one
+ * the bridge cannot know; the English labels the bridge does not read are guesses.
+ */
+const TEXTS = {
+  'zh-CN': {
+    home: '询问 ChatGPT',
+    work: '让 ChatGPT 处理一项任务',
+    chatIn: (name: string) => `在“${name}”中新建聊天`,
+    create: '添加新项目',
+    views: ['聊天', '来源'],
+    modes: ['聊天', '工作'],
+    actions: (name: string) => `${name} 的操作`,
+    kind: '文件',
+    menu: ['下载', '删除'],
+  },
+  en: {
+    home: 'Ask ChatGPT',
+    work: 'Let ChatGPT handle a task',
+    chatIn: (name: string) => `New chat in ${name}`,
+    create: 'New project',
+    views: ['Chats', 'Sources'],
+    modes: ['Chat', 'Work'],
+    actions: (name: string) => `Actions for ${name}`,
+    kind: 'File',
+    menu: ['Download', 'Delete'],
+  },
+} as const;
 
 export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageFixture {
-  const page = mountChatGptPage({ route: options.route ?? '/', modeSwitch: 'none' });
+  const language = options.language ?? 'zh-CN';
+  const text = TEXTS[language];
+  const page = mountChatGptPage({ route: options.route ?? '/', modeSwitch: 'none', language });
   const projects = [...(options.projects ?? [PROJECT_A, PROJECT_B])];
   const files: FixtureFile[] = [...(options.files ?? [])];
   const delay = options.renderDelayMs ?? 200;
@@ -132,7 +173,7 @@ export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageF
     ignoredUploads: 0,
   };
   const created: FixtureProject[] = [];
-  const chatLabel = (name: string): string => `在“${name}”中新建聊天`;
+  const chatLabel = (name: string): string => text.chatIn(name);
   const feed = createPageDataFeed({ running: options.pageObserver ?? true });
   const answerFiles = (project: FixtureProject): void =>
     feed.files(
@@ -157,8 +198,7 @@ export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageF
       </div>`;
     if (options.projectGroup === false) return;
     const group = nav.querySelector('[data-gv-projects]')!;
-    group.innerHTML =
-      '<div><h2>项目</h2><button type="button" aria-label="添加新项目"></button></div><div role="list"></div>';
+    group.innerHTML = `<div><h2>项目</h2><button type="button" data-app-action-sidebar-project-create aria-label="${text.create}"></button></div><div role="list"></div>`;
     (rowsLoaded ? projects : []).forEach((project, index) => {
       const item = document.createElement('div');
       item.setAttribute('role', 'listitem');
@@ -201,12 +241,14 @@ export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageF
     const list = sources.querySelector('ul')!;
     for (const file of listLoaded ? files : []) {
       const row = document.createElement('li');
-      row.innerHTML = `<div></div><div>文件</div><time></time><button type="button" aria-haspopup="menu" aria-expanded="false"></button>`;
-      row.querySelector('div')!.textContent = file.name;
+      row.innerHTML = `<span aria-hidden="true"><svg></svg></span><div><div></div><div>${text.kind}</div></div><div><time></time><div><button type="button" aria-haspopup="menu" aria-expanded="false"></button></div></div>`;
+      const name = row.querySelector('div > div')!;
+      name.setAttribute('title', file.name);
+      name.textContent = file.name;
       const time = row.querySelector('time')!;
       if (file.uploadedAt) time.setAttribute('datetime', file.uploadedAt);
       else time.remove();
-      row.querySelector('button')!.setAttribute('aria-label', `${file.name} 的操作`);
+      row.querySelector('button')!.setAttribute('aria-label', text.actions(file.name));
       list.appendChild(row);
     }
     sources.querySelectorAll<HTMLInputElement>('input[type="file"]').forEach((input, index) => {
@@ -254,14 +296,11 @@ export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageF
 
   const rowOf = (name: string): HTMLElement | null =>
     Array.from(sources.querySelectorAll<HTMLElement>('li')).find(
-      (row) => row.querySelector('div')?.textContent === name,
+      (row) => row.querySelector('[title]')?.getAttribute('title') === name,
     ) ?? null;
 
   const paintMode = (project: FixtureProject): void => {
-    page.composer.setAttribute(
-      'aria-label',
-      mode === 'chat' ? chatLabel(project.name) : WORK_LABEL,
-    );
+    page.composer.setAttribute('aria-label', mode === 'chat' ? chatLabel(project.name) : text.work);
     const [chat, work] = Array.from(
       header.querySelectorAll<HTMLButtonElement>('[data-gv-modes] button'),
     );
@@ -275,14 +314,14 @@ export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageF
     sources.replaceChildren();
     if (!project) {
       document.title = 'ChatGPT';
-      page.composer.setAttribute('aria-label', HOME_LABEL);
+      page.composer.setAttribute('aria-label', text.home);
       return;
     }
     document.title = `ChatGPT - ${project.name}`;
     const onSources = new URLSearchParams(location.search).get('tab') === 'sources';
     header.innerHTML = `
-      <div data-gv-views><button type="button">聊天</button><button type="button">来源</button></div>
-      ${onSources ? '' : '<div data-gv-modes><span><button type="button">聊天</button></span><span><button type="button">工作</button></span></div>'}`;
+      <div data-gv-views role="tablist"><div><button type="button" role="tab" id="_r_c4_-chats-tab">${text.views[0]}</button><button type="button" role="tab" id="_r_c4_-sources-tab">${text.views[1]}</button></div></div>
+      ${onSources ? '' : `<div data-gv-modes role="group"><span><button type="button">${text.modes[0]}</button></span><span><button type="button">${text.modes[1]}</button></span></div>`}`;
     const [chatView, sourcesView] = Array.from(
       header.querySelectorAll<HTMLButtonElement>('[data-gv-views] button'),
     );
@@ -350,13 +389,12 @@ export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageF
     const button = (event.target as Element).closest?.('li button[aria-haspopup="menu"]');
     if (!button || (event as MouseEvent).button !== 0) return;
     counts.menuOpens += 1;
-    const name = button.closest('li')!.querySelector('div')!.textContent ?? '';
+    const name = button.closest('li')!.querySelector('[title]')!.getAttribute('title') ?? '';
     document.querySelector('[role="menu"]')?.remove();
     const menu = document.createElement('div');
     menu.id = `radix-menu-${counts.menuOpens}`;
     menu.setAttribute('role', 'menu');
-    menu.innerHTML =
-      '<div role="menuitem" tabindex="-1">下载</div><div role="menuitem" tabindex="-1">删除</div>';
+    menu.innerHTML = `<div role="menuitem" tabindex="-1"><svg><use href="${SPRITE}#arrow-down-lg-light-16"></use></svg>${text.menu[0]}</div><div role="menuitem" tabindex="-1"><svg><use href="${SPRITE}#trash-light-16"></use></svg>${text.menu[1]}</div>`;
     const [download, remove] = Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'));
     download.addEventListener('click', () => (counts.downloadClicks += 1));
     remove.addEventListener('click', () => {
@@ -375,7 +413,8 @@ export function mountProjectPage(options: ProjectPageOptions = {}): ProjectPageF
 
   // The new-project dialog: a React-controlled input and a submit button.
   nav.addEventListener('click', (event) => {
-    if (!(event.target as Element).closest?.('button[aria-label="添加新项目"]')) return;
+    if (!(event.target as Element).closest?.('button[data-app-action-sidebar-project-create]'))
+      return;
     const dialog = document.createElement('div');
     dialog.setAttribute('role', 'dialog');
     dialog.innerHTML = `<h2>创建项目</h2><form><input name="project-name" value="" /><button type="submit" disabled>创建项目</button></form>`;

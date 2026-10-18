@@ -1,18 +1,20 @@
 /**
  * Read-only views of ChatGPT's projects for the `project.*` ops, driven by the
  * site's `projects` data (measured on chatgpt.com, zh-CN, 2026-10-18; see
- * `sites/sections/projectsData.ts`). Structure and attributes come first;
- * localized text only tells two buttons of the same shape apart.
+ * `sites/sections/projectsData.ts`). Structure and attributes only, so every
+ * UI language reads the same; text tells apart the two buttons of the
+ * chat/Work pair and the composer's placeholder, from tables per language.
  *
- * A project page carries two button pairs that both start with 「聊天」: the
- * views (聊天 / 来源) and the modes (聊天 / 工作). Each pair is found from its
- * distinctive button outwards, so the two 「聊天」 buttons are never confused.
+ * In some languages the chat view tab and the chat mode button read the same
+ * (「聊天」): the mode pair is found from its Work button outwards, among
+ * buttons that carry the pressed attribute, so the two are never confused.
  */
 import {
   PROJECT_ID_PATTERN,
   type ProjectFile,
   type ProjectSummary,
 } from '@/features/bridge/protocol';
+import type { ChatModesSection } from '@/features/plugins/sites/sections/chatModesData';
 import type { LocalizedLabels } from '@/features/plugins/sites/sections/modelPickerData';
 import type { ProjectsSection } from '@/features/plugins/sites/sections/projectsData';
 import type { SiteAdapter } from '@/features/plugins/types';
@@ -104,18 +106,27 @@ function textOf(element: HTMLElement): string {
   return (element.innerText ?? element.textContent ?? '').trim();
 }
 
-function renderedButtons(labels: readonly string[]): HTMLButtonElement[] {
-  return Array.from(document.querySelectorAll<HTMLButtonElement>('button')).filter(
+/** The rendered buttons labelled `labels` that carry `attribute`. */
+function pressableButtons(
+  root: ParentNode,
+  labels: readonly string[],
+  attribute: string,
+): HTMLButtonElement[] {
+  return Array.from(root.querySelectorAll<HTMLButtonElement>(`button[${attribute}]`)).filter(
     (button) => labels.includes(textOf(button)) && isRendered(button),
   );
 }
 
-/** The one button labelled `labels` nearest to `anchor`, within a few ancestors; else null. */
-function partnerOf(anchor: HTMLElement, labels: readonly string[]): HTMLButtonElement | null {
+/** The one such button nearest to `anchor`, within a few ancestors; else null. */
+function partnerOf(
+  anchor: HTMLElement,
+  labels: readonly string[],
+  attribute: string,
+): HTMLButtonElement | null {
   let container: Element | null = anchor.parentElement;
   for (let depth = 1; container && depth <= PAIR_MAX_DEPTH; depth += 1) {
-    const near = Array.from(container.querySelectorAll<HTMLButtonElement>('button')).filter(
-      (button) => button !== anchor && labels.includes(textOf(button)) && isRendered(button),
+    const near = pressableButtons(container, labels, attribute).filter(
+      (button) => button !== anchor,
     );
     if (near.length === 1) return near[0];
     if (near.length > 1) return null;
@@ -130,19 +141,23 @@ export interface ModeSwitch {
 }
 
 /** The project page's chat/Work pair: both carry the pressed attribute. */
-export function findProjectModeSwitch(data: ProjectsSection): ModeSwitch | null {
+export function findProjectModeSwitch(
+  data: ProjectsSection,
+  modes: ChatModesSection,
+): ModeSwitch | null {
   const attribute = data.modePressedAttribute;
-  const works = renderedButtons(allLabels(data.modeLabels.work)).filter((button) =>
-    button.hasAttribute(attribute),
-  );
+  const works = pressableButtons(document, allLabels(modes.work.switchLabels), attribute);
   if (works.length !== 1) return null;
-  const chat = partnerOf(works[0], allLabels(data.modeLabels.chat));
-  return chat?.hasAttribute(attribute) ? { chat, work: works[0] } : null;
+  const chat = partnerOf(works[0], allLabels(modes.chat.switchLabels), attribute);
+  return chat ? { chat, work: works[0] } : null;
 }
 
 /** What the mode switch shows pressed; null when the page has no switch. */
-export function readProjectSwitch(data: ProjectsSection): 'chat' | 'work' | 'unknown' | null {
-  const control = findProjectModeSwitch(data);
+export function readProjectSwitch(
+  data: ProjectsSection,
+  modes: ChatModesSection,
+): 'chat' | 'work' | 'unknown' | null {
+  const control = findProjectModeSwitch(data, modes);
   if (!control) return null;
   const pressed = (button: HTMLButtonElement): boolean =>
     button.getAttribute(data.modePressedAttribute) === 'true';
@@ -163,11 +178,16 @@ export interface ViewSwitch {
   readonly sources: HTMLButtonElement;
 }
 
+/** The one rendered element `selector` matches, else null (none, or ambiguous). */
+function uniqueRendered<T extends HTMLElement>(selector: string): T | null {
+  const found = Array.from(document.querySelectorAll<T>(selector)).filter(isRendered);
+  return found.length === 1 ? found[0] : null;
+}
+
 export function findViewSwitch(data: ProjectsSection): ViewSwitch | null {
-  const sources = renderedButtons(allLabels(data.viewLabels.sources));
-  if (sources.length !== 1) return null;
-  const chat = partnerOf(sources[0], allLabels(data.viewLabels.chat));
-  return chat ? { chat, sources: sources[0] } : null;
+  const chat = uniqueRendered<HTMLButtonElement>(data.views.chat);
+  const sources = uniqueRendered<HTMLButtonElement>(data.views.sources);
+  return chat && sources ? { chat, sources } : null;
 }
 
 /** The link that leads to a project's page, as an anchor's own path. */
@@ -213,13 +233,7 @@ export function sidebarProjects(data: ProjectsSection): SidebarProject[] {
 }
 
 export function findCreateButton(data: ProjectsSection): HTMLButtonElement | null {
-  const labels = allLabels(data.createButtonLabels);
-  const found = Array.from(
-    document.querySelectorAll<HTMLButtonElement>('button[aria-label]'),
-  ).filter(
-    (button) => labels.includes(button.getAttribute('aria-label') ?? '') && isRendered(button),
-  );
-  return found.length === 1 ? found[0] : null;
+  return uniqueRendered<HTMLButtonElement>(data.createButton);
 }
 
 export interface FileRow extends ProjectFile {
@@ -227,21 +241,18 @@ export interface FileRow extends ProjectFile {
   readonly actions: HTMLButtonElement;
 }
 
-/** The sources view's file rows: each names its file in its menu button's label. */
+/** The sources view's file rows: one element titled with the file's name, and one menu button. */
 export function fileRows(data: ProjectsSection): FileRow[] {
-  const templates = Object.values(data.sources.rowActionsLabel);
+  const { row: rowSelector, rowName, rowActions } = data.sources;
   const rows: FileRow[] = [];
-  for (const row of Array.from(document.querySelectorAll<HTMLElement>(data.sources.row))) {
-    for (const actions of Array.from(
-      row.querySelectorAll<HTMLButtonElement>('button[aria-haspopup="menu"][aria-label]'),
-    )) {
-      const label = actions.getAttribute('aria-label') ?? '';
-      const name = templates.map((template) => matchTemplate(template, label)).find(Boolean);
-      if (!name) continue;
-      const uploadedAt = row.querySelector('time[datetime]')?.getAttribute('datetime') ?? null;
-      rows.push({ name, uploadedAt, row, actions });
-      break;
-    }
+  for (const row of Array.from(document.querySelectorAll<HTMLElement>(rowSelector))) {
+    const titled = Array.from(row.querySelectorAll(rowName));
+    const actions = Array.from(row.querySelectorAll<HTMLButtonElement>(rowActions));
+    if (titled.length !== 1 || actions.length !== 1) continue;
+    const name = (titled[0].getAttribute('title') ?? '').trim();
+    if (!name) continue;
+    const uploadedAt = row.querySelector('time[datetime]')?.getAttribute('datetime') ?? null;
+    rows.push({ name, uploadedAt, row, actions: actions[0] });
   }
   return rows;
 }
@@ -273,7 +284,7 @@ export function requireProjectPage(ctx: OpContext, data: ProjectsSection, projec
 
 const VIEW_TIMEOUT_MS = 10_000;
 
-/** Bring the project's sources view up with its own 「来源」 button, once. */
+/** Bring the project's sources view up with its own sources tab, once. */
 export async function ensureSourcesView(ctx: OpContext, data: ProjectsSection): Promise<void> {
   if (!isSourcesView(data)) {
     const views = await ctx.waitFor(() => findViewSwitch(data), {

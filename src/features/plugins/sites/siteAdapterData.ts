@@ -23,6 +23,7 @@ import {
   bridgePolicySectionToData,
   readBridgePolicySection,
 } from './sections/bridgePolicyData';
+import { type ChatModesSection, readChatModesSection } from './sections/chatModesData';
 import { type ModelPickerSection, readModelPickerSection } from './sections/modelPickerData';
 import { type ProjectsSection, readProjectsSection } from './sections/projectsData';
 import { isSemanticSelectorKey } from './semanticKeys';
@@ -41,6 +42,7 @@ export interface SiteAdapterData {
   readonly turnKeyAttributes?: readonly string[];
   readonly modelPicker?: ModelPickerSection;
   readonly projects?: ProjectsSection;
+  readonly chatModes?: ChatModesSection;
   readonly bridge?: BridgePolicySection;
 }
 
@@ -169,7 +171,7 @@ function readSelectors(raw: unknown, issues: ManifestIssue[]): Record<string, st
 export interface SiteAdapterDataRead {
   readonly result: Result<SiteAdapter, ManifestIssue[]>;
   /**
-   * Problems in the optional sections (`modelPicker`, `projects`, `bridge`). They never
+   * Problems in the optional sections (`modelPicker`, `projects`, `chatModes`, `bridge`). They never
    * fail `result`: the broken section is left off the adapter, so selector
    * fixes keep reaching clients while only that capability is unavailable (a
    * missing `bridge` denies the bridge). Publishing fails on any of them.
@@ -197,8 +199,14 @@ export function readSiteAdapterData(input: unknown): SiteAdapterDataRead {
   const issues: ManifestIssue[] = [];
   const modelPickerRead = readModelPickerSection(input.modelPicker);
   const projectsRead = readProjectsSection(input.projects, isValidSelectorSyntax);
+  const chatModesRead = readChatModesSection(input.chatModes);
   const bridgeRead = readBridgePolicySection(input.bridge);
-  const sectionIssues = [...modelPickerRead.issues, ...projectsRead.issues, ...bridgeRead.issues];
+  const sectionIssues = [
+    ...modelPickerRead.issues,
+    ...projectsRead.issues,
+    ...chatModesRead.issues,
+    ...bridgeRead.issues,
+  ];
 
   if (!nonEmptyString(input.id) || !SITE_ID_PATTERN.test(input.id)) {
     issues.push({ path: 'id', message: 'must match ^[a-z][a-z0-9-]*$' });
@@ -299,6 +307,7 @@ export function readSiteAdapterData(input: unknown): SiteAdapterDataRead {
           : {}),
         ...(modelPickerRead.modelPicker ? { modelPicker: modelPickerRead.modelPicker } : {}),
         ...(projectsRead.projects ? { projects: projectsRead.projects } : {}),
+        ...(chatModesRead.chatModes ? { chatModes: chatModesRead.chatModes } : {}),
         ...(bridgeRead.policy ? { bridge: bridgeRead.policy } : {}),
       },
     },
@@ -323,6 +332,7 @@ export function siteAdapterToData(adapter: SiteAdapter): SiteAdapterData {
     // Without these the refresher's cache write would silently drop the sections.
     ...(adapter.modelPicker ? { modelPicker: { ...adapter.modelPicker } } : {}),
     ...(adapter.projects ? { projects: { ...adapter.projects } } : {}),
+    ...(adapter.chatModes ? { chatModes: { ...adapter.chatModes } } : {}),
     ...(adapter.bridge ? { bridge: bridgePolicySectionToData(adapter.bridge) } : {}),
   };
 }

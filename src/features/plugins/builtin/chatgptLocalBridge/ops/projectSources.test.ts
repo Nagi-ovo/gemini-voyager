@@ -126,6 +126,17 @@ describe.runIf(registered)('Local Bridge project.files', () => {
     expect(new URLSearchParams(location.search).get('tab')).toBe('sources');
   });
 
+  it("lists a project's files on a page in English", async () => {
+    mount({ route: `/g/${PROJECT_A.id}/project`, language: 'en' });
+    bridge.start('project.files', { projectId: PROJECT_A.id });
+    await advance(3_000);
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { files: [{ name: 'repo.zip' }, { name: 'notes.md' }] },
+    });
+  });
+
   it('never reports a slow file list as an empty project', async () => {
     mount({ listLoadsAfterMs: 6_000 });
     bridge.start('project.files', { projectId: PROJECT_A.id });
@@ -257,6 +268,16 @@ describe.runIf(registered)('Local Bridge project.remove', () => {
       ok: true,
       data: { removed: 'notes.md', files: [{ name: 'repo.zip' }] },
     });
+    expect(fixture.files()).toEqual(['repo.zip']);
+    expect(fixture.counts).toMatchObject({ menuOpens: 1, downloadClicks: 0 });
+  });
+
+  it('removes a file on a page in English, never pressing its download item', async () => {
+    mount({ language: 'en' });
+    bridge.start('project.remove', { projectId: PROJECT_A.id, name: 'notes.md' });
+    await advance(4_000);
+
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { removed: 'notes.md' } });
     expect(fixture.files()).toEqual(['repo.zip']);
     expect(fixture.counts).toMatchObject({ menuOpens: 1, downloadClicks: 0 });
   });

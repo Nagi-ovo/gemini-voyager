@@ -35,7 +35,6 @@ import { type BlobChunkReader, fetchBlobFile } from './blobBytes';
 import { requirePageObserver } from './pageObserver';
 import {
   type FileRow,
-  allLabels,
   ensureSourcesView,
   fileRows,
   filesOf,
@@ -237,9 +236,8 @@ function menuItem(data: ProjectsSection, trigger: HTMLButtonElement): HTMLElemen
   const id = trigger.getAttribute('aria-controls');
   const menu = id ? document.getElementById(id) : null;
   if (!menu || !isRendered(menu)) return null;
-  const labels = allLabels(data.sources.removeLabels);
   const items = Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]')).filter(
-    (item) => labels.includes((item.textContent ?? '').trim()) && isRendered(item),
+    (item) => !!item.querySelector(data.sources.removeIcon) && isRendered(item),
   );
   return items.length === 1 ? items[0] : null;
 }

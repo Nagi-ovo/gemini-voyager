@@ -181,6 +181,13 @@ describe('composer.send mode', () => {
     expect(page.events().clicks).toBe(0);
   });
 
+  it('sends a prompt on a page in English', async () => {
+    page = mountChatGptPage({ language: 'en' });
+    bridge.start('composer.send', { text: 'hi' });
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(bridge.outcome()).toMatchObject({ ok: true });
+  });
+
   it('sends nothing into a ChatGPT Work composer', async () => {
     page = mountChatGptPage({ mode: 'work' });
     bridge.start('composer.send', { text: 'hi' });

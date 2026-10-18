@@ -2,11 +2,11 @@
  * `conversation.ready` (spec §3.4, leased): wait for the app shell, then report
  * login and mode, and bring the page into `ensureMode` (default `chat`).
  *
- * Mode is decided only from positive evidence. Phase B has no `modelPicker`
- * site data yet, so the composer labels below are the measured fallback
- * (zh-CN UI); any other label reads as `unknown`. ChatGPT's own
- * `oai/apps/tpp/chat-surface-mode` value is recorded but never interpreted:
- * its values were not measured.
+ * Mode is decided only from positive evidence: the composer placeholder and
+ * switch texts in the site's `chatModes`, taken from ChatGPT's own
+ * messages for each UI language it lists; any other label reads as
+ * `unknown`. ChatGPT's own `oai/apps/tpp/chat-surface-mode` value is
+ * recorded but never interpreted: its values were not measured.
  *
  * The only page event is one click on the page's own mode switch, and only
  * when the composer positively shows the other mode. The switch must look like
@@ -19,7 +19,7 @@
  *
  * A project page (site data `projects`) has its own chat/Work pair, marked with
  * `aria-pressed`, and often opens in Work. It is switched in place with that
- * pair's 「聊天」 only: the bridge never presses 「工作」 or leaves the project.
+ * pair's chat button only: the bridge never presses Work or leaves the project.
  */
 import type {
   ChatMode,
@@ -27,12 +27,14 @@ import type {
   ConversationReadyResult,
   SwitchableMode,
 } from '@/features/bridge/protocol';
+import type { LocalizedLabels } from '@/features/plugins/sites/sections/modelPickerData';
 import type { SiteAdapter } from '@/features/plugins/types';
 import { isRendered } from '@/pages/content/export/adapter/chatgptThread';
 
 import { GRANT_MARGIN_MS, type OpContext } from '../opContext';
 import { findComposerField, settledConversationId } from './pageReaders';
 import {
+  allLabels,
   composerSaysProjectChat,
   findProjectModeSwitch,
   projectIdOf,
@@ -43,16 +45,6 @@ import {
 const SHELL_TIMEOUT_MS = 30_000;
 const MODE_SWITCH_TIMEOUT_MS = 5_000;
 const SURFACE_MODE_STORAGE_KEY = 'oai/apps/tpp/chat-surface-mode';
-// Measured on 2026-10-17; replace with `modelPicker.modes.*` once that site data lands.
-const MODE_COMPOSER_LABELS: Readonly<Record<SwitchableMode, readonly string[]>> = {
-  chat: ['询问 ChatGPT'],
-  work: ['使用 ChatGPT Work'],
-};
-/** Measured on 2026-10-17 (zh-CN): the mode buttons' exact text. They have no role. */
-export const MODE_SWITCH_LABELS: Readonly<Record<SwitchableMode, string>> = {
-  chat: '聊天',
-  work: '工作',
-};
 const MODE_SWITCH_STATE_ATTRIBUTE = 'data-state';
 /** How far up from one mode button the shared container may sit. */
 const MODE_SWITCH_MAX_DEPTH = 3;
@@ -76,7 +68,7 @@ function composerLabels(field: HTMLElement): string[] {
   return labels.map((label) => label?.trim() ?? '').filter((label) => label.length > 0);
 }
 
-/** The page's UI language: the mode labels above were measured in zh-CN only. */
+/** The page's UI language, as evidence: the mode labels cover the languages the site data lists. */
 export function readPageLanguage(): string {
   return document.documentElement.lang;
 }
@@ -89,20 +81,32 @@ function readSurfaceMode(): string | null {
   }
 }
 
+function modeLabels(
+  adapter: SiteAdapter | null,
+  kind: 'composerLabels' | 'switchLabels',
+  mode: SwitchableMode,
+): readonly string[] {
+  const labels: LocalizedLabels | undefined = adapter?.chatModes?.[mode][kind];
+  return labels ? allLabels(labels) : [];
+}
+
 export function readMode(
   field: HTMLElement,
   adapter: SiteAdapter | null = null,
 ): { mode: ChatMode; labels: string[] } {
   const labels = composerLabels(field);
-  const says = (mode: SwitchableMode): boolean =>
-    labels.some((label) => MODE_COMPOSER_LABELS[mode].includes(label));
+  const says = (mode: SwitchableMode): boolean => {
+    const known = modeLabels(adapter, 'composerLabels', mode);
+    return labels.some((label) => known.includes(label));
+  };
   let chat = says('chat');
   const work = says('work');
   const data = projectsDataOf(adapter);
-  if (data && projectIdOf(data) !== null) {
+  const modes = adapter?.chatModes;
+  if (data && modes && projectIdOf(data) !== null) {
     // A project's new chat names the project in its placeholder.
     chat ||= composerSaysProjectChat(data, labels);
-    const pressed = readProjectSwitch(data);
+    const pressed = readProjectSwitch(data, modes);
     // Work's own placeholder was not measured: the pressed switch is the evidence.
     if (pressed === 'work') return { mode: 'work', labels };
     if (pressed === 'unknown') chat = false;
@@ -122,11 +126,13 @@ export async function switchProjectToChat(
   timeoutMs: number,
 ): Promise<HTMLElement> {
   const data = projectsDataOf(adapter);
-  const control = data
-    ? await ctx.waitFor(() => findProjectModeSwitch(data), {
-        timeoutMs: budget(ctx, Math.min(timeoutMs, MODE_SWITCH_TIMEOUT_MS)),
-      })
-    : null;
+  const modes = adapter?.chatModes;
+  const control =
+    data && modes
+      ? await ctx.waitFor(() => findProjectModeSwitch(data, modes), {
+          timeoutMs: budget(ctx, Math.min(timeoutMs, MODE_SWITCH_TIMEOUT_MS)),
+        })
+      : null;
   if (!control) {
     ctx.fail('mode-unavailable', 'The project is in Work mode and its mode switch was not found.', {
       mode: 'work',
@@ -156,10 +162,10 @@ function buttonText(button: HTMLElement): string {
   return (button.innerText ?? button.textContent ?? '').trim();
 }
 
-/** The one rendered button whose whole text is `label`, else null (none, or ambiguous). */
-function uniqueButton(label: string): HTMLButtonElement | null {
+/** The one rendered button whose whole text is one of `labels`, else null (none, or ambiguous). */
+function uniqueButton(labels: readonly string[]): HTMLButtonElement | null {
   const found = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).filter(
-    (button) => buttonText(button) === label && isRendered(button),
+    (button) => labels.includes(buttonText(button)) && isRendered(button),
   );
   return found.length === 1 ? found[0] : null;
 }
@@ -169,9 +175,11 @@ function uniqueButton(label: string): HTMLButtonElement | null {
  * button per mode, both carrying `data-state` (its values were not measured,
  * so they are not read), close together in one container.
  */
-export function findModeSwitch(): Readonly<Record<SwitchableMode, HTMLButtonElement>> | null {
-  const chat = uniqueButton(MODE_SWITCH_LABELS.chat);
-  const work = uniqueButton(MODE_SWITCH_LABELS.work);
+export function findModeSwitch(
+  adapter: SiteAdapter | null,
+): Readonly<Record<SwitchableMode, HTMLButtonElement>> | null {
+  const chat = uniqueButton(modeLabels(adapter, 'switchLabels', 'chat'));
+  const work = uniqueButton(modeLabels(adapter, 'switchLabels', 'work'));
   if (!chat || !work) return null;
   if (!chat.hasAttribute(MODE_SWITCH_STATE_ATTRIBUTE)) return null;
   if (!work.hasAttribute(MODE_SWITCH_STATE_ATTRIBUTE)) return null;
@@ -274,7 +282,7 @@ export async function runConversationReady(
       }
     }
     // The switch renders after the composer on a fresh tab, so one look can miss it.
-    const control = await ctx.waitFor(findModeSwitch, {
+    const control = await ctx.waitFor(() => findModeSwitch(adapter), {
       timeoutMs: budget(ctx, MODE_SWITCH_TIMEOUT_MS),
     });
     if (!control) {

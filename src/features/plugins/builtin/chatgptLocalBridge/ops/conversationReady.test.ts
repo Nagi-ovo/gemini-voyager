@@ -48,6 +48,20 @@ describe('Local Bridge conversation.ready: mode', () => {
     expect(page.events().clicks).toBe(1);
   });
 
+  it('switches a page in English from Work to chat with its own switch', async () => {
+    mount({ mode: 'work', language: 'en' });
+    bridge.start('conversation.ready', {});
+    await vi.advanceTimersByTimeAsync(1_000);
+    document.documentElement.lang = '';
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { mode: 'chat', switchedMode: { from: 'work', to: 'chat' } },
+    });
+    expect(page.mode()).toBe('chat');
+    expect(page.events().clicks).toBe(1);
+  });
+
   it('finds a mode switch that renders after the composer on a fresh tab', async () => {
     mount({ mode: 'work' });
     const header = document.querySelector<HTMLElement>('[data-gv-fixture-header]')!;

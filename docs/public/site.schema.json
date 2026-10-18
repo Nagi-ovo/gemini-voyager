@@ -273,11 +273,10 @@
         "projectPath",
         "sourcesQuery",
         "sidebar",
-        "createButtonLabels",
+        "createButton",
         "createDialog",
         "titleTemplates",
-        "viewLabels",
-        "modeLabels",
+        "views",
         "modePressedAttribute",
         "chatComposerLabels",
         "sources"
@@ -285,7 +284,7 @@
       "additionalProperties": false,
       "properties": {
         "format": {
-          "const": 1,
+          "const": 2,
           "description": "Data format version; an unknown format drops the section."
         },
         "projectPagePattern": {
@@ -335,24 +334,11 @@
             }
           }
         },
-        "createButtonLabels": {
-          "type": "object",
-          "minProperties": 1,
-          "propertyNames": {
-            "type": "string",
-            "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
-          },
-          "additionalProperties": {
-            "type": "array",
-            "minItems": 1,
-            "maxItems": 16,
-            "items": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 200
-            }
-          },
-          "description": "The sidebar's new-project button `aria-label`, per UI locale."
+        "createButton": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "CSS selector of the sidebar's new-project button."
         },
         "createDialog": {
           "type": "object",
@@ -391,93 +377,23 @@
           },
           "description": "`document.title` of a project page, each holding `{name}` once."
         },
-        "viewLabels": {
+        "views": {
           "type": "object",
           "required": ["chat", "sources"],
           "additionalProperties": false,
+          "description": "The project page's view tabs.",
           "properties": {
             "chat": {
-              "type": "object",
-              "minProperties": 1,
-              "propertyNames": {
-                "type": "string",
-                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
-              },
-              "additionalProperties": {
-                "type": "array",
-                "minItems": 1,
-                "maxItems": 16,
-                "items": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 200
-                }
-              },
-              "description": "Exact text of the project's chat view button."
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "CSS selector of the chats view tab."
             },
             "sources": {
-              "type": "object",
-              "minProperties": 1,
-              "propertyNames": {
-                "type": "string",
-                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
-              },
-              "additionalProperties": {
-                "type": "array",
-                "minItems": 1,
-                "maxItems": 16,
-                "items": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 200
-                }
-              },
-              "description": "Exact text of the project's sources view button."
-            }
-          }
-        },
-        "modeLabels": {
-          "type": "object",
-          "required": ["chat", "work"],
-          "additionalProperties": false,
-          "properties": {
-            "chat": {
-              "type": "object",
-              "minProperties": 1,
-              "propertyNames": {
-                "type": "string",
-                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
-              },
-              "additionalProperties": {
-                "type": "array",
-                "minItems": 1,
-                "maxItems": 16,
-                "items": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 200
-                }
-              },
-              "description": "Exact text of the project page's chat mode button."
-            },
-            "work": {
-              "type": "object",
-              "minProperties": 1,
-              "propertyNames": {
-                "type": "string",
-                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
-              },
-              "additionalProperties": {
-                "type": "array",
-                "minItems": 1,
-                "maxItems": 16,
-                "items": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 200
-                }
-              },
-              "description": "Exact text of its Work mode button; the bridge never presses it."
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "CSS selector of the sources view tab."
             }
           }
         },
@@ -508,7 +424,7 @@
         },
         "sources": {
           "type": "object",
-          "required": ["fileInput", "row", "rowActionsLabel", "removeLabels"],
+          "required": ["fileInput", "row", "rowName", "rowActions", "removeIcon"],
           "additionalProperties": false,
           "properties": {
             "fileInput": {
@@ -523,22 +439,44 @@
               "maxLength": 200,
               "description": "CSS selector of one file row."
             },
-            "rowActionsLabel": {
-              "type": "object",
-              "minProperties": 1,
-              "propertyNames": {
-                "type": "string",
-                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
-              },
-              "additionalProperties": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 200,
-                "pattern": "\\{name\\}"
-              },
-              "description": "The row's menu button `aria-label`, per UI locale, holding `{name}` once."
+            "rowName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "CSS selector, inside a row, of the one element whose `title` is the file's name."
             },
-            "removeLabels": {
+            "rowActions": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "CSS selector, inside a row, of the one button that opens its menu."
+            },
+            "removeIcon": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "CSS selector, inside a menu item, of the icon of the item that removes the file."
+            }
+          }
+        }
+      }
+    },
+    "chatModes": {
+      "type": "object",
+      "required": ["format", "chat", "work"],
+      "additionalProperties": false,
+      "description": "How the page shows chat and Work mode, for the Local Bridge, from ChatGPT's own messages. A section that fails validation is dropped (every mode then reads as unknown, and the bridge sends nothing) and `catalog:build` refuses to publish it.",
+      "properties": {
+        "format": {
+          "const": 1,
+          "description": "Data format version; an unknown format drops the section."
+        },
+        "chat": {
+          "type": "object",
+          "required": ["composerLabels", "switchLabels"],
+          "additionalProperties": false,
+          "properties": {
+            "composerLabels": {
               "type": "object",
               "minProperties": 1,
               "propertyNames": {
@@ -555,7 +493,71 @@
                   "maxLength": 200
                 }
               },
-              "description": "Exact text of the row menu item that removes the file at once."
+              "description": "The composer's placeholder in chat mode, per UI locale."
+            },
+            "switchLabels": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "description": "The exact text of the mode switch's chat button, per UI locale."
+            }
+          }
+        },
+        "work": {
+          "type": "object",
+          "required": ["composerLabels", "switchLabels"],
+          "additionalProperties": false,
+          "properties": {
+            "composerLabels": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "description": "The composer's placeholder in Work mode, per UI locale."
+            },
+            "switchLabels": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "description": "The exact text of the mode switch's Work button, per UI locale."
             }
           }
         }

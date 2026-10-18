@@ -163,6 +163,17 @@ describe.runIf(registered)('Local Bridge project.create', () => {
     expect(fixture.created).toEqual([{ id: NEW_PROJECT_ID, name: '新项目 2026' }]);
   });
 
+  it('creates a project on a page in English', async () => {
+    mount({ language: 'en' });
+    bridge.start('project.create', { name: 'Thesis 2026' });
+    await vi.advanceTimersByTimeAsync(3_000);
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { projectId: NEW_PROJECT_ID, name: 'Thesis 2026' },
+    });
+  });
+
   it('reports a submit whose project never appeared as unverified, saying it may exist', async () => {
     mount({ createRoutesAfterMs: null });
     bridge.start('project.create', { name: '新项目' });
@@ -194,6 +205,28 @@ describe.runIf(registered)('Local Bridge project.open', () => {
     expect(fixture.counts.linkClicks).toBe(0);
     expect(fixture.counts.workClicks).toBe(0);
     expect(fixture.mode()).toBe('chat');
+  });
+
+  it('opens a Work project on a page in English and switches it to chat, never pressing Work', async () => {
+    mount({ mode: 'work', language: 'en' });
+    bridge.start('project.open', { projectId: PROJECT_A.id, view: 'chat' });
+    await vi.advanceTimersByTimeAsync(3_000);
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { projectId: PROJECT_A.id, switchedMode: { from: 'work', to: 'chat' } },
+    });
+    expect(fixture.counts.workClicks).toBe(0);
+    expect(fixture.mode()).toBe('chat');
+  });
+
+  it('opens the sources view of a project on a page in English', async () => {
+    mount({ route: pagePath(PROJECT_A.id), language: 'en' });
+    bridge.start('project.open', { projectId: PROJECT_A.id, view: 'sources' });
+    await vi.advanceTimersByTimeAsync(3_000);
+
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { view: 'sources' } });
+    expect(new URLSearchParams(location.search).get('tab')).toBe('sources');
   });
 
   it('refuses a project whose chat mode cannot be switched on, never pressing 「工作」', async () => {

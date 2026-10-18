@@ -298,6 +298,52 @@ describe('optional site sections', () => {
     });
   });
 
+  describe('chatModes section', () => {
+    const shipped = JSON.parse(
+      readFileSync(join(__dirname, '../catalog/sites/chatgpt/site.json'), 'utf8'),
+    ) as Record<string, unknown>;
+    const CHAT_MODES = shipped.chatModes as Record<string, unknown>;
+
+    it('keeps the shipped ChatGPT chat modes through a publish round trip', () => {
+      const read = readSiteAdapterData({ ...VALID, chatModes: CHAT_MODES });
+      expect(read.sectionIssues).toEqual([]);
+      if (!read.result.success) throw new Error('fixture must validate');
+      expect(read.result.data.chatModes).toEqual(CHAT_MODES);
+      const again = readSiteAdapterData(
+        JSON.parse(JSON.stringify(siteAdapterToData(read.result.data))),
+      );
+      expect(again.result.success && again.result.data.chatModes).toEqual(CHAT_MODES);
+    });
+
+    it.each([
+      ['an unknown format', { format: 2 }, 'chatModes.format'],
+      ['an unknown key', { home: {} }, 'chatModes.home'],
+      [
+        'an empty label',
+        { work: { composerLabels: { en: [''] }, switchLabels: { en: ['Work'] } } },
+        'chatModes.work.composerLabels.en',
+      ],
+    ])('drops a chatModes section with %s, keeping the adapter', (_label, patch, path) => {
+      const read = readSiteAdapterData({ ...VALID, chatModes: { ...CHAT_MODES, ...patch } });
+      expect(read.result.success).toBe(true);
+      expect(read.result.success && read.result.data.chatModes).toBeUndefined();
+      expect(read.sectionIssues.map((issue) => issue.path)).toContain(path);
+    });
+
+    it('treats changed chat modes as a different adapter, so plugins pick them up', () => {
+      const before = validateSiteAdapterData({ ...VALID, chatModes: CHAT_MODES });
+      const after = validateSiteAdapterData({
+        ...VALID,
+        chatModes: {
+          ...CHAT_MODES,
+          chat: { composerLabels: { en: ['Ask'] }, switchLabels: { en: ['Chat'] } },
+        },
+      });
+      if (!before.success || !after.success) throw new Error('fixtures must validate');
+      expect(isSameSiteAdapter(before.data, after.data)).toBe(false);
+    });
+  });
+
   it('does not treat a bridge policy change as a different adapter, so plugins stay mounted', () => {
     const before = validateSiteAdapterData({ ...VALID, bridge: BRIDGE });
     const after = validateSiteAdapterData({ ...VALID, bridge: { format: 1, allow: [] } });

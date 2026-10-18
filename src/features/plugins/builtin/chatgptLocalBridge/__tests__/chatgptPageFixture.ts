@@ -14,7 +14,8 @@
  *   `/c/<id>`;
  * - the chat/work switch is two role-less buttons reading exactly 「聊天」 and
  *   「工作」, each with a `data-state`; the composer's label names the mode
- *   (「询问 ChatGPT」 / 「使用 ChatGPT Work」).
+ *   (「询问 ChatGPT」 / 「使用 ChatGPT Work」). `language: 'en'` renders the
+ *   English UI instead, with ChatGPT's own English texts.
  *
  * Every page event the bridge causes is counted, so a test can prove that a
  * stopped op caused none.
@@ -65,11 +66,27 @@ export interface PageOptions {
   readonly modeSwitch?: 'measured' | 'no-state' | 'none';
   /** Whether a click on a mode button changes the mode (default true). */
   readonly switchWorks?: boolean;
+  /** The UI language (default `zh-CN`). */
+  readonly language?: FixtureLanguage;
 }
 
-const MODE_LABELS: Readonly<Record<FixtureMode, string>> = {
-  chat: '询问 ChatGPT',
-  work: '使用 ChatGPT Work',
+export type FixtureLanguage = 'zh-CN' | 'en';
+
+/** The composer's label per mode and the switch's button texts, from ChatGPT's own messages. */
+const MODE_TEXTS: Readonly<
+  Record<
+    FixtureLanguage,
+    { composer: Record<FixtureMode, string>; switch: Record<FixtureMode, string> }
+  >
+> = {
+  'zh-CN': {
+    composer: { chat: '询问 ChatGPT', work: '使用 ChatGPT Work' },
+    switch: { chat: '聊天', work: '工作' },
+  },
+  en: {
+    composer: { chat: 'Ask ChatGPT', work: 'Work with ChatGPT' },
+    switch: { chat: 'Chat', work: 'Work' },
+  },
 };
 
 export interface ChatGptPageFixture {
@@ -154,13 +171,15 @@ export function mountChatGptPage(options: PageOptions = {}): ChatGptPageFixture 
   const list = document.querySelector<HTMLElement>('[data-gv-fixture-list]')!;
   const counts = { execCommand: 0, clicks: 0, focus: 0 };
 
+  const language = options.language ?? 'zh-CN';
+  document.documentElement.lang = language;
+  const texts = MODE_TEXTS[language];
   let mode: FixtureMode = options.mode ?? 'chat';
-  composer.setAttribute('aria-label', MODE_LABELS[mode]);
+  composer.setAttribute('aria-label', texts.composer[mode]);
   const switchKind = options.modeSwitch ?? 'measured';
   if (switchKind !== 'none') {
     const header = document.querySelector<HTMLElement>('[data-gv-fixture-header]')!;
-    header.innerHTML =
-      '<div><span><button type="button">聊天</button></span><span><button type="button">工作</button></span></div>';
+    header.innerHTML = `<div><span><button type="button">${texts.switch.chat}</button></span><span><button type="button">${texts.switch.work}</button></span></div>`;
     const buttons = Array.from(header.querySelectorAll<HTMLButtonElement>('button'));
     const paint = (): void => {
       if (switchKind !== 'measured') return;
@@ -174,7 +193,7 @@ export function mountChatGptPage(options: PageOptions = {}): ChatGptPageFixture 
         // ChatGPT re-labels the composer a moment after the click.
         setTimeout(() => {
           mode = index === 0 ? 'chat' : 'work';
-          composer.setAttribute('aria-label', MODE_LABELS[mode]);
+          composer.setAttribute('aria-label', texts.composer[mode]);
           paint();
         }, 300);
       }),
