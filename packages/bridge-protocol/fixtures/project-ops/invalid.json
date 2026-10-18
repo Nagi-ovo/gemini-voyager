@@ -1,0 +1,114 @@
+[
+  {
+    "name": "a project id that is not a project route's",
+    "kind": "opParams",
+    "op": "project.files",
+    "input": { "projectId": "g-1234" },
+    "issuePath": "projectId"
+  },
+  {
+    "name": "a project id with upper-case hex",
+    "kind": "opParams",
+    "op": "project.open",
+    "input": { "projectId": "g-p-0123456789ABCDEF0123456789abcdef", "view": "chat" },
+    "issuePath": "projectId"
+  },
+  {
+    "name": "an unknown project view",
+    "kind": "opParams",
+    "op": "project.open",
+    "input": { "projectId": "g-p-0123456789abcdef0123456789abcdef", "view": "settings" },
+    "issuePath": "view"
+  },
+  {
+    "name": "a project name over two lines",
+    "kind": "opParams",
+    "op": "project.create",
+    "input": { "name": "a\nb" },
+    "issuePath": "name"
+  },
+  {
+    "name": "an empty project name",
+    "kind": "opParams",
+    "op": "project.create",
+    "input": { "name": "" },
+    "issuePath": "name"
+  },
+  {
+    "name": "an upload named like a path",
+    "kind": "opParams",
+    "op": "project.upload",
+    "input": {
+      "projectId": "g-p-0123456789abcdef0123456789abcdef",
+      "blob": {
+        "blobId": "b-1",
+        "name": "../repo.zip",
+        "size": 1,
+        "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+        "mime": "application/zip"
+      }
+    },
+    "issuePath": "blob.name"
+  },
+  {
+    "name": "a removal without a name",
+    "kind": "opParams",
+    "op": "project.remove",
+    "input": { "projectId": "g-p-0123456789abcdef0123456789abcdef" },
+    "issuePath": "name"
+  },
+  {
+    "name": "one project listed twice",
+    "kind": "opResult",
+    "op": "project.list",
+    "input": {
+      "projects": [
+        { "projectId": "g-p-0123456789abcdef0123456789abcdef", "name": "a" },
+        { "projectId": "g-p-0123456789abcdef0123456789abcdef", "name": "b" }
+      ],
+      "evidence": {}
+    },
+    "issuePath": "projects"
+  },
+  {
+    "name": "a switch to Work",
+    "kind": "opResult",
+    "op": "project.open",
+    "input": {
+      "projectId": "g-p-0123456789abcdef0123456789abcdef",
+      "url": "https://chatgpt.com/g/g-p-0123456789abcdef0123456789abcdef/project",
+      "view": "chat",
+      "name": null,
+      "switchedMode": { "from": "chat", "to": "work" },
+      "evidence": {}
+    },
+    "issuePath": "switchedMode"
+  },
+  {
+    "name": "an upload listed twice",
+    "kind": "opResult",
+    "op": "project.upload",
+    "input": {
+      "projectId": "g-p-0123456789abcdef0123456789abcdef",
+      "uploaded": { "name": "repo.zip", "uploadedAt": null },
+      "files": [
+        { "name": "repo.zip", "uploadedAt": null },
+        { "name": "repo.zip", "uploadedAt": null }
+      ],
+      "evidence": {}
+    },
+    "issuePath": "files"
+  },
+  {
+    "name": "a removal that still lists the file",
+    "kind": "opResult",
+    "op": "project.remove",
+    "input": {
+      "projectId": "g-p-0123456789abcdef0123456789abcdef",
+      "removed": "notes.md",
+      "files": [{ "name": "notes.md", "uploadedAt": null }],
+      "evidence": {}
+    },
+    "issuePath": "files"
+  }
+]

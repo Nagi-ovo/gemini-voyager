@@ -19,6 +19,7 @@ import type { TranslationKey } from '@/utils/translations';
 
 import type { BridgePolicySection } from './sites/sections/bridgePolicyData';
 import type { ModelPickerSection } from './sites/sections/modelPickerData';
+import type { ProjectsSection } from './sites/sections/projectsData';
 
 // ---------------------------------------------------------------------------
 // Sites
@@ -88,6 +89,11 @@ export interface SiteAdapter {
    * section is dropped without invalidating the adapter (`sectionIssues`).
    */
   readonly modelPicker?: ModelPickerSection;
+  /**
+   * Data for the Local Bridge `project.*` ops. Optional and isolated like
+   * `modelPicker`: a bad section is dropped without invalidating the adapter.
+   */
+  readonly projects?: ProjectsSection;
   /**
    * Local Bridge kill switch: the ops this site's remote policy allows. Read by
    * the background's `bridgePolicy` straight from the catalog cache; content

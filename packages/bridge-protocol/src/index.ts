@@ -6,6 +6,7 @@
 export * from './errors';
 export * from './http';
 export * from './ops';
+export * from './projectOps';
 export * from './version';
 export { validateWith, type Issue, type Reader, type Validation } from './read';
 export {
@@ -23,3 +24,4 @@ export {
   validateOpResult,
   validateWaitReplyProgress,
 } from './validate/ops';
+export { PROJECT_PARAM_READERS, PROJECT_RESULT_READERS } from './validate/projectOps';

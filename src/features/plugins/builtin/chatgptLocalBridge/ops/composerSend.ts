@@ -84,7 +84,7 @@ export async function runComposerSend(
   // Fail closed on its own, whoever calls: only a composer that positively reads as chat
   // takes a prompt, never Work or one whose label this build has not measured (other UI languages).
   const checkChatMode = (): void => {
-    const { mode, labels } = readMode(field);
+    const { mode, labels } = readMode(field, adapter);
     if (mode === 'chat') return;
     ctx.fail(
       mode === 'work' ? 'mode-unavailable' : 'mode-unknown',

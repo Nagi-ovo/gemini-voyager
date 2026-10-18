@@ -16,6 +16,10 @@
  * An existing conversation (`expect.conversationId`) keeps the mode it was
  * started in, and its page has no switch: one positively in the other mode is
  * `mode-unavailable` at once, with no click and no wait for a switch.
+ *
+ * A project page (site data `projects`) has its own chat/Work pair, marked with
+ * `aria-pressed`, and often opens in Work. It is switched in place with that
+ * pair's 「聊天」 only: the bridge never presses 「工作」 or leaves the project.
  */
 import type {
   ChatMode,
@@ -28,6 +32,13 @@ import { isRendered } from '@/pages/content/export/adapter/chatgptThread';
 
 import { GRANT_MARGIN_MS, type OpContext } from '../opContext';
 import { findComposerField, settledConversationId } from './pageReaders';
+import {
+  composerSaysProjectChat,
+  findProjectModeSwitch,
+  projectIdOf,
+  projectsDataOf,
+  readProjectSwitch,
+} from './projectPage';
 
 const SHELL_TIMEOUT_MS = 30_000;
 const MODE_SWITCH_TIMEOUT_MS = 5_000;
@@ -78,15 +89,66 @@ function readSurfaceMode(): string | null {
   }
 }
 
-export function readMode(field: HTMLElement): { mode: ChatMode; labels: string[] } {
+export function readMode(
+  field: HTMLElement,
+  adapter: SiteAdapter | null = null,
+): { mode: ChatMode; labels: string[] } {
   const labels = composerLabels(field);
   const says = (mode: SwitchableMode): boolean =>
     labels.some((label) => MODE_COMPOSER_LABELS[mode].includes(label));
-  const chat = says('chat');
+  let chat = says('chat');
   const work = says('work');
+  const data = projectsDataOf(adapter);
+  if (data && projectIdOf(data) !== null) {
+    // A project's new chat names the project in its placeholder.
+    chat ||= composerSaysProjectChat(data, labels);
+    const pressed = readProjectSwitch(data);
+    // Work's own placeholder was not measured: the pressed switch is the evidence.
+    if (pressed === 'work') return { mode: 'work', labels };
+    if (pressed === 'unknown') chat = false;
+  }
   // Contradicting evidence is no evidence.
   const mode: ChatMode = chat && !work ? 'chat' : work && !chat ? 'work' : 'unknown';
   return { mode, labels };
+}
+
+/**
+ * Switch a project page from Work to chat with its own 「聊天」, once, and wait
+ * for the composer to confirm it. The field once confirmed, else a failure.
+ */
+export async function switchProjectToChat(
+  ctx: OpContext,
+  adapter: SiteAdapter | null,
+  timeoutMs: number,
+): Promise<HTMLElement> {
+  const data = projectsDataOf(adapter);
+  const control = data
+    ? await ctx.waitFor(() => findProjectModeSwitch(data), {
+        timeoutMs: budget(ctx, Math.min(timeoutMs, MODE_SWITCH_TIMEOUT_MS)),
+      })
+    : null;
+  if (!control) {
+    ctx.fail('mode-unavailable', 'The project is in Work mode and its mode switch was not found.', {
+      mode: 'work',
+      reason: 'project-switch-missing',
+    });
+  }
+  ctx.click(control.chat);
+  const field = await ctx.waitFor(
+    () => {
+      const current = findComposerField(adapter);
+      return current && readMode(current, adapter).mode === 'chat' ? current : null;
+    },
+    { timeoutMs: budget(ctx, timeoutMs) },
+  );
+  if (!field) {
+    ctx.fail('mode-unavailable', 'ChatGPT did not confirm the switch to chat mode.', {
+      from: 'work',
+      to: 'chat',
+      reason: 'project-switch',
+    });
+  }
+  return field;
 }
 
 /** The text a person sees (`innerText` skips visually hidden parts; jsdom only has `textContent`). */
@@ -157,7 +219,9 @@ export async function runConversationReady(
   checkConversation();
 
   const target = params.ensureMode ?? 'chat';
-  let { mode, labels } = readMode(shell.field);
+  let { mode, labels } = readMode(shell.field, adapter);
+  const projects = projectsDataOf(adapter);
+  const inProject = projects !== null && projectIdOf(projects) !== null;
   let switchedMode: ConversationReadyResult['switchedMode'];
   // `unknown` is reported as is: without positive evidence nothing is clicked.
   if (mode !== target && mode !== 'unknown') {
@@ -175,6 +239,30 @@ export async function runConversationReady(
           composerLabels: labels,
         },
       );
+    }
+    if (inProject) {
+      // A project is only ever switched to chat, and in place.
+      if (target !== 'chat') {
+        ctx.fail('mode-unavailable', 'The bridge never switches a project to Work mode.', {
+          mode: from,
+          reason: 'project-work',
+          composerLabels: labels,
+        });
+      }
+      const field = await switchProjectToChat(ctx, adapter, MODE_SWITCH_TIMEOUT_MS);
+      ({ mode, labels } = readMode(field, adapter));
+      return {
+        url: location.href,
+        conversationId: checkConversation(),
+        loggedIn: true,
+        mode,
+        evidence: {
+          composerLabels: labels,
+          lang: readPageLanguage(),
+          surfaceMode: readSurfaceMode(),
+        },
+        switchedMode: { from, to: target },
+      };
     }
     // The switch exists on the new-chat page only: a tab left on a conversation
     // (the restore before close) goes home through the page's own link first.
@@ -203,7 +291,7 @@ export async function runConversationReady(
     const field = await ctx.waitFor(
       () => {
         const current = findComposerField(adapter);
-        return current && readMode(current).mode === target ? current : null;
+        return current && readMode(current, adapter).mode === target ? current : null;
       },
       { timeoutMs: budget(ctx, MODE_SWITCH_TIMEOUT_MS) },
     );
@@ -213,7 +301,7 @@ export async function runConversationReady(
         to: target,
       });
     }
-    ({ mode, labels } = readMode(field));
+    ({ mode, labels } = readMode(field, adapter));
     switchedMode = { from, to: target };
   }
   return {

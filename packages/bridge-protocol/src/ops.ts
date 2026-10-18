@@ -5,6 +5,8 @@
  * service worker runs itself, has to be in the site's `bridge.allow`.
  */
 
+import { PROJECT_OP_NAMES, type ProjectOpParamsMap, type ProjectOpResultMap } from './projectOps';
+
 export const OP_NAMES = [
   'conversation.open',
   'conversation.close',
@@ -16,6 +18,7 @@ export const OP_NAMES = [
   'turns.waitReply',
   'turns.read',
   'files.download',
+  ...PROJECT_OP_NAMES,
 ] as const;
 
 export type OpName = (typeof OP_NAMES)[number];
@@ -261,7 +264,7 @@ export type FilesDownloadResult =
   /** (ii) the browser saved the file; the server copies it from this path. */
   | (DownloadedFile & { readonly path: string });
 
-export interface OpParamsMap {
+export interface OpParamsMap extends ProjectOpParamsMap {
   'conversation.open': ConversationOpenParams;
   'conversation.close': ConversationCloseParams;
   'conversation.ready': ConversationReadyParams;
@@ -274,7 +277,7 @@ export interface OpParamsMap {
   'files.download': FilesDownloadParams;
 }
 
-export interface OpResultMap {
+export interface OpResultMap extends ProjectOpResultMap {
   'conversation.open': ConversationOpenResult;
   'conversation.close': ConversationCloseResult;
   'conversation.ready': ConversationReadyResult;

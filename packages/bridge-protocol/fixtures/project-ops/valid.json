@@ -1,0 +1,115 @@
+[
+  { "name": "list projects", "kind": "opParams", "op": "project.list", "input": {} },
+  {
+    "name": "create a project",
+    "kind": "opParams",
+    "op": "project.create",
+    "input": { "name": "论文 Q3" }
+  },
+  {
+    "name": "open a project's chat view",
+    "kind": "opParams",
+    "op": "project.open",
+    "input": { "projectId": "g-p-0123456789abcdef0123456789abcdef", "view": "chat" }
+  },
+  {
+    "name": "open a project's sources",
+    "kind": "opParams",
+    "op": "project.open",
+    "input": { "projectId": "g-p-0123456789abcdef0123456789abcdef", "view": "sources" }
+  },
+  {
+    "name": "list a project's files",
+    "kind": "opParams",
+    "op": "project.files",
+    "input": { "projectId": "g-p-0123456789abcdef0123456789abcdef" }
+  },
+  {
+    "name": "upload one file",
+    "kind": "opParams",
+    "op": "project.upload",
+    "input": {
+      "projectId": "g-p-0123456789abcdef0123456789abcdef",
+      "blob": {
+        "blobId": "b-1",
+        "name": "repo.zip",
+        "size": 1,
+        "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+        "mime": "application/zip"
+      }
+    }
+  },
+  {
+    "name": "remove a file",
+    "kind": "opParams",
+    "op": "project.remove",
+    "input": { "projectId": "g-p-0123456789abcdef0123456789abcdef", "name": "notes.md" }
+  },
+  {
+    "name": "the sidebar's projects",
+    "kind": "opResult",
+    "op": "project.list",
+    "input": {
+      "projects": [{ "projectId": "g-p-0123456789abcdef0123456789abcdef", "name": "论文 Q3" }],
+      "evidence": { "items": 1 }
+    }
+  },
+  {
+    "name": "a created project",
+    "kind": "opResult",
+    "op": "project.create",
+    "input": {
+      "projectId": "g-p-0123456789abcdef0123456789abcdef",
+      "name": "论文 Q3",
+      "url": "https://chatgpt.com/g/g-p-0123456789abcdef0123456789abcdef/project",
+      "evidence": {}
+    }
+  },
+  {
+    "name": "a project switched from Work to chat",
+    "kind": "opResult",
+    "op": "project.open",
+    "input": {
+      "projectId": "g-p-0123456789abcdef0123456789abcdef",
+      "url": "https://chatgpt.com/g/g-p-0123456789abcdef0123456789abcdef/project",
+      "view": "chat",
+      "name": "论文 Q3",
+      "switchedMode": { "from": "work", "to": "chat" },
+      "evidence": {}
+    }
+  },
+  {
+    "name": "a project's files",
+    "kind": "opResult",
+    "op": "project.files",
+    "input": {
+      "projectId": "g-p-0123456789abcdef0123456789abcdef",
+      "files": [
+        { "name": "repo.zip", "uploadedAt": "2026-10-18T09:00:00.000Z" },
+        { "name": "notes.md", "uploadedAt": null }
+      ]
+    }
+  },
+  {
+    "name": "an upload listed once",
+    "kind": "opResult",
+    "op": "project.upload",
+    "input": {
+      "projectId": "g-p-0123456789abcdef0123456789abcdef",
+      "uploaded": { "name": "repo.zip", "uploadedAt": "2026-10-18T09:00:00.000Z" },
+      "files": [{ "name": "repo.zip", "uploadedAt": "2026-10-18T09:00:00.000Z" }],
+      "evidence": {}
+    }
+  },
+  {
+    "name": "a removal",
+    "kind": "opResult",
+    "op": "project.remove",
+    "input": {
+      "projectId": "g-p-0123456789abcdef0123456789abcdef",
+      "removed": "notes.md",
+      "files": [],
+      "evidence": {}
+    }
+  }
+]

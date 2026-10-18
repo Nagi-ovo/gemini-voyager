@@ -58,7 +58,7 @@ export function createBlobRelay(deps: BlobRelayDeps): BlobRelay {
       if (
         !record ||
         record.taskId !== request.taskId ||
-        record.op !== 'composer.attach' ||
+        (record.op !== 'composer.attach' && record.op !== 'project.upload') ||
         record.state !== 'running' ||
         record.cancelling !== undefined ||
         !senderIsHolder(sender, request.docNonce, record)

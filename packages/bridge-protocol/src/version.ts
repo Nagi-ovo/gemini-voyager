@@ -5,6 +5,7 @@
  * shape without a new protocol version.
  */
 import type { OpName } from './ops';
+import { PROJECT_OP_VERSIONS } from './projectOps';
 
 export interface ProtocolRange {
   readonly min: number;
@@ -27,6 +28,7 @@ export const OP_VERSIONS: Readonly<Record<OpName, number>> = {
   'turns.waitReply': 1,
   'turns.read': 1,
   'files.download': 1,
+  ...PROJECT_OP_VERSIONS,
 };
 
 /** Which side has to be upgraded when the ranges do not meet. */

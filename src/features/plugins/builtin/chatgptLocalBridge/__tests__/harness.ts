@@ -1,4 +1,4 @@
-import type { OpName } from '@/features/bridge/protocol';
+import type { OpName, ProjectOpName } from '@/features/bridge/protocol';
 import type {
   BridgeGrant,
   BridgeOpOutcome,
@@ -12,7 +12,11 @@ import { type BridgeRuntime, createBridgeRuntime } from '../runtime';
 export interface Harness {
   readonly runtime: BridgeRuntime;
   readonly sent: Record<string, unknown>[];
-  start(op: OpName, params: unknown, grant?: Partial<BridgeGrant>): BridgeOpStartAck;
+  start(
+    op: OpName | ProjectOpName,
+    params: unknown,
+    grant?: Partial<BridgeGrant>,
+  ): BridgeOpStartAck;
   readonly taskId: string;
   outcome(taskId?: string): BridgeOpOutcome | undefined;
   progress(taskId?: string): Record<string, unknown>[];
@@ -50,7 +54,8 @@ export function createHarness(
         {
           taskId,
           jobId: 'job-1',
-          op,
+          // The project ops join `OpName` with their registration; the runtime refuses them until then.
+          op: op as OpName,
           opVersion: 1,
           params,
           deadlineMs: 30_000,

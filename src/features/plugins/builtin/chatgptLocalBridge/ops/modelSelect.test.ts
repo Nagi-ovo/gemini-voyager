@@ -107,6 +107,38 @@ describe('Local Bridge model.select: reaching an effort', () => {
   });
 });
 
+describe('Local Bridge model.select: a remounted composer', () => {
+  it('opens the menu with the model button mounted anew after the route was rewritten', async () => {
+    // The old button takes the press but is replaced before it opens anything, as when
+    // `/c/<id>` moves to its project route and ChatGPT mounts the composer again.
+    mount({ effort: 1, opens: false });
+    let fresh: LiveModelPicker | null = null;
+    picker.trigger.addEventListener('pointerdown', () => {
+      setTimeout(() => {
+        const form = page.form.cloneNode(true) as HTMLFormElement;
+        form.querySelector('[aria-haspopup="menu"]')?.remove();
+        page.form.replaceWith(form);
+        fresh = mountLiveModelPicker(form, { effort: 1 });
+      }, 300);
+    });
+    await select({ target: { preset: 'pro' } });
+
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { observed: { modelId: 'gpt-6', effortIndex: 4 } },
+    });
+    expect(fresh!.state()).toMatchObject({ effort: 4, open: false, pointerdowns: 1 });
+  });
+
+  it('still fails menu-not-found when the one button there never opens', async () => {
+    mount({ effort: 1, opens: false });
+    await select({ target: { preset: 'pro' } });
+
+    expect(errorCode(bridge.outcome())).toBe('menu-not-found');
+    expect(picker.state().pointerdowns).toBe(1);
+  });
+});
+
 describe('Local Bridge model.select: refusals', () => {
   it('restores a captured effort although the page names that step in English', async () => {
     mount({ effort: 4, stepLabels: ['即时', '中', 'Higher', '极高', 'Pro'] });

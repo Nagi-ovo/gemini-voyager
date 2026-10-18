@@ -23,7 +23,7 @@ export async function runModelSelect(
 
   const field = findComposerField(adapter);
   if (!field) ctx.fail('selector-missing', 'The ChatGPT composer was not found.');
-  const { mode, labels } = readMode(field);
+  const { mode, labels } = readMode(field, adapter);
   if (mode !== 'chat') {
     ctx.fail(
       mode === 'work' ? 'mode-unavailable' : 'mode-unknown',
@@ -38,7 +38,7 @@ export async function runModelSelect(
     ctx,
     data,
     target,
-    field.closest('form') ?? document,
+    () => findComposerField(adapter)?.closest('form') ?? document,
   );
   return params.capturePrevious ? { ...result, previous } : result;
 }

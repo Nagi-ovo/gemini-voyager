@@ -44,6 +44,9 @@ export interface SendBehavior {
   readonly turnAfterMs?: number | null;
   readonly conversationId?: string;
   readonly turnKey?: string;
+  /** Routes for a send outside `/` (a project's page); default `/c/local-chatgpt:…`, `/c/<id>`. */
+  readonly provisionalRoute?: string;
+  readonly settledRoute?: string;
 }
 
 export interface PageEvents {
@@ -239,9 +242,12 @@ export function mountChatGptPage(options: PageOptions = {}): ChatGptPageFixture 
       setTimeout(fn, ms ?? fallback);
     };
     later(behavior.provisionalAfterMs, 100, () => {
-      if (location.pathname === '/') history.pushState(null, '', '/c/local-chatgpt:4a1b2c');
+      if (behavior.provisionalRoute) history.pushState(null, '', behavior.provisionalRoute);
+      else if (location.pathname === '/') history.pushState(null, '', '/c/local-chatgpt:4a1b2c');
     });
-    later(behavior.settledAfterMs, 1500, () => history.pushState(null, '', `/c/${id}`));
+    later(behavior.settledAfterMs, 1500, () =>
+      history.pushState(null, '', behavior.settledRoute ?? `/c/${id}`),
+    );
     later(behavior.turnAfterMs, 200, () => {
       paragraph().textContent = '';
       syncButton();

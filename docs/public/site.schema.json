@@ -263,6 +263,304 @@
         }
       }
     },
+    "projects": {
+      "type": "object",
+      "description": "Data for the Local Bridge `project.*` ops (ChatGPT projects and their sources). A section that fails validation is dropped (only the project ops become unavailable) and `catalog:build` refuses to publish it.",
+      "required": [
+        "format",
+        "projectPagePattern",
+        "projectRoutePattern",
+        "projectPath",
+        "sourcesQuery",
+        "sidebar",
+        "createButtonLabels",
+        "createDialog",
+        "titleTemplates",
+        "viewLabels",
+        "modeLabels",
+        "modePressedAttribute",
+        "chatComposerLabels",
+        "sources"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "const": 1,
+          "description": "Data format version; an unknown format drops the section."
+        },
+        "projectPagePattern": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Safe regex anchored with `^` matching a project's own page; group 1 is the project id."
+        },
+        "projectRoutePattern": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Safe regex anchored with `^` matching any route inside a project (its page and its chats); group 1 is the project id."
+        },
+        "projectPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "The in-app path of a project's page, holding `{projectId}`."
+        },
+        "sourcesQuery": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,32}=[A-Za-z0-9_-]{1,64}$",
+          "description": "The `key=value` query the project's sources view adds to its route."
+        },
+        "sidebar": {
+          "type": "object",
+          "required": ["row", "idAttribute", "labelAttribute"],
+          "additionalProperties": false,
+          "description": "A project's row in the sidebar. It is not a link, so its id and name are read from attributes.",
+          "properties": {
+            "row": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "CSS selector of one project's row."
+            },
+            "idAttribute": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,63}$",
+              "description": "Attribute on the row holding the project id (`g-p-…`)."
+            },
+            "labelAttribute": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,63}$",
+              "description": "Attribute on the row holding the project name; the text `aria-labelledby` points at stands in when it is missing."
+            }
+          }
+        },
+        "createButtonLabels": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+          },
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          "description": "The sidebar's new-project button `aria-label`, per UI locale."
+        },
+        "createDialog": {
+          "type": "object",
+          "required": ["dialog", "nameInput", "submit"],
+          "additionalProperties": false,
+          "properties": {
+            "dialog": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "CSS selector of the new-project dialog."
+            },
+            "nameInput": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "CSS selector of its name input."
+            },
+            "submit": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "CSS selector of its submit button."
+            }
+          }
+        },
+        "titleTemplates": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "pattern": "\\{name\\}"
+          },
+          "description": "`document.title` of a project page, each holding `{name}` once."
+        },
+        "viewLabels": {
+          "type": "object",
+          "required": ["chat", "sources"],
+          "additionalProperties": false,
+          "properties": {
+            "chat": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "description": "Exact text of the project's chat view button."
+            },
+            "sources": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "description": "Exact text of the project's sources view button."
+            }
+          }
+        },
+        "modeLabels": {
+          "type": "object",
+          "required": ["chat", "work"],
+          "additionalProperties": false,
+          "properties": {
+            "chat": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "description": "Exact text of the project page's chat mode button."
+            },
+            "work": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "description": "Exact text of its Work mode button; the bridge never presses it."
+            }
+          }
+        },
+        "modePressedAttribute": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,63}$",
+          "description": "Attribute that reads `true` on the pressed mode button."
+        },
+        "chatComposerLabels": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+          },
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "\\{name\\}"
+            }
+          },
+          "description": "The composer placeholder of a project's new chat in chat mode, each holding `{name}` once; quote styles are compared loosely."
+        },
+        "sources": {
+          "type": "object",
+          "required": ["fileInput", "row", "rowActionsLabel", "removeLabels"],
+          "additionalProperties": false,
+          "properties": {
+            "fileInput": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "CSS selector of the sources view's file inputs; the first one outside any form takes uploads."
+            },
+            "row": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "CSS selector of one file row."
+            },
+            "rowActionsLabel": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+              },
+              "additionalProperties": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "pattern": "\\{name\\}"
+              },
+              "description": "The row's menu button `aria-label`, per UI locale, holding `{name}` once."
+            },
+            "removeLabels": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "description": "Exact text of the row menu item that removes the file at once."
+            }
+          }
+        }
+      }
+    },
     "bridge": {
       "type": "object",
       "description": "Local Bridge kill switch: the ops the extension may run for `voyager serve` on this site. A missing or invalid section denies every op, and only a fresh remote catalog newer than the packaged one can allow them. Removing an op from `allow` revokes it at the next catalog revision.",
@@ -288,7 +586,13 @@
               "composer.send",
               "turns.waitReply",
               "turns.read",
-              "files.download"
+              "files.download",
+              "project.list",
+              "project.create",
+              "project.open",
+              "project.files",
+              "project.upload",
+              "project.remove"
             ]
           },
           "description": "Allowed op names. Every op, including the ones the service worker runs itself, must be listed."

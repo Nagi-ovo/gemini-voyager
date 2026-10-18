@@ -54,6 +54,7 @@ import { runComposerAttach } from './ops/composerAttach';
 import { type ComposerActivity, runComposerSend } from './ops/composerSend';
 import { runConversationReady } from './ops/conversationReady';
 import { runModelSelect } from './ops/modelSelect';
+import { runProjectOp } from './ops/projectRuntime';
 import { runTurnsRead } from './ops/turnsRead';
 import { runTurnsWaitReply } from './ops/turnsWaitReply';
 
@@ -228,7 +229,10 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
       case 'turns.read':
         return runTurnsRead(ctx, task.params, snapshot);
       default:
-        return ctx.fail('unsupported-op', `This page does not run ${task.op}.`);
+        return (
+          runProjectOp(ctx, task, snapshot, chunkReader(task.taskId)) ??
+          ctx.fail('unsupported-op', `This page does not run ${task.op}.`)
+        );
     }
   };
 

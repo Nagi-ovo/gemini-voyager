@@ -20,6 +20,7 @@ import {
   bridgeError,
 } from '@/features/bridge/protocol';
 import type { BridgeGrant } from '@/features/bridge/runtimeMessages';
+import { readConversationId } from '@/features/plugins/builtin/chatgptResponseNotification/page';
 
 import type { ChallengeKind } from './challengeGuard';
 
@@ -102,6 +103,12 @@ export interface OpContext {
   progress(event: Readonly<Record<string, unknown>>): void;
 }
 
+/** The server's id of the conversation `pathname` shows; not a provisional `local-…` one. */
+function namedConversation(pathname: string): string | null {
+  const id = readConversationId(pathname);
+  return id !== null && !id.startsWith('local-') ? id : null;
+}
+
 export function createOpContext(options: OpContextOptions): OpContext {
   const { env, grant, interactive } = options;
   const controller = new AbortController();
@@ -148,7 +155,13 @@ export function createOpContext(options: OpContextOptions): OpContext {
       terminate(challenge, 'ChatGPT is asking the person to act on this page.');
       stopped();
     }
-    if (!allowedRoutes.has(env.pathname())) {
+    const pathname = env.pathname();
+    const conversation = namedConversation(pathname);
+    // ChatGPT rewrites `/c/<id>` of a project chat to `/g/<project>/c/<id>`: the same page.
+    const sameConversation =
+      conversation !== null &&
+      [...allowedRoutes].some((route) => namedConversation(route) === conversation);
+    if (!allowedRoutes.has(pathname) && !sameConversation) {
       terminate('cancelled', 'The page left the route the op started on.', {
         reason: 'route-changed',
       });

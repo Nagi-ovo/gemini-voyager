@@ -45,6 +45,7 @@ import {
   type Reader,
   type Validation,
 } from '../read';
+import { PROJECT_PARAM_READERS, PROJECT_RESULT_READERS } from './projectOps';
 
 const CHAT_MODES: readonly ChatMode[] = ['chat', 'work', 'unknown'];
 const SWITCHABLE_MODES: readonly SwitchableMode[] = ['chat', 'work'];
@@ -143,6 +144,7 @@ const readReady: Reader<ConversationReadyResult> = (raw, path, issues) => {
 };
 
 const PARAM_READERS: { readonly [K in OpName]: Reader<OpParamsMap[K]> } = {
+  ...PROJECT_PARAM_READERS,
   'conversation.open': (raw, path, issues) => {
     const rec = readObject(raw, path, issues);
     if (rec.new !== undefined) {
@@ -280,6 +282,7 @@ const readDownloaded: Reader<FilesDownloadResult> = (raw, path, issues) => {
 };
 
 const RESULT_READERS: { readonly [K in OpName]: Reader<OpResultMap[K]> } = {
+  ...PROJECT_RESULT_READERS,
   'conversation.open': (raw, path, issues) => {
     const rec = readObject(raw, path, issues);
     const documentId = optionalString(rec, 'documentId', path, issues, { pattern: ID_PATTERN });

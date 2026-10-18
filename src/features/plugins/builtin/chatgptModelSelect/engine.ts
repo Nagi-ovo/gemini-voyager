@@ -137,30 +137,52 @@ export async function selectModel(
   ctx: OpContext,
   data: ModelPickerSection,
   target: ResolvedTarget,
-  scope: ParentNode,
+  /** Where the trigger sits, read afresh: the composer may be mounted anew meanwhile. */
+  scopeOf: () => ParentNode,
 ): Promise<Omit<ModelSelectResult, 'previous'> & { previous: ModelSelection }> {
-  // A fresh tab renders the picker after the composer that made it ready (measured live).
-  const trigger = await ctx.waitFor(() => findTrigger(scope, data), {
-    timeoutMs: budget(ctx, TRIGGER_TIMEOUT_MS),
-    intervalMs: POLL_MS,
-  });
-  if (!trigger) ctx.fail('selector-missing', 'The ChatGPT model picker was not found.');
-
-  let menu = findOpenMenu(trigger);
-  if (!menu) {
-    ctx.dispatch(trigger, pointer('pointerdown'));
-    ctx.dispatch(trigger, pointer('pointerup'));
-    menu = await ctx.waitFor(() => findOpenMenu(trigger), {
+  const awaitTrigger = (): Promise<HTMLElement | null> =>
+    ctx.waitFor(() => findTrigger(scopeOf(), data), {
+      timeoutMs: budget(ctx, TRIGGER_TIMEOUT_MS),
+      intervalMs: POLL_MS,
+    });
+  /** Whether `button` is no longer the page's trigger (removed, or another took its place). */
+  const replaced = (button: HTMLElement): boolean => {
+    if (!button.isConnected) return true;
+    const current = findTrigger(scopeOf(), data);
+    return current !== null && current !== button;
+  };
+  const openWith = async (button: HTMLElement): Promise<HTMLElement | 'replaced' | null> => {
+    const shown = findOpenMenu(button);
+    if (shown) return shown;
+    ctx.dispatch(button, pointer('pointerdown'));
+    ctx.dispatch(button, pointer('pointerup'));
+    return ctx.waitFor(() => findOpenMenu(button) ?? (replaced(button) ? 'replaced' : null), {
       timeoutMs: budget(ctx, OPEN_TIMEOUT_MS),
       intervalMs: POLL_MS,
     });
-    if (!menu) {
-      ctx.fail('menu-not-found', 'The ChatGPT model menu did not open.', {
-        expanded: trigger.getAttribute('aria-expanded'),
-      });
-    }
+  };
+
+  // A fresh tab renders the picker after the composer that made it ready (measured live).
+  let trigger = await awaitTrigger();
+  if (!trigger) ctx.fail('selector-missing', 'The ChatGPT model picker was not found.');
+  let menu = await openWith(trigger);
+  // Opening `/c/<id>` of a project chat moves to its project route and mounts the composer
+  // anew: events on the old trigger open nothing. Press the new one, once.
+  if (menu === 'replaced' || (menu === null && replaced(trigger))) {
+    const again = await awaitTrigger();
+    if (!again) ctx.fail('selector-missing', 'The ChatGPT model picker was not found.');
+    trigger = again;
+    menu = await openWith(trigger);
+  }
+  if (menu === null || menu === 'replaced') {
+    ctx.fail('menu-not-found', 'The ChatGPT model menu did not open.', {
+      expanded: trigger.getAttribute('aria-expanded'),
+      remounted: menu === 'replaced',
+    });
   }
   const openMenu = menu;
+  const menuTrigger = trigger;
+
   let changed = false;
   const seenLabels: string[] = [];
   const read = (): PickerReading => {
@@ -171,10 +193,10 @@ export async function selectModel(
   };
 
   const close = async (): Promise<boolean> => {
-    if (!openMenu.isConnected || trigger.getAttribute('aria-expanded') !== 'true') return true;
+    if (!openMenu.isConnected || menuTrigger.getAttribute('aria-expanded') !== 'true') return true;
     ctx.dispatch(openMenu, key('Escape'));
     const closed = await ctx.waitFor(
-      () => !openMenu.isConnected || trigger.getAttribute('aria-expanded') !== 'true',
+      () => !openMenu.isConnected || menuTrigger.getAttribute('aria-expanded') !== 'true',
       { timeoutMs: budget(ctx, CLOSE_TIMEOUT_MS), intervalMs: POLL_MS },
     );
     return closed === true;
@@ -292,7 +314,7 @@ export async function selectModel(
     statusText: after.status.text,
     seenLabels,
     steps,
-    triggerText: triggerText(trigger),
+    triggerText: triggerText(menuTrigger),
   };
   if (!(await close())) {
     ctx.fail('unverified', 'The ChatGPT model menu did not close.', {

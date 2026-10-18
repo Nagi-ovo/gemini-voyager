@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { isSameSiteAdapter } from '../remote/siteOverride';
@@ -236,6 +238,64 @@ describe('optional site sections', () => {
     expect(read.result.success).toBe(true);
     expect(read.result.success && read.result.data.modelPicker).toBeUndefined();
     expect(read.sectionIssues.map((issue) => issue.path)).toContain(path);
+  });
+
+  describe('projects section', () => {
+    const shipped = JSON.parse(
+      readFileSync(join(__dirname, '../catalog/sites/chatgpt/site.json'), 'utf8'),
+    ) as Record<string, unknown>;
+    const PROJECTS = shipped.projects as Record<string, unknown>;
+    const SIDEBAR = PROJECTS.sidebar as Record<string, unknown>;
+
+    it('keeps the shipped ChatGPT projects data through a publish round trip', () => {
+      const read = readSiteAdapterData({ ...VALID, projects: PROJECTS });
+      expect(read.sectionIssues).toEqual([]);
+      if (!read.result.success) throw new Error('fixture must validate');
+      expect(read.result.data.projects).toEqual(PROJECTS);
+      const again = readSiteAdapterData(
+        JSON.parse(JSON.stringify(siteAdapterToData(read.result.data))),
+      );
+      expect(again.result.success && again.result.data.projects).toEqual(PROJECTS);
+    });
+
+    it.each([
+      [
+        'a route pattern without its id group',
+        { projectPagePattern: '^/g/g-p-[0-9a-f]{32}/project$' },
+        'projects.projectPagePattern',
+      ],
+      [
+        'a title template without {name}',
+        { titleTemplates: ['ChatGPT'] },
+        'projects.titleTemplates[0]',
+      ],
+      [
+        'a selector that does not parse',
+        { sidebar: { ...SIDEBAR, row: 'li >> a' } },
+        'projects.sidebar.row',
+      ],
+      [
+        'an attribute name that is not one',
+        { sidebar: { ...SIDEBAR, idAttribute: 'data id' } },
+        'projects.sidebar.idAttribute',
+      ],
+      ['an unknown key', { workButton: 'button' }, 'projects.workButton'],
+    ])('drops a projects section with %s, keeping the adapter', (_label, patch, path) => {
+      const read = readSiteAdapterData({ ...VALID, projects: { ...PROJECTS, ...patch } });
+      expect(read.result.success).toBe(true);
+      expect(read.result.success && read.result.data.projects).toBeUndefined();
+      expect(read.sectionIssues.map((issue) => issue.path)).toContain(path);
+    });
+
+    it('treats changed projects data as a different adapter, so plugins pick it up', () => {
+      const before = validateSiteAdapterData({ ...VALID, projects: PROJECTS });
+      const after = validateSiteAdapterData({
+        ...VALID,
+        projects: { ...PROJECTS, sourcesQuery: 'view=files' },
+      });
+      if (!before.success || !after.success) throw new Error('fixtures must validate');
+      expect(isSameSiteAdapter(before.data, after.data)).toBe(false);
+    });
   });
 
   it('does not treat a bridge policy change as a different adapter, so plugins stay mounted', () => {

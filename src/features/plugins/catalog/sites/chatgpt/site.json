@@ -105,6 +105,57 @@
       }
     }
   },
+  "projects": {
+    "format": 1,
+    "projectPagePattern": "^/g/(g-p-[0-9a-f]{32})(?:-[^/?#]*)?/project/?$",
+    "projectRoutePattern": "^/g/(g-p-[0-9a-f]{32})(?:-[^/?#]*)?(?:/|$)",
+    "projectPath": "/g/{projectId}/project",
+    "sourcesQuery": "tab=sources",
+    "sidebar": {
+      "row": "[data-app-action-sidebar-project-row]",
+      "idAttribute": "data-app-action-sidebar-project-id",
+      "labelAttribute": "data-app-action-sidebar-project-label"
+    },
+    "createButtonLabels": {
+      "zh-CN": ["添加新项目"]
+    },
+    "createDialog": {
+      "dialog": "[role=\"dialog\"]",
+      "nameInput": "input[name=\"project-name\"]",
+      "submit": "button[type=\"submit\"]"
+    },
+    "titleTemplates": ["ChatGPT - {name}"],
+    "viewLabels": {
+      "chat": {
+        "zh-CN": ["聊天"]
+      },
+      "sources": {
+        "zh-CN": ["来源"]
+      }
+    },
+    "modeLabels": {
+      "chat": {
+        "zh-CN": ["聊天"]
+      },
+      "work": {
+        "zh-CN": ["工作"]
+      }
+    },
+    "modePressedAttribute": "aria-pressed",
+    "chatComposerLabels": {
+      "zh-CN": ["在“{name}”中新建聊天", "在\"{name}\"中新建聊天"]
+    },
+    "sources": {
+      "fileInput": "main input[type=\"file\"]",
+      "row": "main li",
+      "rowActionsLabel": {
+        "zh-CN": "{name} 的操作"
+      },
+      "removeLabels": {
+        "zh-CN": ["删除"]
+      }
+    }
+  },
   "bridge": {
     "format": 1,
     "allow": [
@@ -117,7 +168,13 @@
       "composer.send",
       "turns.waitReply",
       "turns.read",
-      "files.download"
+      "files.download",
+      "project.list",
+      "project.create",
+      "project.open",
+      "project.files",
+      "project.upload",
+      "project.remove"
     ]
   }
 }

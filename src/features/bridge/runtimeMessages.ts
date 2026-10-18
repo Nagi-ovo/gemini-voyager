@@ -147,6 +147,11 @@ export const LEASED_OPS: ReadonlySet<OpName> = new Set<OpName>([
   'model.select',
   'composer.attach',
   'composer.send',
+  'project.create',
+  'project.open',
+  'project.files',
+  'project.upload',
+  'project.remove',
 ]);
 
 export function isBridgeMessageType(type: unknown): type is `gv.bridge.${string}` {

@@ -62,6 +62,12 @@ export const SUPPORTED_BRIDGE_OPS: ReadonlySet<OpName> = new Set<OpName>([
   'composer.send',
   'turns.waitReply',
   'turns.read',
+  'project.list',
+  'project.create',
+  'project.open',
+  'project.files',
+  'project.upload',
+  'project.remove',
 ]);
 
 export interface DispatcherConfig {
@@ -793,7 +799,9 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
       // The page may read exactly these blobs, and only while this task runs.
       ...(task.op === 'composer.attach'
         ? { blobs: task.params.blobs.map(({ blobId, size }) => ({ blobId, size })) }
-        : {}),
+        : task.op === 'project.upload'
+          ? { blobs: [{ blobId: task.params.blob.blobId, size: task.params.blob.size }] }
+          : {}),
     };
     // Ack first: a catalog check below can outlast the server's 10 s ack window.
     await store.setTask(record);

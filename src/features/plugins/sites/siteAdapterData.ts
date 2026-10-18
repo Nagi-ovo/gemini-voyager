@@ -24,6 +24,7 @@ import {
   readBridgePolicySection,
 } from './sections/bridgePolicyData';
 import { type ModelPickerSection, readModelPickerSection } from './sections/modelPickerData';
+import { type ProjectsSection, readProjectsSection } from './sections/projectsData';
 import { isSemanticSelectorKey } from './semanticKeys';
 
 /** JSON-serializable adapter: `capabilities` is an array instead of a Set. */
@@ -39,6 +40,7 @@ export interface SiteAdapterData {
   readonly conversationIdPattern?: string;
   readonly turnKeyAttributes?: readonly string[];
   readonly modelPicker?: ModelPickerSection;
+  readonly projects?: ProjectsSection;
   readonly bridge?: BridgePolicySection;
 }
 
@@ -167,7 +169,7 @@ function readSelectors(raw: unknown, issues: ManifestIssue[]): Record<string, st
 export interface SiteAdapterDataRead {
   readonly result: Result<SiteAdapter, ManifestIssue[]>;
   /**
-   * Problems in the optional sections (`modelPicker`, `bridge`). They never
+   * Problems in the optional sections (`modelPicker`, `projects`, `bridge`). They never
    * fail `result`: the broken section is left off the adapter, so selector
    * fixes keep reaching clients while only that capability is unavailable (a
    * missing `bridge` denies the bridge). Publishing fails on any of them.
@@ -194,8 +196,9 @@ export function readSiteAdapterData(input: unknown): SiteAdapterDataRead {
   }
   const issues: ManifestIssue[] = [];
   const modelPickerRead = readModelPickerSection(input.modelPicker);
+  const projectsRead = readProjectsSection(input.projects, isValidSelectorSyntax);
   const bridgeRead = readBridgePolicySection(input.bridge);
-  const sectionIssues = [...modelPickerRead.issues, ...bridgeRead.issues];
+  const sectionIssues = [...modelPickerRead.issues, ...projectsRead.issues, ...bridgeRead.issues];
 
   if (!nonEmptyString(input.id) || !SITE_ID_PATTERN.test(input.id)) {
     issues.push({ path: 'id', message: 'must match ^[a-z][a-z0-9-]*$' });
@@ -295,6 +298,7 @@ export function readSiteAdapterData(input: unknown): SiteAdapterDataRead {
           ? { turnKeyAttributes: (input.turnKeyAttributes as string[]).slice() }
           : {}),
         ...(modelPickerRead.modelPicker ? { modelPicker: modelPickerRead.modelPicker } : {}),
+        ...(projectsRead.projects ? { projects: projectsRead.projects } : {}),
         ...(bridgeRead.policy ? { bridge: bridgeRead.policy } : {}),
       },
     },
@@ -318,6 +322,7 @@ export function siteAdapterToData(adapter: SiteAdapter): SiteAdapterData {
     ...(adapter.turnKeyAttributes ? { turnKeyAttributes: [...adapter.turnKeyAttributes] } : {}),
     // Without these the refresher's cache write would silently drop the sections.
     ...(adapter.modelPicker ? { modelPicker: { ...adapter.modelPicker } } : {}),
+    ...(adapter.projects ? { projects: { ...adapter.projects } } : {}),
     ...(adapter.bridge ? { bridge: bridgePolicySectionToData(adapter.bridge) } : {}),
   };
 }

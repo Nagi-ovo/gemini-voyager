@@ -60,6 +60,12 @@ export const LEASE_DURATION_MS: Readonly<Partial<Record<OpName, number>>> = {
   'model.select': 25_000,
   'composer.attach': 120_000,
   'composer.send': 30_000,
+  // A project page renders after the route; the switch to chat follows it.
+  'project.open': 40_000,
+  'project.create': 30_000,
+  'project.files': 25_000,
+  'project.upload': 120_000,
+  'project.remove': 25_000,
 };
 
 /** Longest lease an attachment upload may hold (a large zip uploads for minutes). */
@@ -72,7 +78,7 @@ export const ATTACH_LEASE_MAX_MS = 10 * 60_000;
  */
 export function leaseDurationFor(op: OpName, taskBudgetMs: number): number {
   const base = LEASE_DURATION_MS[op] ?? 30_000;
-  if (op !== 'composer.attach') return base;
+  if (op !== 'composer.attach' && op !== 'project.upload') return base;
   return Math.min(ATTACH_LEASE_MAX_MS, Math.max(base, taskBudgetMs));
 }
 
