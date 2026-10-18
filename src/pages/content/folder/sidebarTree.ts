@@ -46,10 +46,9 @@ const ACTIVE_TITLE_MARKER_CLASS = 'gv-folder-conversation-selected gv-folder-act
  * Rows look as the sidebar's own folder list did before it moved onto the
  * shared tree: its `--folder-*` colours (set per scheme on the page root, and
  * inherited here), 8px-rounded rows, the gold edge of a starred chat, the green
- * one of the open chat, and nesting drawn as the old list's bordered body: each
- * level 21px in (12px to the guide, 8px past it), and the indent setting adding
- * to the row's own padding. Rows are flat siblings, so a row carries its
- * folders' offset (`--gv-tree-guides`) as a margin.
+ * one of the open chat, and nesting as the old list's body: each level
+ * one `--gv-sidebar-tree-nest` in, its guide under the folder's chevron. Rows
+ * carry their folders' offset (`--gv-tree-guides`) as a margin.
  */
 export const SIDEBAR_TREE_CSS = `
 :host,
@@ -79,7 +78,8 @@ export const SIDEBAR_TREE_CSS = `
   --gv-sidebar-tree-field: var(--folder-bg, #ffffff);
   --gv-sidebar-tree-selected-glow: var(--folder-selected-glow, rgba(16, 185, 129, 0.12));
   --gv-sidebar-tree-selected-accent: var(--folder-selected-accent, #34d399);
-  --gv-sidebar-tree-nest: 21px;
+  /* 21px at the default indent, 53px at max. */
+  --gv-sidebar-tree-nest: calc(21px + (var(--gv-folder-indent, -8px) + 8px) * 0.8);
 }
 
 :host([data-gv-scheme='dark']) {
@@ -102,11 +102,11 @@ export const SIDEBAR_TREE_CSS = `
   padding-block-end: var(--gv-folder-row-gap, 2px);
 }
 
-/* The old list's nesting guide: one border-coloured line 12px into each enclosing folder.
+/* The old list's nesting guide: a border-coloured line under each enclosing chevron.
    Specific enough to beat the tree sheet's guides, which the tree adds after this one.
    It ends 1px past the last line, or at a 1.25 pixel ratio the next one shows through the icons. */
 :host([data-gv-scheme]) .${FLOATING_PANEL_CLASS}__tree .${FLOATING_PANEL_CLASS}__tree-row[data-guides]::before {
-  left: 12px;
+  left: 17.5px;
   width: calc((var(--gv-tree-guides, 1) - 1) * var(--gv-sidebar-tree-nest) + 1px);
   background-image: repeating-linear-gradient(
     to right,
@@ -117,7 +117,7 @@ export const SIDEBAR_TREE_CSS = `
 
 :host([data-gv-scheme][data-gv-rtl]) .${FLOATING_PANEL_CLASS}__tree .${FLOATING_PANEL_CLASS}__tree-row[data-guides]::before {
   left: auto;
-  right: 12px;
+  right: 17.5px;
   background-image: repeating-linear-gradient(
     to left,
     var(--gv-sidebar-tree-border) 0 1px,
@@ -139,21 +139,20 @@ export const SIDEBAR_TREE_CSS = `
 
 :host([data-gv-scheme]) .${FLOATING_PANEL_CLASS}__folder-header {
   gap: 8px;
-  padding-inline-start: max(
-    0px,
-    calc(var(--gv-folder-depth, 0) * var(--gv-folder-indent, -8px) + 8px)
-  ) !important;
+  padding-inline-start: 8px !important;
   padding-inline-end: 12px;
 }
 
 :host([data-gv-scheme]) .${FLOATING_PANEL_CLASS}__conv {
   position: relative;
   gap: 4px;
-  padding-inline-start: max(
-    0px,
-    calc(var(--gv-tree-guides, 0) * var(--gv-folder-indent, -8px) + 24px)
-  ) !important;
+  /* Under the folder icon at the default indent. */
+  padding-inline-start: 19px !important;
   padding-inline-end: 6px;
+}
+
+:host([data-gv-scheme]) .${FLOATING_PANEL_CLASS}__tree-row:not([data-guides]) .${FLOATING_PANEL_CLASS}__conv {
+  padding-inline-start: 24px !important;
 }
 
 :host([data-gv-scheme]) .${FLOATING_PANEL_CLASS}__folder-header:hover,
@@ -344,10 +343,7 @@ export const SIDEBAR_TREE_CSS = `
 :host([data-gv-scheme]) .${FLOATING_PANEL_CLASS}__tree-row > .${FLOATING_PANEL_CLASS}__inline-form:not(.${FLOATING_PANEL_CLASS}__inline-form--root) {
   width: auto;
   margin-inline-start: calc(var(--gv-tree-guides, 0) * var(--gv-sidebar-tree-nest));
-  padding-inline-start: max(
-    0px,
-    calc(var(--gv-tree-guides, 0) * var(--gv-folder-indent, -8px) + 8px)
-  ) !important;
+  padding-inline-start: 8px !important;
 }
 
 /* Name fields: the old inline rename, a bordered field with 24px save and cancel. */
