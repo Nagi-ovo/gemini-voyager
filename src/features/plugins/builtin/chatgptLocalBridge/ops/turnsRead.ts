@@ -56,12 +56,29 @@ interface FoundReply {
   readonly turnKey: string;
 }
 
+/** The read fails once the tab shows another conversation than the one asked for. */
+function requireConversation(ctx: OpContext, conversationId: string): void {
+  const actual = settledConversationId();
+  if (actual === conversationId) return;
+  ctx.fail('unverified', 'The tab left the conversation while it was read.', {
+    reason: 'route-changed',
+    expected: conversationId,
+    actual,
+  });
+}
+
 /** The last mounted turn, once the opened thread stops adding turns; null when none mounts. */
-async function settledLastItem(ctx: OpContext): Promise<HTMLElement | null> {
+async function settledLastItem(
+  ctx: OpContext,
+  conversationId: string,
+): Promise<HTMLElement | null> {
   let previous: string | null = null;
   let same = 0;
   const settled = await ctx.waitFor(
     () => {
+      // A passive op has no route guard, and an in-app navigation keeps the document:
+      // without this the thread settles on the other conversation's turns.
+      requireConversation(ctx, conversationId);
       const items = conversationItems();
       const last = items.at(-1);
       if (!last) return null;
@@ -80,8 +97,12 @@ async function settledLastItem(ctx: OpContext): Promise<HTMLElement | null> {
  * rendered with its action row, the turn state (when the turn has one) reads
  * complete, and nothing is still thinking or streaming.
  */
-async function findLatestReply(ctx: OpContext, adapter: SiteAdapter | null): Promise<FoundReply> {
-  const item = await settledLastItem(ctx);
+async function findLatestReply(
+  ctx: OpContext,
+  conversationId: string,
+  adapter: SiteAdapter | null,
+): Promise<FoundReply> {
+  const item = await settledLastItem(ctx, conversationId);
   if (!item) {
     if (conversationItems().length > 0) {
       ctx.fail('unverified', 'The conversation kept changing while it was read.', {
@@ -152,8 +173,9 @@ export async function runTurnsRead(
   }
   const found =
     'latest' in params
-      ? await findLatestReply(ctx, adapter)
+      ? await findLatestReply(ctx, params.conversationId, adapter)
       : await findKeyedReply(ctx, params.assistantTurnKey, adapter);
+  requireConversation(ctx, params.conversationId);
 
   const extractor = createContentExtractor(buildChatGptAdapter(siteOf(adapter)));
   const content = extractAssistantMessage(found.item, replyBody(found.reply), extractor);

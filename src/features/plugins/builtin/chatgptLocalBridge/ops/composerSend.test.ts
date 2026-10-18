@@ -142,3 +142,28 @@ describe('composer.send confirmation', () => {
     expect(page.events().clicks).toBe(1);
   });
 });
+
+describe('composer.send into an existing conversation', () => {
+  it('sends nothing when the tab shows another conversation than the one asked for', async () => {
+    page = mountChatGptPage({ route: '/c/conv-b' });
+    page.addTurn({ key: 'b-1', user: 'other chat', reply: { text: 'ok', turnState: 'complete' } });
+    bridge.start('composer.send', { text: 'and now?', expect: { conversationId: 'conv-a' } });
+    await vi.advanceTimersByTimeAsync(2_000);
+    const outcome = bridge.outcome();
+    expect(errorCode(outcome)).toBe('unverified');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({
+      expected: 'conv-a',
+      actual: 'conv-b',
+    });
+    expect(page.events()).toMatchObject({ execCommand: 0, clicks: 0 });
+  });
+
+  it('sends when the tab shows the conversation asked for', async () => {
+    page = mountChatGptPage({ route: '/c/conv-a' });
+    page.sendBehavior = { conversationId: 'conv-a' };
+    bridge.start('composer.send', { text: 'and now?', expect: { conversationId: 'conv-a' } });
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { conversationId: 'conv-a' } });
+    expect(page.events().clicks).toBe(1);
+  });
+});

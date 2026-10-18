@@ -143,6 +143,30 @@ describe('Local Bridge turns.waitReply', () => {
     });
   });
 
+  it("does not take the reply to the person's next prompt as this prompt's reply", async () => {
+    page.addTurn({
+      key: 'turn-2',
+      user: 'a different question',
+      reply: { text: 'reply-B', turnState: 'complete', actions: true, replyId: 'r-b' },
+    });
+    bridge.start('turns.waitReply', { ...WAIT, timeoutMs: 10_000 });
+    await vi.advanceTimersByTimeAsync(11_000);
+    expect(errorCode(bridge.outcome())).toBe('timeout');
+  });
+
+  it('still finds a reply rendered in its own item right after the prompt', async () => {
+    // An earlier ChatGPT DOM put the reply in the next item, with no prompt of its own.
+    const next = page.addTurn({
+      key: 'turn-1-a',
+      user: '',
+      reply: { text: 'The answer.', turnState: 'complete', actions: true, replyId: 'r-1' },
+    });
+    next.querySelector('[data-chatgpt-search-unit-key$=":user"]')?.remove();
+    bridge.start('turns.waitReply', WAIT);
+    await vi.advanceTimersByTimeAsync((BAR_CONFIRM_CYCLES + 3) * 1_000);
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { assistantTurnKey: 'r-1' } });
+  });
+
   it('refuses to watch another conversation than the tab shows', async () => {
     bridge.start('turns.waitReply', { ...WAIT, conversationId: 'conv-2' });
     await vi.advanceTimersByTimeAsync(0);
@@ -251,6 +275,30 @@ describe('Local Bridge turns.read latest', () => {
     expect(errorCode(outcome)).toBe('unverified');
     expect(outcome?.ok === false && outcome.error.details).toMatchObject({
       reason: 'still-generating',
+    });
+  });
+
+  it('does not return the reply of a conversation the person switched to while it settled', async () => {
+    page.setReply('turn-1', {
+      text: 'answer in A',
+      turnState: 'complete',
+      actions: true,
+      replyId: 'r-1',
+    });
+    bridge.start('turns.read', LATEST);
+    await vi.advanceTimersByTimeAsync(600);
+    page.list.innerHTML = '';
+    page.addTurn({
+      key: 'b-1',
+      user: 'question in B',
+      reply: { text: 'answer in B', turnState: 'complete', actions: true, replyId: 'r-b' },
+    });
+    history.pushState(null, '', '/c/conv-2');
+    await vi.advanceTimersByTimeAsync(3_000);
+    const outcome = await readOutcome();
+    expect(errorCode(outcome)).toBe('unverified');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({
+      reason: 'route-changed',
     });
   });
 

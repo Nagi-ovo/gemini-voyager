@@ -160,6 +160,11 @@ export interface ComposerAttachResult {
 export interface ComposerSendParams {
   readonly text: string;
   readonly expectAttachments?: readonly string[];
+  /**
+   * The existing conversation the prompt must go to. The page refuses before
+   * any page event when the tab shows another one; omitted for a new chat.
+   */
+  readonly expect?: { readonly conversationId: string };
 }
 
 export interface ComposerSendResult {

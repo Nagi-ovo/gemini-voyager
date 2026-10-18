@@ -398,6 +398,20 @@ describe('bridge dispatcher', () => {
     expect(await t.lease.current()).toBeNull();
   });
 
+  it('still switches the mode back before closing after the bridge remounted and said hello again', async () => {
+    const t = setup();
+    const tabId = await t.bridgeTab();
+    await t.store.updateTab(tabId, { restoreMode: 'work' });
+    await t.dispatcher.onHello(contentSender(tabId), 'doc-1');
+    const close = { ...task('conversation.close', 'T2'), params: { tabId } } as ValidatedBridgeTask;
+    await t.dispatcher.onTask(close);
+    expect(t.page.starts()[0]?.message.task).toMatchObject({
+      taskId: 'T2',
+      params: { ensureMode: 'work', restore: true },
+    });
+    expect(t.page.tabs.has(tabId)).toBe(true);
+  });
+
   it('still closes the tab when its mode cannot be switched back', async () => {
     const t = setup();
     const tabId = await t.bridgeTab();

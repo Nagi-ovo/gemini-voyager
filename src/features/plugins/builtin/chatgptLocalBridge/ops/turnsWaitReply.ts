@@ -39,6 +39,7 @@ import {
   replyTextOf,
   settledConversationId,
   turnStateOf,
+  userTextOf,
 } from './pageReaders';
 
 export const PROGRESS_EVERY_MS = 15_000;
@@ -65,6 +66,8 @@ function findTarget(
   if (index < 0) return null;
   // ChatGPT keeps the reply in the prompt's own item; earlier DOMs gave it the next one.
   for (const item of items.slice(index)) {
+    // A later prompt's item holds that prompt's reply, never this one's.
+    if (item !== items[index] && userTextOf(item) !== null) break;
     const reply = findReply(item);
     if (reply) return { item, reply };
     if (item !== items[index]) break;

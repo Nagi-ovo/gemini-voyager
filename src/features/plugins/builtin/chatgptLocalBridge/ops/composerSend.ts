@@ -68,6 +68,15 @@ export async function runComposerSend(
   adapter: SiteAdapter | null,
   activity: ComposerActivity,
 ): Promise<ComposerSendResult> {
+  // The route guard only holds the route this op started on: a switch made before the op began
+  // must be caught here, before the first page event. Later route changes terminate in guard().
+  if (params.expect && settledConversationId() !== params.expect.conversationId) {
+    ctx.fail('unverified', 'The tab shows another conversation.', {
+      reason: 'conversation-mismatch',
+      expected: params.expect.conversationId,
+      actual: settledConversationId(),
+    });
+  }
   const field = await ctx.waitFor(() => findComposerField(adapter), {
     timeoutMs: COMPOSER_TIMEOUT_MS,
   });

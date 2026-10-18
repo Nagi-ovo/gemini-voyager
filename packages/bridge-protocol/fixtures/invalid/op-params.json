@@ -224,6 +224,16 @@
     "issuePath": "text"
   },
   {
+    "name": "send expecting a conversation without its id",
+    "kind": "opParams",
+    "op": "composer.send",
+    "input": {
+      "text": "and now?",
+      "expect": {}
+    },
+    "issuePath": "expect.conversationId"
+  },
+  {
     "name": "wait longer than 180 minutes",
     "kind": "opParams",
     "op": "turns.waitReply",

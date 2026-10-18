@@ -208,7 +208,15 @@ const PARAM_READERS: { readonly [K in OpName]: Reader<OpParamsMap[K]> } = {
       stringItem(FILE_NAME),
       { max: MAX_ATTACHMENTS },
     );
-    return expectAttachments === undefined ? { text } : { text, expectAttachments };
+    const withAttachments =
+      expectAttachments === undefined ? { text } : { text, expectAttachments };
+    if (rec.expect === undefined) return withAttachments;
+    const expectPath = at(path, 'expect');
+    const expect = readObject(rec.expect, expectPath, issues);
+    return {
+      ...withAttachments,
+      expect: { conversationId: readConversationId(expect, expectPath, issues) },
+    };
   },
   'turns.waitReply': (raw, path, issues) => {
     const rec = readObject(raw, path, issues);

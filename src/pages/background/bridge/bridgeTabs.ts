@@ -134,10 +134,11 @@ export function createBridgeTabs(deps: {
       const previous = await store.getTab();
       if (!previous || previous.tabId !== sender.tab?.id) return null;
       const documentId = (sender as { documentId?: string }).documentId;
+      // Only the document identity changes; the tab's own state (restoreMode) outlives a
+      // remount's hello, or the close would skip switching the mode back.
+      const { docNonce: _oldNonce, documentId: _oldDocumentId, ...tabState } = previous;
       const current: BridgeTabRecord = {
-        tabId: previous.tabId,
-        jobId: previous.jobId,
-        openedAt: previous.openedAt,
+        ...tabState,
         docNonce,
         ...(documentId ? { documentId } : {}),
       };
