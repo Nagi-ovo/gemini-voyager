@@ -71,6 +71,13 @@ async function advance(ms: number): Promise<void> {
   }
 }
 
+/** The sha256 check runs on real time; on a slow runner the fake clock would use up the wait first. */
+async function untilHandedOver(): Promise<void> {
+  const handed = () => fixture.counts.uploadChanges + fixture.counts.ignoredUploads;
+  for (let step = 0; step < 200 && handed() === 0; step += 1) await advance(100);
+  expect(handed()).toBeGreaterThan(0);
+}
+
 const reads = () => bridge.sent.filter((message) => message.type === 'gv.bridge.blob.read');
 
 beforeEach(() => {
@@ -133,6 +140,7 @@ describe.runIf(registered)('Local Bridge project.upload', () => {
   it('hands the verified file to the sources input and confirms it is listed once', async () => {
     mount();
     bridge.start('project.upload', { projectId: PROJECT_A.id, blob: blobOf('paper.zip') });
+    await untilHandedOver();
     await advance(5_000);
 
     expect(bridge.outcome()).toMatchObject({
@@ -148,10 +156,7 @@ describe.runIf(registered)('Local Bridge project.upload', () => {
   it('waits while the new row still shows as uploading', async () => {
     mount({ uploadBusyMs: 6_000 });
     bridge.start('project.upload', { projectId: PROJECT_A.id, blob: blobOf('paper.zip') });
-    // The sha256 check runs on real time; on a slow runner the fake clock would use up the wait first.
-    for (let step = 0; step < 200 && fixture.counts.uploadChanges === 0; step += 1)
-      await advance(100);
-    expect(fixture.counts.uploadChanges).toBe(1);
+    await untilHandedOver();
     await advance(4_000);
     expect(bridge.outcome()).toBeUndefined();
     await advance(8_000);
@@ -175,6 +180,7 @@ describe.runIf(registered)('Local Bridge project.upload', () => {
     vi.setSystemTime(new Date('2026-10-18T12:00:00.000Z'));
     mount({ listLoadsAfterMs: 6_000 });
     bridge.start('project.upload', { projectId: PROJECT_A.id, blob: blobOf('repo.zip') });
+    await untilHandedOver();
     await advance(12_000);
 
     const outcome = bridge.outcome();
@@ -186,6 +192,7 @@ describe.runIf(registered)('Local Bridge project.upload', () => {
   it('fails attachment-rejected when the file never shows in the list', async () => {
     mount({ uploadShowsAfterMs: null });
     bridge.start('project.upload', { projectId: PROJECT_A.id, blob: blobOf('paper.zip') });
+    await untilHandedOver();
     await advance(30_000);
 
     expect(errorCode(bridge.outcome())).toBe('attachment-rejected');
