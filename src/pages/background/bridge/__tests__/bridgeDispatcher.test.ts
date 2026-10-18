@@ -372,6 +372,32 @@ describe('bridge dispatcher', () => {
     expect(t.resultOf('T1')?.error?.code).toBe('timeout');
   });
 
+  it('names the tab a failed open left behind, so the CLI can close it', async () => {
+    const t = setup();
+    await t.dispatcher.onTask(task('conversation.open', 'T1'));
+    const tabId = (await t.store.getTab())!.tabId;
+    await t.dispatcher.onHello(contentSender(tabId, 'DOC'), 'doc-9');
+    await t.dispatcher.onDone(contentSender(tabId, 'DOC'), {
+      taskId: 'T1',
+      docNonce: 'doc-9',
+      outcome: {
+        ok: false,
+        error: {
+          code: 'mode-unavailable',
+          category: 'user-action',
+          message: 'Work mode.',
+          details: { mode: 'work' },
+        },
+      },
+    });
+
+    expect(t.resultOf('T1')?.error).toMatchObject({
+      code: 'mode-unavailable',
+      details: { mode: 'work', tabId },
+    });
+    expect(t.page.tabs.has(tabId)).toBe(true);
+  });
+
   it('spends one deadline across the catalog check, the hello and the ready step', async () => {
     const t = setup();
     const startedAt = t.now();

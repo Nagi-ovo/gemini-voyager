@@ -283,6 +283,13 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     const record = await store.getTask();
     if (!record || record.taskId !== taskId) return false;
     const owner = record.serverId;
+    // A failed open never hands the CLI its tab, so the error names it: the CLI can close it.
+    if (!result.ok && record.op === 'conversation.open' && record.tabId !== undefined) {
+      result = {
+        ...result,
+        error: { ...result.error, details: { ...result.error.details, tabId: record.tabId } },
+      };
+    }
     const ended = await store.finishTask({
       taskId,
       result,
