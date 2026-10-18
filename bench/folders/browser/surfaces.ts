@@ -4,9 +4,11 @@
  * names and swaps how the surface is mounted, so the tables line up.
  */
 import type { FolderData } from '@/core/types/folder';
+import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
 import { openFolderPicker } from '@/features/plugins/builtin/chatgptFolders/chatgptFolderPicker';
 import { ChatGptFolderSection } from '@/features/plugins/builtin/chatgptFolders/chatgptFolderSection';
 import { ChatGptHideFiled } from '@/features/plugins/builtin/chatgptFolders/chatgptHideFiled';
+import { DEFAULT_SECTION_PREFS } from '@/features/plugins/builtin/chatgptFolders/sectionPrefs';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { mountFloatingPanel } from '@/pages/content/folder/floatingPanel';
 
@@ -111,12 +113,17 @@ export async function benchGeminiSidebar(
 
   // The tree renders in a shadow root under the panel's list.
   const tree = () => panel.querySelector('.gv-folder-tree-host')?.shadowRoot ?? null;
-  const rows = () =>
-    Array.from(
-      tree()?.querySelectorAll<HTMLElement>(
-        `.gv-floating-folder-panel__conv[data-folder-id="${CSS.escape(target)}"]`,
-      ) ?? [],
-    );
+  // Past 150 rows the tree renders only what is on screen, where the busiest
+  // folder may not be: select within the bucket with the most rendered rows.
+  const rendered = () =>
+    Array.from(tree()?.querySelectorAll<HTMLElement>('.gv-floating-folder-panel__conv') ?? []);
+  const perBucket = new Map<string, number>();
+  for (const row of rendered()) {
+    const bucket = row.dataset.folderId ?? '';
+    perBucket.set(bucket, (perBucket.get(bucket) ?? 0) + 1);
+  }
+  const bucket = [...perBucket].sort((a, b) => b[1] - a[1])[0]?.[0];
+  const rows = () => rendered().filter((row) => row.dataset.folderId === bucket);
   const first = rows()[0];
   if (first && rows().length > 1) {
     // Long-press enters multi-select; later clicks toggle rows in that folder.
@@ -138,9 +145,7 @@ export async function benchGeminiSidebar(
     });
     results.push(engaged ? toggle : { ...toggle, note: 'multi-select did not engage' });
   } else {
-    results.push(
-      notApplicable(surface, dataset, 'selection toggle', 'busiest folder has under two rows'),
-    );
+    results.push(notApplicable(surface, dataset, 'selection toggle', 'no folder shows two rows'));
   }
   sidebar.destroy();
   return results;
@@ -160,6 +165,17 @@ const noTreeActions = {
   onSetFolderColor: () => {},
 };
 
+const chatGptSection = (data: FolderData) =>
+  new ChatGptFolderSection({
+    data,
+    rootBucketId: ROOT_BUCKET_ID,
+    actions: noTreeActions,
+    transfer: { import: () => {}, export: () => {} },
+    cloud: { upload: () => {}, sync: () => {} },
+    prefs: { ...DEFAULT_SECTION_PREFS },
+    onPrefsChange: () => {},
+  });
+
 export async function benchFloatingTree(
   dataset: DatasetName,
   data: FolderData,
@@ -169,7 +185,13 @@ export async function benchFloatingTree(
   const results: BenchResult[] = [];
   const target = pickBusiestFolder(data);
   const mount = (shaped: FolderData) =>
-    mountFloatingPanel({ data: shaped, cloudActions: false, ...noTreeActions });
+    mountFloatingPanel({
+      data: shaped,
+      policy: FOLDER_SITE_POLICIES.gemini,
+      cloudActions: false,
+      hintKeys: [],
+      ...noTreeActions,
+    });
 
   for (const { expanded, label } of EXPANSIONS) {
     const shaped = withExpansion(data, expanded);
@@ -250,7 +272,7 @@ export async function benchChatGptSection(
         runs: counts.mount,
         setup: () => ({ section: null as ChatGptFolderSection | null }),
         action: (state) => {
-          state.section = new ChatGptFolderSection(shaped, ROOT_BUCKET_ID, noTreeActions);
+          state.section = chatGptSection(shaped);
           container.append(state.section.element);
         },
         after: (state) => countElements(state.section?.element),
@@ -258,7 +280,7 @@ export async function benchChatGptSection(
       }),
     );
 
-    const section = new ChatGptFolderSection(shaped, ROOT_BUCKET_ID, noTreeActions);
+    const section = chatGptSection(shaped);
     container.append(section.element);
     let current = shaped;
     results.push(

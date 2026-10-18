@@ -16,6 +16,8 @@ import { NativeConversationMenus } from '@/pages/content/folder/NativeConversati
 import { NativeSidebarObserver } from '@/pages/content/folder/NativeSidebarObserver';
 import { createFolderDialogs } from '@/pages/content/folder/folderDialogs';
 import { createFolderHeaderMenus } from '@/pages/content/folder/headerMenus';
+import { createLegacyFolderCommands } from '@/pages/content/folder/legacyFolderCommands';
+import { ligatureIcon } from '@/pages/content/folder/selectionToolbar';
 import type { IFolderStorageAdapter } from '@/pages/content/folder/storage/FolderStorageAdapter';
 
 /** The parts of Gemini's sidebar the folder runtime looks for. */
@@ -94,6 +96,7 @@ export async function createGeminiSidebar(data: FolderData): Promise<GeminiSideb
     },
     adapter,
   );
+  const commands = createLegacyFolderCommands(store);
   const dialogs = createFolderDialogs();
   const feedback = new FolderFeedback();
   const headerMenus = createFolderHeaderMenus();
@@ -150,13 +153,14 @@ export async function createGeminiSidebar(data: FolderData): Promise<GeminiSideb
   });
   selection = new FolderSelection({
     store,
+    commands,
     runtime,
     navigation,
     feedback,
-    nativeMenus,
+    toolbar: { host: () => runtime.panel, placement: 'floating', icon: ligatureIcon },
+    nativeSelection: () => null,
     onFolderSelectionChange: () => treeView.refreshSite(),
     getContext: () => ({
-      sortMode: treeView.sortMode,
       accountIsolationEnabled: store.accountIsolationEnabled,
       isDestroyed: destroyed,
     }),
@@ -173,6 +177,7 @@ export async function createGeminiSidebar(data: FolderData): Promise<GeminiSideb
   });
   treeView = new FolderSidebarView({
     store,
+    commands,
     runtime,
     selection,
     navigation,

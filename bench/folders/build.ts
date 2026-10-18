@@ -1,10 +1,12 @@
 /**
  * Bundles the bench entries with the repository's own esbuild, resolving the
- * `@/` aliases from tsconfig.json, `?raw` CSS imports as text, and
- * `webextension-polyfill` to the in-memory stub.
+ * `@/` aliases from tsconfig.json, `?raw` CSS imports as text, eager
+ * `import.meta.glob` calls as static imports, and `webextension-polyfill` to
+ * the in-memory stub.
  */
 
 import { type Plugin, build } from 'esbuild';
+import { globSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -28,6 +30,57 @@ const rawImports: Plugin = {
       contents: await readFile(args.path, 'utf8'),
       loader: 'text',
     }));
+  },
+};
+
+// `import.meta.glob(<pattern>, { eager: true, import?, query? })`, as src/ writes it.
+const GLOB_CALL =
+  /import\.meta\.glob(?:<[^(]*>)?\(\s*(['"])([^'"]+)\1\s*,\s*(\{[^}]*\})\s*,?\s*\)/g;
+
+function globOption(options: string, name: string): string | undefined {
+  return options.match(new RegExp(`\\b${name}\\s*:\\s*(['"])([^'"]*)\\1`))?.[2];
+}
+
+/** Expands one eager glob into imports plus the object literal Vite would produce. */
+function expandGlob(dir: string, pattern: string, options: string, prefix: string) {
+  if (!/\beager\s*:\s*true\b/.test(options)) {
+    throw new Error(`folder bench: only eager import.meta.glob is supported (${pattern})`);
+  }
+  const imported = globOption(options, 'import');
+  const query = globOption(options, 'query') ?? '';
+  const files = globSync(pattern, { cwd: dir }).sort();
+  const imports = files.map((file, index) => {
+    const source = JSON.stringify(path.resolve(dir, file) + query);
+    const name = `${prefix}${index}`;
+    if (!imported) return `import * as ${name} from ${source};`;
+    if (imported === 'default') return `import ${name} from ${source};`;
+    return `import { ${imported} as ${name} } from ${source};`;
+  });
+  const keyOf = (file: string) => (file.startsWith('.') ? file : `./${file}`);
+  const entries = files.map((file, index) => `${JSON.stringify(keyOf(file))}: ${prefix}${index}`);
+  return { imports, literal: `({ ${entries.join(', ')} })` };
+}
+
+// src/ discovers sites, primitives and their messages with Vite's import.meta.glob,
+// which esbuild leaves as a runtime call that does not exist.
+const importMetaGlob: Plugin = {
+  name: 'import-meta-glob',
+  setup(context) {
+    context.onLoad({ filter: /\.tsx?$/ }, async (args) => {
+      const contents = await readFile(args.path, 'utf8');
+      if (!contents.includes('import.meta.glob')) return undefined;
+      const imports: string[] = [];
+      let count = 0;
+      const rewritten = contents.replace(GLOB_CALL, (_call, _quote, pattern, options) => {
+        const expanded = expandGlob(path.dirname(args.path), pattern, options, `__glob${count++}_`);
+        imports.push(...expanded.imports);
+        return expanded.literal;
+      });
+      return {
+        contents: `${imports.join('\n')}\n${rewritten}`,
+        loader: args.path.endsWith('x') ? 'tsx' : 'ts',
+      };
+    });
   },
 };
 
@@ -56,7 +109,7 @@ export async function bundle(entry: string, platform: 'node' | 'browser'): Promi
     alias: {
       'webextension-polyfill': path.join(BENCH_DIR, 'stubs/webextensionPolyfill.ts'),
     },
-    plugins: [rawImports],
+    plugins: [rawImports, importMetaGlob],
   });
   return result.outputFiles[0].text;
 }
