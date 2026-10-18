@@ -1,3 +1,4 @@
+import type { AccountTier } from '@/features/bridge/protocol';
 /**
  * The Pro usage ring beside ChatGPT's chat-mode model picker, and the small
  * card that names the numbers on hover or focus.
@@ -19,6 +20,7 @@ import type { SiteAdapter } from '@/features/plugins/types';
 import { getCachedLocale, getTranslationSync } from '@/utils/i18n';
 
 import { findTrigger, mergedLabels, triggerText } from '../chatgptModelSelect/pickerDom';
+import { type Allowance, TIER_NAMES } from './allowance';
 import type { ProUsageSummary } from './usageStore';
 
 export const PRO_USAGE_BADGE_ID = 'gv-chatgpt-pro-usage';
@@ -37,8 +39,9 @@ const VIEWPORT_MARGIN_PX = 8;
 
 export interface RingView {
   readonly summary: ProUsageSummary;
-  /** The denominator when ChatGPT has not named its limit: the plugin setting. */
-  readonly fallbackLimit: number;
+  /** The denominator (see `resolveAllowance`); null draws no share. */
+  readonly allowance: Allowance | null;
+  readonly tier: AccountTier;
 }
 
 function pickerData(adapter: SiteAdapter | null): ModelPickerSection | null {
@@ -92,19 +95,27 @@ export function describeRing(view: RingView): {
   readonly title: string;
   readonly detail: string;
 } {
-  const { summary } = view;
-  const limit = summary.limit ?? view.fallbackLimit;
-  const ratio = summary.blocked ? 1 : Math.min(1, summary.usedThisWeek / limit);
-  const title = summary.blocked
-    ? getTranslationSync('chatgptProUsageNoneLeft')
-    : fill(getTranslationSync('chatgptProUsageUsed'), { used: summary.usedThisWeek, limit });
-  const scope = getTranslationSync('chatgptProUsageScope');
-  const detail =
-    summary.resetsAt === null
-      ? scope
-      : `${scope} · ${fill(getTranslationSync('chatgptProUsageResets'), {
-          time: formatTime(summary.resetsAt),
-        })}`;
+  const { summary, allowance } = view;
+  const used = summary.usedThisWeek;
+  let ratio = 0;
+  let title: string;
+  if (summary.blocked) {
+    ratio = 1;
+    title = getTranslationSync('chatgptProUsageNoneLeft');
+  } else if (allowance) {
+    ratio = Math.min(1, used / allowance.limit);
+    title = fill(getTranslationSync('chatgptProUsageUsed'), { used, limit: allowance.limit });
+  } else {
+    title = fill(getTranslationSync('chatgptProUsageUsedCount'), { used });
+  }
+  const parts = [getTranslationSync('chatgptProUsageScope')];
+  if (view.tier !== 'unknown') parts.unshift(TIER_NAMES[view.tier]);
+  if (summary.resetsAt !== null) {
+    parts.push(
+      fill(getTranslationSync('chatgptProUsageResets'), { time: formatTime(summary.resetsAt) }),
+    );
+  }
+  const detail = parts.join(' · ');
   return { ratio, title, detail };
 }
 

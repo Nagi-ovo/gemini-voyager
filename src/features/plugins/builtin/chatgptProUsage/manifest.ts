@@ -3,8 +3,8 @@ import type { VoyagerBuildTarget } from '@/core/utils/browser';
 import type { PluginManifest } from '../../types';
 
 export const CHATGPT_PRO_USAGE_PLUGIN_ID = 'voyager.chatgpt-pro-usage';
-/** The ring's denominator until ChatGPT names the real limit (it does so only once Pro is used up). */
-export const DEFAULT_WEEKLY_PRO_LIMIT = 200;
+/** 0 = automatic: ChatGPT's own limit when it names one, else the plan's default (allowance.ts). */
+export const AUTOMATIC_WEEKLY_PRO_LIMIT = 0;
 export const MAX_WEEKLY_PRO_LIMIT = 10_000;
 
 // Read here rather than through getVoyagerBuildTarget: the builtin list runs this at import,
@@ -91,8 +91,8 @@ export const CHATGPT_PRO_USAGE_MANIFEST: PluginManifest = {
       weeklyLimit: {
         type: 'number',
         label: 'Weekly Pro allowance',
-        default: DEFAULT_WEEKLY_PRO_LIMIT,
-        min: 1,
+        default: AUTOMATIC_WEEKLY_PRO_LIMIT,
+        min: 0,
         max: MAX_WEEKLY_PRO_LIMIT,
         messageKeys: {
           label: 'chatgptProUsageWeeklyLimit',

@@ -33,11 +33,19 @@ const MAX_SENDS = 5_000;
 const MAX_ACCOUNTS = 20;
 const MAX_KEY_LENGTH = 64;
 const MAX_LIMIT = 10_000;
+const MAX_PLAN_LENGTH = 100;
 
 export interface ProUsageSend {
   readonly at: number;
   /** A hash of conversation + last message id; null when the page named neither. */
   readonly key: string | null;
+}
+
+/** The two plan strings the page's own `accounts/check` response named, and when. */
+export interface ProUsagePlan {
+  readonly planType: string | null;
+  readonly subscriptionPlan: string | null;
+  readonly observedAt: number;
 }
 
 export interface ProUsageBucket {
@@ -49,6 +57,7 @@ export interface ProUsageBucket {
   readonly resetsAt: number | null;
   /** Until this time ChatGPT has said Pro is used up, whatever this browser counted. */
   readonly blockedUntil: number | null;
+  readonly plan: ProUsagePlan | null;
 }
 
 export interface ProUsageStore {
@@ -80,6 +89,7 @@ export const EMPTY_BUCKET: ProUsageBucket = {
   limit: null,
   resetsAt: null,
   blockedUntil: null,
+  plan: null,
 };
 export const EMPTY_PRO_USAGE: ProUsageStore = { version: 2, accounts: {}, lastAccount: null };
 
@@ -113,6 +123,21 @@ function readSend(value: unknown): ProUsageSend | null {
   return { at, key };
 }
 
+function planString(value: unknown): string | null {
+  return typeof value === 'string' && value.length > 0 && value.length <= MAX_PLAN_LENGTH
+    ? value
+    : null;
+}
+
+export function readPlan(raw: unknown): ProUsagePlan | null {
+  if (!isRecord(raw)) return null;
+  const planType = planString(raw.planType);
+  const subscriptionPlan = planString(raw.subscriptionPlan);
+  const observedAt = finiteOrNull(raw.observedAt);
+  if ((planType === null && subscriptionPlan === null) || observedAt === null) return null;
+  return { planType, subscriptionPlan, observedAt };
+}
+
 function readBucket(raw: unknown): ProUsageBucket {
   if (!isRecord(raw)) return EMPTY_BUCKET;
   const sends = Array.isArray(raw.sends)
@@ -124,6 +149,7 @@ function readBucket(raw: unknown): ProUsageBucket {
     limit: limit !== null && limit >= 1 ? limit : null,
     resetsAt: finiteOrNull(raw.resetsAt),
     blockedUntil: finiteOrNull(raw.blockedUntil),
+    plan: readPlan(raw.plan),
   };
 }
 
@@ -299,6 +325,25 @@ export function applyProQuota(
     return null;
   }
   return withBucket(current, key, next);
+}
+
+/** The store with the plan this account's page reported, or null when it is unchanged. */
+export function recordPlan(
+  store: ProUsageStore,
+  account: string | null,
+  plan: ProUsagePlan,
+): ProUsageStore | null {
+  const key = accountKey(account);
+  const current = withAccount(store, key);
+  const bucket = bucketOf(current, key);
+  if (
+    current === store &&
+    bucket.plan?.planType === plan.planType &&
+    bucket.plan?.subscriptionPlan === plan.subscriptionPlan
+  ) {
+    return null;
+  }
+  return withBucket(current, key, { ...bucket, plan });
 }
 
 /**

@@ -4306,7 +4306,11 @@
     "description": "Label of the ChatGPT Pro usage plugin setting: Pro messages per week."
   },
   "chatgptProUsageWeeklyLimitHint": {
-    "message": "لا يذكر ChatGPT عادةً حصتك من Pro، لذا تعتمد الحلقة على هذا الرقم. وعندما يذكرها ChatGPT تُستخدم قيمته بدلًا منه.",
+    "message": "اتركه 0 ليُضبط تلقائيًا: الحد الذي يذكره ChatGPT عندما يذكره، وإلا فالحصة المعتادة لخطتك (Pro Lite ‏50؛ Pro ‏200، ثم 100 بدءًا من 30 أكتوبر 2026). لا توجد قيمة افتراضية لـ Pro Max. وأي رقم آخر يُستخدم بدلًا من ذلك إلى أن يذكر ChatGPT حده.",
     "description": "Hint under the weekly Pro allowance setting."
+  },
+  "chatgptProUsageUsedCount": {
+    "message": "استُخدم {used} من رسائل Pro هذا الأسبوع",
+    "description": "First line of the Pro usage card when no weekly allowance is known. {used} is a number."
   }
 }

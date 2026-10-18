@@ -2,8 +2,9 @@ import { StorageKeys } from '@/core/types/common';
 import type { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import type { PluginSettings, SiteAdapter } from '@/features/plugins/types';
 
+import { resolveAllowance, tierOfPlan } from './allowance';
 import { findProTrigger, isBadgeNode, renderBadge } from './badge';
-import { DEFAULT_WEEKLY_PRO_LIMIT, MAX_WEEKLY_PRO_LIMIT } from './manifest';
+import { MAX_WEEKLY_PRO_LIMIT } from './manifest';
 import { type ObserverEvent, postToObserver, readObserverMessage } from './protocol';
 import {
   EMPTY_PRO_USAGE,
@@ -15,11 +16,13 @@ import {
   noteAccount,
   parseInitQuota,
   readProUsageStore,
+  recordPlan,
   recordProSend,
   summarizeProUsage,
 } from './usageStore';
 
 export { CHATGPT_PRO_USAGE_MANIFEST, CHATGPT_PRO_USAGE_PLUGIN_ID } from './manifest';
+export { resolveAllowance, tierOfPlan } from './allowance';
 export { bucketOf, readProUsageStore, summarizeProUsage } from './usageStore';
 
 const STORAGE_KEY = StorageKeys.GV_CHATGPT_PRO_USAGE;
@@ -48,7 +51,7 @@ export function activateChatGptProUsage(
   adapter: SiteAdapter | null = null,
 ): void {
   const { signal } = scope;
-  const fallbackLimit = weeklyLimitSetting(settings);
+  const manualLimit = weeklyLimitSetting(settings);
   let store: ProUsageStore = EMPTY_PRO_USAGE;
   // No ring until the observer answers: without it the count would silently stay at zero.
   let observerReady = false;
@@ -67,12 +70,16 @@ export function activateChatGptProUsage(
 
   const render = (): void => {
     if (signal.aborted) return;
-    renderBadge(
-      observerReady ? findProTrigger(adapter) : null,
-      observerReady
-        ? { summary: summarizeProUsage(bucketOf(store, shownAccount()), Date.now()), fallbackLimit }
-        : null,
-    );
+    if (!observerReady) {
+      renderBadge(null, null);
+      return;
+    }
+    const now = Date.now();
+    const bucket = bucketOf(store, shownAccount());
+    const summary = summarizeProUsage(bucket, now);
+    const tier = tierOfPlan(bucket.plan);
+    const allowance = resolveAllowance({ chatgptLimit: summary.limit, manualLimit, tier, now });
+    renderBadge(findProTrigger(adapter), { summary, allowance, tier });
   };
 
   const scheduleRender = (): void => {
@@ -121,6 +128,17 @@ export function activateChatGptProUsage(
     }
     if (event.type === 'account') {
       learnAccount(event.account);
+      return;
+    }
+    if (event.type === 'plan') {
+      // A check request that named no account belongs to the account the page is on.
+      const account = event.account ?? currentAccount ?? null;
+      const plan = {
+        planType: event.planType,
+        subscriptionPlan: event.subscriptionPlan,
+        observedAt: Date.now(),
+      };
+      update((current) => recordPlan(current, account, plan));
       return;
     }
     const { account } = event;
@@ -181,11 +199,12 @@ export function activateChatGptProUsage(
 }
 
 /** The plugin's "weekly Pro allowance", used until ChatGPT names the real limit. */
-function weeklyLimitSetting(settings: PluginSettings): number {
+/** The plugin's "weekly Pro allowance"; 0 (the default) or anything unusable means automatic. */
+function weeklyLimitSetting(settings: PluginSettings): number | null {
   const value = settings.weeklyLimit;
   return typeof value === 'number' && Number.isFinite(value) && value >= 1
     ? Math.min(MAX_WEEKLY_PRO_LIMIT, Math.round(value))
-    : DEFAULT_WEEKLY_PRO_LIMIT;
+    : null;
 }
 
 function addsOnlyBadge(record: MutationRecord): boolean {

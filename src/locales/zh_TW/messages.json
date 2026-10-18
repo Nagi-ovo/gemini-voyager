@@ -4306,7 +4306,11 @@
     "description": "Label of the ChatGPT Pro usage plugin setting: Pro messages per week."
   },
   "chatgptProUsageWeeklyLimitHint": {
-    "message": "ChatGPT 平時不會告訴你 Pro 額度，圓環先以這個數字計算；ChatGPT 回報額度後會自動以它為準。",
+    "message": "填 0 表示依方案自動：ChatGPT 回報額度就用它，否則依方案常見額度（Pro Lite 50；Pro 200，2026 年 10 月 30 日起 100），Pro Max 沒有預設值。填其他數字就用你填的，直到 ChatGPT 回報自己的額度。",
     "description": "Hint under the weekly Pro allowance setting."
+  },
+  "chatgptProUsageUsedCount": {
+    "message": "本週已用 {used} 次 Pro",
+    "description": "First line of the Pro usage card when no weekly allowance is known. {used} is a number."
   }
 }

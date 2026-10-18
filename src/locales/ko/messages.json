@@ -4306,7 +4306,11 @@
     "description": "Label of the ChatGPT Pro usage plugin setting: Pro messages per week."
   },
   "chatgptProUsageWeeklyLimitHint": {
-    "message": "ChatGPT는 보통 Pro 한도를 알려 주지 않아 링은 이 숫자로 계산합니다. ChatGPT가 한도를 알려 주면 그 값을 사용합니다.",
+    "message": "0으로 두면 자동입니다. ChatGPT가 한도를 알려 주면 그 값을, 아니면 요금제의 일반 한도(Pro Lite 50, Pro 200, 2026년 10월 30일부터 100)를 씁니다. Pro Max는 기본값이 없습니다. 다른 숫자를 넣으면 ChatGPT가 한도를 알려 줄 때까지 그 숫자를 씁니다.",
     "description": "Hint under the weekly Pro allowance setting."
+  },
+  "chatgptProUsageUsedCount": {
+    "message": "이번 주 Pro {used}회 사용",
+    "description": "First line of the Pro usage card when no weekly allowance is known. {used} is a number."
   }
 }

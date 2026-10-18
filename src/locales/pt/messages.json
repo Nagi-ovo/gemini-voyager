@@ -4306,7 +4306,11 @@
     "description": "Label of the ChatGPT Pro usage plugin setting: Pro messages per week."
   },
   "chatgptProUsageWeeklyLimitHint": {
-    "message": "O ChatGPT geralmente não informa sua cota do Pro, então o anel usa este número. Quando o ChatGPT a informa, o valor dele é usado.",
+    "message": "Deixe em 0 para ser automático: o limite que o ChatGPT informar, quando informar; senão, a cota habitual do seu plano (Pro Lite 50; Pro 200, e 100 a partir de 30 de outubro de 2026). O Pro Max não tem valor padrão. Qualquer outro número é usado no lugar, até o ChatGPT informar o próprio limite.",
     "description": "Hint under the weekly Pro allowance setting."
+  },
+  "chatgptProUsageUsedCount": {
+    "message": "{used} mensagens do Pro usadas nesta semana",
+    "description": "First line of the Pro usage card when no weekly allowance is known. {used} is a number."
   }
 }

@@ -132,6 +132,63 @@ describe('chatgpt-pro-usage-observer', () => {
     expect(accounts[0].payload?.account).not.toBe(accounts[1].payload?.account);
   });
 
+  const checkBody = {
+    accounts: {
+      'acct-1': {
+        account: {
+          account_id: 'acct-1',
+          plan_type: 'prolite',
+          plan_display_name: 'Pro',
+          email: 'jesse@example.com',
+          name: 'Jesse',
+        },
+        entitlement: { subscription_plan: 'chatgptprolite', expires_at: '2026-11-01T00:00:00Z' },
+      },
+    },
+  };
+  const checkUrl = '/backend-api/accounts/check/v4-2023-04-27';
+  const accountHeader = { headers: { 'chatgpt-account-id': 'acct-1' } };
+
+  it("reports only the plan type and subscription of the page's account", async () => {
+    await arm();
+    pageFetch.mockResolvedValueOnce(new Response(JSON.stringify(checkBody), { status: 200 }));
+    const response = await window.fetch(checkUrl, accountHeader);
+    await settle();
+
+    const plans = posted.filter((entry) => entry.type === 'plan');
+    expect(plans).toHaveLength(1);
+    expect(Object.keys(plans[0].payload ?? {}).sort()).toEqual([
+      'account',
+      'planType',
+      'subscriptionPlan',
+    ]);
+    expect(plans[0].payload).toMatchObject({
+      planType: 'prolite',
+      subscriptionPlan: 'chatgptprolite',
+    });
+    const everything = JSON.stringify(posted);
+    for (const secret of ['jesse@example.com', 'Jesse', 'acct-1', '2026-11-01']) {
+      expect(everything).not.toContain(secret);
+    }
+    expect(await response.json()).toEqual(checkBody);
+  });
+
+  it('remembers the plan check the page makes before it is armed, and reports it on arm', async () => {
+    const proBody = JSON.parse(JSON.stringify(checkBody));
+    proBody.accounts['acct-1'].account.plan_type = 'pro';
+    pageFetch.mockResolvedValueOnce(new Response(JSON.stringify(proBody), { status: 200 }));
+    await window.fetch(checkUrl, accountHeader);
+    await settle();
+    expect(posted.filter((entry) => entry.type === 'plan')).toEqual([]);
+
+    window.postMessage({ source: CONTENT_SOURCE, type: 'arm' }, location.origin);
+    await settle();
+    // Observers installed by earlier cases answer the arm too; this page's plan is the `pro` one.
+    expect(
+      posted.filter((entry) => entry.type === 'plan' && entry.payload?.planType === 'pro'),
+    ).toHaveLength(1);
+  });
+
   it('gives the same turn the same key on both conversation endpoints', async () => {
     await arm();
     await window.fetch('/backend-api/f/conversation', { method: 'POST', body: sendBody('x') });

@@ -22,6 +22,12 @@ export type ObserverEvent =
   | { readonly type: 'ready'; readonly account?: string | null }
   | { readonly type: 'account'; readonly account: string | null }
   | {
+      readonly type: 'plan';
+      readonly account: string | null;
+      readonly planType: string | null;
+      readonly subscriptionPlan: string | null;
+    }
+  | {
       readonly type: 'send';
       readonly account: string | null;
       readonly model: string;
@@ -74,6 +80,15 @@ export function readObserverMessage(
   if (!isRecord(payload) || !isAccount(payload.account)) return null;
   const { account } = payload;
   if (data.type === 'account') return { type: 'account', account };
+  if (data.type === 'plan') {
+    // Only these two strings are read, whatever else a page posts under the tag.
+    const { planType, subscriptionPlan } = payload;
+    if (planType !== null && !boundedString(planType, MAX_MODEL_LENGTH)) return null;
+    if (subscriptionPlan !== null && !boundedString(subscriptionPlan, MAX_MODEL_LENGTH))
+      return null;
+    if (planType === null && subscriptionPlan === null) return null;
+    return { type: 'plan', account, planType, subscriptionPlan };
+  }
   if (data.type === 'send') {
     const { model, mode, key, at } = payload;
     if (!boundedString(model, MAX_MODEL_LENGTH)) return null;

@@ -17,6 +17,12 @@
  *   value leaves the page, only hashes.
  * - quota: a /backend-api/conversation/init response with a non-empty
  *   model_limits or blocked_features, reported as those two lists.
+ * - plan: a GET /backend-api/accounts/check/… response, reported as
+ *   { account, planType, subscriptionPlan } for the account the page uses:
+ *   account.plan_type and entitlement.subscription_plan, nothing else. The
+ *   page asks for it once while loading, before the content script can arm
+ *   this, so that one request is watched before arming (only until a plan is
+ *   seen) and its plan is posted on arm.
  *
  * Which model counts as Pro is decided by the content script
  * (src/features/plugins/builtin/chatgptProUsage/usageStore.ts).
@@ -37,10 +43,14 @@
 
   var ACCOUNT_HEADER = 'chatgpt-account-id';
   var API_PREFIX = '/backend-api/';
+  var CHECK_PATH = /^\/backend-api\/accounts\/check(?:\/[^/]+)?\/?$/;
+  var MAX_ACCOUNTS = 16;
 
   var armed = false;
   // The account hash last reported; undefined until one is seen while armed.
   var lastAccount;
+  // The last plan seen, posted again on each arm.
+  var lastPlan = null;
   var originalFetch = window.fetch;
 
   function post(type, payload) {
@@ -56,6 +66,7 @@
     if (data.type === 'arm') {
       armed = true;
       post('ready', lastAccount === undefined ? undefined : { account: lastAccount });
+      if (lastPlan) post('plan', lastPlan);
     } else if (data.type === 'disarm') {
       armed = false;
     }
@@ -199,6 +210,69 @@
     });
   }
 
+  function isObject(value) {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+  }
+
+  function planText(value) {
+    return typeof value === 'string' && value.length > 0 && value.length <= MAX_MODEL
+      ? value
+      : null;
+  }
+
+  // The check response lists accounts by id; pick the one this page uses.
+  function readPlan(data, account) {
+    if (!isObject(data) || !isObject(data.accounts)) return null;
+    var keys = Object.keys(data.accounts).slice(0, MAX_ACCOUNTS);
+    var entries = [];
+    var seen = {};
+    for (var i = 0; i < keys.length; i += 1) {
+      var entry = data.accounts[keys[i]];
+      if (!isObject(entry)) continue;
+      var info = isObject(entry.account) ? entry.account : {};
+      // The map may list one account twice (under its id and as "default").
+      var id = typeof info.account_id === 'string' && info.account_id ? info.account_id : keys[i];
+      var key = hash(id);
+      if (seen[key]) continue;
+      seen[key] = true;
+      entries.push({ key: key, entry: entry });
+    }
+    var chosen = null;
+    for (var j = 0; j < entries.length; j += 1) {
+      if (account !== null && entries[j].key === account) chosen = entries[j].entry;
+    }
+    if (!chosen && entries.length === 1) chosen = entries[0].entry;
+    if (!chosen) return null;
+    var accountInfo = isObject(chosen.account) ? chosen.account : {};
+    var entitlement = isObject(chosen.entitlement) ? chosen.entitlement : {};
+    var planType = planText(accountInfo.plan_type);
+    var subscriptionPlan = planText(entitlement.subscription_plan);
+    if (planType === null && subscriptionPlan === null) return null;
+    // Only these two strings and the account hash leave the page.
+    return { account: account, planType: planType, subscriptionPlan: subscriptionPlan };
+  }
+
+  function watchCheck(result, account) {
+    onResponse(result, function (response) {
+      if (typeof response.clone !== 'function') return;
+      response
+        .clone()
+        .json()
+        .then(function (data) {
+          var plan = readPlan(data, account);
+          if (!plan) return;
+          lastPlan = plan;
+          if (armed) post('plan', plan);
+        })
+        .catch(ignore);
+    });
+  }
+
+  function isCheck(input, init) {
+    var path = sameOriginPath(input);
+    return path !== null && CHECK_PATH.test(path) && methodOf(input, init) === 'GET';
+  }
+
   function noteAccount(account) {
     if (account === lastAccount) return;
     lastAccount = account;
@@ -207,7 +281,22 @@
 
   if (typeof originalFetch === 'function') {
     window.fetch = function (input, init) {
-      if (!armed) return originalFetch.apply(this, arguments);
+      if (!armed) {
+        // Before the first plan only, the page's own plan check is watched too.
+        var early = false;
+        var earlyAccount = null;
+        try {
+          early = !lastPlan && isCheck(input, init);
+          if (early) earlyAccount = accountOf(input, init);
+        } catch (e) {
+          early = false;
+        }
+        var passed = originalFetch.apply(this, arguments);
+        try {
+          if (early) watchCheck(passed, earlyAccount);
+        } catch (e) {}
+        return passed;
+      }
       var kind = null;
       var bodyPromise = null;
       var account = null;
@@ -227,6 +316,8 @@
           } else if (path === INIT_PATH) {
             kind = 'init';
           }
+        } else if (isCheck(input, init)) {
+          kind = 'check';
         }
       } catch (e) {
         kind = null;
@@ -235,6 +326,7 @@
       try {
         if (kind === 'send') watchSend(result, bodyPromise, account);
         else if (kind === 'init') watchInit(result, account);
+        else if (kind === 'check') watchCheck(result, account);
       } catch (e) {}
       return result;
     };

@@ -101,6 +101,7 @@ describe('account migration', () => {
       limit: 15,
       resetsAt: NOW + DAY,
       blockedUntil: null,
+      plan: null,
     });
   });
 

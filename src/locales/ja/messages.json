@@ -4306,7 +4306,11 @@
     "description": "Label of the ChatGPT Pro usage plugin setting: Pro messages per week."
   },
   "chatgptProUsageWeeklyLimitHint": {
-    "message": "ChatGPT は通常 Pro の上限を知らせないため、リングはこの数で計算します。ChatGPT が上限を知らせた後はその値を使います。",
+    "message": "0 のままなら自動です。ChatGPT が上限を知らせたらその値、なければプランの標準回数（Pro Lite 50、Pro 200、2026 年 10 月 30 日以降は 100）を使います。Pro Max には既定値がありません。ほかの数を入れると、ChatGPT が上限を知らせるまでその数を使います。",
     "description": "Hint under the weekly Pro allowance setting."
+  },
+  "chatgptProUsageUsedCount": {
+    "message": "今週の Pro 使用 {used} 回",
+    "description": "First line of the Pro usage card when no weekly allowance is known. {used} is a number."
   }
 }

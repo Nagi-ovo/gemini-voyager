@@ -4306,7 +4306,11 @@
     "description": "Label of the ChatGPT Pro usage plugin setting: Pro messages per week."
   },
   "chatgptProUsageWeeklyLimitHint": {
-    "message": "ChatGPT usually doesn't report your Pro allowance, so the ring uses this number. Once ChatGPT reports it, its number is used instead.",
+    "message": "Leave at 0 to set it automatically: the limit ChatGPT reports when it reports one, otherwise your plan's usual allowance (Pro Lite 50; Pro 200, 100 from 30 October 2026). Pro Max has no default. Any other number is used instead, until ChatGPT reports its own limit.",
     "description": "Hint under the weekly Pro allowance setting."
+  },
+  "chatgptProUsageUsedCount": {
+    "message": "Pro messages used this week: {used}",
+    "description": "First line of the Pro usage card when no weekly allowance is known. {used} is a number."
   }
 }

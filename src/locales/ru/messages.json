@@ -4306,7 +4306,11 @@
     "description": "Label of the ChatGPT Pro usage plugin setting: Pro messages per week."
   },
   "chatgptProUsageWeeklyLimitHint": {
-    "message": "Обычно ChatGPT не сообщает лимит Pro, поэтому кольцо считает по этому числу. Когда ChatGPT сообщит лимит, будет использовано его значение.",
+    "message": "Оставьте 0 для автоматического выбора: лимит, который сообщает ChatGPT, а если его нет — обычный лимит тарифа (Pro Lite 50; Pro 200, со 30 октября 2026 года 100). У Pro Max значения по умолчанию нет. Любое другое число используется вместо этого, пока ChatGPT не сообщит свой лимит.",
     "description": "Hint under the weekly Pro allowance setting."
+  },
+  "chatgptProUsageUsedCount": {
+    "message": "Pro за неделю: {used}",
+    "description": "First line of the Pro usage card when no weekly allowance is known. {used} is a number."
   }
 }

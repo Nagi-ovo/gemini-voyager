@@ -118,6 +118,10 @@ function send(
   fromObserver('send', { account, model, mode, key, at: Date.now() });
 }
 
+function plan(planType: string | null, subscriptionPlan: string | null, account = 'acct-a'): void {
+  fromObserver('plan', { account, planType, subscriptionPlan });
+}
+
 function bucket(account: string): { sends: unknown[]; limit?: number; resetsAt?: number } {
   return (stored[KEY] as { accounts: Record<string, { sends: unknown[] }> }).accounts[account];
 }
@@ -131,6 +135,7 @@ describe('ChatGPT Pro usage', () => {
   });
 
   afterEach(async () => {
+    vi.useRealTimers();
     await scope?.dispose();
     scope = null;
     vi.restoreAllMocks();
@@ -144,7 +149,7 @@ describe('ChatGPT Pro usage', () => {
     expect(toObserver).toContain('arm');
     expect(ring()?.nextElementSibling?.getAttribute('aria-label')).toBe('选择 ChatGPT 模型');
     expect(arcShare()).toBe(0);
-    expect(badgeText()).toBe('0 / 200 Pro messages used this week');
+    expect(badgeText()).toBe('Pro messages used this week: 0');
   });
 
   it('keeps the ring on the picker row when ChatGPT wraps the picker in a block', async () => {
@@ -171,10 +176,9 @@ describe('ChatGPT Pro usage', () => {
     send('gpt-6-pro', 'k1');
     await settle();
 
-    expect(badgeText()).toBe('1 / 200 Pro messages used this week');
-    // One send of 200 still draws a visible arc.
-    expect(arcShare()).toBeGreaterThan(0.04);
-    expect(arcShare()).toBeLessThan(0.1);
+    expect(badgeText()).toBe('Pro messages used this week: 1');
+    // No plan, setting or ChatGPT limit known: no share to draw.
+    expect(arcShare()).toBe(0);
     expect(bucket('acct-a').sends).toHaveLength(1);
   });
 
@@ -184,7 +188,7 @@ describe('ChatGPT Pro usage', () => {
     send('gpt-6', 'k2');
     await settle();
 
-    expect(badgeText()).toBe('0 / 200 Pro messages used this week');
+    expect(badgeText()).toBe('Pro messages used this week: 0');
     expect(stored[KEY]).toBeUndefined();
   });
 
@@ -227,7 +231,7 @@ describe('ChatGPT Pro usage', () => {
     await start();
     send('gpt-6-pro', 'k5', 'acct-a', 'gizmo_interaction');
     await settle();
-    expect(badgeText()).toBe('1 / 200 Pro messages used this week');
+    expect(badgeText()).toBe('Pro messages used this week: 1');
   });
 
   it('shows only the count of the account the page is signed in to', async () => {
@@ -236,14 +240,14 @@ describe('ChatGPT Pro usage', () => {
     send('gpt-6-pro', 'k1', 'acct-a');
     send('gpt-6-pro', 'k2', 'acct-a');
     await settle();
-    expect(badgeText()).toBe('2 / 200 Pro messages used this week');
+    expect(badgeText()).toBe('Pro messages used this week: 2');
 
     fromObserver('account', { account: 'acct-b' });
     await settle();
-    expect(badgeText()).toBe('0 / 200 Pro messages used this week');
+    expect(badgeText()).toBe('Pro messages used this week: 0');
     send('gpt-6-pro', 'k3', 'acct-b');
     await settle();
-    expect(badgeText()).toBe('1 / 200 Pro messages used this week');
+    expect(badgeText()).toBe('Pro messages used this week: 1');
     expect(bucket('acct-a').sends).toHaveLength(2);
   });
 
@@ -251,11 +255,11 @@ describe('ChatGPT Pro usage', () => {
     stored[KEY] = { version: 1, sends: [{ at: Date.now() - 1_000, key: 'old' }] };
     mountComposer('Pro');
     await start();
-    expect(badgeText()).toBe('1 / 200 Pro messages used this week');
+    expect(badgeText()).toBe('Pro messages used this week: 1');
 
     fromObserver('account', { account: 'acct-a' });
     await settle();
-    expect(badgeText()).toBe('1 / 200 Pro messages used this week');
+    expect(badgeText()).toBe('Pro messages used this week: 1');
     expect(bucket('acct-a').sends).toHaveLength(1);
   });
 
@@ -266,7 +270,60 @@ describe('ChatGPT Pro usage', () => {
     document.documentElement.append(body);
     mountComposer('Pro');
     await new Promise((r) => setTimeout(r, 150));
+    expect(badgeText()).toBe('Pro messages used this week: 0');
+  });
+
+  it('measures a Pro Lite account against 50 and names the plan', async () => {
+    mountComposer('Pro');
+    await start();
+    plan('prolite', 'chatgptprolite');
+    send('gpt-6-pro', 'k1');
+    await settle();
+
+    expect(hoverCard()).toEqual({
+      title: '1 / 50 Pro messages used this week',
+      detail: 'Pro Lite · Counted in this browser only',
+    });
+    // One send of 50 still draws a visible arc.
+    expect(arcShare()).toBeGreaterThan(0.04);
+  });
+
+  it('measures a Pro account against 200 until 30 October 2026, then 100', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 9, 29, 23, 59));
+    mountComposer('Pro');
+    await start();
+    plan('pro', 'chatgptpro');
+    await settle();
     expect(badgeText()).toBe('0 / 200 Pro messages used this week');
+
+    vi.setSystemTime(new Date(2026, 9, 30, 0, 1));
+    send('gpt-6-pro', 'k1');
+    await settle();
+    expect(badgeText()).toBe('1 / 100 Pro messages used this week');
+    vi.useRealTimers();
+  });
+
+  it('draws no share for a plan without a known allowance', async () => {
+    mountComposer('Pro');
+    await start();
+    plan('promax', null);
+    send('gpt-6-pro', 'k1');
+    await settle();
+
+    expect(arcShare()).toBe(0);
+    expect(hoverCard()).toEqual({
+      title: 'Pro messages used this week: 1',
+      detail: 'Pro Max · Counted in this browser only',
+    });
+  });
+
+  it('prefers the allowance setting over the plan default', async () => {
+    mountComposer('Pro');
+    await start({ weeklyLimit: 4 });
+    plan('pro', 'chatgptpro');
+    await settle();
+    expect(badgeText()).toBe('0 / 4 Pro messages used this week');
   });
 
   it('measures against the weekly allowance setting', async () => {
@@ -304,10 +361,12 @@ describe('ChatGPT Pro usage', () => {
     await start();
     const element = ring()!;
     expect(element.tabIndex).toBe(0);
-    expect(element.getAttribute('aria-label')).toBe('0 / 200 Pro messages used this week');
+    expect(element.getAttribute('aria-label')).toBe('Pro messages used this week: 0');
 
     element.focus();
-    expect(document.getElementById(PRO_USAGE_CARD_ID)?.textContent).toContain('0 / 200');
+    expect(document.getElementById(PRO_USAGE_CARD_ID)?.textContent).toContain(
+      'Pro messages used this week: 0',
+    );
     element.blur();
     expect(document.getElementById(PRO_USAGE_CARD_ID)).toBeNull();
   });
@@ -322,7 +381,7 @@ describe('ChatGPT Pro usage', () => {
 
     setStep(trigger, 'Pro');
     await new Promise((r) => setTimeout(r, 150));
-    expect(badgeText()).toBe('0 / 200 Pro messages used this week');
+    expect(badgeText()).toBe('Pro messages used this week: 0');
   });
 
   it('shows nothing until the page observer answers', async () => {
