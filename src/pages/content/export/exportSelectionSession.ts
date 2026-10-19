@@ -81,9 +81,13 @@ interface SelectionView {
 
 interface MessageBinding {
   readonly host: HTMLElement;
+  readonly selector: HTMLElement;
   readonly checkbox: HTMLButtonElement;
   readonly cleanup: () => void;
 }
+
+/** Gap between the shared left edge and every checkbox; matches `.gv-export-msg-selector`. */
+const SELECTOR_INSET_PX = 8;
 
 function swallow(ev: Event): void {
   try {
@@ -212,6 +216,7 @@ function createSelectionView(
 
     return {
       host,
+      selector,
       checkbox,
       cleanup: () => {
         host.removeEventListener('click', toggle);
@@ -226,6 +231,27 @@ function createSelectionView(
     bindings.delete(id);
   };
 
+  // A user bubble and a response start at different x (Gemini right-aligns the bubble), so each
+  // checkbox is moved onto the leftmost message edge to keep them in one column.
+  const alignSelectors = () => {
+    const placed = Array.from(bindings.values()).flatMap((binding) => {
+      const rect = binding.host.getBoundingClientRect();
+      return rect.width > 0 ? [{ binding, left: rect.left }] : [];
+    });
+    if (placed.length === 0) return;
+    const edge = placed.reduce((min, { left }) => Math.min(min, left), Infinity);
+    placed.forEach(({ binding, left }) => {
+      binding.selector.style.left = `${Math.round(edge - left) + SELECTOR_INSET_PX}px`;
+    });
+  };
+  window.addEventListener('resize', alignSelectors);
+  cleanupTasks.push(() => window.removeEventListener('resize', alignSelectors));
+  if (typeof ResizeObserver === 'function') {
+    const rootResize = new ResizeObserver(() => alignSelectors());
+    rootResize.observe(anchors.conversationRoot());
+    cleanupTasks.push(() => rootResize.disconnect());
+  }
+
   return {
     bind(messages) {
       const liveIds = new Set(messages.map((m) => m.messageId));
@@ -239,6 +265,7 @@ function createSelectionView(
         removeBinding(msg.messageId);
         bindings.set(msg.messageId, attach(msg));
       }
+      alignSelectors();
     },
     render(state) {
       const frozen = state.status !== 'selecting';

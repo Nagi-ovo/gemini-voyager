@@ -123,6 +123,25 @@ describe('startExportSelectionSession', () => {
     session.cancel();
   });
 
+  it('puts every checkbox in one column when user bubbles start further right than responses', () => {
+    const user = message('1:u', 'user');
+    const assistant = message('1:a', 'assistant');
+    const place = (host: HTMLElement, left: number, width: number) =>
+      vi
+        .spyOn(host, 'getBoundingClientRect')
+        .mockReturnValue(DOMRect.fromRect({ x: left, y: 0, width, height: 40 }));
+    place(user.hostElement, 731, 708);
+    place(assistant.hostElement, 300, 1570);
+    const { session } = start({ readMessages: () => [user, assistant] });
+
+    const checkboxX = (host: HTMLElement) =>
+      host.getBoundingClientRect().left +
+      parseFloat(host.querySelector<HTMLElement>('.gv-export-msg-selector')!.style.left);
+    expect(checkboxX(user.hostElement)).toBe(checkboxX(assistant.hostElement));
+    expect(checkboxX(assistant.hostElement)).toBe(308);
+    session.cancel();
+  });
+
   it('preselects the requested message and toggles messages by clicking them', () => {
     const { session, messages } = start({ initialSelectedMessageId: '1:a' });
 
