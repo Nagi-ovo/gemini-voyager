@@ -61,6 +61,7 @@ Use `StorageService` where suitable; established direct `chrome.storage`/`browse
 - For visual changes, state the expected result and verify alignment, spacing and behavior in light/dark themes, including external resource dependencies.
 - After fixing a repeatable, non-obvious bug, put a one-line why-comment at the code that prevents it and name the guarding test after the symptom.
 - `bun run filesize:check` fails when a `src/**/*.ts(x)` file over 1000 lines is added or a baselined one grows: put new code in a new file. Run `bun run filesize:update` after shrinking one; raising an entry in `scripts/file-size-baseline.json` is a deliberate, explained change in the PR.
+- The pre-commit hook (`scripts/check-staged-size.mjs`) also blocks any staged file over 5,000 tokens (bytes / 4), existing files included; lockfiles, binaries, build output and `src/locales/*/messages.json` are exempt. Editing an oversized file means splitting it first, as the hook's message describes.
 
 ## Verification
 

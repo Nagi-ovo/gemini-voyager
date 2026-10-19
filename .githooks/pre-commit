@@ -21,7 +21,7 @@ while IFS= read -r -d '' file; do
 done < <(git diff --cached --name-only --diff-filter=ACMR -z)
 
 if [ "${#files[@]}" -eq 0 ]; then
-  exit 0
+  exec node scripts/check-staged-size.mjs
 fi
 
 dirty=()
@@ -41,3 +41,6 @@ fi
 bun x oxfmt --no-error-on-unmatched-pattern "${files[@]}"
 git add -- "${files[@]}"
 git diff --cached --check
+
+# Measured after formatting, which can change the staged size.
+node scripts/check-staged-size.mjs
