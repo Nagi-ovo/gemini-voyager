@@ -39,6 +39,7 @@ import {
   siteOf,
   turnStateOf,
 } from './pageReaders';
+import { interruptionNotice } from './replyEvidence';
 import { sandboxCandidates, turnMessages } from './sandboxFiles';
 
 // Fallback only: the heading's text in the UI languages measured or shipped by ChatGPT.
@@ -107,6 +108,7 @@ async function findLatestReply(
   const item = current ?? conversationItems().at(-1);
   if (!item) ctx.fail('selector-missing', 'The conversation shows no turns.');
   const reply = findReply(item);
+  refuseInterrupted(ctx, item);
   const state = turnStateOf(item);
   const unfinished =
     !reply ||
@@ -130,6 +132,17 @@ async function findLatestReply(
   return { item, reply, turnKey: replyIdOf(reply) ?? readTurnKey(item) };
 }
 
+/** A reply ChatGPT shows as cut short by a lost connection is not a reply to save. */
+function refuseInterrupted(ctx: OpContext, item: HTMLElement): void {
+  const notice = interruptionNotice(item);
+  if (notice) {
+    ctx.fail('unverified', 'ChatGPT lost the connection before the reply was complete.', {
+      reason: 'connection-interrupted',
+      notice,
+    });
+  }
+}
+
 async function findKeyedReply(
   ctx: OpContext,
   key: string,
@@ -137,6 +150,7 @@ async function findKeyedReply(
 ): Promise<FoundReply> {
   const found = findReplyByKey(key);
   if (!found) ctx.fail('selector-missing', 'The reply is not on the page.');
+  refuseInterrupted(ctx, found.item);
   const state = turnStateOf(found.item);
   if ((state !== null && !isCompleteTurnState(state)) || hasStopControl(adapter)) {
     ctx.fail('unverified', 'The reply is still being written.', { reason: 'still-generating' });

@@ -34,7 +34,7 @@ import {
 
 /** The protocol's id shape; a new chat's provisional `local-…:<uuid>` id never passes. */
 const CONVERSATION_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
-const USER_UNIT_SELECTOR = '[data-chatgpt-search-unit-key$=":user"]';
+export const USER_UNIT_SELECTOR = '[data-chatgpt-search-unit-key$=":user"]';
 const ASSISTANT_UNIT_SELECTOR = '[data-chatgpt-search-unit-key$=":assistant"]';
 const MESSAGE_IDS_ATTRIBUTE = 'data-chatgpt-search-message-ids';
 const REPLY_ID_ATTRIBUTE = 'data-chatgpt-selection-message-id';
@@ -180,6 +180,13 @@ export function isCompleteTurnState(state: string | null): boolean {
 
 export function hasThinkingSignal(item: HTMLElement): boolean {
   return queryAll<HTMLElement>(item, THINKING_SELECTOR).some(isRendered);
+}
+
+/** Which thinking or streaming markers show in the item, for a failure's evidence. */
+export function thinkingSignalsOf(item: HTMLElement): string[] {
+  return THINKING_SELECTOR.split(', ').filter((selector) =>
+    queryAll<HTMLElement>(item, selector).some(isRendered),
+  );
 }
 
 /** Small, stable string hash for change detection (not for integrity). */

@@ -26,6 +26,9 @@
  * After a frozen stretch (`resume`), the activity clock restarts: the frozen
  * time is the browser's, not a stall.
  *
+ * A turn showing ChatGPT's connection-interrupted notice never counts as
+ * finished, whatever else it shows: its text is cut short (`./replyEvidence.ts`).
+ *
  * With `stopOnApproval`, an app's approval card in the reply ends the wait
  * (`approval-required`); `turns.approve` answers it.
  *
@@ -62,6 +65,7 @@ import {
   turnStateOf,
   userTextOf,
 } from './pageReaders';
+import { interruptionNotice, replyEvidence } from './replyEvidence';
 
 export const PROGRESS_EVERY_MS = 15_000;
 export const BAR_CONFIRM_CYCLES = 3;
@@ -206,8 +210,10 @@ export async function runTurnsWaitReply(
     const contentKey = reply ? `${replyIdOf(reply) ?? ''}|${hashText(text)}` : '';
     const changed = contentKey !== gate.contentKey;
     const quiet = !stop && !thinking && (turnState === null || isCompleteTurnState(turnState));
+    // Cut short: its retry button would pass for the action row, and its partial text for the reply.
+    const interrupted = target ? interruptionNotice(target.item) !== null : false;
     // A wake can come any time: a cycle counts only a full cycle after the last one.
-    const steady = bar && quiet && !changed;
+    const steady = bar && quiet && !changed && !interrupted;
     const cycled = steady && now - gate.cycleAt >= CYCLE_MS;
     gate = {
       contentKey,
@@ -224,6 +230,7 @@ export async function runTurnsWaitReply(
       text.length > 0 &&
       quiet &&
       bar &&
+      !interrupted &&
       gate.barCycles >= BAR_CONFIRM_CYCLES &&
       now - gate.changedAt >= stableMs
     ) {
@@ -261,6 +268,7 @@ export async function runTurnsWaitReply(
         stalledForMs: now - activeAt,
         // An alert the site data does not know (another language, new copy) is often the cause.
         ...(pageAlerts().length > 0 ? { alerts: pageAlerts() } : {}),
+        ...replyEvidence(target?.item ?? null, reply, adapter),
       });
     }
     if (now - startedAt >= timeoutMs) {
@@ -268,6 +276,8 @@ export async function runTurnsWaitReply(
         conversationId: params.conversationId,
         phase,
         textLength,
+        ...(pageAlerts().length > 0 ? { alerts: pageAlerts() } : {}),
+        ...replyEvidence(target?.item ?? null, reply, adapter),
       });
     }
     seen = { item: reply && target ? target.item : null, finalizing: phase === 'finalizing' };
