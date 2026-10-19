@@ -6,3 +6,17 @@
 .gv-aistudio-root tr[mat-row].gv-conversation-archived {
   display: none !important;
 }
+
+/* AI Studio's folder header has no section gutter: its title starts at the
+   container edge and its actions stop 8px short (160-aistudio-folder-tweaks),
+   so the nudge card lines up with those instead.
+   Physical sides, like that header: `gv-rtl` can be set with or without a
+   page `dir`, so a logical margin would flip twice in an RTL document. */
+.gv-aistudio .gv-hide-archived-nudge {
+  margin-left: 0;
+  margin-right: 8px;
+}
+body.gv-rtl .gv-aistudio .gv-hide-archived-nudge {
+  margin-left: 8px;
+  margin-right: 0;
+}

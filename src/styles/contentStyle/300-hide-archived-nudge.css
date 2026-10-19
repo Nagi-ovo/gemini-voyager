@@ -14,13 +14,17 @@
   --gv-nudge-accent: var(--gv-pm-brand, var(--gv-pm-brand-default));
 
   position: relative;
-  margin: 4px 8px 10px 0;
+  /* In line with the folder header's title and actions, which sit one section
+     gutter in from the sidebar edge. */
+  margin: 4px var(--gv-folder-section-gutter, 8px) 10px;
   padding: 12px 12px 10px;
   border: 1px solid var(--gv-nudge-border);
   border-radius: 12px;
   background: var(--gv-nudge-surface);
   color: var(--gv-nudge-text);
-  font-family: inherit;
+  /* The folder container's stack, not `inherit`: the collapse card sits in
+     Gemini's sidebar scroller, which sets no font and falls back to Times. */
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
   font-size: 13px;
   line-height: 1.5;
   opacity: 0;
@@ -112,13 +116,7 @@ html[data-gv-scheme='dark'] .gv-hide-archived-nudge {
   }
 }
 
-/* RTL */
-body.gv-rtl .gv-hide-archived-nudge {
-  margin: 4px 0 10px 8px;
-}
-body.gv-rtl .gv-hide-archived-nudge.gv-sidebar-collapse-nudge {
-  margin: 6px 16px 10px;
-}
+/* RTL: the card's margins are symmetric; only the actions move. */
 body.gv-rtl .gv-hide-archived-nudge__actions {
   justify-content: flex-start;
 }
