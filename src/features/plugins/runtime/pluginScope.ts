@@ -23,6 +23,10 @@
  *    and effects cannot be registered once disposal has begun.
  */
 import { logger } from '@/core/services/LoggerService';
+import {
+  hasValidExtensionContext,
+  isExtensionContextInvalidatedError,
+} from '@/core/utils/extensionContext';
 
 export type Dispose = () => void | Promise<void>;
 
@@ -153,7 +157,14 @@ export class PluginScope {
   ): Dispose {
     return this.effect(() => {
       event.addListener(listener);
-      return () => event.removeListener(listener);
+      return () => {
+        try {
+          event.removeListener(listener);
+        } catch (error) {
+          // A reloaded extension's events are already gone, so nothing is left to remove.
+          if (hasValidExtensionContext() && !isExtensionContextInvalidatedError(error)) throw error;
+        }
+      };
     }, 'onChromeEvent');
   }
 
@@ -345,7 +356,9 @@ export class PluginScope {
     try {
       await dispose();
     } catch (error) {
-      logger.error('PluginScope disposer failed', { label, error: String(error) });
+      // The detail goes in the message: the extension error list shows a context object as [object Object].
+      const detail = error instanceof Error ? (error.stack ?? error.message) : String(error);
+      logger.error(`PluginScope disposer failed (${label}): ${detail}`);
     }
   }
 }

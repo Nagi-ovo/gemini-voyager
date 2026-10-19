@@ -11,6 +11,7 @@ import browser from 'webextension-polyfill';
 
 import { LoggerService } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
+import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { getCurrentLanguage, initI18n } from '@/utils/i18n';
 import { localeFromLanguage } from '@/utils/language';
 
@@ -55,6 +56,8 @@ async function saveSnapshot(next: UsageSnapshot): Promise<void> {
       [StorageKeys.GV_USAGE_CACHE]: next,
     });
   } catch (error) {
+    // A reloaded extension can no longer write; the next run saves a fresh snapshot.
+    if (isExtensionContextInvalidatedError(error)) return;
     console.warn('[UsageStatus] Failed to persist usage cache:', error);
   }
 }
@@ -81,7 +84,9 @@ async function loadSnapshot(
         ])
       : null;
   } catch (error) {
-    console.warn('[UsageStatus] Failed to load usage cache:', error);
+    if (!isExtensionContextInvalidatedError(error)) {
+      console.warn('[UsageStatus] Failed to load usage cache:', error);
+    }
   }
   return null;
 }

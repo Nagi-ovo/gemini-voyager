@@ -78,7 +78,9 @@ export function createThemeToggle({
     element: themeToggle,
     destroy: () => {
       stopFollowingPage();
-      browser.storage.onChanged.removeListener(onStorageChanged);
+      // After an extension reload `browser.storage` is gone; a throw here would
+      // skip the rest of the Prompt Manager's teardown and strand its trigger.
+      browser.storage?.onChanged?.removeListener(onStorageChanged);
     },
   };
 }

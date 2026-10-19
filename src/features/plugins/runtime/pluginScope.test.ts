@@ -142,6 +142,37 @@ describe('PluginScope', () => {
       expect(listeners.size).toBe(0);
     });
 
+    it('onChromeEvent() disposes quietly when a reloaded extension can no longer remove the listener', async () => {
+      scope = new PluginScope();
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const event = {
+        addListener: vi.fn(),
+        removeListener: () => {
+          throw new Error('Extension context invalidated.');
+        },
+      };
+      scope.onChromeEvent(event, vi.fn());
+      await scope.dispose();
+      expect(error).not.toHaveBeenCalled();
+      error.mockRestore();
+    });
+
+    it('a failing disposer is logged with its label and error message, not [object Object]', async () => {
+      scope = new PluginScope();
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+      scope.effect(
+        () => () => {
+          throw new Error('listener gone');
+        },
+        'watchWidth',
+      );
+      await scope.dispose();
+      const logged = error.mock.calls.map((args) => args.map(String).join(' ')).join('\n');
+      expect(logged).toContain('watchWidth');
+      expect(logged).toContain('listener gone');
+      error.mockRestore();
+    });
+
     it('mount() inserts before the anchor and removes on dispose', async () => {
       scope = new PluginScope();
       const parent = document.body.appendChild(document.createElement('div'));
