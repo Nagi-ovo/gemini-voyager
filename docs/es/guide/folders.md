@@ -1,122 +1,103 @@
-# Carpetas bien hechas
+# Carpetas
 
-¿Por qué es tan difícil organizar los chats de IA?
-Lo hemos solucionado. Hemos construido un sistema de archivos para tus pensamientos.
+Guarda tus conversaciones en carpetas de la barra lateral: arrastra una a una carpeta y queda archivada, anida carpetas hasta tres niveles y recupera las mismas en otro ordenador.
 
-<div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; margin-bottom: 40px;">
-  <div style="flex: 1; min-width: 300px; text-align: center;">
-    <p><b>Gemini™</b></p>
-    <img src="/assets/gemini-folders.png" alt="Carpetas Gemini" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-  <div style="flex: 1; min-width: 300px; text-align: center;">
-    <p><b>AI Studio</b></p>
-    <img src="/assets/aistudio-folders.png" alt="Carpetas AI Studio" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-</div>
+<SiteSupport feature="folders" :labels="{ folders: 'Carpetas en la barra lateral', 'hide-filed': 'Ocultar conversaciones archivadas', activity: 'Vista Activity', 'account-isolation': 'Aislamiento de cuentas', projects: 'Carpetas como proyectos', 'ai-organize': 'Organizar con IA' }" />
 
-## La física de la organización
+Solo en algunos sitios:
 
-Simplemente se siente bien.
+- **Mover a carpeta** en el menú de conversación del propio sitio: Gemini, ChatGPT, Claude
+- Arrastrar desde la tabla de Library a una carpeta: AI Studio
+- Iconos de conversación según el tipo de Gem: Gemini
 
-- **Arrastrar y soltar**: Toma un chat. Suéltalo en una carpeta. Es táctil.
-- **Jerarquía anidada**: Los proyectos tienen subproyectos. Crea carpetas dentro de carpetas. Estructúralo a _tu_ manera.
-- **Espaciado de carpetas**: Ajusta la densidad de la barra lateral, de compacto a espacioso.
-  > _Nota: En Mac Safari, es posible que los ajustes no sean en tiempo real; actualiza la página para ver el efecto._
-- **Sincronización entre dispositivos**: Organiza en tu escritorio y usa la [Sincronización en la nube](/es/guide/cloud-sync) para ver las mismas carpetas en tu portátil.
+Un ✓ con círculo funciona nada más instalar Voyager. En los demás sitios, abre la ventana de Voyager en ese sitio y activa las carpetas en la zona **Complementos**; la primera vez te pide acceso al sitio.
 
-## Consejos profesionales
+## Dónde está
 
-- **Selección Múltiple**: Mantén presionado un elemento de chat para entrar en modo de selección múltiple, opera en lote, listo de una vez.
-- **Renombrar**: Doble clic en la carpeta, cámbialo directamente.
-- **Reconocimiento**: Código, escritura, charla... Identificamos automáticamente el tipo de Gema y asignamos un icono. Tú solo úsalo, déjanos el resto a nosotros.
+La sección de carpetas está encima de la lista de conversaciones, en la barra lateral. Con la barra lateral cerrada, las mismas carpetas siguen disponibles en un panel flotante.
 
-## Diferencias de características por plataforma
+<img src="/assets/gemini-folders.png" alt="La sección de carpetas en la barra lateral" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 320px;"/>
 
-### Funciones comunes
+## Archivar una conversación
 
-- **Gestión básica**: Arrastrar y soltar, renombrar, selección múltiple.
-- **Reconocimiento inteligente**: Detecta automáticamente tipos de chat y asigna iconos.
-- **Jerarquía anidada**: Soporte para anidamiento de carpetas.
-- **Sincronización en la nube**: Haz copias de seguridad y sincroniza la estructura de carpetas con la [Sincronización en la nube](/es/guide/cloud-sync).
+- **Arrastrar**: arrastra una conversación de la barra lateral sobre una carpeta.
+- **Menú de la conversación**: en los sitios que lo admiten, abre el menú de la conversación y elige **Mover a carpeta**.
+- **Conversación actual**: haz clic derecho en una carpeta y elige **Añadir la conversación actual aquí**.
+- **Selección múltiple**: mantén pulsada una conversación dentro de una carpeta para seleccionar varias y moverlas a la vez. La barra lateral de AI Studio todavía no admite selección múltiple.
 
-#### Ocultar conversaciones archivadas
+## Anidar, renombrar y colorear
 
-Una vez que una conversación está archivada en una carpeta, ya está "lista" — pero por defecto sigue ocupando espacio en la lista principal. Activa **Ocultar conversaciones archivadas** en el popup de la extensión → **Opciones de Carpetas**, y la lista principal mostrará solo lo que está activo. Inbox zero de verdad para tus chats de IA.
+<img src="/assets/folders-nested-en.png" alt="Carpetas anidadas en tres niveles" width="240" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-- La primera vez que archivas una conversación en una carpeta, Voyager muestra una pequeña tarjeta en el área de carpetas para activarlo con un clic. Si no lo quieres, pulsa "Ahora no" y no te molestaremos más.
-- Las conversaciones archivadas **nunca se eliminan** — siguen accesibles dentro de sus carpetas.
-- En AI Studio, las conversaciones archivadas se ocultan de la tabla de la Library. Gemini y AI Studio tienen cada uno su propio ajuste.
-- Puedes alternar desde el popup en cualquier momento.
+- Las carpetas llegan a tres niveles: una carpeta de primer nivel puede tener dos niveles más de subcarpetas.
+- Haz doble clic en el nombre de una carpeta para renombrarla.
+- Con clic derecho en una carpeta puedes fijarla, crear una subcarpeta, renombrarla, eliminarla o elegir uno de 7 colores.
 
-### Exclusivo de Gemini
+<img src="/assets/folders-menu-en.png" alt="El menú contextual de una carpeta y sus colores" width="254" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-#### Colores personalizados
+El engranaje del encabezado de carpetas cambia el orden de las conversaciones (orden manual o abiertas recientemente) y ajusta el tamaño del texto, el espaciado de carpetas y la sangría de subcarpetas; el ajuste **Espaciado de carpetas** de la ventana también lo hace. En Safari para Mac quizá tengas que recargar la página para ver el cambio.
 
-Haz clic en el icono de la carpeta para personalizar su color. Elige entre 7 colores predeterminados o usa el selector de colores para elegir cualquier color.
+## Ocultar conversaciones archivadas
 
-<img src="/assets/folder-color.png" alt="Colores de carpeta" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+Cuando una conversación ya está en una carpeta, puedes sacarla de la lista principal para que solo queden las conversaciones en curso.
 
-#### Aislamiento de cuenta
+- En Gemini y AI Studio, abre la ventana → **Opciones de Carpetas** → **Ocultar conversaciones archivadas**. Cada sitio guarda su propio ajuste; en AI Studio se ocultan las filas de la tabla de Library.
+- La primera vez que archivas una conversación, una tarjeta en la sección de carpetas te ofrece activarlo con un clic. Si eliges **Ahora no**, no vuelve a preguntar.
+- En los demás sitios, el interruptor está en los ajustes del plugin de carpetas, en la zona **Complementos** de la ventana, y viene desactivado.
+- No se borra nada: las conversaciones archivadas siguen en sus carpetas y puedes desactivarlo cuando quieras.
 
-El icono de persona muestra temporalmente solo los chats de la cuenta de Google actual, y está desactivado por defecto. El **Hard Isolation** de las opciones de carpetas va más allá y separa los datos de carpetas y de sincronización en la nube por cuenta. Cuando Hard Isolation está activado, el filtro de persona es redundante y se oculta automáticamente.
+## Importar y exportar
 
-<img src="/assets/current-user-only.png" alt="Aislamiento de cuenta" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/folders-transfer-en.png" alt="Importar y exportar carpetas" width="190" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-#### Organización automática con IA
+El icono de carpeta del encabezado tiene **Importar carpetas** y **Exportar carpetas**. Exportar guarda un archivo JSON; importar lo fusiona con tus carpetas actuales, así que lo que ya ordenaste se queda como está.
 
-Demasiados chats, demasiada pereza para ordenar? Deja que Gemini piense por ti.
+## Sincronización en la nube
 
-Un clic copia tu estructura de conversaciones actual, pégalo en Gemini, y genera un plan de carpetas listo para importar — organización instantánea.
+Todos los sitios con carpetas pueden usar la [sincronización en la nube](/es/guide/cloud-sync) para tener las mismas carpetas en otro ordenador. Las carpetas de cada sitio se guardan y sincronizan por separado.
 
-**Paso 1: Copia tu estructura de conversaciones**
+## Vista Activity
 
-En la parte inferior de la sección de carpetas del popup de la extensión, haz clic en el botón **Organizar con IA**. Recopila automáticamente todas tus conversaciones sin clasificar y la estructura de carpetas existente, genera un prompt y lo copia al portapapeles.
+La campana del encabezado cambia el árbol por una vista Activity de solo lectura; púlsala otra vez para volver al árbol. Nunca mueve, copia ni reclasifica conversaciones.
 
-<img src="/assets/ai-auto-folder.png" alt="AI Organize Button" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+- **Prioridad**: conversaciones con actividad real en las últimas 3 horas. Abrir o ver una conversación no cuenta.
+- **Hoy, Ayer y días de la semana**: ordenadas por la última actividad real, con solo hoy y los cuatro días anteriores.
+- La estrella es una marca manual aparte y no decide qué entra en Prioridad.
+- Las conversaciones más antiguas, o sin hora conocida, no aparecen en Activity y siguen en sus carpetas.
+- Cada entrada muestra su carpeta; una conversación que está en varias carpetas aparece una sola vez.
 
-**Paso 2: Deja que Gemini lo ordene**
+[Lee la guía completa de la vista Activity](/es/guide/activity-view)
 
-Pega el contenido del portapapeles en una conversación de Gemini. Analizará los títulos de tus chats y generará un plan de carpetas en JSON.
+## Aislamiento de cuentas
 
-**Paso 3: Importa los resultados**
+El botón con forma de persona de la barra lateral de Gemini muestra temporalmente solo las conversaciones de la cuenta de Google actual; viene desactivado. **Enable Hard Isolation**, en **Opciones de Carpetas** de la ventana, separa las carpetas y los datos de sincronización por cuenta; una vez activado, los datos ya están separados y el botón se oculta solo.
 
-Haz clic en **Importar carpetas** desde el menú del panel de carpetas, selecciona **O pegar JSON directamente**, pega el JSON que devolvió Gemini y haz clic en **Importar**.
+<img src="/assets/current-user-only.png" alt="El botón con forma de persona" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 200px;"/>
 
-<div style="display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; margin-bottom: 24px;">
-  <div style="text-align: center;">
-    <img src="/assets/ai-auto-folder-2.png" alt="Import Menu" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 240px;"/>
-  </div>
-  <div style="text-align: center;">
-    <img src="/assets/ai-auto-folder-3.png" alt="Paste JSON Import" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
-  </div>
-</div>
+## Organizar con IA
 
-- **Fusión incremental**: Usa la estrategia de "Fusionar" por defecto — solo agrega nuevas carpetas y asignaciones, nunca destruye tu organización existente.
-- **Multilingüe**: El prompt usa automáticamente tu idioma configurado, y los nombres de carpetas también se generan en ese idioma.
+¿Demasiadas conversaciones para ordenarlas a mano? Deja que Gemini proponga un plan de carpetas.
 
-#### Carpeta como Proyecto
+1. Abre la ventana en Gemini y haz clic en **Organizar con IA** al final de **Opciones de Carpetas**. Tus conversaciones sin archivar y la estructura actual de carpetas se copian como un prompt. El prompt usa tu idioma, igual que los nombres de las carpetas.
+2. Pega el prompt en Gemini. Responde con un plan de carpetas en JSON.
+3. Haz clic en **Importar carpetas** en el encabezado, elige **O pegar JSON directamente**, pégalo y haz clic en **Importar**. **Fusionar con carpetas existentes** es la opción por defecto: solo añade carpetas nuevas y nuevas asignaciones, sin tocar las que ya tienes.
 
-¿Quieres que los chats nuevos arranquen con un pequeño preset de proyecto? Convierte cualquier carpeta en uno.
-La idea está inspirada en Claude Projects, pero Voyager la implementa de forma más ligera: instrucciones para el primer mensaje basadas en carpetas y archivado automático, no un espacio de trabajo con contexto compartido.
+<img src="/assets/ai-auto-folder.png" alt="El botón Organizar con IA en la ventana" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 320px;"/>
 
-1. Activa `Habilitar Carpeta como Proyecto` en el popup de la extensión.
-2. Haz clic derecho sobre una carpeta y elige `Establecer instrucciones` o `Editar instrucciones`.
-3. Abre un chat nuevo de Gemini, usa el selector de carpetas junto al cuadro de escritura y elige esa carpeta.
+## Carpetas como proyectos
+
+Dale a una carpeta instrucciones para el primer turno y una conversación nueva se archiva sola en ella tras su primer mensaje. La idea viene de Claude Projects, pero Voyager solo añade instrucciones del primer turno y archivado automático; no es un espacio de trabajo con contexto compartido.
+
+1. Activa **Habilitar Carpeta como Proyecto** en la ventana.
+2. Haz clic derecho en una carpeta y elige **Establecer instrucciones** o **Editar instrucciones**.
+3. Abre una conversación nueva de Gemini y elige la carpeta en el selector junto al cuadro de texto.
 4. Envía tu primer mensaje.
 
-Qué ocurre después:
+Después:
 
-- La conversación se guarda automáticamente en esa carpeta tras el primer envío.
-- Si la carpeta tiene instrucciones, Voyager las antepone solo en ese primer envío.
-- Si la carpeta no tiene instrucciones, igualmente sirve como atajo rápido de archivado.
-- Los chats de la misma carpeta **no** comparten memoria ni leen automáticamente el contenido de los otros.
-- El auto-guardado de borradores conserva solo el texto que escribiste; las instrucciones ocultas no vuelven al cuadro de entrada.
+- Tras el primer envío, la conversación se archiva en esa carpeta.
+- Si la carpeta tiene instrucciones, Voyager las añade solo a ese primer envío. Sin instrucciones, la carpeta sirve como atajo para archivar conversaciones nuevas.
+- Las conversaciones de una misma carpeta **no** comparten memoria ni leen el contenido de las demás.
+- El guardado automático del borrador solo conserva lo que escribiste, nunca las instrucciones ocultas.
 
-### Exclusivo de AI Studio
-
-- **Ajuste de barra lateral**: Arrastra para cambiar el ancho de la barra lateral.
-- **Integración con Library**: Arrastra directamente desde tu Library a las carpetas.
-
-### ChatGPT
-
-Las carpetas también llegan a ChatGPT como plugin integrado. Obtienes una sección de carpetas en la barra lateral de ChatGPT, además del mismo panel flotante. Archiva una conversación con **Mover a carpeta** en su menú, o arrastra su fila sobre una carpeta. La importación, la exportación y la vista de actividad también funcionan allí. Actívalo o desactívalo desde la sección **Complementos** del popup.
+Para el ancho de la barra lateral, consulta [Ancho de la barra lateral](/es/guide/sidebar).

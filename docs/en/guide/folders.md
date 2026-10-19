@@ -1,122 +1,103 @@
-# Folders Done Right
+# Folders
 
-Why is organizing AI chats so hard?
-We fixed it. We built a file system for your thoughts.
+Keep your chats in folders in the sidebar: drag one in and it's filed, nest folders three levels deep, and get the same folders back on another computer.
 
-<div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; margin-bottom: 40px;">
-  <div style="flex: 1; min-width: 300px; text-align: center;">
-    <p><b>Gemini™</b></p>
-    <img src="/assets/gemini-folders.png" alt="Gemini Folders" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-  <div style="flex: 1; min-width: 300px; text-align: center;">
-    <p><b>AI Studio</b></p>
-    <img src="/assets/aistudio-folders.png" alt="AI Studio Folders" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-</div>
+<SiteSupport feature="folders" :labels="{ folders: 'Sidebar folders', 'hide-filed': 'Hide filed chats', activity: 'Activity view', 'account-isolation': 'Account isolation', projects: 'Folders as projects', 'ai-organize': 'AI Organize' }" />
 
-## The Physics of Organization
+Only on some sites:
 
-It just feels right.
+- **Move to folder** in the site's own chat menu: Gemini, ChatGPT, Claude
+- Dragging from the Library table into a folder: AI Studio
+- Chat icons by Gem type: Gemini
 
-- **Drag and Drop**: Pick up a chat. Drop it in a folder. It’s tactile.
-- **Nested Hierarchy**: Projects have sub-projects. Create folders inside folders. Structure it _your_ way.
-- **Folder Spacing**: Adjust vertical density from compact to spacious.
-  > _Note: On Mac Safari, adjustments may not be real-time; refresh the page to see the effect._
-- **Sync Across Devices**: Organize on your desktop, then use [Cloud Sync](/en/guide/cloud-sync) to see the same folders on your laptop.
+A circled ✓ works as soon as Voyager is installed. On the other sites, open the Voyager popup on that site and turn folders on in the **Plugins** area; the first time, it asks for access to the site.
 
-## Pro Tips
+## Where it is
 
-- **Multi-Select**: Long-press a conversation to enter multi-select mode, then select multiple chats and move them all at once.
-- **Renaming**: Double-click any folder to rename it.
-- **Icons**: We automatically detect the Gem type (Coding, Creative, etc.) and assign the right icon. You don't have to do a thing.
+The folder section sits above the chat list in the sidebar. When the sidebar is closed, the same folders are available in a floating panel.
 
-## Platform Feature Differences
+<img src="/assets/gemini-folders.png" alt="The folder section in the sidebar" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 320px;"/>
 
-### Common Features
+## File a chat
 
-- **Basic Management**: Drag and drop, rename, multi-select.
-- **Smart Recognition**: Automatically detect chat types and assign icons.
-- **Nested Hierarchy**: Support for folder nesting.
-- **Cloud Sync**: Back up and sync your folder structure with [Cloud Sync](/en/guide/cloud-sync).
+- **Drag**: drag a chat from the sidebar onto a folder.
+- **Chat menu**: on sites that support it, open the chat's own menu and choose **Move to folder**.
+- **Current chat**: right-click a folder and choose **Add current conversation here**.
+- **Multi-select**: long-press a chat inside a folder to start selecting, then move them all at once. AI Studio's sidebar doesn't support multi-select yet.
 
-#### Hide Archived Conversations
+## Nest, rename and color
 
-Once a chat is filed into a folder, it's "done" — but by default it still takes up space in the main list. Turn on **Hide archived conversations** in the extension popup → **Folder Options** and the main list shows only what's still active. A true inbox-zero for your AI chats.
+<img src="/assets/folders-nested-en.png" alt="Folders nested three levels deep" width="240" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-- The first time you file a conversation into a folder, Voyager pops up a small card right in the folder area offering one-click to enable this. Dismiss it and we won't bother you again.
-- Archived conversations are **never deleted** — they stay fully accessible inside their folders.
-- On AI Studio, filed conversations are hidden from the Library table instead. Gemini and AI Studio each keep their own setting.
-- Toggle anytime from the popup.
+- Folders go three levels deep: a top-level folder can hold two more levels of subfolders.
+- Double-click a folder's name to rename it.
+- Right-click a folder to pin, create a subfolder, rename or delete it, or pick one of 7 colors.
 
-### Gemini Exclusive
+<img src="/assets/folders-menu-en.png" alt="A folder's right-click menu with its colors" width="254" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-#### Custom Colors
+The gear in the folder header switches the chat order (manual or recently opened) and sets the text size, folder spacing and subfolder indent; the popup's **Folder spacing** sets it too. On Mac Safari, you may need to refresh the page to see a change.
 
-Click the folder icon to customize its color. Choose from 7 default colors or use the color picker to select any custom color.
+## Hide filed chats
 
-<img src="/assets/folder-color.png" alt="Folder Colors" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+Once a chat is in a folder, you can take it out of the main list so only active chats stay there.
 
-#### Account Isolation
+- On Gemini and AI Studio, open the popup → **Folder Options** → **Hide archived conversations**. Each site keeps its own setting; on AI Studio it hides the rows of the Library table.
+- The first time you file a chat, a card in the folder section offers to turn it on in one click. Choose **Not now** and it won't ask again.
+- On the other sites, the switch is in the folders plugin's settings in the popup's **Plugins** area, off by default.
+- Nothing is deleted: filed chats are always in their folders, and you can turn this off at any time.
 
-The person icon temporarily shows chats from the current Google account only and is off by default. Hard Isolation in Folder options goes further by separating folder and cloud-sync data per account. When Hard Isolation is on, the person filter is redundant and is hidden automatically.
+## Import and export
 
-<img src="/assets/current-user-only.png" alt="Account Isolation" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/folders-transfer-en.png" alt="Import and export folders" width="190" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-#### AI Auto-Organize
+The folder icon in the folder header has **Import folders** and **Export folders**. Export saves a JSON file; import merges it with your existing folders, so what you've already sorted stays put.
 
-Too many chats, too lazy to sort? Let Gemini do the thinking.
+## Cloud sync
 
-One click copies your current conversation structure, paste it into Gemini, and it generates a ready-to-import folder plan — instant organization.
+Every site with folders can use [Cloud Sync](/en/guide/cloud-sync) to get the same folders on another computer. Each site's folders are stored and synced separately.
 
-**Step 1: Copy Your Conversation Structure**
+## Activity view
 
-At the bottom of the folder section in the extension popup, click the **AI Organize** button. It automatically collects all your unfiled conversations and existing folder structure, generates a prompt, and copies it to your clipboard.
+The bell in the folder header swaps the tree for a read-only Activity view; press it again to get the tree back. It never moves, copies or re-files a chat.
 
-<img src="/assets/ai-auto-folder.png" alt="AI Organize Button" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+- **Priority**: chats with real activity in the last 3 hours. Opening or viewing a chat doesn't count.
+- **Today, Yesterday and weekdays**: ordered by the last real activity, keeping only today and the four days before it.
+- Star is a separate manual mark and doesn't decide what goes into Priority.
+- Older chats, or ones with no known time, stay out of Activity and remain in their folders.
+- Each entry shows its folder path; a chat in several folders appears once.
 
-**Step 2: Let Gemini Sort It Out**
+[Read the full Activity view guide](/en/guide/activity-view)
 
-Paste the clipboard content into a Gemini conversation. It will analyze your chat titles and output a JSON folder plan.
+## Account isolation
 
-**Step 3: Import the Results**
+The person button in Gemini's sidebar temporarily shows only the current Google account's chats; it's off by default. **Enable Hard Isolation** in the popup's **Folder Options** splits folders and cloud sync data by account; once it's on, the data is already separate and the person button hides itself.
 
-Click **Import folders** from the folder panel menu, select **Or paste JSON directly**, paste the JSON that Gemini returned, and click **Import**.
+<img src="/assets/current-user-only.png" alt="The person button" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 200px;"/>
 
-<div style="display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; margin-bottom: 24px;">
-  <div style="text-align: center;">
-    <img src="/assets/ai-auto-folder-2.png" alt="Import Menu" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 240px;"/>
-  </div>
-  <div style="text-align: center;">
-    <img src="/assets/ai-auto-folder-3.png" alt="Paste JSON Import" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
-  </div>
-</div>
+## AI Organize
 
-- **Incremental Merge**: Uses the "Merge" strategy by default — only adds new folders and assignments, never destroys your existing organization.
-- **Multilingual**: The prompt automatically uses your configured language, and folder names are generated in that language too.
+Too many chats to sort by hand? Let Gemini suggest a folder plan.
 
-#### Folder as Project
+1. Open the popup on Gemini and click **AI Organize** at the bottom of **Folder Options**. It writes your unfiled chats and current folder structure into a prompt and copies it. The prompt uses your language, and so do the folder names.
+2. Paste the prompt into Gemini. It replies with a folder plan in JSON.
+3. Click **Import folders** in the folder header, choose **Or paste JSON directly**, paste, and click **Import**. **Merge with existing folders** is the default: it only adds new folders and new filings, and leaves your existing ones alone.
 
-Want new chats to start with a lightweight project preset? Turn any folder into one.
-This idea is inspired by Claude Projects, but Voyager implements it as a lighter model: folder-based first-message instructions plus auto-filing, not a shared context workspace.
+<img src="/assets/ai-auto-folder.png" alt="The AI Organize button in the popup" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 320px;"/>
 
-1. Enable `Folder as Project` in the extension popup.
-2. Right-click a folder and choose `Set Instructions` or `Edit Instructions`.
-3. Open a new Gemini chat, use the folder picker beside the composer, and select that folder.
+## Folders as projects
+
+Give a folder first-turn instructions, and a new chat files itself there after its first message. The idea comes from Claude Projects, but Voyager only adds first-turn instructions and auto-filing; it isn't a shared-context workspace.
+
+1. Turn on **Enable Folder as Project** in the popup.
+2. Right-click a folder and choose **Set Instructions** or **Edit Instructions**.
+3. Start a new Gemini chat and pick the folder in the folder picker next to the input box.
 4. Send your first message.
 
 What happens next:
 
-- The conversation is automatically filed into that folder after the first send.
-- If the folder has instructions, Voyager prepends them only for that first send.
-- If the folder has no instructions, it still works as a quick filing shortcut.
-- Chats in the same folder do **not** share memory or read each other automatically.
-- Draft auto-save keeps only the text you typed; hidden instructions are not restored into the composer.
+- After the first send, the chat is filed into that folder.
+- If the folder has instructions, Voyager adds them only to that first send. Without instructions, the folder is a quick way to file new chats.
+- Chats in the same folder do **not** share memory or read each other.
+- Draft autosave keeps only what you typed, never the hidden instructions.
 
-### AI Studio Exclusive
-
-- **Sidebar Adjustment**: Drag to resize the sidebar width.
-- **Library Integration**: Drag directly from your Library into folders.
-
-### ChatGPT
-
-Folders also come to ChatGPT as a built-in plugin. You get a folder section in ChatGPT's sidebar plus the same floating panel. File a conversation with **Move to folder** in its menu, or drag its row onto a folder. Import, export, and the Activity view work there too. Turn it on or off from the popup's **Plugins** section.
+For the sidebar's width, see [Sidebar Width](/en/guide/sidebar).

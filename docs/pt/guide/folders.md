@@ -1,122 +1,103 @@
-# Pastas Bem Feitas
+# Pastas
 
-Por que organizar chats de IA é tão difícil?
-Nós resolvemos isso. Construímos um sistema de arquivos para seus pensamentos.
+Guarde as suas conversas em pastas na barra lateral: arraste uma para uma pasta e fica arquivada, encaixe pastas até três níveis e recupere as mesmas noutro computador.
 
-<div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; margin-bottom: 40px;">
-  <div style="flex: 1; min-width: 300px; text-align: center;">
-    <p><b>Gemini™</b></p>
-    <img src="/assets/gemini-folders.png" alt="Pastas Gemini" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-  <div style="flex: 1; min-width: 300px; text-align: center;">
-    <p><b>AI Studio</b></p>
-    <img src="/assets/aistudio-folders.png" alt="Pastas AI Studio" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-</div>
+<SiteSupport feature="folders" :labels="{ folders: 'Pastas na barra lateral', 'hide-filed': 'Ocultar conversas arquivadas', activity: 'Vista Activity', 'account-isolation': 'Isolamento de contas', projects: 'Pastas como projetos', 'ai-organize': 'Organizar com IA' }" />
 
-## A física da organização
+Só em alguns sites:
 
-Simplesmente parece certo.
+- **Mover para pasta** no menu de conversa do próprio site: Gemini, ChatGPT, Claude
+- Arrastar da tabela da Library para uma pasta: AI Studio
+- Ícones de conversa conforme o tipo de Gem: Gemini
 
-- **Arrastar e Soltar**: Pegue um chat. Solte-o em uma pasta. É tátil.
-- **Hierarquia Aninhada**: Projetos têm subprojetos. Crie pastas dentro de pastas. Estruture do _seu_ jeito.
-- **Espaçamento de pastas**: Ajuste a densidade da barra lateral, de compacto a espaçoso.
-  > _Nota: No Mac Safari, os ajustes podem não ser em tempo real; atualize a página para ver o efeito._
-- **Sincronização entre dispositivos**: Organize no seu desktop e use a [Sincronização na Nuvem](/pt/guide/cloud-sync) para ver as mesmas pastas no seu laptop.
+Um ✓ com círculo funciona logo após instalar o Voyager. Nos outros sites, abra a janela do Voyager nesse site e ative as pastas na área **Plugins**; na primeira vez, é pedido acesso ao site.
 
-## Dicas Profissionais
+## Onde está
 
-- **Multi-Seleção**: Pressione e segure uma conversa para entrar no modo de multi-seleção, depois selecione vários chats e mova todos de uma vez.
-- **Renomear**: Clique duas vezes em qualquer pasta para renomeá-la.
-- **Ícones**: Detectamos automaticamente o tipo de Gem (Programação, Criativo, etc.) e atribuímos o ícone correto. Você não precisa fazer nada.
+A secção de pastas fica por cima da lista de conversas, na barra lateral. Com a barra lateral fechada, as mesmas pastas continuam disponíveis num painel flutuante.
 
-## Diferenças de recursos por plataforma
+<img src="/assets/gemini-folders.png" alt="A secção de pastas na barra lateral" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 320px;"/>
 
-### Recursos comuns
+## Arquivar uma conversa
 
-- **Gestão básica**: Arrastar e soltar, renomear, seleção múltipla.
-- **Reconhecimento inteligente**: Detecta automaticamente tipos de chat e atribui ícones.
-- **Hierarquia Aninhada**: Suporte para aninhamento de pastas.
-- **Sincronização na nuvem**: Faça backup e sincronize a estrutura de pastas com a [Sincronização na Nuvem](/pt/guide/cloud-sync).
+- **Arrastar**: arraste uma conversa da barra lateral para cima de uma pasta.
+- **Menu da conversa**: nos sites que o permitem, abra o menu da conversa e escolha **Mover para pasta**.
+- **Conversa atual**: clique com o botão direito numa pasta e escolha **Adicionar a conversa atual aqui**.
+- **Seleção múltipla**: prima longamente uma conversa dentro de uma pasta para selecionar várias e movê-las de uma vez. A barra lateral do AI Studio ainda não suporta seleção múltipla.
 
-#### Ocultar conversas arquivadas
+## Encaixar, mudar o nome e a cor
 
-Uma vez que uma conversa foi arquivada em uma pasta, ela está "concluída" — mas por padrão continua ocupando espaço na lista principal. Ative **Ocultar conversas arquivadas** no popup da extensão → **Opções de Pasta**, e a lista principal mostrará apenas o que ainda está ativo. Inbox zero de verdade para seus chats de IA.
+<img src="/assets/folders-nested-en.png" alt="Pastas encaixadas em três níveis" width="240" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-- Na primeira vez que você arquiva uma conversa em uma pasta, o Voyager exibe um pequeno cartão na área de pastas para ativar com um clique. Se não quiser, clique em "Agora não" e não te incomodaremos mais.
-- Conversas arquivadas **nunca são excluídas** — continuam acessíveis dentro das pastas.
-- No AI Studio, as conversas arquivadas são ocultadas da tabela da Library. O Gemini e o AI Studio mantêm cada um a sua própria configuração.
-- Alterne a qualquer momento no popup.
+- As pastas vão até três níveis: uma pasta de topo pode ter mais dois níveis de subpastas.
+- Faça duplo clique no nome de uma pasta para lhe mudar o nome.
+- Com o botão direito numa pasta pode afixá-la, criar uma subpasta, mudar-lhe o nome, eliminá-la ou escolher uma de 7 cores.
 
-### Exclusivo para Gemini
+<img src="/assets/folders-menu-en.png" alt="O menu de contexto de uma pasta e as suas cores" width="254" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-#### Cores personalizadas
+A roda dentada do cabeçalho das pastas muda a ordem das conversas (ordem manual ou abertas recentemente) e ajusta o tamanho do texto, o espaçamento das pastas e o recuo das subpastas; a opção **Espaçamento de pastas** da janela também o faz. No Safari para Mac, pode ser preciso atualizar a página para ver a alteração.
 
-Clique no ícone da pasta para personalizar sua cor. Escolha entre 7 cores padrão ou use o seletor de cores para escolher qualquer cor.
+## Ocultar conversas arquivadas
 
-<img src="/assets/folder-color.png" alt="Cores das pastas" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+Depois de pôr uma conversa numa pasta, pode tirá-la da lista principal para lá ficarem só as conversas em curso.
 
-#### Isolamento de conta
+- No Gemini e no AI Studio, abra a janela → **Opções de Pasta** → **Ocultar conversas arquivadas**. Cada site guarda a sua própria definição; no AI Studio, ficam ocultas as linhas da tabela da Library.
+- Na primeira vez que arquiva uma conversa, um cartão na secção de pastas oferece ativá-lo com um clique. Escolha **Agora não** e não volta a perguntar.
+- Nos outros sites, o interruptor está nas definições do plugin de pastas, na área **Plugins** da janela, e vem desativado.
+- Nada é eliminado: as conversas arquivadas continuam nas suas pastas, e pode desativar isto quando quiser.
 
-O ícone "pessoa" mostra temporariamente apenas os chats da conta Google atual e fica desativado por padrão. O Hard Isolation, nas opções de pastas, vai além: separa os dados de pastas e de sincronização na nuvem por conta. Quando o Hard Isolation está ativo, o filtro de pessoa fica redundante e é ocultado automaticamente.
+## Importar e exportar
 
-<img src="/assets/current-user-only.png" alt="Isolamento de conta" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/folders-transfer-en.png" alt="Importar e exportar pastas" width="190" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-#### Organização Automática com IA
+O ícone de pasta do cabeçalho tem **Importar pastas** e **Exportar pastas**. Exportar guarda um ficheiro JSON; importar junta-o às pastas que já tem, por isso o que já organizou fica como está.
 
-Chats demais, preguiça de organizar? Deixe o Gemini pensar por você.
+## Sincronização na nuvem
 
-Um clique copia sua estrutura de conversas atual, cole no Gemini, e ele gera um plano de pastas pronto para importar — organização instantânea.
+Todos os sites com pastas podem usar a [sincronização na nuvem](/pt/guide/cloud-sync) para ter as mesmas pastas noutro computador. As pastas de cada site são guardadas e sincronizadas em separado.
 
-**Passo 1: Copie sua estrutura de conversas**
+## Vista Activity
 
-Na parte inferior da seção de pastas no popup da extensão, clique no botão **Organizar com IA**. Ele coleta automaticamente todas as suas conversas não classificadas e a estrutura de pastas existente, gera um prompt e copia para a área de transferência.
+O sino do cabeçalho troca a árvore por uma vista Activity só de leitura; prima-o outra vez para voltar à árvore. Nunca move, copia nem reclassifica conversas.
 
-<img src="/assets/ai-auto-folder.png" alt="AI Organize Button" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+- **Prioridade**: conversas com atividade real nas últimas 3 horas. Abrir ou ver uma conversa não conta.
+- **Hoje, Ontem e dias da semana**: ordenadas pela última atividade real, com apenas hoje e os quatro dias anteriores.
+- A estrela é uma marca manual à parte e não decide o que entra em Prioridade.
+- Conversas mais antigas, ou sem hora conhecida, não entram na Activity e continuam nas suas pastas.
+- Cada entrada mostra a sua pasta; uma conversa que está em várias pastas aparece só uma vez.
 
-**Passo 2: Deixe o Gemini classificar**
+[Leia o guia completo da vista Activity](/pt/guide/activity-view)
 
-Cole o conteúdo da área de transferência em uma conversa do Gemini. Ele vai analisar os títulos dos seus chats e gerar um plano de pastas em JSON.
+## Isolamento de contas
 
-**Passo 3: Importe os resultados**
+O botão com forma de pessoa na barra lateral do Gemini mostra temporariamente só as conversas da conta Google atual; vem desativado. **Enable Hard Isolation**, em **Opções de Pasta** na janela, separa as pastas e os dados de sincronização por conta; depois de ativado, os dados já estão separados e o botão esconde-se sozinho.
 
-Clique em **Importar pastas** no menu do painel de pastas, selecione **Ou colar JSON diretamente**, cole o JSON que o Gemini retornou e clique em **Importar**.
+<img src="/assets/current-user-only.png" alt="O botão com forma de pessoa" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 200px;"/>
 
-<div style="display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; margin-bottom: 24px;">
-  <div style="text-align: center;">
-    <img src="/assets/ai-auto-folder-2.png" alt="Import Menu" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 240px;"/>
-  </div>
-  <div style="text-align: center;">
-    <img src="/assets/ai-auto-folder-3.png" alt="Paste JSON Import" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
-  </div>
-</div>
+## Organizar com IA
 
-- **Mesclagem incremental**: Usa a estratégia de "Mesclar" por padrão — apenas adiciona novas pastas e atribuições, nunca destrói sua organização existente.
-- **Multilíngue**: O prompt usa automaticamente o idioma configurado, e os nomes das pastas também são gerados nesse idioma.
+Demasiadas conversas para organizar à mão? Deixe o Gemini propor um plano de pastas.
 
-#### Pasta como Projeto
+1. Abra a janela no Gemini e clique em **Organizar com IA** no fundo de **Opções de Pasta**. As conversas por arquivar e a estrutura atual de pastas são copiadas como um prompt. O prompt usa o seu idioma, tal como os nomes das pastas.
+2. Cole o prompt no Gemini. Ele responde com um plano de pastas em JSON.
+3. Clique em **Importar pastas** no cabeçalho, escolha **Ou colar JSON diretamente**, cole e clique em **Importar**. **Mesclar com pastas existentes** é a opção predefinida: só acrescenta pastas novas e novas atribuições, sem mexer nas que já tem.
 
-Quer que novas conversas já comecem com um pequeno preset de projeto? Transforme qualquer pasta num projeto.
-A ideia é inspirada no Claude Projects, mas o Voyager implementa isso de forma mais leve: instruções baseadas em pasta para a primeira mensagem e arquivamento automático, não um workspace de contexto partilhado.
+<img src="/assets/ai-auto-folder.png" alt="O botão Organizar com IA na janela" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 320px;"/>
 
-1. Ative `Habilitar Pasta como Projeto` no popup da extensão.
-2. Clique com o botão direito numa pasta e escolha `Definir instruções` ou `Editar instruções`.
-3. Abra um novo chat do Gemini, use o seletor de pastas ao lado da caixa de escrita e escolha essa pasta.
+## Pastas como projetos
+
+Dê a uma pasta instruções para o primeiro turno e uma conversa nova arquiva-se sozinha nela depois da primeira mensagem. A ideia vem dos Claude Projects, mas o Voyager só acrescenta instruções do primeiro turno e arquivo automático; não é um espaço de trabalho com contexto partilhado.
+
+1. Ative **Habilitar Pasta como Projeto** na janela.
+2. Clique com o botão direito numa pasta e escolha **Definir instruções** ou **Editar instruções**.
+3. Abra uma conversa nova do Gemini e escolha a pasta no seletor ao lado da caixa de texto.
 4. Envie a primeira mensagem.
 
-O que acontece a seguir:
+A seguir:
 
-- A conversa é automaticamente colocada nessa pasta após o primeiro envio.
-- Se a pasta tiver instruções, o Voyager prefixa essas instruções apenas nesse primeiro envio.
-- Se a pasta não tiver instruções, continua a funcionar como atalho rápido de organização.
-- Os chats na mesma pasta **não** partilham memória nem leem automaticamente o conteúdo uns dos outros.
-- O auto-save de rascunhos guarda apenas o texto que escreveu; as instruções ocultas não voltam para a caixa de entrada.
+- Depois do primeiro envio, a conversa é arquivada nessa pasta.
+- Se a pasta tiver instruções, o Voyager só as junta a esse primeiro envio. Sem instruções, a pasta serve de atalho para arquivar conversas novas.
+- As conversas da mesma pasta **não** partilham memória nem leem o conteúdo umas das outras.
+- O guardar automático do rascunho só mantém o que escreveu, nunca as instruções ocultas.
 
-### Exclusivo para AI Studio
-
-- **Ajuste da barra lateral**: Arraste para redimensionar a largura da barra lateral.
-- **Integração com Library**: Arraste diretamente de sua Library para pastas.
-
-### ChatGPT
-
-As pastas também chegam ao ChatGPT como um plugin integrado. Você ganha uma seção de pastas na barra lateral do ChatGPT, além do mesmo painel flutuante. Guarde uma conversa com **Mover para pasta** no menu dela ou arraste a sua linha para uma pasta. Importar, exportar e a visualização de Atividade também funcionam ali. Ative ou desative pela seção **Plugins** do popup.
+Para a largura da barra lateral, veja [Largura da barra lateral](/pt/guide/sidebar).

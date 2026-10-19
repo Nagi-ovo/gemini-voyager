@@ -1,122 +1,103 @@
-# Les dossiers, comme ils devraient l'être
+# Dossiers
 
-Pourquoi organiser les chats AI est-il si difficile ?
-Nous avons réglé ça. Nous avons construit un système de fichiers pour vos pensées.
+Rangez vos conversations dans des dossiers de la barre latérale : glissez-en une dans un dossier et elle est classée, imbriquez les dossiers sur trois niveaux et retrouvez les mêmes sur un autre ordinateur.
 
-<div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; margin-bottom: 40px;">
-  <div style="flex: 1; min-width: 300px; text-align: center;">
-    <p><b>Gemini™</b></p>
-    <img src="/assets/gemini-folders.png" alt="Dossiers Gemini" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-  <div style="flex: 1; min-width: 300px; text-align: center;">
-    <p><b>AI Studio</b></p>
-    <img src="/assets/aistudio-folders.png" alt="Dossiers AI Studio" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-</div>
+<SiteSupport feature="folders" :labels="{ folders: 'Dossiers dans la barre latérale', 'hide-filed': 'Masquer les conversations classées', activity: 'Vue Activity', 'account-isolation': 'Isolation des comptes', projects: 'Dossiers comme projets', 'ai-organize': 'Organiser par IA' }" />
 
-## La physique de l'organisation
+Seulement sur certains sites :
 
-C'est tout simplement naturel.
+- **Déplacer vers un dossier** dans le menu de conversation du site : Gemini, ChatGPT, Claude
+- Glisser depuis le tableau Library vers un dossier : AI Studio
+- Icônes de conversation selon le type de Gem : Gemini
 
-- **Glisser-Déposer** : Prenez un chat. Déposez-le dans un dossier. C'est tactile.
-- **Hiérarchie imbriquée** : Les projets ont des sous-projets. Créez des dossiers dans des dossiers. Structurez à _votre_ façon.
-- **Espacement des dossiers** : Ajustez la densité de la barre latérale, de compact à spacieux.
-  > _Note : Sur Mac Safari, les ajustements peuvent ne pas être en temps réel ; actualisez la page pour voir l'effet._
-- **Synchronisation entre appareils** : Organisez sur votre bureau, puis utilisez la [Synchro Cloud](/fr/guide/cloud-sync) pour retrouver les mêmes dossiers sur votre ordinateur portable.
+Un ✓ entouré fonctionne dès l’installation. Sur les autres sites, ouvrez la fenêtre de Voyager sur le site et activez les dossiers dans la zone **Extensions** ; la première fois, l’accès au site vous est demandé.
 
-## Astuces de Pro
+## Où les trouver
 
-- **Multi-Sélection** : Appui long sur une conversation pour entrer en mode multi-sélection, puis sélectionnez plusieurs chats et déplacez-les tous en une fois.
-- **Renommer** : Double-cliquez sur n'importe quel dossier pour le renommer.
-- **Icônes** : Nous détectons automatiquement le type de Gem (Codage, Créatif, etc.) et attribuons la bonne icône. Vous n'avez rien à faire.
+La section des dossiers se trouve au-dessus de la liste des conversations, dans la barre latérale. Quand la barre latérale est fermée, les mêmes dossiers restent disponibles dans un panneau flottant.
 
-## Différences de fonctionnalités par plateforme
+<img src="/assets/gemini-folders.png" alt="La section des dossiers dans la barre latérale" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 320px;"/>
 
-### Fonctionnalités communes
+## Classer une conversation
 
-- **Gestion de base** : Glisser-déposer, renommer, multi-sélection.
-- **Reconnaissance intelligente** : Détecte automatiquement les types de chat et assigne des icônes.
-- **Hiérarchie imbriquée** : Support pour l'imbrication des dossiers.
-- **Synchro Cloud** : Sauvegardez et synchronisez la structure des dossiers avec la [Synchro Cloud](/fr/guide/cloud-sync).
+- **Glisser** : faites glisser une conversation de la barre latérale sur un dossier.
+- **Menu de la conversation** : sur les sites qui le permettent, ouvrez le menu de la conversation et choisissez **Déplacer vers un dossier**.
+- **Conversation actuelle** : faites un clic droit sur un dossier et choisissez **Ajouter la conversation actuelle ici**.
+- **Sélection multiple** : appuyez longuement sur une conversation d’un dossier pour en sélectionner plusieurs, puis déplacez-les d’un coup. La barre latérale d’AI Studio ne gère pas encore la sélection multiple.
 
-#### Masquer les discussions archivées
+## Imbriquer, renommer et colorer
 
-Une fois une discussion classée dans un dossier, c'est "fait" — mais elle continue par défaut à occuper de la place dans la liste principale. Activez **Masquer les discussions archivées** dans la popup de l'extension → **Options de dossiers**, et la liste principale n'affiche plus que les conversations en cours. Un vrai inbox zero pour vos chats IA.
+<img src="/assets/folders-nested-en.png" alt="Des dossiers imbriqués sur trois niveaux" width="240" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-- La première fois que vous classez une discussion dans un dossier, Voyager affiche une petite carte dans la zone des dossiers permettant d'activer l'option en un clic. Si vous ne le souhaitez pas, cliquez sur « Plus tard » et nous ne vous dérangerons plus.
-- Les discussions archivées **ne sont jamais supprimées** — elles restent accessibles dans leurs dossiers.
-- Sur AI Studio, les discussions classées sont masquées du tableau de la Library à la place. Gemini et AI Studio conservent chacun leur propre réglage.
-- Modifiable à tout moment depuis la popup.
+- Les dossiers vont jusqu’à trois niveaux : un dossier de premier niveau peut contenir deux niveaux de sous-dossiers.
+- Double-cliquez sur le nom d’un dossier pour le renommer.
+- Un clic droit sur un dossier permet de l’épingler, de créer un sous-dossier, de le renommer, de le supprimer ou de choisir l’une des 7 couleurs.
 
-### Exclusivité Gemini
+<img src="/assets/folders-menu-en.png" alt="Le menu contextuel d’un dossier et ses couleurs" width="254" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-#### Couleurs personnalisées
+La roue dentée de l’en-tête des dossiers change l’ordre des conversations (ordre manuel ou ouvertes récemment) et règle la taille du texte, l’espacement des dossiers et le retrait des sous-dossiers ; le réglage **Espacement des dossiers** de la fenêtre le fait aussi. Sur Safari pour Mac, il faut parfois actualiser la page pour voir le changement.
 
-Cliquez sur l'icône du dossier pour personnaliser sa couleur. Choisissez parmi 7 couleurs par défaut ou utilisez le sélecteur de couleurs pour choisir n'importe quelle couleur.
+## Masquer les conversations classées
 
-<img src="/assets/folder-color.png" alt="Couleurs des dossiers" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+Une fois une conversation dans un dossier, vous pouvez la retirer de la liste principale pour n’y garder que les conversations en cours.
 
-#### Isolation de compte
+- Sur Gemini et AI Studio, ouvrez la fenêtre → **Options des dossiers** → **Masquer les discussions archivées**. Chaque site garde son propre réglage ; sur AI Studio, ce sont les lignes du tableau Library qui sont masquées.
+- La première fois que vous classez une conversation, une carte dans la section des dossiers propose de l’activer en un clic. Choisissez **Pas maintenant** et elle ne reviendra pas.
+- Sur les autres sites, l’interrupteur se trouve dans les réglages du plugin des dossiers, zone **Extensions** de la fenêtre ; il est désactivé par défaut.
+- Rien n’est supprimé : les conversations classées restent dans leurs dossiers, et vous pouvez désactiver l’option à tout moment.
 
-L'icône « personne » n'affiche temporairement que les chats du compte Google actuel ; elle est désactivée par défaut. **Enable Hard Isolation** dans les options de dossiers va plus loin en séparant les données des dossiers et de la synchronisation cloud par compte. Lorsque l'isolation renforcée est active, le filtre par personne devient redondant et est masqué automatiquement.
+## Importer et exporter
 
-<img src="/assets/current-user-only.png" alt="Isolation de compte" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/folders-transfer-en.png" alt="Importer et exporter des dossiers" width="190" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-#### Organisation automatique par IA
+L’icône de dossier de l’en-tête propose **Importer dossiers** et **Exporter dossiers**. L’export enregistre un fichier JSON ; l’import le fusionne avec vos dossiers existants, sans défaire ce que vous avez déjà classé.
 
-Trop de chats, la flemme de trier ? Laissez Gemini réfléchir à votre place.
+## Synchronisation cloud
 
-Un clic copie votre structure de conversations actuelle, collez-la dans Gemini, et il génère un plan de dossiers prêt à importer — organisation instantanée.
+Chaque site qui a des dossiers peut utiliser la [synchronisation cloud](/fr/guide/cloud-sync) pour retrouver les mêmes dossiers sur un autre ordinateur. Les dossiers de chaque site sont enregistrés et synchronisés séparément.
 
-**Étape 1 : Copiez votre structure de conversations**
+## Vue Activity
 
-En bas de la section dossiers dans le popup de l'extension, cliquez sur le bouton **Organiser par IA**. Il collecte automatiquement toutes vos conversations non classées et la structure de dossiers existante, génère un prompt et le copie dans votre presse-papiers.
+La cloche de l’en-tête remplace l’arborescence par une vue Activity en lecture seule ; appuyez de nouveau pour revenir à l’arborescence. Elle ne déplace, ne copie et ne reclasse aucune conversation.
 
-<img src="/assets/ai-auto-folder.png" alt="AI Organize Button" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+- **Priorité** : les conversations avec une vraie activité dans les 3 dernières heures. Ouvrir ou consulter une conversation ne compte pas.
+- **Aujourd’hui, Hier et jours de la semaine** : classées par dernière activité réelle, en ne gardant qu’aujourd’hui et les quatre jours précédents.
+- L’étoile est une marque manuelle à part et ne décide pas de ce qui entre dans Priorité.
+- Les conversations plus anciennes, ou sans heure connue, n’apparaissent pas dans Activity et restent dans leurs dossiers.
+- Chaque entrée indique son dossier ; une conversation présente dans plusieurs dossiers n’apparaît qu’une fois.
 
-**Étape 2 : Laissez Gemini trier**
+[Lire le guide complet de la vue Activity](/fr/guide/activity-view)
 
-Collez le contenu du presse-papiers dans une conversation Gemini. Il analysera vos titres de chat et produira un plan de dossiers en JSON.
+## Isolation des comptes
 
-**Étape 3 : Importez les résultats**
+Le bouton en forme de personne dans la barre latérale de Gemini n’affiche temporairement que les conversations du compte Google actuel ; il est désactivé par défaut. **Enable Hard Isolation**, dans **Options des dossiers** de la fenêtre, sépare les dossiers et les données de synchronisation par compte ; une fois activé, les données sont déjà séparées et le bouton se masque.
 
-Cliquez sur **Importer dossiers** depuis le menu du panneau de dossiers, sélectionnez **Ou coller le JSON directement**, collez le JSON renvoyé par Gemini, puis cliquez sur **Importer**.
+<img src="/assets/current-user-only.png" alt="Le bouton en forme de personne" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 200px;"/>
 
-<div style="display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; margin-bottom: 24px;">
-  <div style="text-align: center;">
-    <img src="/assets/ai-auto-folder-2.png" alt="Import Menu" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 240px;"/>
-  </div>
-  <div style="text-align: center;">
-    <img src="/assets/ai-auto-folder-3.png" alt="Paste JSON Import" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
-  </div>
-</div>
+## Organiser par IA
 
-- **Fusion incrémentale** : Utilise la stratégie « Fusionner » par défaut — ajoute uniquement les nouveaux dossiers et assignations, sans jamais détruire votre organisation existante.
-- **Multilingue** : Le prompt utilise automatiquement votre langue configurée, et les noms de dossiers sont générés dans cette langue également.
+Trop de conversations à trier à la main ? Laissez Gemini proposer un plan de dossiers.
 
-#### Dossier comme projet
+1. Ouvrez la fenêtre sur Gemini et cliquez sur **Organiser par IA** en bas de **Options des dossiers**. Vos conversations non classées et la structure actuelle des dossiers sont copiées sous forme de prompt. Le prompt est dans votre langue, tout comme les noms de dossiers.
+2. Collez le prompt dans Gemini. Il répond avec un plan de dossiers en JSON.
+3. Cliquez sur **Importer dossiers** dans l’en-tête, choisissez **Ou coller le JSON directement**, collez, puis cliquez sur **Importer**. **Fusionner** est le choix par défaut : seuls les nouveaux dossiers et les nouveaux classements sont ajoutés, le reste ne bouge pas.
 
-Vous voulez donner aux nouveaux chats un léger preset de projet ? Transformez n'importe quel dossier en projet.
-L'idée s'inspire de Claude Projects, mais Voyager l'implémente sous une forme plus légère : des instructions pour le premier message basées sur le dossier et un classement automatique, pas un espace de travail à contexte partagé.
+<img src="/assets/ai-auto-folder.png" alt="Le bouton Organiser par IA dans la fenêtre" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 320px;"/>
 
-1. Activez `Activer Dossier comme Projet` dans la fenêtre de l'extension.
-2. Faites un clic droit sur un dossier puis choisissez `Définir les instructions` ou `Modifier les instructions`.
-3. Ouvrez un nouveau chat Gemini, utilisez le sélecteur de dossiers à côté de la zone de saisie et choisissez ce dossier.
+## Dossiers comme projets
+
+Donnez à un dossier des instructions de premier tour : une nouvelle conversation s’y range d’elle-même après son premier message. L’idée vient de Claude Projects, mais Voyager se limite aux instructions de premier tour et au classement automatique ; ce n’est pas un espace de travail au contexte partagé.
+
+1. Activez **Activer Dossier comme Projet** dans la fenêtre.
+2. Faites un clic droit sur un dossier et choisissez **Définir les instructions** ou **Modifier les instructions**.
+3. Ouvrez une nouvelle conversation Gemini et choisissez le dossier dans le sélecteur à côté du champ de saisie.
 4. Envoyez votre premier message.
 
-Ce qui se passe ensuite :
+Ensuite :
 
-- La conversation est automatiquement rangée dans ce dossier après le premier envoi.
-- Si le dossier contient des instructions, Voyager les préfixe uniquement pour ce premier envoi.
-- Si le dossier n'a pas d'instructions, il reste utile comme raccourci de classement rapide.
-- Les chats d'un même dossier **ne** partagent **pas** automatiquement leur mémoire et ne lisent pas le contenu des autres.
-- L'auto-enregistrement des brouillons conserve uniquement votre texte ; les instructions cachées ne reviennent pas dans le champ de saisie.
+- Après le premier envoi, la conversation est classée dans ce dossier.
+- Si le dossier a des instructions, Voyager ne les ajoute qu’à ce premier envoi. Sans instructions, le dossier sert de raccourci pour classer les nouvelles conversations.
+- Les conversations d’un même dossier ne partagent **pas** de mémoire et ne lisent pas le contenu des autres.
+- L’enregistrement automatique du brouillon ne garde que ce que vous avez tapé, jamais les instructions cachées.
 
-### Exclusivité AI Studio
-
-- **Ajustement de la barre latérale** : Faites glisser pour redimensionner la largeur de la barre latérale.
-- **Intégration Library** : Glissez directement depuis votre Library vers les dossiers.
-
-### ChatGPT
-
-Les dossiers arrivent aussi sur ChatGPT, sous forme d'extension intégrée. Vous obtenez une section de dossiers dans la barre latérale de ChatGPT, ainsi que le même panneau flottant. Classez une discussion avec **Déplacer vers un dossier** dans son menu, ou faites glisser sa ligne sur un dossier. L'import, l'export et la vue Activité y fonctionnent aussi. Activez ou désactivez-la depuis la section **Extensions** de la popup de l'extension.
+Pour la largeur de la barre latérale, voir [Largeur de la barre latérale](/fr/guide/sidebar).

@@ -1,122 +1,103 @@
-# 資料夾，本該如此
+# 資料夾
 
-整理 AI 聊天記錄，以前怎麼那麼難？
-我們修好了。給你的思緒，裝個檔案系統。
+把對話收進側邊欄裡的資料夾：拖進去就歸檔好了，資料夾可以套三層，換一台電腦也能同步回來。
 
-<div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; margin-bottom: 40px;">
-  <div style="flex: 1; min-width: 300px; text-align: center;">
-    <p><b>Gemini™</b></p>
-    <img src="/assets/gemini-folders.png" alt="Gemini 資料夾" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-  <div style="flex: 1; min-width: 300px; text-align: center;">
-    <p><b>AI Studio</b></p>
-    <img src="/assets/aistudio-folders.png" alt="AI Studio 資料夾" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-  </div>
-</div>
+<SiteSupport feature="folders" :labels="{ folders: '側邊欄資料夾', 'hide-filed': '隱藏已歸檔對話', activity: 'Activity 檢視', 'account-isolation': '帳號隔離', projects: '資料夾即專案', 'ai-organize': 'AI 整理' }" />
 
-## 整理的直覺
+只在部分網站上有：
 
-手感對了，一切都對了。
+- 網站自己的對話選單裡的 **移動到資料夾**：Gemini、ChatGPT、Claude
+- 從 Library 表格拖進資料夾：AI Studio
+- 依 Gem 類型顯示的對話圖示：Gemini
 
-- **拖拽**：抓起來，扔進去。真實物理回饋。
-- **套娃**：大項目套小項目。最多三層，隨你安排。
-- **間距**：自由調整側邊欄密度，從緊湊到寬鬆。
-  > _注：Mac Safari 上的調整可能不是即時的，重新整理頁面即可生效。_
-- **同步**：電腦上理好，透過[雲端同步](/zh_TW/guide/cloud-sync)，筆記本上就能看到同一套資料夾。
+帶圈的 ✓ 表示裝好就能用。其他網站要在該網站上打開 Voyager 彈出視窗，在 **外掛** 區域開啟資料夾；第一次開啟時會要求存取這個網站。
 
-## 絕招
+## 在哪裡
 
-- **多選**：長按對話項進入多選模式，批次操作，一次搞定。
-- **改名**：雙擊資料夾，直接改。
-- **識圖**：代碼、寫作、閒聊... 我們自動識別 Gem 類型，配上圖標。你只管用，剩下的交給我們。
+資料夾區域在側邊欄的對話列表上方。側邊欄收起時，同一套資料夾也能在浮動面板裡使用。
 
-## 平台特性差異
+<img src="/assets/gemini-folders.png" alt="側邊欄裡的資料夾區域" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 320px;"/>
 
-### 通用功能
+## 把對話放進資料夾
 
-- **基礎管理**：拖拽排序、重命名、多選操作。
-- **智能識別**：自動識別對話類型並匹配圖標。
-- **多級目錄**：支持資料夾嵌套，結構更深邃。
-- **雲端同步**：透過[雲端同步](/zh_TW/guide/cloud-sync)備份並同步資料夾結構。
+- **拖曳**：把側邊欄裡的對話拖到資料夾上。
+- **對話選單**：在支援的網站上，打開對話自己的選單，選 **移動到資料夾**。
+- **目前對話**：在資料夾上按右鍵，選 **將目前對話加入此處**。
+- **多選**：長按資料夾裡的一則對話進入多選，再一起移動。AI Studio 的側邊欄暫不支援多選。
 
-#### 隱藏已歸檔對話
+## 巢狀、改名和顏色
 
-對話歸入資料夾後，它就算「處理完了」——但預設情況下它仍會繼續佔據主清單的位置。在擴充功能彈窗 → **資料夾選項** 裡開啟 **隱藏已歸檔對話**，主清單就只保留進行中的對話，真正的 inbox zero。
+<img src="/assets/folders-nested-zh.png" alt="三層巢狀的資料夾" width="240" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-- 你第一次把對話拖入資料夾時，Voyager 會在資料夾區域彈出一張小卡片，一鍵即可開啟。不想用的話點「暫不開啟」，不會再打擾你。
-- 已歸檔對話 **永遠不會被刪除**——隨時可在資料夾中檢視。
-- 在 AI Studio 上，已歸檔的對話會改為從 Library 表格中隱藏。Gemini 和 AI Studio 各自有獨立的設定。
-- 任何時候都能在彈窗裡關閉此功能。
+- 資料夾最多三層：頂層資料夾下面還能再建兩級子資料夾。
+- 雙擊資料夾名稱即可改名。
+- 在資料夾上按右鍵可以置頂、新增子資料夾、重新命名、刪除，或從 7 種顏色裡選一種。
 
-### Gemini 專屬增強
+<img src="/assets/folders-menu-zh.png" alt="資料夾右鍵選單和顏色" width="206" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-#### 自定義顏色
+資料夾標題列的齒輪裡可以切換對話排序（手動排序或最近開啟），並調整字級、資料夾間距和子資料夾縮排；彈出視窗的 **資料夾間距** 也能調。Mac Safari 上調整後可能要重新整理頁面才會生效。
 
-點擊資料夾圖標自定義顏色。內置 7 種默認配色，亦支持通過調色盤選取你的專屬色彩。
+## 隱藏已歸檔對話
 
-<img src="/assets/folder-color.png" alt="資料夾配色" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+對話放進資料夾後，可以讓它不再出現在主列表裡，主列表只留進行中的對話。
 
-#### 帳號隔離
+- 在 Gemini 和 AI Studio 上，打開彈出視窗 → **資料夾選項** → **隱藏已歸檔對話**。兩邊的設定互相獨立；AI Studio 上隱藏的是 Library 表格裡的列。
+- 你第一次把對話放進資料夾時，資料夾區域會跳出一張卡片，一鍵就能開啟；點 **暫不開啟** 就不會再提示。
+- 在其他網站上，這個開關在彈出視窗 **外掛** 區域資料夾外掛的設定裡，預設關閉。
+- 對話不會被刪除，隨時能在資料夾裡找到；開關也隨時可以關掉。
 
-點擊頂欄的「人像」圖標，即可暫時只顯示目前 Google 帳號的對話（預設關閉）。資料夾選項裡的 **啟用硬隔離（Hard Isolation）** 更進一步，按帳號分開存放資料夾與雲端同步資料。開啟硬隔離後，人像篩選就用不上了，會自動隱藏。
+## 匯入與匯出
 
-<img src="/assets/current-user-only.png" alt="帳號隔離模式" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/folders-transfer-zh.png" alt="匯入和匯出資料夾" width="186" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 
-#### AI 自動整理
+資料夾標題列的資料夾圖示裡有 **匯入資料夾** 和 **匯出資料夾**。匯出會得到一個 JSON 檔；匯入時會與現有資料夾合併，不會打亂已有的分類。
 
-聊天太多，懶得分類？讓 Gemini 幫你動腦。
+## 雲端同步
 
-一鍵複製你現有的對話結構，貼進 Gemini，它就會生成一份可以直接匯入的資料夾方案——秒速整理。
+每個有資料夾的網站都能用 [雲端同步](/zh_TW/guide/cloud-sync) 在另一台電腦上拿回同樣的資料夾。各網站的資料夾分開儲存、分開同步。
 
-**第一步：複製你的對話結構**
+## Activity 檢視
 
-在擴充套件彈窗的資料夾區塊底部，點擊 **AI 整理** 按鈕。它會自動收集所有未歸類的對話和現有資料夾結構，生成提示詞並複製到剪貼簿。
+點資料夾標題列的鈴鐺，目錄會換成唯讀的 Activity 檢視；再點一次回到資料夾樹。它不會移動、複製或重新分類任何對話。
 
-<img src="/assets/ai-auto-folder.png" alt="AI Organize Button" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
+- **優先**：最近 3 小時內有真實對話活動的會話。打開或查看不算。
+- **今天、昨天、具體星期**：依最近一次真實對話時間排列，只保留今天和之前四天。
+- Star 是獨立的手動標記，不決定對話是否進入優先。
+- 更早或時間未知的對話不進 Activity，仍在原來的資料夾裡。
+- 每筆都標出所屬資料夾；同一對話在多個資料夾裡時只顯示一次。
 
-**第二步：讓 Gemini 來分類**
+[Activity 檢視的完整說明](/zh_TW/guide/activity-view)
 
-將剪貼簿內容貼進 Gemini 對話。它會分析你的聊天標題，然後輸出一份 JSON 資料夾方案。
+## 帳號隔離
 
-**第三步：匯入結果**
+Gemini 側欄的人像按鈕只暫時顯示目前 Google 帳號的對話，預設關閉。彈出視窗 **資料夾選項** 裡的 **啟用硬隔離（Hard Isolation）** 會依帳號拆分資料夾和雲端同步資料；開啟後資料已經分開，人像按鈕會自動隱藏。
 
-在資料夾面板選單中點擊 **匯入資料夾**，選擇 **或直接貼上 JSON**，貼上 Gemini 回傳的 JSON，然後點擊 **匯入**。
+<img src="/assets/current-user-only.png" alt="人像按鈕" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 200px;"/>
 
-<div style="display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; margin-bottom: 24px;">
-  <div style="text-align: center;">
-    <img src="/assets/ai-auto-folder-2.png" alt="Import Menu" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 240px;"/>
-  </div>
-  <div style="text-align: center;">
-    <img src="/assets/ai-auto-folder-3.png" alt="Paste JSON Import" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px;"/>
-  </div>
-</div>
+## AI 整理
 
-- **增量合併**：預設採用「合併」策略——只新增資料夾和分配，絕不破壞你現有的組織結構。
-- **多語言支援**：提示詞會自動使用你設定的語言，資料夾名稱也會以該語言生成。
+對話太多不想手動分，可以讓 Gemini 給出一份資料夾方案。
 
-#### 資料夾即專案
+1. 在 Gemini 上打開彈出視窗，點 **資料夾選項** 底部的 **AI 整理**。它會把未分類的對話和現有資料夾結構寫成一段提示詞，複製到剪貼簿。提示詞用你設定的語言，資料夾名稱也會用這種語言。
+2. 把提示詞貼給 Gemini，它會回覆一段 JSON 格式的資料夾方案。
+3. 在資料夾標題列點 **匯入資料夾**，選 **或直接貼上 JSON**，貼上後點 **匯入**。預設 **與現有資料夾合併**，只新增資料夾和新的歸檔，不動已有的分類。
 
-想讓新對話自帶一套輕量「專案預設」？把任意資料夾變成專案即可。
-這個設計參考了 Claude Projects，但 Voyager 採用的是更輕量的實作：基於資料夾的首輪指令 + 自動歸檔，而不是共享上下文工作區。
+<img src="/assets/ai-auto-folder.png" alt="彈出視窗裡的 AI 整理按鈕" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 320px;"/>
 
-1. 在擴充功能彈窗中開啟 `啟用資料夾作為專案`。
-2. 右鍵某個資料夾，選擇 `設定指令` 或 `編輯指令`。
+## 資料夾即專案
+
+讓某個資料夾帶上一套首輪指令，新對話送出第一則訊息後自動歸進去。思路參考了 Claude Projects，但 Voyager 只做首輪指令加自動歸檔，不是共享上下文的工作區。
+
+1. 在彈出視窗中開啟 **啟用資料夾作為專案**。
+2. 在資料夾上按右鍵，選 **設定指令** 或 **編輯指令**。
 3. 打開一個新的 Gemini 對話，在輸入框旁的資料夾選擇器裡選中它。
-4. 傳送第一則訊息。
+4. 送出第一則訊息。
 
-接下來會發生什麼：
+之後：
 
-- 首次傳送後，這個對話會自動歸入該資料夾。
-- 如果資料夾設定了指令，Voyager 只會在第一次傳送時臨時附加這些指令。
-- 如果資料夾沒有指令，它仍然可以作為一個快速歸檔入口。
-- 同一資料夾下的對話 **不會** 共享記憶，也不會自動互相讀取內容。
-- 草稿自動儲存只會保留你輸入的正文，不會把隱藏指令重新塞回輸入框。
+- 第一次送出後，對話自動歸入這個資料夾。
+- 資料夾有指令時，Voyager 只在第一次送出時暫時附上這些指令；沒有指令時，它就是一個快速歸檔入口。
+- 同一資料夾裡的對話 **不** 共享記憶，也不會互相讀取內容。
+- 草稿自動儲存只保留你輸入的正文，不會把隱藏的指令放回輸入框。
 
-### AI Studio 專屬增強
-
-- **側邊欄調節**：鼠標拖拽邊緣，自由調整側邊欄寬度。
-- **庫拖拽支持**：支持直接從 Library 列表中拖拽項目到資料夾。
-
-### ChatGPT
-
-資料夾也以內建外掛的形式提供給 ChatGPT。你會在 ChatGPT 側邊欄中看到資料夾區域，並擁有同樣的浮動面板。在對話選單中選擇 **移動到資料夾**，或直接把對話列拖到資料夾上，即可歸檔。匯入、匯出與活動檢視在這裡同樣可用。你可以在彈出視窗的 **外掛** 區段中開啟或關閉此功能。
+側邊欄寬度見 [側邊欄寬度](/zh_TW/guide/sidebar)。
