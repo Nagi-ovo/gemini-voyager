@@ -2,153 +2,28 @@
  * What AI Studio's folder tree does for a user, stated through `aistudioTreeDriver`
  * so the same cases hold when the tree's DOM changes. Drafts, placement policy
  * and the read-only window during loads are covered by aistudioFolderSync,
- * aistudioPlacementCharacterization and aistudioPersistence.
+ * aistudioPlacementCharacterization and aistudioPersistence; opening prompts and
+ * /library by aistudioTreeCharacterization.navigation.
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { logger } from '@/core/services/LoggerService';
-import { StorageKeys } from '@/core/types/common';
-
-import { AIStudioFolderManager } from '../aistudio';
-import type { ConversationReference, Folder, FolderData } from '../types';
+import type { Folder } from '../types';
+import {
+  conv,
+  destroyManagers,
+  flush,
+  folder,
+  mockBrowser,
+  mountTree as mount,
+  stored,
+  treeFixture,
+  installAIStudioFolderPage,
+} from './aistudioFolderHarness';
 import { ROOT, fakeTransfer, nameInput, nativeRowTransfer, tree } from './aistudioTreeDriver';
 
-const { mockBrowser } = vi.hoisted(() => ({
-  mockBrowser: {
-    runtime: {
-      id: 'test-extension-id',
-      onMessage: { addListener: vi.fn(), removeListener: vi.fn() },
-      sendMessage: vi.fn(),
-    },
-    storage: {
-      onChanged: { addListener: vi.fn(), removeListener: vi.fn() },
-      local: { get: vi.fn(), set: vi.fn(), remove: vi.fn() },
-      sync: { get: vi.fn(), set: vi.fn() },
-    },
-  },
-}));
+vi.mock('webextension-polyfill', () => ({ default: chrome }));
 
-vi.mock('webextension-polyfill', () => ({ default: mockBrowser }));
-
-const KEY = StorageKeys.FOLDER_DATA_AISTUDIO;
-let local: Record<string, unknown>;
-let sync: Record<string, unknown>;
-const managers: Array<{ destroy(): void }> = [];
-
-function pick(values: Record<string, unknown>, keys: unknown): Record<string, unknown> {
-  if (typeof keys === 'string') return structuredClone({ [keys]: values[keys] });
-  if (Array.isArray(keys)) {
-    return structuredClone(Object.fromEntries(keys.map((key) => [key, values[key]])));
-  }
-  if (keys && typeof keys === 'object') {
-    return structuredClone(
-      Object.fromEntries(
-        Object.entries(keys).map(([key, fallback]) => [key, values[key] ?? fallback]),
-      ),
-    );
-  }
-  return structuredClone(values);
-}
-
-function folder(id: string, name: string, extra: Partial<Folder> = {}): Folder {
-  return { id, name, parentId: null, isExpanded: true, createdAt: 1, updatedAt: 1, ...extra };
-}
-
-function conv(id: string, title: string, extra: Partial<ConversationReference> = {}) {
-  return {
-    conversationId: id,
-    title,
-    url: `https://aistudio.google.com/prompts/${id}`,
-    addedAt: 1,
-    ...extra,
-  };
-}
-
-/**
- * Creation order differs from both name and sortIndex order, so a tree that
- * sorts by either shows itself. Beta's prompts are stored oldest-added first,
- * with the starred one in the middle.
- */
-function fixture(): FolderData {
-  return {
-    folders: [
-      folder('b', 'Beta', { createdAt: 1, sortIndex: 2 }),
-      folder('a', 'Alpha', { createdAt: 2, sortIndex: 0 }),
-      folder('p', 'Pinned', { createdAt: 3, sortIndex: 1, pinned: true }),
-      folder('b2', 'Late child', { parentId: 'b', createdAt: 9, sortIndex: 0 }),
-      folder('b1', 'Early child', { parentId: 'b', createdAt: 5, sortIndex: 1 }),
-      folder('g', 'Grandchild', { parentId: 'b1', createdAt: 6 }),
-    ],
-    folderContents: {
-      b: [
-        conv('c1', 'First stored', { addedAt: 1 }),
-        conv('c2', 'Starred second', { addedAt: 2, starred: true }),
-        conv('c3', 'Newest third', { addedAt: 3 }),
-      ],
-      a: [conv('c4', 'In alpha')],
-      p: [],
-      b1: [],
-      b2: [],
-      g: [conv('c5', 'Under grandchild')],
-    },
-  };
-}
-
-function stored(): FolderData {
-  return local[KEY] as FolderData;
-}
-
-async function flush(): Promise<void> {
-  for (let i = 0; i < 5; i++) await new Promise((resolve) => setTimeout(resolve, 0));
-}
-
-async function mount(data: FolderData = fixture(), path = '/prompts/new_chat') {
-  (
-    globalThis as unknown as { jsdom: { reconfigure(options: { url: string }): void } }
-  ).jsdom.reconfigure({ url: `https://aistudio.google.com${path}` });
-  local[KEY] = structuredClone(data);
-  const manager = new AIStudioFolderManager();
-  managers.push(manager as unknown as { destroy(): void });
-  await manager.init();
-  await flush();
-  return manager;
-}
-
-beforeEach(() => {
-  vi.clearAllMocks();
-  localStorage.clear();
-  document.body.innerHTML = `
-    <span class="account-switcher-text" data-email="a@example.com">a@example.com</span>
-    <div class="nav-content v3-left-nav"><nav><div class="empty-space"></div></nav></div>`;
-  local = {};
-  sync = {
-    [StorageKeys.LANGUAGE]: 'en',
-    [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: false,
-    geminiFolderEnabled: true,
-  };
-  mockBrowser.storage.local.get.mockImplementation(async (keys: unknown) => pick(local, keys));
-  mockBrowser.storage.local.set.mockImplementation(async (values: Record<string, unknown>) => {
-    Object.assign(local, structuredClone(values));
-  });
-  mockBrowser.storage.sync.get.mockImplementation(async (keys: unknown) => pick(sync, keys));
-  mockBrowser.storage.sync.set.mockImplementation(async (values: Record<string, unknown>) => {
-    Object.assign(sync, structuredClone(values));
-  });
-  chrome.storage.local.get = mockBrowser.storage.local.get as typeof chrome.storage.local.get;
-  chrome.storage.local.set = mockBrowser.storage.local.set as typeof chrome.storage.local.set;
-  chrome.storage.sync.get = mockBrowser.storage.sync.get as typeof chrome.storage.sync.get;
-  chrome.storage.sync.set = mockBrowser.storage.sync.set as typeof chrome.storage.sync.set;
-  vi.spyOn(console, 'log').mockImplementation(() => {});
-  vi.spyOn(console, 'warn').mockImplementation(() => {});
-  vi.spyOn(console, 'error').mockImplementation(() => {});
-});
-
-afterEach(() => {
-  for (const manager of managers.splice(0)) manager.destroy();
-  vi.restoreAllMocks();
-  document.body.innerHTML = '';
-  document.documentElement.className = '';
-});
+installAIStudioFolderPage();
 
 describe('AI Studio folder tree: what it shows', () => {
   it('orders folders pinned first, then by creation time, ignoring name and sortIndex', async () => {
@@ -165,7 +40,7 @@ describe('AI Studio folder tree: what it shows', () => {
   });
 
   it('pins a subfolder ahead of an older sibling', async () => {
-    const data = fixture();
+    const data = treeFixture();
     data.folders.find((f) => f.id === 'b2')!.pinned = true;
     await mount(data);
     expect(tree.folderOrder().filter((name) => name.startsWith('Beta ›'))).toEqual([
@@ -197,9 +72,9 @@ describe('AI Studio folder tree: what it shows', () => {
     await mount();
     expect(tree.rootSectionLabel()).toBeNull();
 
-    const data = fixture();
+    const data = treeFixture();
     data.folderContents[ROOT] = [conv('r1', 'Loose prompt')];
-    for (const manager of managers.splice(0)) manager.destroy();
+    destroyManagers();
     document.querySelector('.gv-folder-container')?.remove();
     await mount(data);
 
@@ -209,7 +84,7 @@ describe('AI Studio folder tree: what it shows', () => {
   });
 
   it('marks the prompt the page has open, and follows navigation', async () => {
-    await mount(fixture(), '/prompts/c3');
+    await mount(treeFixture(), '/prompts/c3');
     expect(tree.activeConversationIds()).toEqual(['c3']);
 
     history.pushState({}, '', '/prompts/c4');
@@ -234,7 +109,7 @@ describe('AI Studio folder tree: what it changes', () => {
   });
 
   it('stars a prompt that legacy data files in two folders in both, from either row', async () => {
-    const data = fixture();
+    const data = treeFixture();
     data.folderContents.a.push(conv('c1', 'First stored'));
     await mount(data);
     const stars = () =>
@@ -470,95 +345,5 @@ describe('AI Studio folder tree: lifetime', () => {
     expect(document.querySelector('.gv-aistudio-folder-tree')).toBeNull();
     expect(document.querySelector('.gv-folder-tree-popover-layer')).toBeNull();
     expect(mousedownSwallowed()).toBe(false);
-  });
-});
-
-describe('AI Studio folder tree: navigation', () => {
-  it('opens a prompt through the native link when the page shows one', async () => {
-    await mount();
-    const anchor = document.createElement('a');
-    anchor.className = 'prompt-link';
-    anchor.href = '/prompts/c4';
-    const history = document.createElement('ms-prompt-history-v3');
-    history.appendChild(anchor);
-    document.body.appendChild(history);
-    const clicked = vi.fn((event: Event) => event.preventDefault());
-    anchor.addEventListener('click', clicked);
-
-    tree.openConversation('a', 'c4');
-    expect(clicked).toHaveBeenCalledTimes(1);
-  });
-
-  it('otherwise opens a prompt through the History API, without a page load', async () => {
-    await mount();
-    const pushState = vi.spyOn(history, 'pushState');
-    const popstate = vi.fn();
-    window.addEventListener('popstate', popstate);
-
-    tree.openConversation('a', 'c4');
-
-    expect(pushState).toHaveBeenCalledWith({}, '', 'https://aistudio.google.com/prompts/c4');
-    expect(popstate).toHaveBeenCalledTimes(1);
-    expect(location.pathname).toBe('/prompts/c4');
-    window.removeEventListener('popstate', popstate);
-  });
-
-  it('stays on the page and logs when the History API refuses the prompt', async () => {
-    await mount();
-    const before = location.href;
-    const refusal = new DOMException('blocked', 'SecurityError');
-    vi.spyOn(history, 'pushState').mockImplementation(() => {
-      throw refusal;
-    });
-    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
-    // jsdom reports a page load it cannot perform through console.error.
-    const pageLoad = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    tree.openConversation('a', 'c4');
-
-    expect(location.href).toBe(before);
-    expect(pageLoad).not.toHaveBeenCalled();
-    expect(warn).toHaveBeenCalledWith(expect.any(String), {
-      url: 'https://aistudio.google.com/prompts/c4',
-      error: refusal,
-    });
-  });
-
-  it("opens /library through the nav's own Library link when the nav has one", async () => {
-    await mount();
-    const nav = document.querySelector('.nav-content nav')!;
-    const native = document.createElement('a');
-    native.href = '/library';
-    nav.appendChild(native);
-    const clicked = vi.fn((event: Event) => event.preventDefault());
-    native.addEventListener('click', clicked);
-    const pushState = vi.spyOn(history, 'pushState');
-
-    tree.libraryButton()!.click();
-
-    expect(clicked).toHaveBeenCalledTimes(1);
-    expect(pushState).not.toHaveBeenCalled();
-  });
-
-  it('otherwise opens /library through the History API, without a page load', async () => {
-    await mount();
-    const popstate = vi.fn();
-    window.addEventListener('popstate', popstate);
-
-    tree.libraryButton()!.click();
-
-    expect(location.pathname).toBe('/library');
-    expect(popstate).toHaveBeenCalledTimes(1);
-    window.removeEventListener('popstate', popstate);
-  });
-
-  it('offers the Library shortcut away from /library and hides it there', async () => {
-    await mount();
-    expect(tree.libraryButton()?.style.display).toBe('');
-
-    history.pushState({}, '', '/library');
-    window.dispatchEvent(new PopStateEvent('popstate'));
-    await flush();
-    expect(tree.libraryButton()?.style.display).toBe('none');
   });
 });
