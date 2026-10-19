@@ -69,7 +69,10 @@
     "https://accounts.google.com/*",
     "https://*.googleusercontent.com/*",
     "https://lh3.google.com/*",
-    "https://*.ggpht.com/*"
+    "https://*.ggpht.com/*",
+    "https://claude.ai/*",
+    "https://*.frame.claudeusercontent.com/*",
+    "https://chat.deepseek.com/*"
   ],
   "optional_host_permissions": ["https://chatgpt.com/*", "http://127.0.0.1/*", "<all_urls>"],
   "background": {
