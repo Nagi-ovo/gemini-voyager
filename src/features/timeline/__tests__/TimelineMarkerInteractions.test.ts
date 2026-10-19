@@ -184,7 +184,8 @@ describe('TimelineMarkerInteractions', () => {
       const menu = document.querySelector('.timeline-context-menu')!;
       expect(menu.querySelectorAll('button')).toHaveLength(3);
       expect(menu.querySelector('.active')?.getAttribute('data-level')).toBe('2');
-      expect(menu.querySelector('.check-icon')?.textContent).toBe('✓');
+      expect(menu.querySelector('[aria-pressed="true"]')?.getAttribute('data-level')).toBe('2');
+      expect(menu.querySelectorAll('[aria-pressed="false"]')).toHaveLength(2);
       const button = menu.querySelector<HTMLButtonElement>(`button[data-level="${level}"]`)!;
       button.focus();
       expect(document.activeElement).toBe(button);

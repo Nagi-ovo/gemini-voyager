@@ -1,3 +1,5 @@
+import { createCheckIcon } from '@/core/icons/diagramToolbarIcons';
+import { createChevronDownIcon, createChevronRightIcon } from '@/core/icons/folderIcons';
 import { getTranslationSync } from '@/utils/i18n';
 
 import { TimelineTooltip } from './TimelineTooltip';
@@ -179,6 +181,7 @@ export class TimelineMarkerInteractions {
       item.className = 'timeline-context-menu-item';
       if (level === state.level) item.classList.add('active');
       item.setAttribute('data-level', String(level));
+      item.setAttribute('aria-pressed', String(level === state.level));
 
       const indicator = document.createElement('span');
       indicator.className = 'level-indicator';
@@ -192,7 +195,7 @@ export class TimelineMarkerInteractions {
       if (level === state.level) {
         const check = document.createElement('span');
         check.className = 'check-icon';
-        check.textContent = '✓';
+        check.appendChild(createCheckIcon(14));
         item.appendChild(check);
       }
       menu.appendChild(item);
@@ -206,7 +209,7 @@ export class TimelineMarkerInteractions {
       item.className = 'timeline-context-menu-item collapse-item';
       const icon = document.createElement('span');
       icon.className = 'collapse-icon';
-      icon.textContent = state.collapsed ? '▶' : '▼';
+      icon.appendChild(state.collapsed ? createChevronRightIcon(14) : createChevronDownIcon(14));
       item.appendChild(icon);
       const label = document.createElement('span');
       label.textContent = state.collapsed

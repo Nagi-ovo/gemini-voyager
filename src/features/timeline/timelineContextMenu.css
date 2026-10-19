@@ -1,61 +1,75 @@
-/* ===== Timeline Context Menu ===== */
+/* ===== Timeline Context Menu =====
+ * One menu look, shared with the copy-image width menu (`.gv-response-image-menu`
+ * in contentStyle 340): the page ui tokens, rows inset in the card with a
+ * neutral hover wash, and the current level marked in brand ink with a check.
+ * Rows are never filled with the brand: hovered and selected rows merged into
+ * one solid block, and in dark the pale sage under light text was unreadable. */
 .timeline-context-menu {
   position: fixed;
-  background-color: var(--timeline-tooltip-bg);
-  border: 1px solid var(--timeline-tooltip-border);
-  border-radius: 8px;
-  box-shadow: var(--timeline-tooltip-shadow);
-  padding: 4px 0;
+  box-sizing: border-box;
+  min-width: 168px;
+  padding: 4px;
+  border: 1px solid var(--gv-ui-border, var(--timeline-tooltip-border));
+  border-radius: 12px;
+  background: var(--gv-ui-surface, var(--timeline-tooltip-bg));
+  color: var(--gv-ui-text, var(--timeline-tooltip-text));
+  box-shadow: var(--gv-ui-shadow, var(--timeline-tooltip-shadow));
+  font-family: var(--gv-ui-font, ui-sans-serif, system-ui, sans-serif);
+  font-size: 13px;
+  line-height: 18px;
   z-index: 2147483647;
-  min-width: 160px;
   animation: timeline-menu-in 0.12s ease-out;
 }
 
 @keyframes timeline-menu-in {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: translateY(2px);
   }
+}
 
-  to {
-    opacity: 1;
-    transform: scale(1);
+@media (prefers-reduced-motion: reduce) {
+  .timeline-context-menu {
+    animation: none;
   }
 }
 
 .timeline-context-menu-title {
-  padding: 8px 12px 4px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--timeline-tooltip-text);
-  opacity: 0.6;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--timeline-tooltip-border);
-  margin-bottom: 4px;
+  padding: 6px 8px 4px;
+  color: var(--gv-ui-text-muted, var(--timeline-tooltip-text));
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .timeline-context-menu-item {
   display: flex;
   align-items: center;
   gap: 10px;
+  box-sizing: border-box;
   width: 100%;
-  padding: 8px 12px;
-  border: none;
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
   background: transparent;
-  color: var(--timeline-tooltip-text);
-  font-size: 13px;
+  color: inherit;
+  font: inherit;
+  text-align: start;
   cursor: pointer;
-  text-align: left;
   transition: background-color 0.1s ease;
 }
 
 .timeline-context-menu-item:hover {
-  background-color: var(--timeline-dot-active-color);
+  background-color: var(--gv-ui-hover, oklch(0.14 0.004 285 / 0.06));
+}
+
+.timeline-context-menu-item:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring, var(--timeline-dot-active-color));
+  outline-offset: -2px;
 }
 
 .timeline-context-menu-item.active {
-  background-color: var(--timeline-dot-active-color);
+  color: var(--gv-ui-primary, var(--timeline-dot-active-color));
   font-weight: 500;
 }
 
@@ -65,12 +79,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: none;
 }
 
 .timeline-context-menu-item .level-dot {
-  width: 10px;
-  height: 10px;
-  background-color: var(--timeline-dot-color);
+  width: 9px;
+  height: 9px;
+  background-color: var(--gv-ui-text-muted, var(--timeline-dot-color));
+}
+
+.timeline-context-menu-item.active .level-dot {
+  background-color: currentColor;
 }
 
 /* Level 1: Circle */
@@ -81,36 +100,35 @@
 
 /* Level 2: Square */
 .timeline-context-menu-item[data-level='2'] .level-dot {
-  border-radius: 0;
+  border-radius: 1.5px;
   clip-path: none;
 }
 
 /* Level 3: Triangle */
 .timeline-context-menu-item[data-level='3'] .level-dot {
+  width: 10px;
+  height: 10px;
   border-radius: 0;
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
 
 .timeline-context-menu-item .check-icon {
-  margin-left: auto;
-  color: var(--timeline-dot-active-color);
-  font-size: 14px;
+  display: inline-flex;
+  margin-inline-start: auto;
+  color: currentColor;
 }
 
 /* Context menu separator */
 .timeline-context-menu-separator {
   height: 1px;
-  background-color: var(--timeline-tooltip-border);
-  margin: 4px 0;
-}
-
-/* Collapse menu item */
-.timeline-context-menu-item.collapse-item {
-  margin-top: 2px;
+  margin: 4px 4px;
+  background-color: var(--gv-ui-border, var(--timeline-tooltip-border));
 }
 
 .timeline-context-menu-item .collapse-icon {
-  font-size: 12px;
-  color: var(--timeline-dot-color);
-  transition: transform 0.2s ease;
+  width: 16px;
+  display: inline-flex;
+  justify-content: center;
+  flex: none;
+  color: var(--gv-ui-text-muted, var(--timeline-dot-color));
 }

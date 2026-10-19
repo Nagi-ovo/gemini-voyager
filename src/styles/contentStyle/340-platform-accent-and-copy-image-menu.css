@@ -121,27 +121,37 @@
   box-shadow: 0 0 0 3px var(--gv-pm-brand-soft) !important;
 }
 
-/* Response action copy image menu */
+/* Response action copy image menu: the timeline context menu's look
+   (src/features/timeline/timelineContextMenu.css). Rows inset in the card with
+   a neutral hover wash; a solid brand row under white text was unreadable on
+   dark's pale sage. */
 .gv-response-image-menu {
   position: fixed;
-  background-color: var(--timeline-tooltip-bg);
-  border: 1px solid var(--timeline-tooltip-border);
-  border-radius: 8px;
-  box-shadow: var(--timeline-tooltip-shadow);
-  padding: 4px 0;
+  box-sizing: border-box;
+  min-width: 148px;
+  padding: 4px;
+  border: 1px solid var(--gv-ui-border, var(--timeline-tooltip-border));
+  border-radius: 12px;
+  background: var(--gv-ui-surface, var(--timeline-tooltip-bg));
+  color: var(--gv-ui-text, var(--timeline-tooltip-text));
+  box-shadow: var(--gv-ui-shadow, var(--timeline-tooltip-shadow));
+  font-family: var(--gv-ui-font, ui-sans-serif, system-ui, sans-serif);
+  font-size: 13px;
+  line-height: 18px;
   z-index: 2147483647;
-  min-width: 140px;
   animation: gv-menu-in 0.12s ease-out;
 }
 
 @keyframes gv-menu-in {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: translateY(2px);
   }
-  to {
-    opacity: 1;
-    transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gv-response-image-menu {
+    animation: none;
   }
 }
 
@@ -149,18 +159,25 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  box-sizing: border-box;
   width: 100%;
-  padding: 8px 12px;
-  border: none;
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
   background: transparent;
-  color: var(--timeline-tooltip-text);
-  font-size: 13px;
+  color: inherit;
+  font: inherit;
+  text-align: start;
   cursor: pointer;
-  text-align: left;
   transition: background-color 0.1s ease;
 }
 
 .gv-response-image-menu-item:hover {
-  background-color: var(--timeline-dot-active-color);
-  color: #fff;
+  background-color: var(--gv-ui-hover, oklch(0.14 0.004 285 / 0.06));
+}
+
+.gv-response-image-menu-item:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring, var(--timeline-dot-active-color));
+  outline-offset: -2px;
 }

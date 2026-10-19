@@ -21,12 +21,12 @@
   top: 0;
   bottom: 0;
   width: 2px;
-  background: rgba(0, 0, 0, 0.08);
+  background: oklch(0.14 0.004 285 / 0.08);
   border-radius: 9999px;
 }
 
 html[data-gv-scheme='dark'] .timeline-left-slider::before {
-  background: rgba(255, 255, 255, 0.1);
+  background: oklch(0.92 0.004 250 / 0.1);
 }
 
 .timeline-left-handle {
@@ -34,16 +34,17 @@ html[data-gv-scheme='dark'] .timeline-left-slider::before {
   left: 2px;
   width: 8px;
   height: 22px;
-  background: rgba(16, 163, 127, 0.28);
+  /* The rail's accent, not a hard-coded green: it follows a custom colour. */
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 28%, transparent);
   border-radius: 9999px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.15);
   pointer-events: auto;
   cursor: grab;
   transition: background-color 120ms ease;
 }
 
 .timeline-left-handle:hover {
-  background: rgba(16, 163, 127, 0.45);
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent);
 }
 
 .timeline-left-handle:active {
