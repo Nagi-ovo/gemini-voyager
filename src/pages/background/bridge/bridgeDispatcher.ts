@@ -22,219 +22,45 @@
 import { logger } from '@/core/services/LoggerService';
 import {
   type BridgeError,
-  type BridgeTask,
-  type ConversationOpenResult,
   type ConversationReadyResult,
   type ErrorCode,
   type InflightState,
-  type OpName,
-  type TaskResultRequest,
   type ValidatedBridgeTask,
-  bridgeError,
   supportsOpVersion,
-  validateMessage,
-  validateOpResult,
 } from '@/features/bridge/protocol';
+import { LEASED_OPS } from '@/features/bridge/runtimeMessages';
+
+import type { PairedConnection } from './bridgeClient';
+import { senderIsHolder } from './bridgeTabs';
+import type { BridgeTaskRecord } from './bridgeTaskStore';
+import { createConversationTasks } from './conversationTasks';
 import {
-  type BridgeOpCancelMessage,
-  type BridgeOpStartAck,
-  LEASED_OPS,
-} from '@/features/bridge/runtimeMessages';
-
-import type { BridgeClient, PairedConnection } from './bridgeClient';
-import type { BridgePolicy } from './bridgePolicy';
-import { type BridgeTabs, type ContentHolder, conversationUrl, senderIsHolder } from './bridgeTabs';
-import type { BridgeTabRecord, BridgeTaskRecord, BridgeTaskStore } from './bridgeTaskStore';
-import type { CatalogRefreshRunner } from './catalogRefreshOp';
+  fail,
+  holderOf,
+  isRecord,
+  normalizeOutcome,
+  notCancelling,
+  runsReady,
+} from './dispatchOutcome';
 import {
-  LEASE_PROBE_TIMEOUT_MS,
-  type PageLease,
-  type PageLeaseArbiter,
-  leaseDurationFor,
-} from './pageLease';
+  type BridgeDispatcher,
+  DEFAULT_DISPATCHER_CONFIG,
+  type DispatchContext,
+  type DispatcherConfig,
+  type DispatcherDeps,
+} from './dispatcherConfig';
+import { createTaskSettlement } from './taskSettlement';
 
-/** Ops this build can run: the service worker's own plus what the content runtime implements. */
-export const SUPPORTED_BRIDGE_OPS: ReadonlySet<OpName> = new Set<OpName>([
-  'conversation.open',
-  'conversation.close',
-  'conversation.ready',
-  'model.select',
-  'composer.attach',
-  'composer.send',
-  'turns.waitReply',
-  'turns.read',
-  'files.download',
-  'project.list',
-  'project.create',
-  'project.open',
-  'project.files',
-  'project.upload',
-  'project.remove',
-  'catalog.refresh',
-]);
-
-export interface DispatcherConfig {
-  /** Open bridge tabs in the foreground; off: every op runs in a background tab. */
-  readonly openTabActive: boolean;
-  /**
-   * A running op silent for this long gets a document probe. Background-tab
-   * throttling can stretch the 15 s progress beat to about a minute, so only a
-   * probe that fails (no document) ends the task.
-   */
-  readonly silenceProbeMs: number;
-  /** Slack past a task's deadline before the background gives it up. */
-  readonly deadlineGraceMs: number;
-  /** What a close keeps of its budget for closing the tab after switching its mode back. */
-  readonly closeMarginMs: number;
-  /** How long a page gets to answer `op.cancel` before the stop counts as unconfirmed for now. */
-  readonly cancelReplyTimeoutMs: number;
-  /** How often a close checks whether a timeout's mode switch-back has finished. */
-  readonly leftRestorePollMs: number;
-  /**
-   * Switch a tab the bridge moved to chat back to the mode it came from. Off: the
-   * person uses chat and asked that the bridge never switch their account to Work.
-   */
-  readonly restoreSwitchedMode: boolean;
-  readonly supportedOps: ReadonlySet<OpName>;
-}
-
-export const DEFAULT_DISPATCHER_CONFIG: DispatcherConfig = {
-  openTabActive: false,
-  silenceProbeMs: 120_000,
-  deadlineGraceMs: 30_000,
-  closeMarginMs: 2_000,
-  cancelReplyTimeoutMs: LEASE_PROBE_TIMEOUT_MS,
-  leftRestorePollMs: 250,
-  restoreSwitchedMode: false,
-  supportedOps: SUPPORTED_BRIDGE_OPS,
-};
-
-export interface DispatcherDeps {
-  readonly store: BridgeTaskStore;
-  readonly lease: PageLeaseArbiter;
-  readonly policy: Pick<BridgePolicy, 'checkOp' | 'refreshIfOld'>;
-  readonly tabs: BridgeTabs;
-  readonly client: Pick<BridgeClient, 'ack' | 'progress' | 'result'>;
-  readonly connection: () => Promise<PairedConnection | null>;
-  readonly ready: () => Promise<void>;
-  /** Runs `catalog.refresh` in the service worker; without it the op is unsupported. */
-  readonly refreshCatalog?: CatalogRefreshRunner;
-  readonly now?: () => number;
-  readonly config?: Partial<DispatcherConfig>;
-}
-
-export interface BridgeDispatcher {
-  /** `from`: the pairing whose poll brought the task (the current one when omitted). */
-  onTask(task: ValidatedBridgeTask, from?: PairedConnection): Promise<void>;
-  /** The server gave the task up: stop it, and report it once its page confirms. */
-  onAbort(taskId: string, reason: ErrorCode, from?: PairedConnection): Promise<void>;
-  onHello(sender: chrome.runtime.MessageSender, docNonce: string): Promise<boolean>;
-  onProgress(sender: chrome.runtime.MessageSender, message: ContentReport): Promise<boolean>;
-  onDone(sender: chrome.runtime.MessageSender, message: ContentDone): Promise<boolean>;
-  onTabRemoved(tabId: number): Promise<void>;
-  /** Builtin off, unpaired or policy flipped: stop the current task with `code`. */
-  stopCurrent(code: ErrorCode, message: string): Promise<void>;
-  /** Policy inputs changed: stop the current task if its op is no longer allowed. */
-  recheckPolicy(): Promise<void>;
-  /** Periodic watchdog (alarm): deadlines, silent documents, vanished tabs, pending stops. */
-  tick(): Promise<void>;
-  inflight(): Promise<{ taskId: string; state: InflightState }[]>;
-  drainOutbox(): Promise<boolean>;
-  current(): Promise<BridgeTaskRecord | null>;
-}
-
-export interface ContentReport {
-  readonly taskId: string;
-  readonly docNonce: string;
-  readonly progress: unknown;
-}
-
-export interface ContentDone {
-  readonly taskId: string;
-  readonly docNonce: string;
-  readonly outcome: unknown;
-}
-
-const fail = (code: ErrorCode, message: string, details?: Record<string, unknown>) =>
-  ({ ok: false, error: bridgeError(code, message, details) }) as const;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-/** Why the page has to stop, in the content runtime's vocabulary. */
-export function cancelReason(code: ErrorCode): BridgeOpCancelMessage['reason'] {
-  if (code === 'timeout') return 'job-timeout';
-  if (code === 'not-paired') return 'unpaired';
-  if (
-    code === 'policy-denied' ||
-    code === 'policy-stale' ||
-    code === 'bridge-disabled' ||
-    code === 'permission-missing'
-  ) {
-    return 'policy-denied';
-  }
-  return 'cli-cancel';
-}
-
-function holderOf(record: BridgeTaskRecord | BridgeTabRecord): ContentHolder | null {
-  if (record.tabId === undefined || !record.docNonce) return null;
-  return {
-    tabId: record.tabId,
-    docNonce: record.docNonce,
-    ...(record.documentId ? { documentId: record.documentId } : {}),
-  };
-}
-
-function parseAck(reply: unknown): BridgeOpStartAck {
-  if (isRecord(reply) && reply.accepted === true) return { accepted: true };
-  const reason = isRecord(reply) ? reply.reason : undefined;
-  return reason === 'doc-mismatch' ||
-    reason === 'busy' ||
-    reason === 'not-attached' ||
-    reason === 'cancelled'
-    ? { accepted: false, reason }
-    : { accepted: false };
-}
-
-function refusal(ack: BridgeOpStartAck, sendFailed: boolean): TaskResultRequest {
-  if (sendFailed || ack.reason === 'doc-mismatch') {
-    return fail('document-lost', 'The bridge tab no longer holds the document this task was for.');
-  }
-  if (ack.reason === 'busy') return fail('busy', 'The page is already running an op.');
-  if (ack.reason === 'not-attached')
-    return fail('bridge-disabled', 'The page bridge is not running.');
-  if (ack.reason === 'cancelled') return fail('cancelled', 'The task was stopped before it ran.');
-  return fail('document-lost', 'The page did not accept the op.');
-}
-
-/** Check what the page reported: a well-formed error, or data shaped like `op`'s result. */
-function normalizeOutcome(op: OpName, outcome: unknown): TaskResultRequest {
-  if (!isRecord(outcome)) return fail('unverified', 'The page returned no outcome.');
-  if (outcome.ok === false) {
-    const error = validateMessage('bridgeError', outcome.error);
-    return error.ok
-      ? { ok: false, error: error.value }
-      : fail('unverified', 'The page returned a malformed error.');
-  }
-  if (outcome.ok !== true) return fail('unverified', 'The page returned no outcome.');
-  const data = validateOpResult(op, outcome.data);
-  return data.ok
-    ? { ok: true, data: data.value }
-    : fail('unverified', 'The page returned a malformed result.', {
-        issues: data.issues.slice(0, 5),
-      });
-}
-
-/** Ops whose page side is `conversation.ready` (open and close run it as a step). */
-const runsReady = (op: OpName): boolean =>
-  op === 'conversation.ready' || op === 'conversation.open' || op === 'conversation.close';
-
-const notCancelling = (record: BridgeTaskRecord): boolean => record.cancelling === undefined;
-
-type LeaseOutcome = { readonly lease: PageLease } | { readonly refused: TaskResultRequest };
-/** Marks the untracked mode switch-back that follows a timeout or abort. */
-const LEFT_RESTORE_SUFFIX = '.restore-mode';
+export {
+  type BridgeDispatcher,
+  type ContentDone,
+  type ContentReport,
+  DEFAULT_DISPATCHER_CONFIG,
+  type DispatcherConfig,
+  type DispatcherDeps,
+  SUPPORTED_BRIDGE_OPS,
+} from './dispatcherConfig';
+export { cancelReason } from './dispatchOutcome';
 
 export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   const now = deps.now ?? (() => Date.now());
@@ -242,167 +68,15 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   const { store, lease, tabs, client } = deps;
   let lastJobId: string | null = null;
 
-  /** The current pairing while it is still the one `serverId` names, else null. */
-  const ownConnection = async (serverId: string | undefined): Promise<PairedConnection | null> => {
-    const connection = await deps.connection();
-    return connection && serverId !== undefined && connection.serverId === serverId
-      ? connection
-      : null;
-  };
-
-  /** Hand a result to the server; true once it has answered for it (or nobody is left to tell). */
-  const deliver = async (
-    taskId: string,
-    result: TaskResultRequest,
-    serverId: string | undefined,
-  ): Promise<boolean> => {
-    // Only the server that sent the task may see its result; after a re-pairing it is dropped.
-    const connection = await ownConnection(serverId);
-    if (connection) {
-      const reply = await client.result(connection, taskId, result);
-      // Unreachable: the outbox keeps it, and it is handed over before the next poll.
-      if (!reply.ok && reply.error.code === 'server-unreachable') return false;
-      if (!reply.ok && reply.error.code !== 'gone' && reply.error.code !== 'not-found') {
-        logger.warn('voyager serve refused a task result', { taskId, code: reply.error.code });
-      }
-    }
-    await store.removeOutbox(taskId);
-    // A worker stopped between the outbox write and the record removal leaves the record behind.
-    await store.clearTask(taskId);
-    return true;
-  };
-
-  /**
-   * End the task once: its result enters the outbox as its record goes, so a
-   * poll in between still lists it (else the server calls the extension
-   * reloaded and drops the result). Then maybe free its lease, then report.
-   */
-  const finish = async (
-    taskId: string,
-    result: TaskResultRequest,
-    options: { releaseLease: boolean },
-  ): Promise<boolean> => {
-    const record = await store.getTask();
-    if (!record || record.taskId !== taskId) return false;
-    const owner = record.serverId;
-    // A failed open never hands the CLI its tab, so the error names it: the CLI can close it.
-    if (!result.ok && record.op === 'conversation.open' && record.tabId !== undefined) {
-      result = {
-        ...result,
-        error: { ...result.error, details: { ...result.error.details, tabId: record.tabId } },
-      };
-    }
-    const ended = await store.finishTask({
-      taskId,
-      result,
-      at: now(),
-      ...(owner ? { serverId: owner } : {}),
-    });
-    if (!ended) return false;
-    if (!ended.stored)
-      logger.warn('Bridge outbox full; reporting without a stored copy', { taskId });
-    if (options.releaseLease && record.leaseId) await lease.release(record.leaseId);
-    await deliver(taskId, result, owner);
-    return true;
-  };
-
-  /** Answer a task that never got a record (busy, unsupported). */
-  const refuse = async (
-    taskId: string,
-    result: TaskResultRequest,
-    serverId: string,
-  ): Promise<void> => {
-    await store.pushOutbox({ taskId, result, at: now(), serverId });
-    await deliver(taskId, result, serverId);
-  };
-
-  const cancelMessage = (taskId: string, code: ErrorCode): BridgeOpCancelMessage => ({
-    type: 'gv.bridge.op.cancel',
-    taskId,
-    reason: cancelReason(code),
-  });
-
-  /** Fire-and-forget stop for a task the background ends on its own (timeout, unpair, policy). */
-  const abortInPage = (record: BridgeTaskRecord, reason: ErrorCode): void => {
-    const holder = holderOf(record);
-    if (!holder) return;
-    void tabs.send(holder, cancelMessage(record.taskId, reason)).catch(() => undefined);
-  };
-
-  /**
-   * Ask the page to stop a `cancelling` task, and report it only once the
-   * document confirms (`stopped: true`) or is gone. Anything else keeps the
-   * task in flight; the next abort or tick asks again.
-   */
-  const confirmStop = async (record: BridgeTaskRecord, code: ErrorCode): Promise<void> => {
-    const stopped = fail(code, 'Stopped by voyager serve.');
-    const holder = holderOf(record);
-    // No document was handed this task, so nothing can be running it.
-    if (!holder) {
-      await finish(record.taskId, stopped, { releaseLease: false });
-      return;
-    }
-    let reply: unknown;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    // Bounded: a frozen page that never answers must not hold up the poll loop that called us.
-    const unanswered = new Promise<undefined>((resolve) => {
-      timer = setTimeout(() => resolve(undefined), config.cancelReplyTimeoutMs);
-    });
-    try {
-      reply = await Promise.race([
-        tabs.send(holder, cancelMessage(record.taskId, code)),
-        unanswered,
-      ]);
-    } catch {
-      // No receiver: the document and its ops are gone. The arbiter's probe frees the lease.
-      await finish(record.taskId, stopped, { releaseLease: false });
-      return;
-    } finally {
-      if (timer !== undefined) clearTimeout(timer);
-    }
-    if (isRecord(reply) && reply.stopped === true) {
-      await finish(record.taskId, stopped, { releaseLease: true });
-    }
-  };
-
-  /**
-   * After the job gave an op up (timeout, abort), switch its tab back to the mode a
-   * bridge op moved it from: a failed job leaves the tab open and may never send the
-   * close that would. Once, untracked, in a background tab too; a refusal is final.
-   */
-  const restoreLeftMode = async (ended: BridgeTaskRecord): Promise<void> => {
-    if (ended.op === 'conversation.close' || (await store.getTask())) return;
-    const tab = await store.getTab();
-    if (!tab?.restoreMode || tab.jobId !== ended.jobId) return;
-    const holder = holderOf(tab);
-    if (!holder || !(await tabs.exists(tab.tabId))) return;
-    if (await deps.policy.checkOp('conversation.ready')) return;
-    const taskId = `${ended.taskId}${LEFT_RESTORE_SUFFIX}`;
-    const got = await leaseFor(taskId, 'conversation.ready', holder);
-    if ('refused' in got) return;
-    const { leaseId, deadline } = got.lease;
-    const readyTask: BridgeTask = {
-      taskId,
-      jobId: ended.jobId,
-      op: 'conversation.ready',
-      opVersion: 1,
-      params: { ensureMode: tab.restoreMode, restore: true },
-      deadlineMs: Math.max(0, deadline - now()),
-      issuedAt: now(),
-    };
-    let reply: unknown;
-    try {
-      reply = await tabs.send(holder, {
-        type: 'gv.bridge.op.start',
-        task: readyTask,
-        grant: { leaseId, deadline, docNonce: holder.docNonce },
-      });
-    } catch {
-      // No receiver: nothing runs, so the lease goes below.
-    }
-    // Its report finds no task and only frees this lease (see `onDone`).
-    if (!parseAck(reply).accepted) await lease.release(leaseId);
-  };
+  const context: DispatchContext = { deps, config, now };
+  const settle = createTaskSettlement(context);
+  const { ownConnection, deliver, finish, refuse, abortInPage, confirmStop, leaseFor } = settle;
+  const { concludeClose, endLost, startOp } = settle;
+  const conversations = createConversationTasks(context, settle, (delayMs) =>
+    scheduleTick(delayMs),
+  );
+  const { restoreLeftMode, openConversation, startReady, closeConversation } = conversations;
+  const { noteMode, openResult } = conversations;
 
   const cancel = async (taskId: string, code: ErrorCode): Promise<void> => {
     const marked =
@@ -416,89 +90,6 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   const scheduleTick = (delayMs: number): void => {
     if (delayMs > 5 * 60_000) return; // the wake alarm covers long waits
     setTimeout(() => void tick().catch(() => undefined), Math.max(0, delayMs) + 50);
-  };
-
-  const leaseFor = async (
-    taskId: string,
-    op: OpName,
-    holder: ContentHolder,
-    taskBudgetMs = 0,
-  ): Promise<LeaseOutcome> => {
-    const acquired = await lease.acquire({
-      taskId,
-      op,
-      ...holder,
-      durationMs: leaseDurationFor(op, taskBudgetMs),
-    });
-    if (acquired.ok) return { lease: acquired.lease };
-    const message =
-      acquired.code === 'busy'
-        ? 'Another op holds the page.'
-        : 'An earlier op may still be running; close its ChatGPT tab.';
-    return { refused: fail(acquired.code, message) };
-  };
-
-  /** Close the job's tab and report it; `restoredMode` only when a mode restore was due. */
-  const concludeClose = async (
-    taskId: string,
-    tabId: number,
-    restoredMode: boolean | undefined,
-  ): Promise<void> => {
-    // One owner: our own tab removal, a tick and a late page report can all end up here.
-    const claimed = await store.updateTask(
-      taskId,
-      { phase: 'closing' },
-      (current) => current.phase !== 'closing',
-    );
-    if (!claimed) return;
-    const closed = await tabs.close(tabId);
-    await lease.releaseForTab(tabId);
-    const data = { closed, ...(restoredMode === undefined ? {} : { restoredMode }) };
-    await finish(taskId, { ok: true, data }, { releaseLease: false });
-  };
-
-  /** The task's page went away: a close still closes; anything else ends with `result`. */
-  const endLost = async (
-    record: BridgeTaskRecord,
-    result: TaskResultRequest,
-    releaseLease: boolean,
-  ): Promise<void> => {
-    if (record.op === 'conversation.close' && record.tabId !== undefined) {
-      await concludeClose(record.taskId, record.tabId, false);
-      return;
-    }
-    const ended = record.cancelling
-      ? fail(record.cancelling, 'Stopped; its page is gone.')
-      : result;
-    await finish(record.taskId, ended, { releaseLease });
-  };
-
-  const startOp = async (
-    record: BridgeTaskRecord,
-    holder: ContentHolder,
-    task: BridgeTask,
-    grant: { leaseId?: string; deadline: number },
-  ): Promise<void> => {
-    let reply: unknown;
-    let sendFailed = false;
-    try {
-      reply = await tabs.send(holder, {
-        type: 'gv.bridge.op.start',
-        task,
-        grant: { ...grant, docNonce: holder.docNonce },
-      });
-    } catch {
-      sendFailed = true;
-    }
-    const ack = parseAck(reply);
-    if (ack.accepted) return;
-    // A refused op dispatched nothing, so its lease can go at once.
-    if (record.op === 'conversation.close') {
-      if (grant.leaseId) await lease.release(grant.leaseId);
-      await concludeClose(record.taskId, holder.tabId, false);
-      return;
-    }
-    await finish(record.taskId, refusal(ack, sendFailed), { releaseLease: true });
   };
 
   const dispatchToContent = async (task: ValidatedBridgeTask, record: BridgeTaskRecord) => {
@@ -539,181 +130,6 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     if (!running) return releaseOwn(); // stopped while waiting
     await startOp(running, holder, task, { ...(leaseId ? { leaseId } : {}), deadline });
     scheduleTick(running.deadline + config.deadlineGraceMs - now());
-  };
-
-  const openConversation = async (
-    task: Extract<ValidatedBridgeTask, { op: 'conversation.open' }>,
-  ) => {
-    const current = await store.getTask();
-    if (current?.taskId !== task.taskId || current.cancelling) return; // stopped meanwhile
-    const conversationId = 'conversationId' in task.params ? task.params.conversationId : undefined;
-    let tabId: number;
-    try {
-      tabId = await tabs.open(task.jobId, conversationUrl(conversationId), config.openTabActive);
-    } catch (error) {
-      return finish(task.taskId, fail('tab-closed', `Could not open a tab: ${String(error)}`), {
-        releaseLease: false,
-      });
-    }
-    // Every phase spends the task's own deadline, which the server counts from dispatch.
-    const updated = await store.updateTask(
-      task.taskId,
-      {
-        state: 'running',
-        tabId,
-        phase: 'awaiting-hello',
-        ...(conversationId ? { expectConversationId: conversationId } : {}),
-      },
-      notCancelling,
-    );
-    if (!updated) return;
-    scheduleTick(updated.deadline - now());
-    // A hello sent before the tab was recorded here was turned away; ask for it again.
-    void tabs.requestHello(tabId);
-  };
-
-  const startReady = async (taskId: string, holder: ContentHolder) => {
-    // Claimed in one step: a repeated hello must not start the ready step twice.
-    const claimed = await store.updateTask(
-      taskId,
-      { phase: 'ready', ...holder, lastProgressAt: now() },
-      (current) => current.phase === 'awaiting-hello' && notCancelling(current),
-    );
-    if (!claimed) return;
-    const got = await leaseFor(taskId, 'conversation.ready', holder);
-    if ('refused' in got) {
-      await finish(taskId, got.refused, { releaseLease: false });
-      return;
-    }
-    const { leaseId } = got.lease;
-    const running = await store.updateTask(taskId, { leaseId }, notCancelling);
-    if (!running) {
-      await lease.release(leaseId);
-      return;
-    }
-    const deadline = Math.min(running.deadline, got.lease.deadline);
-    const readyTask: BridgeTask = {
-      taskId,
-      jobId: running.jobId,
-      op: 'conversation.ready',
-      opVersion: 1,
-      params: {
-        ...(running.expectConversationId
-          ? { expect: { conversationId: running.expectConversationId } }
-          : {}),
-        ensureMode: 'chat',
-      },
-      deadlineMs: Math.max(0, deadline - now()),
-      issuedAt: now(),
-    };
-    await startOp(running, holder, readyTask, { leaseId, deadline });
-    scheduleTick(running.deadline + config.deadlineGraceMs - now());
-  };
-
-  /** Switch the tab back to the mode a bridge op switched it from; false when that cannot start. */
-  /**
-   * The CLI closes a failed job's tab, often while a timeout's switch-back still holds the
-   * page: wait for it, since closing the tab meanwhile would cut the switch short.
-   */
-  const leaseAfterLeftRestore = async (
-    taskId: string,
-    holder: ContentHolder,
-    until: number,
-  ): Promise<LeaseOutcome> => {
-    for (;;) {
-      const got = await leaseFor(taskId, 'conversation.ready', holder);
-      if (!('refused' in got)) return got;
-      const held = await lease.current();
-      const switchingBack = held?.taskId.endsWith(LEFT_RESTORE_SUFFIX) === true;
-      if (!switchingBack || now() >= until) return got;
-      await new Promise((resolve) => setTimeout(resolve, config.leftRestorePollMs));
-    }
-  };
-
-  const restoreMode = async (
-    task: Extract<ValidatedBridgeTask, { op: 'conversation.close' }>,
-    tab: BridgeTabRecord,
-  ): Promise<boolean> => {
-    const holder = holderOf(tab);
-    const record = await store.getTask();
-    if (!holder || !tab.restoreMode || !record || record.taskId !== task.taskId) return false;
-    if (!(await tabs.exists(tab.tabId))) return false;
-    const until = record.deadline - config.closeMarginMs;
-    if (until <= now()) return false;
-    const got = await leaseAfterLeftRestore(task.taskId, holder, until);
-    if ('refused' in got) return false;
-    const { leaseId } = got.lease;
-    const running = await store.updateTask(
-      task.taskId,
-      { state: 'running', phase: 'restoring-mode', ...holder, leaseId, lastProgressAt: now() },
-      notCancelling,
-    );
-    if (!running) {
-      await lease.release(leaseId);
-      return true; // stopped meanwhile: the stop reports it
-    }
-    const deadline = Math.min(until, got.lease.deadline);
-    const readyTask: BridgeTask = {
-      taskId: task.taskId,
-      jobId: task.jobId,
-      op: 'conversation.ready',
-      opVersion: 1,
-      params: { ensureMode: tab.restoreMode, restore: true },
-      deadlineMs: Math.max(0, deadline - now()),
-      issuedAt: now(),
-    };
-    await startOp(running, holder, readyTask, { leaseId, deadline });
-    scheduleTick(running.deadline + config.deadlineGraceMs - now());
-    return true;
-  };
-
-  const closeConversation = async (
-    task: Extract<ValidatedBridgeTask, { op: 'conversation.close' }>,
-  ) => {
-    const tab = await store.getTab();
-    if (!tab || tab.tabId !== task.params.tabId || tab.jobId !== task.jobId) {
-      return finish(
-        task.taskId,
-        fail('bad-request', 'Only the tab this job opened can be closed.'),
-        {
-          releaseLease: false,
-        },
-      );
-    }
-    if (!tab.restoreMode) return concludeClose(task.taskId, tab.tabId, undefined);
-    // A failed restore never keeps the tab open; the result says it was not restored.
-    if (!(await restoreMode(task, tab))) await concludeClose(task.taskId, tab.tabId, false);
-  };
-
-  /** Remember the mode a ready step switched the tab from, until it is back in it. */
-  const noteMode = async (tabId: number, ready: ConversationReadyResult): Promise<void> => {
-    const tab = await store.getTab();
-    if (!tab || tab.tabId !== tabId) return;
-    if (ready.switchedMode && !tab.restoreMode && config.restoreSwitchedMode) {
-      await store.updateTab(tabId, { restoreMode: ready.switchedMode.from });
-    } else if (tab.restoreMode && ready.mode === tab.restoreMode) {
-      await store.updateTab(tabId, { restoreMode: undefined });
-    }
-  };
-
-  /** The `conversation.ready` result of an open, wrapped into the open's own result. */
-  const openResult = (record: BridgeTaskRecord, ready: TaskResultRequest): TaskResultRequest => {
-    if (!ready.ok || record.tabId === undefined || !record.docNonce) return ready;
-    const data = ready.data as ConversationReadyResult;
-    if (record.expectConversationId && data.conversationId !== record.expectConversationId) {
-      return fail('unverified', 'The tab opened a different conversation.', {
-        expected: record.expectConversationId,
-        observed: data.conversationId,
-      });
-    }
-    const result: ConversationOpenResult = {
-      tabId: record.tabId,
-      url: data.url,
-      ...(record.documentId ? { documentId: record.documentId } : {}),
-      docNonce: record.docNonce,
-      ready: data,
-    };
-    return { ok: true, data: result };
   };
 
   const tick = async (): Promise<void> => {
