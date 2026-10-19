@@ -8,7 +8,9 @@ import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { initI18n } from '@/utils/i18n';
 
-import { ChatGptHideFiled, FILED_ROW_ATTRIBUTE, HIDE_FILED_SETTING } from '../chatgptHideFiled';
+import { HIDE_FILED_SETTING, SidebarHideFiled } from '../../siteFolders/hideFiled';
+import { FILED_ROW_ATTRIBUTE } from '../chatgptHideFiled';
+import { CHATGPT_SITE_FOLDERS } from '../chatgptSiteFolders';
 import { activateChatGptFolders } from '../index';
 import { type SidebarFixture, makeRows, mountSidebarFixture } from './chatgptSidebarFixture';
 import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
@@ -30,6 +32,12 @@ let memory: MemoryStorage;
 let originalStorage: typeof chrome.storage;
 let scope: PluginScope;
 let sidebar: SidebarFixture;
+
+/** ChatGPT's hiding on its own, outside the plugin. */
+function chatgptHideFiled(scope: PluginScope): SidebarHideFiled {
+  const { hideFiled, sidebar, key } = CHATGPT_SITE_FOLDERS;
+  return new SidebarHideFiled(scope, hideFiled, sidebar, key);
+}
 
 function filed(...rows: typeof ROWS): FolderData {
   return {
@@ -251,7 +259,7 @@ describe('hiding filed chats in Recents', () => {
   });
 
   it('keeps CSS and unchanged row markers untouched as filed ids grow to 10k', async () => {
-    const hide = new ChatGptHideFiled(scope);
+    const hide = chatgptHideFiled(scope);
     hide.update([ROWS[1].id]);
     hide.sync(sidebar.sidebar);
     const mutations: MutationRecord[] = [];
@@ -284,7 +292,7 @@ describe('hiding filed chats in Recents', () => {
   });
 
   it('accepts only safe ids and never treats stored ids as CSS', () => {
-    const hide = new ChatGptHideFiled(scope);
+    const hide = chatgptHideFiled(scope);
     hide.update([ROWS[1].id, 'abc"], body { display: none } a[x="']);
     hide.sync(sidebar.sidebar);
     expect(hiddenIds()).toEqual([ROWS[1].id]);

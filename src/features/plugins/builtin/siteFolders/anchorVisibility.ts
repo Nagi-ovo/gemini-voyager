@@ -1,6 +1,6 @@
 /**
  * Whether an element is actually on screen, for a guide that must point at it.
- * Being connected is not enough: ChatGPT's sidebar scrolls and collapses, and an
+ * Being connected is not enough: a site's sidebar scrolls and collapses, and an
  * element can sit outside its scroll viewport or the window, or be hidden.
  */
 

@@ -21,7 +21,8 @@ import {
 } from '@/pages/content/folder/floatingTree/__tests__/treeDriver';
 import { initI18n } from '@/utils/i18n';
 
-import { FILED_ROW_ATTRIBUTE, HIDE_FILED_SETTING } from '../chatgptHideFiled';
+import { HIDE_FILED_SETTING } from '../../siteFolders/hideFiled';
+import { FILED_ROW_ATTRIBUTE } from '../chatgptHideFiled';
 import { activateChatGptFolders } from '../index';
 import { type SidebarFixture, makeRows, mountSidebarFixture } from './chatgptSidebarFixture';
 import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';

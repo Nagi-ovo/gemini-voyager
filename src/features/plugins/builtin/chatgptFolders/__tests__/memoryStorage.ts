@@ -9,7 +9,7 @@
  */
 import { StorageKeys } from '@/core/types/common';
 
-import { CHATGPT_FOLDERS_GUIDE_ID } from '../chatgptFolderGuide';
+import { CHATGPT_FOLDERS_GUIDE_ID } from '../chatgptSiteFolders';
 
 type Area = 'local' | 'sync';
 type Change = { oldValue?: unknown; newValue?: unknown };

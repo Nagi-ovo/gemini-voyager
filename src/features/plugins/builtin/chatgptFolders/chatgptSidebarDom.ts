@@ -3,6 +3,7 @@
  * classes: every row link is `/c/<id>` or `/g/<project>/c/<id>`. See the fixture
  * (`__tests__/chatgptSidebarFixture.ts`) for the live structure this follows.
  */
+import type { SidebarConversation } from '../siteFolders/types';
 import { readChatGptConversationPath } from './chatgptIdentity';
 
 /** The scroll area that holds Projects and Recents; only the real sidebar has one. */
@@ -14,13 +15,6 @@ const HISTORY_DROP_TARGET_SELECTOR = '[data-chatgpt-project-conversation-drop-ta
 const ROW_SELECTOR = '[role="listitem"]';
 const ROW_LINK_SELECTOR = 'a[href]';
 const MENU_ITEM_SELECTOR = '[role="menuitem"]';
-
-export interface SidebarConversation {
-  readonly id: string;
-  /** The route the row links to, e.g. `/g/g-p-<project>/c/<id>`. */
-  readonly path: string;
-  readonly link: HTMLAnchorElement;
-}
 
 /**
  * ChatGPT's sidebar, or `null` while it is not rendered. The app rail is also a
@@ -49,6 +43,16 @@ export function readSidebarLink(link: Element): SidebarConversation | null {
   if (link.target && link.target !== '_self') return null;
   const route = readChatGptConversationPath(link.getAttribute('href'));
   return route ? { ...route, link } : null;
+}
+
+/** The sidebar row a press landed on: a conversation link inside ChatGPT's sidebar. */
+export function sidebarConversationAt(
+  target: EventTarget | null,
+  doc: Document = document,
+): SidebarConversation | null {
+  const link = target instanceof Element ? target.closest('a[href]') : null;
+  if (!link || !findChatGptSidebar(doc)?.contains(link)) return null;
+  return readSidebarLink(link);
 }
 
 /** Every conversation row the sidebar renders right now, in sidebar order. */

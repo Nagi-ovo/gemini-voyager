@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Folder } from '@/core/types/folder';
 import { layoutFolders } from '@/pages/content/folder/floatingTree/shared';
 
-import { FOLDER_PICKER_CLASS, openFolderPicker } from '../chatgptFolderPicker';
+import { FOLDER_PICKER_CLASS, openFolderPicker } from '../folderPicker';
 
 type Row = { id: string; padding: string; label: string; path: string | null; name: string };
 
@@ -81,7 +81,7 @@ function folder(id: string, name: string, parentId: string | null): Folder {
   return { id, name, parentId, isExpanded: true, createdAt: 1, updatedAt: 1 };
 }
 
-describe('ChatGPT folder picker listing', () => {
+describe('site folder picker listing', () => {
   it.each(Array.from({ length: 40 }, (_, i) => i))(
     'lists random folders #%i once each, under the parent the sidebar tree shows',
     (seed) => {

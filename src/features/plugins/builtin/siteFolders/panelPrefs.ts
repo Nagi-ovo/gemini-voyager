@@ -1,18 +1,18 @@
 import browser from 'webextension-polyfill';
 
-import { StorageKeys } from '@/core/types/common';
+import type { StorageKey } from '@/core/types/common';
 
 type Point = { x: number; y: number };
 
-/** Where the ChatGPT folder panel and its button sit on this device. */
-export type ChatGptFolderPanelPrefs = {
+/** Where a site's floating folder panel and its button sit on this device. */
+export type SiteFolderPanelPrefs = {
   open: boolean;
   pos: Point | null;
   size: { w: number; h: number } | null;
   fabPos: Point | null;
 };
 
-const DEFAULT_PREFS: ChatGptFolderPanelPrefs = { open: false, pos: null, size: null, fabPos: null };
+const DEFAULT_PREFS: SiteFolderPanelPrefs = { open: false, pos: null, size: null, fabPos: null };
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
@@ -29,7 +29,7 @@ function readSize(value: unknown): { w: number; h: number } | null {
   return isFiniteNumber(w) && isFiniteNumber(h) ? { w, h } : null;
 }
 
-export function parsePanelPrefs(value: unknown): ChatGptFolderPanelPrefs {
+export function parsePanelPrefs(value: unknown): SiteFolderPanelPrefs {
   if (!value || typeof value !== 'object') return { ...DEFAULT_PREFS };
   const raw = value as Record<string, unknown>;
   return {
@@ -40,18 +40,18 @@ export function parsePanelPrefs(value: unknown): ChatGptFolderPanelPrefs {
   };
 }
 
-export async function loadPanelPrefs(): Promise<ChatGptFolderPanelPrefs> {
+export async function loadPanelPrefs(key: StorageKey): Promise<SiteFolderPanelPrefs> {
   try {
-    const stored = await browser.storage.local.get(StorageKeys.CHATGPT_FOLDER_PANEL);
-    return parsePanelPrefs(stored[StorageKeys.CHATGPT_FOLDER_PANEL]);
+    const stored = await browser.storage.local.get(key);
+    return parsePanelPrefs(stored[key]);
   } catch {
     return { ...DEFAULT_PREFS };
   }
 }
 
-export async function savePanelPrefs(prefs: ChatGptFolderPanelPrefs): Promise<void> {
+export async function savePanelPrefs(key: StorageKey, prefs: SiteFolderPanelPrefs): Promise<void> {
   try {
-    await browser.storage.local.set({ [StorageKeys.CHATGPT_FOLDER_PANEL]: prefs });
+    await browser.storage.local.set({ [key]: prefs });
   } catch {
     // Geometry is a convenience; an invalidated context or full quota loses only that.
   }

@@ -1,12 +1,13 @@
 /**
- * Dragging a conversation out of ChatGPT's sidebar onto a Voyager folder.
+ * Dragging a conversation out of a site's sidebar onto a Voyager folder.
  *
- * Sidebar rows are dnd-kit draggables (drag-to-Project). While its pointer
- * sensor runs, dnd-kit cancels every HTML5 `dragstart` on the window, and a
- * native drag would end its own drag with `pointercancel`. So this rides along
- * on the same pointer gesture instead: it only listens, never cancels or stops
- * an event, and never touches ChatGPT's nodes. Past a small move, the folder
- * under the pointer lights up; releasing over it files the conversation.
+ * Sidebar rows may be the site's own draggables: ChatGPT's are dnd-kit's
+ * (drag-to-Project). While its pointer sensor runs, dnd-kit cancels every HTML5
+ * `dragstart` on the window, and a native drag would end its own drag with
+ * `pointercancel`. So this rides along on the same pointer gesture instead: it
+ * only listens, never cancels or stops an event, and never touches the site's
+ * nodes. Past a small move, the folder under the pointer lights up; releasing
+ * over it files the conversation.
  */
 import type { ConversationReference } from '@/core/types/folder';
 import type { PluginScope } from '@/features/plugins/runtime/pluginScope';
@@ -15,13 +16,13 @@ import {
   showDropTarget,
 } from '@/pages/content/folder/floatingTree/dropTargets';
 
-import { CHATGPT_CONVERSATION_ID_PREFIX } from './chatgptIdentity';
-import { findChatGptSidebar, readSidebarLink, readSidebarTitle } from './chatgptSidebarDom';
-
 export type DroppedConversation = Pick<ConversationReference, 'conversationId' | 'title' | 'url'>;
 
 export interface RowDragOptions {
-  untitled: () => string;
+  /** The conversation of the sidebar row a press landed on, or `null`. */
+  conversationAt: (target: EventTarget | null) => DroppedConversation | null;
+  /** Names the plugin's effects, e.g. `chatgpt-folders`. */
+  label: string;
   /** The Voyager folder drop target under a viewport point. */
   dropTargetAt: (x: number, y: number) => FolderDropTarget | null;
   onDrop: (folderId: string, conversation: DroppedConversation) => void;
@@ -39,23 +40,8 @@ interface Gesture {
   over: FolderDropTarget | null;
 }
 
-function sidebarConversationAt(
-  target: EventTarget | null,
-  untitled: () => string,
-): DroppedConversation | null {
-  const link = target instanceof Element ? target.closest('a[href]') : null;
-  if (!link || !findChatGptSidebar()?.contains(link)) return null;
-  const row = readSidebarLink(link);
-  if (!row) return null;
-  return {
-    conversationId: `${CHATGPT_CONVERSATION_ID_PREFIX}${row.id}`,
-    title: readSidebarTitle(row) || untitled(),
-    url: `${location.origin}${row.path}`,
-  };
-}
-
-/** Makes ChatGPT's sidebar rows drag sources for Voyager folders while `scope` lives. */
-export function bindChatGptRowDrag(scope: PluginScope, options: RowDragOptions): void {
+/** Makes the site's sidebar rows drag sources for Voyager folders while `scope` lives. */
+export function bindSidebarRowDrag(scope: PluginScope, options: RowDragOptions): void {
   let gesture: Gesture | null = null;
 
   const hover = (over: FolderDropTarget | null): void => {
@@ -73,7 +59,7 @@ export function bindChatGptRowDrag(scope: PluginScope, options: RowDragOptions):
   const press = (event: PointerEvent): void => {
     abort();
     if (!event.isPrimary || event.button !== 0) return;
-    const conversation = sidebarConversationAt(event.target, options.untitled);
+    const conversation = options.conversationAt(event.target);
     if (!conversation) return;
     gesture = {
       pointerId: event.pointerId,
@@ -114,5 +100,5 @@ export function bindChatGptRowDrag(scope: PluginScope, options: RowDragOptions):
   scope.on(window, 'pointercancel', abort, { capture: true });
   scope.on(window, 'keydown', escape, { capture: true });
   scope.on(window, 'blur', abort);
-  scope.effect(() => abort, 'chatgpt-folders:row-drag');
+  scope.effect(() => abort, `${options.label}:row-drag`);
 }

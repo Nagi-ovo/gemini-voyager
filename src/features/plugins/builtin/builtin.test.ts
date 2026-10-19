@@ -6,8 +6,8 @@ import { checkPrimitivesAreShippable } from '../../../../scripts/lib/pluginCheck
 import { validateManifest } from '../manifest/validate';
 import { legacyValueBindingsFor } from '../storage/legacyValueBindings';
 import { activateChatGptFolders } from './chatgptFolders';
-import { HIDE_FILED_SETTING } from './chatgptFolders/chatgptHideFiled';
 import { BUILTIN_PLUGINS, NATIVE_BUILTIN_PLUGIN_IDS } from './index';
+import { HIDE_FILED_SETTING } from './siteFolders/hideFiled';
 
 describe('BUILTIN_PLUGINS', () => {
   it('every builtin manifest passes validation', () => {

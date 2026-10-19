@@ -4,14 +4,15 @@
  *
  * - `panel`: the Gemini (and ChatGPT) floating panel, `mountFloatingPanel`.
  * - `aistudio`: AI Studio's sidebar tree, `mountAIStudioTree`, inside a nav.
- * - `chatgpt`: ChatGPT's sidebar section, `ChatGptFolderSection`.
+ * - `chatgpt`: ChatGPT's sidebar section, `SiteFolderSection` with ChatGPT's site.
  *
  * The characterization suites run the same cases over all three and state each
  * difference as data, so a rewrite of the tree's internals has to keep all of them.
  */
 import { AISTUDIO_ROOT_BUCKET_ID, ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
-import { ChatGptFolderSection } from '@/features/plugins/builtin/chatgptFolders/chatgptFolderSection';
-import { DEFAULT_SECTION_PREFS } from '@/features/plugins/builtin/chatgptFolders/sectionPrefs';
+import { CHATGPT_SECTION_SITE } from '@/features/plugins/builtin/chatgptFolders/chatgptSiteFolders';
+import { SiteFolderSection } from '@/features/plugins/builtin/siteFolders/folderSection';
+import { DEFAULT_SECTION_PREFS } from '@/features/plugins/builtin/siteFolders/sectionPrefs';
 import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
 import { GEMINI_PANEL } from '../../__tests__/floatingPanelHarness';
@@ -100,7 +101,8 @@ function mountAIStudio(data: FolderData, actions: TreeActions, options: MountOpt
 }
 
 function mountChatGpt(data: FolderData, actions: TreeActions): MountedTree {
-  const section = new ChatGptFolderSection({
+  const section = new SiteFolderSection({
+    site: CHATGPT_SECTION_SITE,
     data,
     rootBucketId: ROOT_CONVERSATIONS_ID,
     actions,

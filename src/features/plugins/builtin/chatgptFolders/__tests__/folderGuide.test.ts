@@ -8,7 +8,7 @@ import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { confirmDriver } from '@/tests/confirmDriver';
 import { initI18n } from '@/utils/i18n';
 
-import { CHATGPT_FOLDERS_GUIDE_DEBUG_EVENT, CHATGPT_FOLDERS_GUIDE_ID } from '../chatgptFolderGuide';
+import { CHATGPT_FOLDERS_GUIDE_DEBUG_EVENT, CHATGPT_FOLDERS_GUIDE_ID } from '../chatgptSiteFolders';
 import { activateChatGptFolders } from '../index';
 import { type SidebarFixture, makeRows, mountSidebarFixture } from './chatgptSidebarFixture';
 import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';

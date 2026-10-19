@@ -1,6 +1,6 @@
 /**
  * "Move to folder" in a sidebar row's "Chat actions" menu: with the row drag in
- * `chatgptRowDrag.ts`, how a conversation gets from the sidebar into a folder
+ * `../siteFolders/rowDrag.ts`, how a conversation gets from the sidebar into a folder
  * without opening it first, and the way that needs no pointer.
  *
  * Observed live (2026-10-01): the menu is a Radix menu portaled under `body` and
@@ -13,6 +13,7 @@
  */
 import type { ConversationReference } from '@/core/types/folder';
 
+import type { SiteMoveMenu, SiteMoveMenuOptions } from '../siteFolders/types';
 import { CHATGPT_CONVERSATION_ID_PREFIX } from './chatgptIdentity';
 import {
   closeMenu,
@@ -126,14 +127,6 @@ function wireKeyboard(menu: HTMLElement, entry: HTMLElement, activate: () => voi
   });
 }
 
-export interface MoveMenuOptions {
-  readonly label: () => string;
-  readonly untitled: () => string;
-  /** Whether a conversation can be filed right now (the store is ready). */
-  readonly canFile: () => boolean;
-  readonly onMove: (conversation: ConversationReference) => void;
-}
-
 /** Frames to wait for a menu whose content was not rendered with its trigger. */
 const MENU_WAIT_FRAMES = 10;
 /** Frames to wait for a closed menu to hand focus back to its trigger. */
@@ -145,13 +138,13 @@ const CLOSE_WAIT_FRAMES = 30;
  * whether to check again next frame: a trigger is open but its menu is not
  * rendered yet. That wait is bounded per trigger.
  */
-export class ChatGptMoveMenu {
+export class ChatGptMoveMenu implements SiteMoveMenu {
   private waitingFor: Element | null = null;
   private waitedFrames = 0;
   private pendingMove: number | null = null;
 
   constructor(
-    private readonly options: MoveMenuOptions,
+    private readonly options: SiteMoveMenuOptions,
     private readonly doc: Document = document,
   ) {}
 
@@ -179,6 +172,12 @@ export class ChatGptMoveMenu {
   cancel(): void {
     if (this.pendingMove !== null) cancelAnimationFrame(this.pendingMove);
     this.pendingMove = null;
+  }
+
+  /** Turning the folders off: no pending move, and no entry left in an open menu. */
+  dispose(): void {
+    this.cancel();
+    for (const entry of this.doc.querySelectorAll(`[${MOVE_ENTRY_ATTR}]`)) entry.remove();
   }
 
   /**

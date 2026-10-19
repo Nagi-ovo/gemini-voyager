@@ -1,5 +1,5 @@
 /**
- * One-time guide that points at the folder section in ChatGPT's sidebar, on the
+ * One-time guide that points at the folder section in a site's sidebar, on the
  * shared coachmark (`src/pages/content/coachmark`). It is checked after every
  * sidebar change, scroll, resize and change in the header's visibility, never on
  * a timer. It shows only once the folders have loaded and the section header is
@@ -16,16 +16,13 @@ import { FLOATING_PANEL_CLASS } from '@/pages/content/folder/floatingTree/shared
 import { getTranslationSyncUnsafe as t } from '@/utils/i18n';
 
 import { isOnScreen } from './anchorVisibility';
-import { FOLDER_PICKER_CLASS } from './chatgptFolderPicker';
-
-export const CHATGPT_FOLDERS_GUIDE_ID = 'chatgpt-folders-sidebar-intro-v1';
-/** `document.dispatchEvent(new Event(...))` shows the guide again, seen or not. */
-export const CHATGPT_FOLDERS_GUIDE_DEBUG_EVENT = 'gv:debug:chatgptFoldersCoachmark';
+import { FOLDER_PICKER_CLASS } from './folderPicker';
+import type { SiteFolderGuideConfig } from './types';
 
 const FOLDER_ICON =
   '<svg viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Z"/></svg>';
 
-/** ChatGPT's Radix menus and dialogs, plus this plugin's picker and Voyager's confirms. */
+/** The site's own menus and dialogs, plus the folder picker and Voyager's confirms. */
 const OVERLAY_SELECTOR = [
   '[role="menu"]',
   '[role="dialog"]',
@@ -65,7 +62,7 @@ export interface FolderGuideTarget {
 
 type GuideState = 'idle' | 'pending' | 'showing' | 'done';
 
-export class ChatGptFolderGuide {
+export class SiteFolderGuide {
   private state: GuideState = 'idle';
   private readonly open = new Set<AbortController>();
   /** Re-check triggers; released once the guide has been seen. */
@@ -74,9 +71,12 @@ export class ChatGptFolderGuide {
   private observed: HTMLElement | null = null;
   private checkQueued = false;
 
+  /** `label` names the plugin's effects, e.g. `chatgpt-folders`. */
   constructor(
     private readonly scope: PluginScope,
+    private readonly config: SiteFolderGuideConfig,
     private readonly target: FolderGuideTarget,
+    label: string,
   ) {
     scope.effect(
       () => () => {
@@ -86,9 +86,9 @@ export class ChatGptFolderGuide {
         this.visibility?.disconnect();
         this.visibility = null;
       },
-      'chatgpt-folders:guide',
+      `${label}:guide`,
     );
-    scope.on(document, CHATGPT_FOLDERS_GUIDE_DEBUG_EVENT, () => void this.present(false));
+    scope.on(document, config.debugEvent, () => void this.present(false));
     // Scrolling the sidebar, resizing, or showing a collapsed sidebar can bring
     // the header on screen without any change inside the sidebar.
     this.triggers.push(
@@ -165,7 +165,7 @@ export class ChatGptFolderGuide {
   }
 
   private async run(): Promise<void> {
-    const seen = await hasSeenCoachmark(CHATGPT_FOLDERS_GUIDE_ID);
+    const seen = await hasSeenCoachmark(this.config.id);
     if (this.state !== 'pending') return;
     if (seen) {
       this.finish();
@@ -190,11 +190,11 @@ export class ChatGptFolderGuide {
     this.open.add(controller);
     try {
       return await showCoachmark({
-        id: CHATGPT_FOLDERS_GUIDE_ID,
+        id: this.config.id,
         once,
         icon: FOLDER_ICON,
-        title: t('chatgptFoldersCoachmarkTitle'),
-        body: t('chatgptFoldersCoachmarkBody'),
+        title: t(this.config.titleKey),
+        body: t(this.config.bodyKey),
         anchor: () => this.target.anchor(),
         dismissLabel: t('coachmarkDismiss'),
         closeLabel: t('coachmarkClose'),

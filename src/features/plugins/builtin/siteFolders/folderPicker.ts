@@ -1,15 +1,15 @@
 /**
- * "Move to folder" picker for ChatGPT. It carries its own sheet in a shadow
- * surface (scheme, RTL and the key guard come with it), so ChatGPT's page CSS
- * cannot restyle it. The plugin's dynamic registration does inject
- * `contentStyle.css` on chatgpt.com, alongside the content script.
+ * "Move to folder" picker for a plugin site's folders. It carries its own sheet
+ * in a shadow surface (scheme, RTL and the key guard come with it), so the
+ * page's CSS cannot restyle it. Its class and ids keep the names ChatGPT's
+ * folders first gave them.
  */
 import type { Folder, FolderData } from '@/core/types/folder';
 import { buildFolderIndex } from '@/features/folder/model/folderIndex';
 import { attachShadowSurface } from '@/pages/content/folder/shadowHost';
 import { getTranslationSyncUnsafe as t } from '@/utils/i18n';
 
-import pickerCss from './chatgptFolderPicker.css?raw';
+import pickerCss from './folderPicker.css?raw';
 
 export const FOLDER_PICKER_CLASS = 'gv-chatgpt-folder-picker';
 

@@ -5,10 +5,14 @@
  */
 import type { FolderData } from '@/core/types/folder';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
-import { openFolderPicker } from '@/features/plugins/builtin/chatgptFolders/chatgptFolderPicker';
-import { ChatGptFolderSection } from '@/features/plugins/builtin/chatgptFolders/chatgptFolderSection';
-import { ChatGptHideFiled } from '@/features/plugins/builtin/chatgptFolders/chatgptHideFiled';
-import { DEFAULT_SECTION_PREFS } from '@/features/plugins/builtin/chatgptFolders/sectionPrefs';
+import {
+  CHATGPT_SECTION_SITE,
+  CHATGPT_SITE_FOLDERS,
+} from '@/features/plugins/builtin/chatgptFolders/chatgptSiteFolders';
+import { openFolderPicker } from '@/features/plugins/builtin/siteFolders/folderPicker';
+import { SiteFolderSection } from '@/features/plugins/builtin/siteFolders/folderSection';
+import { SidebarHideFiled } from '@/features/plugins/builtin/siteFolders/hideFiled';
+import { DEFAULT_SECTION_PREFS } from '@/features/plugins/builtin/siteFolders/sectionPrefs';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { mountFloatingPanel } from '@/pages/content/folder/floatingPanel';
 
@@ -166,7 +170,8 @@ const noTreeActions = {
 };
 
 const chatGptSection = (data: FolderData) =>
-  new ChatGptFolderSection({
+  new SiteFolderSection({
+    site: CHATGPT_SECTION_SITE,
     data,
     rootBucketId: ROOT_BUCKET_ID,
     actions: noTreeActions,
@@ -270,7 +275,7 @@ export async function benchChatGptSection(
         dataset,
         metric: `mount (${label})`,
         runs: counts.mount,
-        setup: () => ({ section: null as ChatGptFolderSection | null }),
+        setup: () => ({ section: null as SiteFolderSection | null }),
         action: (state) => {
           state.section = chatGptSection(shaped);
           container.append(state.section.element);
@@ -396,7 +401,8 @@ export async function benchHideFiledStyle(
   for (let i = 0; i < RECENTS_ROWS; i++) addRow(i);
   document.body.append(nav);
   const scope = new PluginScope();
-  const hideFiled = new ChatGptHideFiled(scope);
+  const { hideFiled: dom, sidebar, key } = CHATGPT_SITE_FOLDERS;
+  const hideFiled = new SidebarHideFiled(scope, dom, sidebar, key);
   const style = document.querySelector<HTMLStyleElement>('style[data-gv-chatgpt-hide-filed]')!;
 
   const hiddenRows = () =>

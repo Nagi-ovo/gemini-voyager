@@ -12,6 +12,7 @@
  * field taking focus in the row confirms the item was Rename; anything else
  * reports no rename, and the folders keep their titles.
  */
+import type { NativeRenameOptions } from '../siteFolders/types';
 import { MOVE_ENTRY_ATTR } from './chatgptMoveMenu';
 import {
   closeMenu,
@@ -26,17 +27,6 @@ const TRIGGER_SELECTOR = 'button[aria-haspopup="menu"][id]';
 const MENU_WAIT_FRAMES = 10;
 /** Frames the row stays revealed while ChatGPT's name field takes focus. */
 const FIELD_WAIT_FRAMES = 30;
-
-export interface NativeRenameOptions {
-  readonly sidebar: () => HTMLElement | null;
-  /**
-   * Shows the row while "hide filed chats" hides it, until the release: a
-   * hidden row's name field cannot take focus.
-   */
-  readonly reveal: (id: string) => () => void;
-  /** False once the plugin is off; the wait stops. */
-  readonly active: () => boolean;
-}
 
 const nextFrame = (): Promise<void> =>
   new Promise((resolve) => requestAnimationFrame(() => resolve()));
