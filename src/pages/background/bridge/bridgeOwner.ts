@@ -44,6 +44,7 @@ import {
 import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
 
 import { createBlobRelay } from './bridgeBlobRelay';
+import { createBlobUploadRelay } from './bridgeBlobUpload';
 import { createBridgeClient } from './bridgeClient';
 import { SUPPORTED_BRIDGE_OPS, createBridgeDispatcher } from './bridgeDispatcher';
 import { createBridgePairing, parsePairing } from './bridgePairing';
@@ -209,6 +210,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
     now,
   });
   const blobRelay = createBlobRelay({ store, client, connection, ready: awaitReady, now });
+  const blobUpload = createBlobUploadRelay({ store, client, connection, ready: awaitReady, now });
 
   // The plan the bridge's ChatGPT pages last showed; it rides on every poll.
   const readAccount = async () => {
@@ -414,6 +416,9 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
     progress: (sender, message) => dispatcher.onProgress(sender, message),
     done: (sender, message) => dispatcher.onDone(sender, message),
     blobRead: (sender, message) => blobRelay.read(sender, message),
+    blobCreate: (sender, message) => blobUpload.create(sender, message),
+    blobWrite: (sender, message) => blobUpload.write(sender, message),
+    blobCommit: (sender, message) => blobUpload.commit(sender, message),
   };
 
   const catalogKey = hostCatalogStorageKey(BRIDGE_POLICY_HOST);

@@ -359,6 +359,40 @@ describe('Local Bridge turns.read', () => {
     expect(outcome?.ok && (outcome.data as { markdown: string }).markdown).toBe('From note.txt.');
   });
 
+  it('lists the sandbox files the reply links, in reply order and once each', async () => {
+    const feed = createPageDataFeed();
+    page.setReply('turn-1', { text: 'Files are ready.', turnState: 'complete', replyId: 'r-1' });
+    const link = (name: string, label = name) => ({
+      label,
+      href: `sandbox:/mnt/data/${name}`,
+    });
+    feed.conversation('conv-1', 'r-1', [
+      { id: 'u-0', role: 'user', links: [] },
+      // An earlier turn's file is not this reply's.
+      { id: 'r-0', role: 'assistant', links: [link('old.csv')] },
+      { id: 'u-1', role: 'user', links: [] },
+      { id: 'sub-1', role: 'assistant', links: [link('data.csv', 'Download the data')] },
+      { id: 'tool-1', role: 'tool', links: [] },
+      { id: 'r-1', role: 'assistant', links: [link('chart.png'), link('data.csv', 'again')] },
+    ]);
+    bridge.start('turns.read', { conversationId: 'conv-1', assistantTurnKey: 'r-1' });
+    const outcome = await readOutcome();
+    expect(outcome?.ok && (outcome.data as { files: unknown[] }).files).toEqual([
+      {
+        kind: 'sandbox',
+        label: 'Download the data',
+        href: 'sandbox:/mnt/data/data.csv',
+        controlRef: 'sub-1',
+      },
+      {
+        kind: 'sandbox',
+        label: 'chart.png',
+        href: 'sandbox:/mnt/data/chart.png',
+        controlRef: 'r-1',
+      },
+    ]);
+  });
+
   it('refuses a reply that is still being written', async () => {
     page.setReply('turn-1', { text: 'partial', turnState: 'streaming', replyId: 'r-1' });
     bridge.start('turns.read', { conversationId: 'conv-1', assistantTurnKey: 'r-1' });

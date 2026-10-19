@@ -15,9 +15,20 @@ import {
   type UpgradeSide,
   bridgeError,
 } from '@/features/bridge/protocol';
-import { type BridgeBlobReadReply, isBridgeMessageType } from '@/features/bridge/runtimeMessages';
+import {
+  type BridgeBlobCommitReply,
+  type BridgeBlobCreateReply,
+  type BridgeBlobReadReply,
+  type BridgeBlobWriteReply,
+  isBridgeMessageType,
+} from '@/features/bridge/runtimeMessages';
 
 import { isTrustedExtensionPageSender } from '../runtimeMessageRouting';
+import type {
+  BlobCommitMessageFields,
+  BlobCreateMessageFields,
+  BlobWriteMessageFields,
+} from './bridgeBlobUpload';
 import { isBridgeContentSender } from './bridgeTabs';
 
 /** `data` of the `gv.bridge.status` reply (the popup card reads exactly this). */
@@ -69,6 +80,18 @@ export interface BridgeMessageOwner {
       length: unknown;
     },
   ): Promise<BridgeBlobReadReply>;
+  blobCreate(
+    sender: chrome.runtime.MessageSender,
+    message: BlobCreateMessageFields,
+  ): Promise<BridgeBlobCreateReply>;
+  blobWrite(
+    sender: chrome.runtime.MessageSender,
+    message: BlobWriteMessageFields,
+  ): Promise<BridgeBlobWriteReply>;
+  blobCommit(
+    sender: chrome.runtime.MessageSender,
+    message: BlobCommitMessageFields,
+  ): Promise<BridgeBlobCommitReply>;
 }
 
 /** Message types the background answers; the routing table lists the same set. */
@@ -84,7 +107,9 @@ export const BRIDGE_CONTENT_MESSAGE_TYPES = [
   'gv.bridge.op.progress',
   'gv.bridge.op.done',
   'gv.bridge.blob.read',
+  'gv.bridge.blob.create',
   'gv.bridge.blob.write',
+  'gv.bridge.blob.commit',
 ] as const;
 
 const MAX_ID_LENGTH = 128;
@@ -139,21 +164,35 @@ export function createBridgeRuntimeMessageHandler(
             : owner.progress(sender, { ...base, progress: fields.progress });
         return handled.then((ok) => ({ ok }));
       }
+      // The blob messages all name their task and document; the owner checks both.
+      if (!isId(fields.taskId) || !isId(fields.docNonce)) return Promise.resolve({ ok: false });
+      const holder = { taskId: fields.taskId, docNonce: fields.docNonce };
       if (type === 'gv.bridge.blob.read') {
-        if (!isId(fields.taskId) || !isId(fields.docNonce)) return Promise.resolve({ ok: false });
         return owner.blobRead(sender, {
-          taskId: fields.taskId,
-          docNonce: fields.docNonce,
+          ...holder,
           blobId: fields.blobId,
           offset: fields.offset,
           length: fields.length,
         });
       }
-      // Downloads (page → serve) arrive with files.download.
-      return Promise.resolve({
-        ok: false,
-        error: bridgeError('unsupported-op', 'Blob upload is not available in this build.'),
-      });
+      if (type === 'gv.bridge.blob.create') {
+        return owner.blobCreate(sender, {
+          ...holder,
+          name: fields.name,
+          size: fields.size,
+          sha256: fields.sha256,
+          mime: fields.mime,
+        });
+      }
+      if (type === 'gv.bridge.blob.write') {
+        return owner.blobWrite(sender, {
+          ...holder,
+          blobId: fields.blobId,
+          offset: fields.offset,
+          base64: fields.base64,
+        });
+      }
+      return owner.blobCommit(sender, { ...holder, blobId: fields.blobId });
     }
     return null;
   };

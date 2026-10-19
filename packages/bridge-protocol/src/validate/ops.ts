@@ -7,6 +7,7 @@ import {
   CATALOG_HOST_PATTERN,
   MAX_ATTACHMENT_BYTES,
   MAX_ATTACHMENTS,
+  MAX_FILE_CANDIDATES,
   WAIT_REPLY_MAX_TIMEOUT_MS,
   type BlobRef,
   type CatalogRefreshStatus,
@@ -55,7 +56,6 @@ const HTTPS_URL = { pattern: /^https:\/\//, maxLength: 4096 } as const;
 const TURN_KEY = { maxLength: 256 } as const;
 const LABEL = { maxLength: 200, allowEmpty: true } as const;
 const FILE_NAME = { pattern: /^[^/\\\0]+$/, maxLength: 255 } as const;
-const MAX_FILE_CANDIDATES = 100;
 const CATALOG_HOST = { pattern: CATALOG_HOST_PATTERN, maxLength: 253 } as const;
 const CATALOG_STATUSES: readonly CatalogRefreshStatus[] = [
   'updated',

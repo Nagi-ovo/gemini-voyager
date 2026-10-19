@@ -240,11 +240,17 @@ export type TurnsReadParams =
 
 export type FileCandidateKind = 'sandbox' | 'estuary' | 'button';
 
+/** Most files one `turns.read` lists. */
+export const MAX_FILE_CANDIDATES = 100;
+
 export interface FileCandidate {
   readonly kind: FileCandidateKind;
   readonly label: string;
   readonly href?: string;
-  /** Opaque handle the page side uses to find the control again. */
+  /**
+   * Opaque handle the page side uses to find the file again; for `sandbox`, the
+   * id of the message whose text links it (`href` is `sandbox:/mnt/data/…`).
+   */
   readonly controlRef: string;
 }
 
@@ -256,7 +262,7 @@ export interface TurnsReadResult {
   readonly files: readonly FileCandidate[];
 }
 
-// files.download (transport decided by spec Q3)
+// files.download: the bytes reach serve as a blob (see the Blobs section of http.ts)
 
 export interface FilesDownloadParams {
   readonly conversationId: string;

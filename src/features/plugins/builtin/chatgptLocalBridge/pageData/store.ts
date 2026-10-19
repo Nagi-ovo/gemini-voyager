@@ -1,7 +1,8 @@
 /**
  * What ChatGPT's own responses told the page, as the data observer reports
  * it: the sidebar's projects and whether that list is whole, each project's
- * file list, and the message each conversation ends on. The ops compare the
+ * file list, and the message each conversation ends on with the branch that
+ * leads to it. The ops compare the
  * page against these instead of waiting for it to stop changing.
  *
  * Kept for the document's life, like the runtime: an in-app visit to a
@@ -14,6 +15,7 @@
 import type { ProjectSummary } from '@/features/bridge/protocol';
 
 import {
+  type ConversationMessage,
   type DataObserverEvent,
   type FileListSource,
   postToDataObserver,
@@ -38,6 +40,8 @@ export interface PageData {
   projects(): ProjectsReport | null;
   files(projectId: string): FilesReport | null;
   currentNode(conversationId: string): string | null;
+  /** The branch the conversation ends on, oldest first, from ChatGPT's last answer for it. */
+  messages(conversationId: string): readonly ConversationMessage[] | null;
 }
 
 export type PageDataWake = 'pageData' | 'route';
@@ -54,7 +58,10 @@ export function createPageDataStore(now: () => number = Date.now): PageDataStore
   let observing = false;
   let projects: ProjectsReport | null = null;
   const files = new Map<string, FilesReport>();
-  const conversations = new Map<string, string>();
+  const conversations = new Map<
+    string,
+    { readonly currentNode: string; readonly messages: readonly ConversationMessage[] | null }
+  >();
   const listeners = new Set<(reason: PageDataWake) => void>();
 
   const onMessage = (event: MessageEvent): void => {
@@ -87,7 +94,10 @@ export function createPageDataStore(now: () => number = Date.now): PageDataStore
         });
         return;
       case 'conversation':
-        conversations.set(report.conversationId, report.currentNode);
+        conversations.set(report.conversationId, {
+          currentNode: report.currentNode,
+          messages: report.messages,
+        });
         return;
     }
   };
@@ -106,6 +116,7 @@ export function createPageDataStore(now: () => number = Date.now): PageDataStore
     },
     projects: () => projects,
     files: (projectId) => files.get(projectId) ?? null,
-    currentNode: (conversationId) => conversations.get(conversationId) ?? null,
+    currentNode: (conversationId) => conversations.get(conversationId)?.currentNode ?? null,
+    messages: (conversationId) => conversations.get(conversationId)?.messages ?? null,
   };
 }

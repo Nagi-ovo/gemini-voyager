@@ -143,6 +143,16 @@ export function replyIdOf(reply: HTMLElement): string | null {
   return unit?.getAttribute(MESSAGE_IDS_ATTRIBUTE)?.trim().split(/\s+/)[0] || null;
 }
 
+/** The turn whose reply id or turn key is `key`, with its reply. */
+export function findReplyByKey(key: string): { item: HTMLElement; reply: HTMLElement } | null {
+  for (const item of conversationItems()) {
+    const reply = findReply(item);
+    if (!reply) continue;
+    if (replyIdOf(reply) === key || readTurnKey(item) === key) return { item, reply };
+  }
+  return null;
+}
+
 /** The reply's text without the localized role heading. */
 export function replyTextOf(reply: HTMLElement): string {
   const headings = queryAll<HTMLElement>(reply, ASSISTANT_HEADING_SELECTOR);

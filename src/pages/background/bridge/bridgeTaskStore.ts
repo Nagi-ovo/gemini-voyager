@@ -82,6 +82,8 @@ export interface BridgeTaskRecord {
   readonly cancelling?: ErrorCode;
   /** `composer.attach`: the blobs its params name, the only ones its page may read. */
   readonly blobs?: readonly BridgeTaskBlob[];
+  /** `files.download`: the one blob its page created, the only one it may write and commit. */
+  readonly download?: BridgeTaskBlob;
   /** The paired server that sent the task; only it hears about the task. */
   readonly serverId?: string;
 }
@@ -125,9 +127,10 @@ const isInt = (value: unknown): value is number =>
 const isText = (value: unknown): value is string => typeof value === 'string' && value.length > 0;
 const optional = <T>(value: unknown, guard: (v: unknown) => v is T): boolean =>
   value === undefined || guard(value);
+const isTaskBlob = (blob: unknown): blob is BridgeTaskBlob =>
+  isRecord(blob) && isText(blob.blobId) && isInt(blob.size);
 const isTaskBlobs = (value: unknown): value is BridgeTaskBlob[] =>
-  Array.isArray(value) &&
-  value.every((blob) => isRecord(blob) && isText(blob.blobId) && isInt(blob.size));
+  Array.isArray(value) && value.every(isTaskBlob);
 
 export function parseTaskRecord(raw: unknown): BridgeTaskRecord | null {
   if (!isRecord(raw)) return null;
@@ -148,6 +151,7 @@ export function parseTaskRecord(raw: unknown): BridgeTaskRecord | null {
     optional(raw.expectConversationId, isText) &&
     (raw.cancelling === undefined || isErrorCode(raw.cancelling)) &&
     optional(raw.blobs, isTaskBlobs) &&
+    optional(raw.download, isTaskBlob) &&
     optional(raw.serverId, isText);
   return ok ? (raw as unknown as BridgeTaskRecord) : null;
 }

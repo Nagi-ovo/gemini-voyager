@@ -1,6 +1,8 @@
 import type { ProjectSummary } from '@/features/bridge/protocol';
 
+import type { PageDownloadReply, PageDownloadRequest } from '../pageData/download';
 import {
+  type ConversationMessage,
   DATA_CONTENT_SOURCE,
   DATA_OBSERVER_SOURCE,
   type FileListSource,
@@ -15,7 +17,13 @@ import {
 export interface PageDataFeed {
   projects(projects: readonly ProjectSummary[], complete?: boolean): void;
   files(projectId: string, names: readonly string[], source?: FileListSource): void;
-  conversation(conversationId: string, currentNode: string): void;
+  conversation(
+    conversationId: string,
+    currentNode: string,
+    messages?: readonly ConversationMessage[],
+  ): void;
+  /** Answer the bridge's `download` requests as the observer would, after its own requests. */
+  answerDownloads(answer: (request: PageDownloadRequest) => PageDownloadReply): void;
 }
 
 /**
@@ -66,9 +74,18 @@ export function createPageDataFeed({ running = true } = {}): PageDataFeed {
     post(type, payload);
   };
 
+  let answer: ((request: PageDownloadRequest) => PageDownloadReply) | null = null;
   window.addEventListener('message', (event) => {
-    const data = event.data as { source?: string; type?: string } | null;
-    if (activeFeed !== self || data?.source !== DATA_CONTENT_SOURCE || data.type !== 'arm') return;
+    const data = event.data as { source?: string; type?: string; payload?: unknown } | null;
+    if (activeFeed !== self || data?.source !== DATA_CONTENT_SOURCE) return;
+    if (data.type === 'download' && answer) {
+      const { requestId, ...request } = data.payload as PageDownloadRequest & {
+        requestId: string;
+      };
+      post('download', { requestId, ...answer(request) });
+      return;
+    }
+    if (data.type !== 'arm') return;
     post('armed', {});
     for (const { type, payload } of latest.values()) post(type, payload);
   });
@@ -78,7 +95,14 @@ export function createPageDataFeed({ running = true } = {}): PageDataFeed {
       report('projects', 'projects', { projects: projects.map((p) => ({ ...p })), complete }),
     files: (projectId, names, source = 'project') =>
       report(`files:${projectId}`, 'files', { projectId, names: [...names], source }),
-    conversation: (conversationId, currentNode) =>
-      report(`conversation:${conversationId}`, 'conversation', { conversationId, currentNode }),
+    conversation: (conversationId, currentNode, messages) =>
+      report(`conversation:${conversationId}`, 'conversation', {
+        conversationId,
+        currentNode,
+        ...(messages ? { messages: messages.map((message) => ({ ...message })) } : {}),
+      }),
+    answerDownloads: (next) => {
+      answer = next;
+    },
   };
 }

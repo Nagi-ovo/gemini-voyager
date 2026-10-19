@@ -13,6 +13,9 @@ import {
   BRIDGE_PATHS,
   type BlobChunk,
   type BlobChunkRange,
+  type BlobCommitResponse,
+  type BlobCreateRequest,
+  type BlobCreateResponse,
   type BridgeError,
   type HelloResponse,
   type MessageKind,
@@ -49,6 +52,8 @@ export type ClientResult<T> =
 const REQUEST_TIMEOUT_MS = 10_000;
 /** One attachment chunk from 127.0.0.1; generous, since serve reads it from disk. */
 const BLOB_READ_TIMEOUT_MS = 30_000;
+/** A downloaded chunk to 127.0.0.1, or the commit that hashes the whole file on disk. */
+const BLOB_WRITE_TIMEOUT_MS = 30_000;
 
 export function bridgeBaseUrl(port: number): string {
   return `http://${BRIDGE_HOST}:${port}`;
@@ -98,6 +103,18 @@ export interface BridgeClient {
     blobId: string,
     range: BlobChunkRange,
   ): Promise<ClientResult<BlobChunk>>;
+  /** A blob for a file the page downloaded: `POST /v1/ext/blobs`. */
+  blobCreate(
+    connection: BridgeConnection,
+    request: BlobCreateRequest,
+  ): Promise<ClientResult<BlobCreateResponse>>;
+  /** One chunk of that file, in order from offset 0: `POST /v1/ext/blobs/:blobId`. */
+  blobWrite(connection: BridgeConnection, chunk: BlobChunk): Promise<ClientResult<unknown>>;
+  /** The file is whole: `POST /v1/ext/blobs/:blobId/commit`. */
+  blobCommit(
+    connection: BridgeConnection,
+    blobId: string,
+  ): Promise<ClientResult<BlobCommitResponse>>;
 }
 
 export function createBridgeClient(
@@ -258,6 +275,33 @@ export function createBridgeClient(
           body: range,
           kind: 'blobChunk',
           timeoutMs: BLOB_READ_TIMEOUT_MS,
+        }),
+      ),
+    blobCreate: async (connection, body) =>
+      nonNull(
+        await request(connection, {
+          method: 'POST',
+          path: BRIDGE_PATHS.extBlobs,
+          body,
+          kind: 'blobCreateResponse',
+        }),
+      ),
+    blobWrite: (connection, chunk) =>
+      request(connection, {
+        method: 'POST',
+        path: bridgePath.blob(chunk.blobId),
+        body: chunk,
+        kind: null,
+        timeoutMs: BLOB_WRITE_TIMEOUT_MS,
+      }),
+    blobCommit: async (connection, blobId) =>
+      nonNull(
+        await request(connection, {
+          method: 'POST',
+          path: bridgePath.blobCommit(blobId),
+          body: {},
+          kind: 'blobCommitResponse',
+          timeoutMs: BLOB_WRITE_TIMEOUT_MS,
         }),
       ),
     unpair: (connection) =>

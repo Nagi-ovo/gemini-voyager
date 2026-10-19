@@ -70,13 +70,43 @@ export interface BridgeBlobReadMessage {
 }
 /** `base64` decodes to exactly the requested length. */
 export type BridgeBlobReadReply = { ok: true; base64: string } | { ok: false; error: BridgeError };
+/**
+ * A file the running `files.download` fetched, handed to `voyager serve` in
+ * three steps (create, one write per chunk from offset 0, commit). Only the
+ * task's holder document may send them, and only for the one blob its create
+ * opened. Answered with the matching reply below.
+ */
+export interface BridgeBlobCreateMessage {
+  type: 'gv.bridge.blob.create';
+  taskId: string;
+  docNonce: string;
+  name: string;
+  size: number;
+  sha256: string;
+  mime: string;
+}
+export type BridgeBlobCreateReply =
+  | { ok: true; blobId: string }
+  | { ok: false; error: BridgeError };
 export interface BridgeBlobWriteMessage {
   type: 'gv.bridge.blob.write';
   taskId: string;
+  docNonce: string;
   blobId: string;
   offset: number;
   base64: string;
 }
+export type BridgeBlobWriteReply = { ok: true } | { ok: false; error: BridgeError };
+export interface BridgeBlobCommitMessage {
+  type: 'gv.bridge.blob.commit';
+  taskId: string;
+  docNonce: string;
+  blobId: string;
+}
+/** What `voyager serve` stored; the background has checked it against the create. */
+export type BridgeBlobCommitReply =
+  | { ok: true; blobId: string; size: number; sha256: string }
+  | { ok: false; error: BridgeError };
 
 // background → content (sent with { documentId } where supported)
 export interface BridgeOpStartMessage {
@@ -130,7 +160,9 @@ export type BridgeContentToBackgroundMessage =
   | BridgeOpProgressMessage
   | BridgeOpDoneMessage
   | BridgeBlobReadMessage
-  | BridgeBlobWriteMessage;
+  | BridgeBlobCreateMessage
+  | BridgeBlobWriteMessage
+  | BridgeBlobCommitMessage;
 export type BridgeBackgroundToContentMessage =
   | BridgeOpStartMessage
   | BridgeLeaseProbeMessage

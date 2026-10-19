@@ -180,7 +180,11 @@ export interface TaskProgressRequest {
 /** Body of `POST /v1/ext/tasks/:taskId/result`; only the first one counts. */
 export type TaskResultRequest = Envelope<unknown>;
 
-// Blobs (placeholders until spike S3 and decision Q3 settle the transport)
+// Blobs. Uploads (composer.attach, project.upload): the page reads chunks with
+// `POST /v1/ext/blobs/:blobId/read`. Downloads (files.download): the service
+// worker sends `POST /v1/ext/blobs` (BlobCreateRequest), then each BlobChunk in
+// order to `POST /v1/ext/blobs/:blobId`, then `POST /v1/ext/blobs/:blobId/commit`;
+// serve accepts them only from the running files.download task of that job.
 
 export interface BlobCreateRequest {
   readonly jobId: string;

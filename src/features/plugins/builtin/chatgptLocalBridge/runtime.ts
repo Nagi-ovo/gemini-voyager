@@ -18,6 +18,7 @@ import type { Toaster } from '@/core/ui/toast/types';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { isUserEvent } from '@/core/utils/userEvent';
 import {
+  type BridgeError,
   type BridgeTask,
   type ValidatedBridgeTask,
   bridgeError,
@@ -50,13 +51,21 @@ import {
   defaultOpEnvironment,
 } from './opContext';
 import { type BlobChunkReader, readBlobReply } from './ops/blobBytes';
+import {
+  type BlobWriter,
+  readBlobCommitReply,
+  readBlobCreateReply,
+  readBlobWriteReply,
+} from './ops/blobUpload';
 import { runComposerAttach } from './ops/composerAttach';
 import { type ComposerActivity, runComposerSend } from './ops/composerSend';
 import { runConversationReady } from './ops/conversationReady';
+import { runFilesDownload } from './ops/filesDownload';
 import { runModelSelect } from './ops/modelSelect';
 import { runProjectOp } from './ops/projectRuntime';
 import { runTurnsRead } from './ops/turnsRead';
 import { runTurnsWaitReply } from './ops/turnsWaitReply';
+import { createPageDownloader } from './pageData/download';
 import { createPageDataStore } from './pageData/store';
 import type { Defer } from './wake';
 
@@ -163,6 +172,7 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
   let lastUserInputAt = Number.NEGATIVE_INFINITY;
   let toaster: Toaster | null = null;
   const pageData = createPageDataStore(now);
+  const pageDownload = createPageDownloader();
   const outcomes = new Map<string, BridgeOpOutcome>();
   /** Tasks cancelled here; an `op.start` for one (it can arrive after its cancel) is refused. */
   const cancelled = new Set<string>();
@@ -210,6 +220,40 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
       }
     };
 
+  /** A downloaded file goes to the background, which checks this document holds the task. */
+  const blobWriter = (taskId: string): BlobWriter => {
+    const relay = async <T>(
+      message: Record<string, unknown>,
+      read: (raw: unknown) => T,
+      failed: (error: BridgeError) => T,
+    ): Promise<T> => {
+      try {
+        return read(await send({ ...message, taskId, docNonce: getDocNonce() }));
+      } catch (error) {
+        const reloaded = isExtensionContextInvalidatedError(error);
+        return failed(
+          bridgeError(
+            reloaded ? 'extension-reloaded' : 'server-unreachable',
+            'The download could not be handed to the extension.',
+          ),
+        );
+      }
+    };
+    const refused = (error: BridgeError) => ({ ok: false as const, error });
+    return {
+      create: (meta) =>
+        relay({ type: 'gv.bridge.blob.create', ...meta }, readBlobCreateReply, refused),
+      write: (blobId, offset, base64) =>
+        relay(
+          { type: 'gv.bridge.blob.write', blobId, offset, base64 },
+          readBlobWriteReply,
+          refused,
+        ),
+      commit: (blobId) =>
+        relay({ type: 'gv.bridge.blob.commit', blobId }, readBlobCommitReply, refused),
+    };
+  };
+
   const showChallengeToast = (kind: ChallengeKind): void => {
     void getCurrentLanguage()
       .catch(() => 'en' as const)
@@ -242,6 +286,8 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
         return runTurnsWaitReply(ctx, task.params, snapshot);
       case 'turns.read':
         return runTurnsRead(ctx, task.params, snapshot, pageData);
+      case 'files.download':
+        return runFilesDownload(ctx, task.params, pageData, pageDownload, blobWriter(task.taskId));
       default:
         return (
           runProjectOp(ctx, task, snapshot, chunkReader(task.taskId), pageData) ??

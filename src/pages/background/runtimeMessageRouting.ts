@@ -173,7 +173,9 @@ const HANDLED_BACKGROUND_MESSAGE_TYPES = new Set([
   'gv.bridge.op.progress',
   'gv.bridge.op.done',
   'gv.bridge.blob.read',
+  'gv.bridge.blob.create',
   'gv.bridge.blob.write',
+  'gv.bridge.blob.commit',
 ]);
 
 export function isHandledBackgroundRuntimeMessage(message: unknown): boolean {

@@ -10,9 +10,11 @@
  * finished reply: one still being written is `unverified`, never an earlier
  * reply in its place.
  *
- * Phase B reports no file candidates; `files.download` arrives in Phase C.
+ * `files` lists the sandbox files the turn links (`sandboxFiles.ts`), from
+ * ChatGPT's own conversation answer; a turn that answer did not include (one
+ * the page has not fetched since it was written) lists none.
  */
-import type { TurnsReadParams, TurnsReadResult } from '@/features/bridge/protocol';
+import type { FileCandidate, TurnsReadParams, TurnsReadResult } from '@/features/bridge/protocol';
 import { createContentExtractor } from '@/features/export/services/DOMContentExtractor';
 import { hasReplyActions } from '@/features/plugins/builtin/chatgptResponseNotification/page';
 import type { SiteAdapter } from '@/features/plugins/types';
@@ -26,6 +28,7 @@ import {
   ASSISTANT_HEADING_SELECTOR,
   conversationItems,
   findReply,
+  findReplyByKey,
   hasStopControl,
   hasThinkingSignal,
   isCompleteTurnState,
@@ -36,18 +39,10 @@ import {
   siteOf,
   turnStateOf,
 } from './pageReaders';
+import { sandboxCandidates, turnMessages } from './sandboxFiles';
 
 // Fallback only: the heading's text in the UI languages measured or shipped by ChatGPT.
 const HEADING_LINE = /^(?:#{1,6}\s*)?(?:ChatGPT said:|ChatGPT 说：|ChatGPT 說：)\s*\n+/;
-
-function findReplyByKey(key: string): { item: HTMLElement; reply: HTMLElement } | null {
-  for (const item of conversationItems()) {
-    const reply = findReply(item);
-    if (!reply) continue;
-    if (replyIdOf(reply) === key || readTurnKey(item) === key) return { item, reply };
-  }
-  return null;
-}
 
 const LATEST_TIMEOUT_MS = 20_000;
 
@@ -166,6 +161,13 @@ function withoutHeading(reply: HTMLElement): HTMLElement {
   return copy;
 }
 
+/** The sandbox files the turn links, as ChatGPT's last conversation answer lists it. */
+function turnFiles(pageData: PageData, conversationId: string, anchor: string): FileCandidate[] {
+  const messages = pageData.messages(conversationId);
+  const turn = messages ? turnMessages(messages, anchor) : null;
+  return turn ? sandboxCandidates(turn) : [];
+}
+
 export async function runTurnsRead(
   ctx: OpContext,
   params: TurnsReadParams,
@@ -193,6 +195,6 @@ export async function runTurnsRead(
     turnKey: found.turnKey,
     ...(messageId ? { messageId } : {}),
     textSha256: await sha256Hex(markdown),
-    files: [],
+    files: turnFiles(pageData, params.conversationId, messageId ?? found.turnKey),
   };
 }
