@@ -71,10 +71,28 @@ async function advance(ms: number): Promise<void> {
   }
 }
 
-/** The sha256 check runs on real time; on a slow runner the fake clock would use up the wait first. */
+/** Captured before `beforeEach` fakes the clock: the hash phase waits on real time. */
+const realSetTimeout = globalThis.setTimeout;
+/** A ceiling under the test timeout, not a wait: the hash takes milliseconds. */
+const HASH_REAL_MS = 3_000;
+
+/**
+ * The page work up to the blob read runs on the fake clock; the sha256 after it
+ * runs on Node's thread pool, in real time. 200 fake-clock steps pass in a few
+ * real milliseconds, too few for the hash on a loaded CI runner, so that phase
+ * waits on real time with the fake clock held, which also keeps the op's lease
+ * unspent.
+ */
 async function untilHandedOver(): Promise<void> {
   const handed = () => fixture.counts.uploadChanges + fixture.counts.ignoredUploads;
-  for (let step = 0; step < 200 && handed() === 0; step += 1) await advance(100);
+  for (let step = 0; step < 200 && reads().length === 0 && !bridge.outcome(); step += 1) {
+    await advance(100);
+  }
+  expect(reads().length).toBeGreaterThan(0);
+  const until = performance.now() + HASH_REAL_MS;
+  while (handed() === 0 && !bridge.outcome() && performance.now() < until) {
+    await new Promise((resolve) => realSetTimeout(resolve, 1));
+  }
   expect(handed()).toBeGreaterThan(0);
 }
 
