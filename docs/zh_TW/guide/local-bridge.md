@@ -58,9 +58,13 @@ voyager ask --chat <連結|id> "邊界情況呢？"         # 在既有對話裡
 voyager read <連結|id>                             # 儲存某個對話的最新回答
 voyager project upload "論文" ./thesis             # 把檔案放進專案，專案裡的對話都讀得到
 voyager ask --project "論文" "論證最薄弱的地方在哪？"
+voyager ask --drive ./paper.pdf "總結一下方法部分"  # 放到 Google Drive，讓 ChatGPT 自己的 Drive 應用程式去讀
+voyager ask --repo owner/name "CI 為什麼掛了？"     # 讓 ChatGPT 自己的 GitHub 應用程式讀這個儲存庫
 ```
 
 回答會存成 `response.md`，預設使用聊天模式下的 GPT-6 Pro。
+
+這兩個選項都用 ChatGPT 自己的 Google Drive 和 GitHub 應用程式，請先在 ChatGPT 裡連結好；它們只是在提示裡多加幾句話，不需要新版 Voyager。`--drive` 用 rclone 把檔案傳到 `VOYAGER_DRIVE_REMOTE`（例如 `gdrive:Voyager`）下的一個新資料夾，這個 remote 必須和 ChatGPT 的 Drive 應用程式是同一個 Google 帳號；它沒有 `--attach` 的 64 MiB 上限，檔案傳完會留在 Drive 上。`--repo` 會請 ChatGPT 只往新建的 `chatgpt/*` 分支提交，這只是請求，不是限制：它的 GitHub 應用程式能寫進安裝範圍內的任何地方。ChatGPT 存取不到這個儲存庫時，voyager 會以結束代碼 3 停下，請到 [GitHub 的 installations 設定](https://github.com/settings/installations)把儲存庫加進去。
 
 很長的回答怎麼等、每個結束代碼的意思、全部指令，請見 [CLI 的 README](https://github.com/voyager-crew/voyager-cli/blob/main/README_ZH.md)。給 Claude Code、Codex 等 agent 用的說明在 [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md)。
 

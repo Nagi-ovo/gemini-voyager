@@ -58,9 +58,13 @@ voyager ask --chat <link|id> "And the edge cases?"  # follow up in a conversatio
 voyager read <link|id>                              # save a conversation's latest reply
 voyager project upload "Thesis" ./thesis            # every chat in the project can read it
 voyager ask --project "Thesis" "Where is the argument weakest?"
+voyager ask --drive ./paper.pdf "Summarize the methods"  # put it on Google Drive for ChatGPT's own Drive app
+voyager ask --repo owner/name "Why is CI failing?"       # ChatGPT's own GitHub app reads the repository
 ```
 
 The reply is saved as `response.md`, and asks use GPT-6 Pro in chat mode by default.
+
+Both use ChatGPT's own Google Drive and GitHub apps, so connect them in ChatGPT first; they only add text to the prompt and need no new Voyager version. `--drive` uploads with rclone into a new folder under `VOYAGER_DRIVE_REMOTE` (for example `gdrive:Voyager`), which must be the same Google account as ChatGPT's Drive app; it has no 64 MiB limit like `--attach`, and the files stay on Drive. `--repo` asks ChatGPT to commit only to a new `chatgpt/*` branch, but that is a request, not a restriction: the app can write wherever its GitHub installation reaches. If ChatGPT cannot reach the repository, voyager stops with exit code 3; add the repository in [GitHub's installation settings](https://github.com/settings/installations).
 
 For waiting on long answers, what each exit code means and every command, see the [CLI README](https://github.com/voyager-crew/voyager-cli#readme). Instructions for Claude Code, Codex and other agents are in [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md).
 

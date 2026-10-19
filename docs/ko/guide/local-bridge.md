@@ -58,9 +58,13 @@ voyager ask --chat <link|id> "엣지 케이스는?"       # 기존 대화에서 
 voyager read <link|id>                              # 대화의 최신 답변 저장
 voyager project upload "Thesis" ./thesis            # 프로젝트의 모든 대화가 읽을 수 있음
 voyager ask --project "Thesis" "논증이 가장 약한 곳은 어디야?"
+voyager ask --drive ./paper.pdf "방법 부분을 요약해 줘"  # Google Drive에 올려 ChatGPT 자체 Drive 앱이 읽게 함
+voyager ask --repo owner/name "CI가 왜 실패해?"          # ChatGPT 자체 GitHub 앱이 저장소를 읽음
 ```
 
 답변은 `response.md`로 저장되며, 기본으로 채팅 모드의 GPT-6 Pro를 씁니다.
+
+두 옵션 모두 ChatGPT 자체의 Google Drive 앱과 GitHub 앱을 쓰므로 먼저 ChatGPT에서 연결해 두세요. 프롬프트에 문장을 덧붙일 뿐이라 새 Voyager 버전은 필요 없습니다. `--drive`는 rclone으로 `VOYAGER_DRIVE_REMOTE`(예: `gdrive:Voyager`) 아래 새 폴더에 파일을 올리며, 이 remote는 ChatGPT의 Drive 앱과 같은 Google 계정이어야 합니다. `--attach`의 64 MiB 제한이 없고, 파일은 Drive에 남습니다. `--repo`는 ChatGPT에게 새 `chatgpt/*` 브랜치에만 커밋해 달라고 요청하지만, 이는 요청일 뿐 제한이 아닙니다. 앱은 GitHub 설치 범위 안이라면 어디에든 쓸 수 있습니다. ChatGPT가 저장소에 접근하지 못하면 voyager는 종료 코드 3으로 멈추니, [GitHub 설치 설정](https://github.com/settings/installations)에서 저장소를 추가하세요.
 
 긴 답변을 기다리는 법, 각 종료 코드의 의미, 전체 명령은 [CLI README](https://github.com/voyager-crew/voyager-cli#readme)를 보세요. Claude Code, Codex 등 에이전트용 안내는 [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md)에 있습니다.
 

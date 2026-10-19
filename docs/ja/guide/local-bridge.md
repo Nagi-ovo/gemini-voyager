@@ -58,9 +58,13 @@ voyager ask --chat <link|id> "エッジケースは？"     # 既存の会話で
 voyager read <link|id>                              # 会話の最新の回答を保存
 voyager project upload "Thesis" ./thesis            # プロジェクト内のどのチャットからも読める
 voyager ask --project "Thesis" "論証がいちばん弱いのはどこ？"
+voyager ask --drive ./paper.pdf "手法の部分を要約して"  # Google Drive に置き、ChatGPT 自身の Drive アプリに読ませる
+voyager ask --repo owner/name "CI が落ちるのはなぜ？"   # ChatGPT 自身の GitHub アプリにリポジトリを読ませる
 ```
 
 回答は `response.md` として保存されます。既定ではチャットモードの GPT-6 Pro を使います。
+
+どちらも ChatGPT 自身の Google Drive アプリと GitHub アプリを使うので、先に ChatGPT で連携しておいてください。プロンプトに文を足すだけなので、新しいバージョンの Voyager は要りません。`--drive` は rclone で `VOYAGER_DRIVE_REMOTE`（例：`gdrive:Voyager`）の下に新しいフォルダを作ってアップロードします。この remote は ChatGPT の Drive アプリと同じ Google アカウントである必要があります。`--attach` の 64 MiB の上限はなく、ファイルは Drive に残ります。`--repo` は ChatGPT に新しい `chatgpt/*` ブランチにだけコミットするよう頼みますが、これはお願いであって制限ではありません。アプリは GitHub のインストール範囲内ならどこにでも書き込めます。ChatGPT がリポジトリにアクセスできないと、voyager は終了コード 3 で止まります。[GitHub のインストール設定](https://github.com/settings/installations)でリポジトリを追加してください。
 
 長い回答の待ち方、各終了コードの意味、すべてのコマンドは [CLI の README](https://github.com/voyager-crew/voyager-cli#readme) を参照してください。Claude Code や Codex などのエージェント向けの説明は [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md) にあります。
 

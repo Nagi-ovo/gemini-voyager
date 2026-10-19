@@ -58,9 +58,13 @@ voyager ask --chat <link|id> "وماذا عن الحالات الحدّية؟"  
 voyager read <link|id>                               # حفظ آخر رد في محادثة
 voyager project upload "Thesis" ./thesis             # تستطيع كل محادثة في المشروع قراءته
 voyager ask --project "Thesis" "أين تكمن أضعف نقطة في الحجة؟"
+voyager ask --drive ./paper.pdf "لخّص قسم المنهجية"       # يُرفع إلى Google Drive ليقرأه تطبيق Drive في ChatGPT
+voyager ask --repo owner/name "لماذا يفشل CI؟"           # يقرأ تطبيق GitHub في ChatGPT المستودع
 ```
 
 يُحفظ الرد في `response.md`، وتستخدم الأسئلة افتراضيًا GPT-6 Pro في وضع الدردشة.
+
+يعتمد الخياران على تطبيقَي Google Drive وGitHub الخاصّين بـ ChatGPT نفسه، لذا اربطهما في ChatGPT أولًا؛ وهما لا يضيفان سوى نص إلى الطلب، فلا يحتاجان إلى إصدار جديد من Voyager. يرفع `--drive` الملفات عبر rclone إلى مجلد جديد داخل `VOYAGER_DRIVE_REMOTE` (مثل `gdrive:Voyager`)، ويجب أن يكون هذا الـ remote على حساب Google نفسه المربوط بتطبيق Drive في ChatGPT؛ ولا يخضع لحدّ 64 MiB الذي يفرضه `--attach`، وتبقى الملفات على Drive. ويطلب `--repo` من ChatGPT ألّا يُودِع التغييرات (commits) إلا في فرع جديد `chatgpt/*`، لكن هذا طلب لا قيد: فالتطبيق يستطيع الكتابة في أي مكان يصل إليه تثبيته على GitHub. وإذا تعذّر على ChatGPT الوصول إلى المستودع، يتوقف voyager برمز الخروج 3؛ أضِف المستودع من [إعدادات التثبيت في GitHub](https://github.com/settings/installations).
 
 لمعرفة كيفية انتظار الإجابات الطويلة، ومعنى كل رمز خروج، وجميع الأوامر، راجع [ملف README الخاص بالأداة](https://github.com/voyager-crew/voyager-cli#readme). أما التعليمات الموجّهة إلى Claude Code وCodex وغيرهما من الوكلاء ففي [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md).
 

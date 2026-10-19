@@ -58,9 +58,13 @@ voyager ask --chat <link|id> "E os casos extremos?" # continuar uma conversa
 voyager read <link|id>                              # salvar a última resposta de uma conversa
 voyager project upload "Tese" ./thesis              # todas as conversas do projeto podem ler
 voyager ask --project "Tese" "Onde o argumento é mais fraco?"
+voyager ask --drive ./paper.pdf "Resuma a seção de métodos"  # vai para o Google Drive; o app do Drive no ChatGPT lê
+voyager ask --repo owner/name "Por que o CI está falhando?"  # o app do GitHub no ChatGPT lê o repositório
 ```
 
 A resposta é salva como `response.md`, e as perguntas usam por padrão o GPT-6 Pro no modo chat.
+
+Os dois usam os próprios apps do Google Drive e do GitHub no ChatGPT, então conecte-os no ChatGPT antes; eles só acrescentam texto ao prompt e não exigem uma nova versão do Voyager. `--drive` envia os arquivos com o rclone para uma pasta nova dentro de `VOYAGER_DRIVE_REMOTE` (por exemplo, `gdrive:Voyager`), que precisa ser a mesma conta Google do app do Drive no ChatGPT; não há o limite de 64 MiB do `--attach`, e os arquivos ficam no Drive. `--repo` pede ao ChatGPT que faça commits só em um novo branch `chatgpt/*`, mas isso é um pedido, não uma restrição: o app pode escrever em qualquer lugar que a instalação do GitHub alcance. Se o ChatGPT não conseguir acessar o repositório, o voyager para com o código de saída 3; adicione o repositório nas [configurações de instalações do GitHub](https://github.com/settings/installations).
 
 Como esperar respostas longas, o que cada código de saída significa e todos os comandos estão no [README do CLI](https://github.com/voyager-crew/voyager-cli#readme). As instruções para Claude Code, Codex e outros agentes estão em [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md).
 

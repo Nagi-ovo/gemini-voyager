@@ -58,9 +58,13 @@ voyager ask --chat <link|id> "Et les cas limites ?" # poursuivre une conversatio
 voyager read <link|id>                              # enregistrer la dernière réponse d’une conversation
 voyager project upload "Thèse" ./thesis             # lisible par toutes les conversations du projet
 voyager ask --project "Thèse" "Où l’argumentation est-elle la plus faible ?"
+voyager ask --drive ./paper.pdf "Résume la partie méthodes"     # via Google Drive, lu par l’application Drive de ChatGPT
+voyager ask --repo owner/name "Pourquoi la CI échoue-t-elle ?"  # l’application GitHub de ChatGPT lit le dépôt
 ```
 
 La réponse est enregistrée dans `response.md`, et les questions utilisent par défaut GPT-6 Pro en mode chat.
+
+Les deux passent par les applications Google Drive et GitHub de ChatGPT lui-même : connectez-les d’abord dans ChatGPT. Elles ajoutent seulement du texte au prompt et ne demandent pas de nouvelle version de Voyager. `--drive` envoie les fichiers avec rclone dans un nouveau dossier sous `VOYAGER_DRIVE_REMOTE` (par exemple `gdrive:Voyager`), qui doit être le même compte Google que l’application Drive de ChatGPT ; il n’a pas la limite de 64 MiB de `--attach`, et les fichiers restent sur Drive. `--repo` demande à ChatGPT de ne committer que sur une nouvelle branche `chatgpt/*`, mais c’est une demande, pas une restriction : l’application peut écrire partout où son installation GitHub a accès. Si ChatGPT n’atteint pas le dépôt, voyager s’arrête avec le code de sortie 3 ; ajoutez le dépôt dans les [paramètres d’installation de GitHub](https://github.com/settings/installations).
 
 Pour attendre une longue réponse, le sens de chaque code de sortie et toutes les commandes, voir le [README du CLI](https://github.com/voyager-crew/voyager-cli#readme). Les instructions pour Claude Code, Codex et les autres agents sont dans [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md).
 

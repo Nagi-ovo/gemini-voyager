@@ -58,9 +58,13 @@ voyager ask --chat <link|id> "А граничные случаи?"  # продо
 voyager read <link|id>                              # сохранить последний ответ из разговора
 voyager project upload "Диссертация" ./thesis       # его прочитает любой чат в проекте
 voyager ask --project "Диссертация" "Где аргументация слабее всего?"
+voyager ask --drive ./paper.pdf "Кратко изложи методы"  # через Google Drive: читает приложение Drive в ChatGPT
+voyager ask --repo owner/name "Почему падает CI?"       # репозиторий читает приложение GitHub в ChatGPT
 ```
 
 Ответ сохраняется в `response.md`; по умолчанию запросы идут в GPT-6 Pro в режиме чата.
+
+Обе опции работают через собственные приложения Google Drive и GitHub в ChatGPT, поэтому сначала подключите их в ChatGPT; они лишь добавляют текст в запрос, и новая версия Voyager для них не нужна. `--drive` загружает файлы через rclone в новую папку внутри `VOYAGER_DRIVE_REMOTE` (например, `gdrive:Voyager`); этот remote должен быть тем же аккаунтом Google, что и приложение Drive в ChatGPT. Лимита 64 MiB, как у `--attach`, здесь нет, а файлы остаются в Drive. `--repo` просит ChatGPT коммитить только в новую ветку `chatgpt/*`, но это просьба, а не ограничение: приложение может писать везде, куда дотягивается его установка GitHub. Если ChatGPT не может добраться до репозитория, voyager останавливается с кодом выхода 3; добавьте репозиторий в [настройках установок GitHub](https://github.com/settings/installations).
 
 Как дожидаться длинных ответов, что значит каждый код выхода и все команды — в [README CLI](https://github.com/voyager-crew/voyager-cli#readme). Инструкции для Claude Code, Codex и других агентов — в [SKILL.md](https://github.com/voyager-crew/voyager-cli/blob/main/skills/voyager/SKILL.md).
 
