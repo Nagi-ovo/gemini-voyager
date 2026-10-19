@@ -161,7 +161,6 @@ const LEGEND: Readonly<Record<string, { ready: string; toggle: string }>> = {
 export interface SiteSupportWords {
   /** The first header. */
   feature: string;
-  defaultOn: string;
   /** Beside the filled tick: works without switching anything on. */
   ready: string;
   /** Beside the plain tick: where to switch it on. */
@@ -193,7 +192,6 @@ export function loadSiteSupport(): SiteSupportData {
         locale.prefix || 'root',
         {
           feature: locale.feature,
-          defaultOn: locale.defaultOn,
           ...(LEGEND[locale.prefix] ?? LEGEND.en),
         },
       ]),

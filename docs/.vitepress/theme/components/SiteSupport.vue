@@ -60,7 +60,7 @@ const label = (id: string): string => props.labels?.[id] ?? id;
           <tr v-for="row in rows" :key="row.id">
             <th scope="row">{{ label(row.id) }}</th>
             <td v-for="(cell, index) in row.cells" :key="data.sites[index].id">
-              <span v-if="cell === 'on'" class="gvg-tick-on" :title="words.defaultOn">✓</span>
+              <span v-if="cell === 'on'" class="gvg-tick-on" :title="words.ready">✓</span>
               <span v-else-if="cell === 'yes'" class="gvg-tick">✓</span>
               <span v-else class="gvg-tick-no" aria-hidden="true">·</span>
             </td>
