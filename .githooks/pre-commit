@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Worktrees can share this hook through an absolute core.hooksPath, and an older
+# worktree may lack the script, so run the copy beside this hook.
+size_check="$(dirname "$0")/../scripts/check-staged-size.mjs"
+
 if ! command -v bun >/dev/null 2>&1; then
   echo "bun is required to format staged files before commit." >&2
   exit 1
@@ -21,7 +25,7 @@ while IFS= read -r -d '' file; do
 done < <(git diff --cached --name-only --diff-filter=ACMR -z)
 
 if [ "${#files[@]}" -eq 0 ]; then
-  exec node scripts/check-staged-size.mjs
+  exec node "$size_check"
 fi
 
 dirty=()
@@ -43,4 +47,4 @@ git add -- "${files[@]}"
 git diff --cached --check
 
 # Measured after formatting, which can change the staged size.
-node scripts/check-staged-size.mjs
+node "$size_check"
