@@ -141,6 +141,16 @@ describe('readComposer', () => {
     expect(readComposer(rich)).toBe('first\nsecond word');
   });
 
+  it('reads a Drive link chip as its link, not the CSS inside its icon', () => {
+    const url = 'https://drive.google.com/file/d/abc/view';
+    const field = editable();
+    field.innerHTML =
+      `<p>read <span rich-link-source-app-id="google-drive"><span contenteditable="false">` +
+      `<svg viewBox="0 0 1 1"><style>.a{fill:url(#g)}</style><path d="M0 0"></path></svg></span>` +
+      `<span>${url}</span></span> please</p>`;
+    expect(readComposer(field)).toBe(`read ${url} please`);
+  });
+
   it('does not double paragraph breaks the way innerText does, so a restored draft keeps its blank lines', () => {
     const field = editable();
     field.innerHTML =

@@ -72,8 +72,12 @@ export function findComposer(
   return usable[0] ?? null;
 }
 
+// ChatGPT turns a Drive link into a chip whose svg icon carries a <style> sheet; its CSS is not draft text.
+const NON_TEXT_ELEMENTS = new Set(['style', 'script', 'svg', 'template']);
+
 function domText(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) return node.nodeValue ?? '';
+  if (node instanceof Element && NON_TEXT_ELEMENTS.has(node.localName)) return '';
   if (
     node instanceof Element &&
     /^(P|DIV)$/.test(node.tagName) &&
