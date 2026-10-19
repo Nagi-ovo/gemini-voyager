@@ -23,6 +23,14 @@ export const FOLDER_ICON_NODE = [
   ],
 ] satisfies IconNode;
 
+/** Lucide `library`, for AI Studio's /library shortcut. */
+const LIBRARY_ICON_NODE = [
+  ['path', { d: 'm16 6 4 14', key: 'ji33uf' }],
+  ['path', { d: 'M12 6v14', key: '1n7gus' }],
+  ['path', { d: 'M8 8v12', key: '1gg7y9' }],
+  ['path', { d: 'M4 4v16', key: '6qkkli' }],
+] satisfies IconNode;
+
 const MINUS_ICON_NODE = [['path', { d: 'M5 12h14', key: '1ays0h' }]] satisfies IconNode;
 
 export const PLUS_ICON_NODE = [
@@ -109,6 +117,10 @@ export function createCloudIcon(size = 16): SVGSVGElement {
 
 export function createFolderIcon(size = 16): SVGSVGElement {
   return createLucideIcon('folder', FOLDER_ICON_NODE, size);
+}
+
+export function createLibraryIcon(size = 16): SVGSVGElement {
+  return createLucideIcon('library', LIBRARY_ICON_NODE, size);
 }
 
 export function createMinusIcon(size = 16): SVGSVGElement {

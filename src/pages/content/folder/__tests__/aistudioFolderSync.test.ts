@@ -96,7 +96,7 @@ describe('AI Studio folder sync across contexts', () => {
     expect(toastDriver.messages()[0]).toContain('offline');
   });
 
-  it("shows AI Studio's own last upload and sync times in the cloud tooltips, not Gemini's", async () => {
+  it("shows AI Studio's own last upload and sync times in the cloud tooltip, not Gemini's", async () => {
     local[GLOBAL_KEY] = folderData('Mine');
     await mount();
     const now = Date.now();
@@ -109,19 +109,12 @@ describe('AI Studio folder sync across contexts', () => {
         lastSyncTimeAIStudio: null,
       },
     });
-    const button = (title: string) =>
-      [...document.querySelectorAll<HTMLButtonElement>('.gv-aistudio .gv-folder-action-btn')].find(
-        (candidate) => candidate.title.startsWith(title),
-      )!;
-    const upload = button('Upload to Cloud');
-    const sync = button('Sync from Cloud');
+    const cloud = document.querySelector<HTMLButtonElement>('.gv-aistudio .gv-folder-cloud-btn')!;
 
-    upload.dispatchEvent(new MouseEvent('mouseenter'));
-    sync.dispatchEvent(new MouseEvent('mouseenter'));
+    cloud.dispatchEvent(new MouseEvent('mouseenter'));
     await vi.advanceTimersByTimeAsync(0);
 
-    expect(upload.title).toBe('Upload to Cloud\nUploaded: 5 minutes ago');
-    expect(sync.title).toBe('Sync from Cloud\nNever synced');
+    expect(cloud.title).toBe('Cloud sync\nUploaded: 5 minutes ago\nNever synced');
   });
 
   it('reloads another tab write that follows an unchanged save', async () => {

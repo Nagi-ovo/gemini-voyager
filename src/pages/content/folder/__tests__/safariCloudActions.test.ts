@@ -82,27 +82,26 @@ describe('Safari folder cloud actions', () => {
     expect(onCloudSync).toHaveBeenCalledTimes(1);
   });
 
-  it('Safari shows cloud upload and sync in AI Studio', () => {
-    const onCloudUpload = vi.fn();
-    const onCloudSync = vi.fn();
-    const { container } = buildFolderPanel(
-      {
-        t: (key) => key,
-        onCloudUpload,
-        onCloudSync,
-        uploadTooltip: async () => '',
-        syncTooltip: async () => '',
-        onCreateFolder: vi.fn(),
-      },
-      true,
-    );
-    const button = (title: string) =>
-      [...container.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.title === title);
+  it('Safari shows the folder cloud menu in AI Studio', () => {
+    const upload = vi.fn();
+    const sync = vi.fn();
+    const container = buildFolderPanel({ cloud: { upload, sync }, onCreateFolder: vi.fn() }, true);
+    document.body.appendChild(container);
+    const cloud = container.querySelector<HTMLButtonElement>('button[aria-label="folder_cloud"]');
+    expect(cloud).not.toBeNull();
 
-    button('folder_cloud_upload')!.click();
-    button('folder_cloud_sync')!.click();
-
-    expect(onCloudUpload).toHaveBeenCalledTimes(1);
-    expect(onCloudSync).toHaveBeenCalledTimes(1);
+    for (const [label, action] of [
+      ['folder_cloud_upload', upload],
+      ['folder_cloud_sync', sync],
+    ] as const) {
+      cloud!.click();
+      const item = [...document.querySelectorAll<HTMLElement>('[data-gv-layer="popover"]')]
+        .flatMap((host) => [
+          ...host.shadowRoot!.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'),
+        ])
+        .find((candidate) => candidate.textContent?.endsWith(label));
+      item!.click();
+      expect(action).toHaveBeenCalledTimes(1);
+    }
   });
 });

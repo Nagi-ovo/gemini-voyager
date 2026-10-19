@@ -94,11 +94,11 @@ describe('AI Studio folder tree: navigation', () => {
 
   it('offers the Library shortcut away from /library and hides it there', async () => {
     await mount();
-    expect(tree.libraryButton()?.style.display).toBe('');
+    expect(tree.libraryButton()?.hidden).toBe(false);
 
     history.pushState({}, '', '/library');
     window.dispatchEvent(new PopStateEvent('popstate'));
     await flush();
-    expect(tree.libraryButton()?.style.display).toBe('none');
+    expect(tree.libraryButton()?.hidden).toBe(true);
   });
 });

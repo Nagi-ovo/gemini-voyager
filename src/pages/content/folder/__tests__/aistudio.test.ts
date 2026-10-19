@@ -444,23 +444,14 @@ describe('AIStudio theme compatibility', () => {
   });
 
   it('paints every header action icon in currentColor in AI Studio', () => {
-    const { container } = buildFolderPanel(
-      {
-        t: (key) => key,
-        onCloudUpload: vi.fn(),
-        onCloudSync: vi.fn(),
-        uploadTooltip: async () => '',
-        syncTooltip: async () => '',
-        onCreateFolder: vi.fn(),
-      },
-      true,
+    const container = buildFolderPanel(
+      { cloud: { upload: vi.fn(), sync: vi.fn() }, onCreateFolder: vi.fn() },
+      false,
     );
-    // Upload, sync and create; the filled cloud glyphs and the stroked plus.
-    const paints = [...container.querySelectorAll('svg')].map((svg) =>
-      svg.getAttribute('fill') === 'none' ? svg.getAttribute('stroke') : svg.getAttribute('fill'),
-    );
-
-    expect(paints).toEqual(['currentColor', 'currentColor', 'currentColor']);
+    // Library, cloud and create: stroked icons that follow the header's colour.
+    const svgs = [...container.querySelectorAll('svg')];
+    expect(svgs).toHaveLength(3);
+    for (const svg of svgs) expect(svg.getAttribute('stroke')).toBe('currentColor');
     // No ligature text for a font AI Studio may not load.
     expect(container.querySelector('.google-symbols')).toBeNull();
   });

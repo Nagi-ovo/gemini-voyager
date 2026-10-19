@@ -45,12 +45,13 @@ import { AIStudioTransfer } from './aistudioTransfer';
 import { type AIStudioTree, aistudioTreeActions, mountAIStudioTree } from './aistudioTree';
 import type { TreeActions } from './floatingTree/shared';
 import { createFolderDialogs } from './folderDialogs';
+import { setFolderHeaderDisabled } from './folderHeader/folderHeader';
 import { getFolderRecoveryNotice } from './folderRecoveryNotice';
 import { createLegacyAIStudioCommands } from './legacyAIStudioCommands';
 import { AISTUDIO_FOLDER_CONFIG } from './platformFolderConfig';
 import { AIStudioFolderStorageAdapter } from './storage/AIStudioFolderStorageAdapter';
 import { createSyncMessageListener } from './syncMessageListener';
-import { readSyncTooltip } from './syncTooltip';
+import { readCloudTooltip } from './syncTooltip';
 import type { FolderData } from './types';
 
 /** Errors and warnings stay longer than a confirmation. */
@@ -132,7 +133,6 @@ export class AIStudioFolderManager {
   private container: HTMLElement | null = null;
   private historyRoot: HTMLElement | null = null;
   private tree: AIStudioTree | null = null;
-  private libraryShortcutBtn: HTMLButtonElement | null = null;
   /** Stops for what `initializeFolderUI` started once per mount. */
   private cleanupFns: Array<() => void> = [];
   private stopMountWatch: (() => void) | null = null;
@@ -290,21 +290,19 @@ export class AIStudioFolderManager {
 
   private injectUI(): void {
     if (this.container && document.body.contains(this.container)) return;
-    const { container, libraryButton } = buildFolderPanel(
+    const container = buildFolderPanel(
       {
-        t: this.translate,
-        onCloudUpload: () => void this.transfer.upload(),
-        onCloudSync: () => void this.transfer.sync(),
-        uploadTooltip: () => readSyncTooltip('aistudio', 'upload'),
-        syncTooltip: () => readSyncTooltip('aistudio', 'sync'),
+        cloud: {
+          upload: () => void this.transfer.upload(),
+          sync: () => void this.transfer.sync(),
+          tooltip: () => readCloudTooltip('aistudio'),
+        },
         onCreateFolder: () => {
           if (this.canEdit) this.tree?.startCreateFolder();
         },
       },
       this.historyRoot !== null,
     );
-    this.libraryShortcutBtn = libraryButton;
-    updateLibraryShortcut(libraryButton);
     // A re-inject builds a new container; the old tree goes with the old one.
     this.unmountTree();
     this.tree = mountAIStudioTree({
@@ -345,11 +343,7 @@ export class AIStudioFolderManager {
     if (!this.container) return;
     this.container.inert = !this.canEdit;
     this.container.setAttribute('aria-busy', String(!this.canEdit));
-    this.container
-      .querySelectorAll<HTMLButtonElement>('.gv-folder-header-actions button')
-      .forEach((button) => {
-        button.disabled = !this.canEdit;
-      });
+    setFolderHeaderDisabled(this.container, !this.canEdit);
     this.tree?.update(this.data);
     this.highlightActiveConversation();
     this.syncNudge();
@@ -403,7 +397,7 @@ export class AIStudioFolderManager {
 
   private handleRouteChange(): void {
     this.ensureContainerMounted();
-    updateLibraryShortcut(this.libraryShortcutBtn);
+    updateLibraryShortcut(this.container);
     if (isLibraryPath()) this.library.attach();
     else this.library.detach();
     this.highlightActiveConversation();
@@ -493,7 +487,6 @@ export class AIStudioFolderManager {
     this.unmountTree();
     this.container?.remove();
     this.container = null;
-    this.libraryShortcutBtn = null;
     this.historyRoot = null;
     document.documentElement.classList.remove('gv-aistudio-root');
   }

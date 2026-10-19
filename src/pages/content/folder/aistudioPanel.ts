@@ -1,21 +1,34 @@
-import type { IconNode } from 'lucide-react';
-
-import { createPlusIcon } from '@/core/icons/folderIcons';
-import { createLucideIcon } from '@/core/icons/lucideIcon';
+/**
+ * The folder panel's frame in AI Studio's left nav: the shared folder header
+ * with AI Studio's actions, where the panel goes in the legacy or V2 nav, and a
+ * watch that notices when Angular rebuilds the nav and drops it.
+ */
+import { createLibraryIcon } from '@/core/icons/folderIcons';
 
 import { isLibraryPath } from './aistudioLibraryTable';
 import { openLibraryInApp } from './aistudioNavigation';
-/**
- * The folder panel's frame in AI Studio's left nav: the header with its
- * actions, where the panel goes in the legacy or V2 nav, and a watch that
- * notices when Angular rebuilds the nav and drops it.
- */
-import { ensureFolderHeaderStyle } from './folderHeader/folderHeader';
+import {
+  type FolderHeaderAction,
+  createFolderHeader,
+  ensureFolderHeaderStyle,
+  setFolderHeaderAction,
+} from './folderHeader/folderHeader';
+import { folderHeaderActions } from './folderHeader/folderHeaderActions';
+import { ensurePageSheet } from './pageSheet';
 
 const NAV_SELECTOR = '.nav-content.v3-left-nav';
 const REINJECT_THROTTLE_MS = 250;
-const CLOUD_UPLOAD_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q25-92 100-149t170-57q117 0 198.5 81.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H520q-33 0-56.5-23.5T440-240v-206l-64 62-56-56 160-160 160 160-56 56-64-62v206h220q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-83-58.5-141.5T480-720q-83 0-141.5 58.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h100v80H260Zm220-280Z"/></svg>`;
-const CLOUD_SYNC_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q17-72 85-137t145-65q33 0 56.5 23.5T520-716v242l64-62 56 56-160 160-160-160 56-56 64 62v-242q-76 14-118 73.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h480q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-48-22-89.5T600-680v-93q74 35 117 103.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H260Zm220-358Z"/></svg>`;
+const LIBRARY_CLASS = 'gv-folder-library-btn';
+
+/** Gemini's title rules skip `.gv-aistudio`; the heading keeps the nav's own type. */
+const PANEL_CSS = `
+.gv-aistudio .gv-folder-header .title {
+  margin: 0;
+  font-family: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+`;
 
 /** Stable insertion anchors: Angular renders the nav shell before its children. */
 const PANEL_ANCHOR_SELECTOR = [
@@ -25,96 +38,46 @@ const PANEL_ANCHOR_SELECTOR = [
 ].join(', ');
 
 export type PanelActions = {
-  t: (key: string) => string;
-  onCloudUpload: () => void;
-  onCloudSync: () => void;
-  uploadTooltip: () => Promise<string>;
-  syncTooltip: () => Promise<string>;
+  cloud: { upload: () => void; sync: () => void; tooltip?: () => Promise<string> };
   onCreateFolder: () => void;
 };
 
-export type FolderPanelFrame = {
-  container: HTMLElement;
-  /** V2 nav only: the shortcut to /library, hidden while there. */
-  libraryButton: HTMLButtonElement | null;
-};
-
-/** Lucide's `library` geometry (lucide-react v0.553.0), for the /library shortcut. */
-const LIBRARY_ICON_NODE = [
-  ['path', { d: 'm16 6 4 14', key: 'ji33uf' }],
-  ['path', { d: 'M12 6v14', key: '1n7gus' }],
-  ['path', { d: 'M8 8v12', key: '1gg7y9' }],
-  ['path', { d: 'M4 4v16', key: '6qkkli' }],
-] satisfies IconNode;
-
-function cloudButton(
-  icon: string,
-  title: string,
-  onClick: () => void,
-  tooltip: () => Promise<string>,
-) {
-  const button = document.createElement('button');
-  button.className = 'gv-folder-action-btn';
-  button.innerHTML = icon;
-  button.title = title;
-  button.addEventListener('click', onClick);
-  button.addEventListener('mouseenter', async () => {
-    button.title = await tooltip();
-  });
-  return button;
+/** The V2 nav's /library shortcut, which the shared header has no slot for. */
+function libraryAction(): FolderHeaderAction {
+  return {
+    className: LIBRARY_CLASS,
+    icon: () => createLibraryIcon(18),
+    labelKey: 'folder_manage_in_library',
+    hidden: isLibraryPath(),
+    onClick: () => openLibraryInApp(),
+  };
 }
 
 /**
- * Builds the panel frame, styled by the shared folder header sheet. The V2 nav,
- * which has no inline history (`legacyNav` false), gets a /library shortcut.
+ * Builds the panel frame around the shared folder header. The V2 nav, which has
+ * no inline history (`legacyNav` false), gets a /library shortcut.
  */
-export function buildFolderPanel(actions: PanelActions, legacyNav: boolean): FolderPanelFrame {
-  const { t } = actions;
+export function buildFolderPanel(actions: PanelActions, legacyNav: boolean): HTMLElement {
   ensureFolderHeaderStyle();
+  ensurePageSheet('gv-aistudio-panel-style', PANEL_CSS);
   const container = document.createElement('div');
   // `.gv-aistudio` scopes AI Studio's styles away from Gemini's.
   container.className = 'gv-folder-container gv-aistudio';
-  const header = document.createElement('div');
-  header.className = 'gv-folder-header';
-  const title = document.createElement('div');
-  title.className = 'gv-folder-title gds-label-l';
-  title.textContent = t('folder_title');
-  const buttons = document.createElement('div');
-  buttons.className = 'gv-folder-header-actions';
-  header.append(title, buttons);
-
-  buttons.append(
-    cloudButton(
-      CLOUD_UPLOAD_ICON,
-      t('folder_cloud_upload'),
-      actions.onCloudUpload,
-      actions.uploadTooltip,
-    ),
-    cloudButton(CLOUD_SYNC_ICON, t('folder_cloud_sync'), actions.onCloudSync, actions.syncTooltip),
-  );
-  const addButton = document.createElement('button');
-  addButton.className = 'gv-folder-add-btn';
-  addButton.title = t('folder_create');
-  addButton.appendChild(createPlusIcon(18));
-  addButton.addEventListener('click', actions.onCreateFolder);
-  buttons.appendChild(addButton);
-
-  let libraryButton: HTMLButtonElement | null = null;
-  if (!legacyNav) {
-    libraryButton = document.createElement('button');
-    libraryButton.className = 'gv-folder-action-btn gv-folder-library-btn';
-    libraryButton.title = t('folder_manage_in_library');
-    libraryButton.appendChild(createLucideIcon('library', LIBRARY_ICON_NODE, 18));
-    libraryButton.addEventListener('click', openLibraryInApp);
-    buttons.appendChild(libraryButton);
-  }
+  const header = createFolderHeader({
+    title: { tag: 'h2', labelKey: 'folder_title', className: 'gv-folder-title' },
+    actions: folderHeaderActions({
+      extra: legacyNav ? [] : [libraryAction()],
+      cloud: actions.cloud,
+      create: { labelKey: 'folder_create', onClick: actions.onCreateFolder },
+    }),
+  });
   container.appendChild(header);
-  return { container, libraryButton };
+  return container;
 }
 
 /** The /library shortcut is hidden on /library itself. */
-export function updateLibraryShortcut(button: HTMLButtonElement | null): void {
-  if (button) button.style.display = isLibraryPath() ? 'none' : '';
+export function updateLibraryShortcut(root: ParentNode | null): void {
+  if (root) setFolderHeaderAction(root, LIBRARY_CLASS, { hidden: isLibraryPath() });
 }
 
 /**
