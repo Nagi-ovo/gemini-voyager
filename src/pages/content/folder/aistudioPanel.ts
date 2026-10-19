@@ -14,21 +14,10 @@ import {
   setFolderHeaderAction,
 } from './folderHeader/folderHeader';
 import { folderHeaderActions } from './folderHeader/folderHeaderActions';
-import { ensurePageSheet } from './pageSheet';
 
 const NAV_SELECTOR = '.nav-content.v3-left-nav';
 const REINJECT_THROTTLE_MS = 250;
 const LIBRARY_CLASS = 'gv-folder-library-btn';
-
-/** Gemini's title rules skip `.gv-aistudio`; the heading keeps the nav's own type. */
-const PANEL_CSS = `
-.gv-aistudio .gv-folder-header .title {
-  margin: 0;
-  font-family: inherit;
-  font-weight: inherit;
-  line-height: inherit;
-}
-`;
 
 /** Stable insertion anchors: Angular renders the nav shell before its children. */
 const PANEL_ANCHOR_SELECTOR = [
@@ -59,7 +48,6 @@ function libraryAction(): FolderHeaderAction {
  */
 export function buildFolderPanel(actions: PanelActions, legacyNav: boolean): HTMLElement {
   ensureFolderHeaderStyle();
-  ensurePageSheet('gv-aistudio-panel-style', PANEL_CSS);
   const container = document.createElement('div');
   // `.gv-aistudio` scopes AI Studio's styles away from Gemini's.
   container.className = 'gv-folder-container gv-aistudio';

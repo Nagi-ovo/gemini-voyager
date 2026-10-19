@@ -26,6 +26,14 @@
   opacity: 0.8;
 }
 
+/* Gemini's title rules skip `.gv-aistudio`; the h2 keeps the nav's own type. */
+.gv-aistudio .gv-folder-header .title {
+  margin: 0;
+  font-family: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
 /* Reduce container/list side paddings to utilize width */
 .gv-aistudio.gv-folder-container {
   padding-left: 2px;
