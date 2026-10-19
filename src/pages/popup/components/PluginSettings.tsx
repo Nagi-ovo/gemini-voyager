@@ -1,3 +1,5 @@
+import { type ChangeEvent, useEffect, useState } from 'react';
+
 import {
   compatibleSettingWrite,
   resolvePluginSettings,
@@ -9,6 +11,76 @@ import { Switch } from '../../../components/ui/switch';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { ExperimentalBadge } from './ExperimentalBadge';
 import { pickLocalized, pickLocalizedSetting } from './PluginIdentity';
+
+/**
+ * A popup slider track is a few hundred pixels wide, so a span up to 1,000 still
+ * lands on the value people want — reading width (600–1,600) and text size
+ * (80–150) keep their original display. A wider span cannot (the Pro weekly
+ * allowance is 0–10,000 but useful values are 50/100/200), so only those get a
+ * precise number input.
+ */
+const PRECISE_NUMBER_MIN_RANGE = 1000;
+
+interface NumberSettingProps {
+  readonly label: string;
+  readonly value: number;
+  readonly min: number;
+  readonly max: number;
+  readonly disabled: boolean;
+  readonly onChange: (value: number) => void;
+}
+
+/**
+ * The precise path for a wide number setting. A draft lets the person clear or
+ * overshoot while typing; valid values update the slider immediately, invalid
+ * ones clamp on blur.
+ */
+function NumberSetting({ label, value, min, max, disabled, onChange }: NumberSettingProps) {
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    const raw = event.target.value;
+    setDraft(raw);
+    if (raw.trim() === '') return;
+    const next = Number(raw);
+    if (!Number.isFinite(next)) return;
+    const rounded = Math.round(next);
+    if (rounded >= min && rounded <= max) onChange(rounded);
+  };
+
+  const handleBlur = (): void => {
+    const next = Number(draft);
+    if (draft.trim() === '' || !Number.isFinite(next)) {
+      setDraft(String(value));
+      return;
+    }
+    const clamped = Math.min(max, Math.max(min, Math.round(next)));
+    setDraft(String(clamped));
+    if (clamped !== value) onChange(clamped);
+  };
+
+  return (
+    <input
+      type="number"
+      min={min}
+      max={max}
+      step={1}
+      value={draft}
+      disabled={disabled}
+      inputMode="numeric"
+      aria-label={label}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') event.currentTarget.blur();
+      }}
+      className="bg-background border-border focus:ring-primary/50 w-16 shrink-0 rounded-md border px-1.5 py-0.5 text-right text-[11px] tabular-nums transition-all focus:ring-2 disabled:cursor-not-allowed"
+    />
+  );
+}
 
 interface PluginSettingsProps {
   readonly plugin: PluginManifest;
@@ -108,6 +180,9 @@ export function PluginSettings({
 
         if (field.type !== 'number') return null;
         const value = Number(rawValue);
+        const min = field.min ?? 0;
+        const max = field.max ?? 100;
+        const needsPreciseInput = max - min > PRECISE_NUMBER_MIN_RANGE;
         return (
           <div
             key={key}
@@ -116,8 +191,23 @@ export function PluginSettings({
           >
             <div className="text-muted-foreground mb-1 flex items-center justify-between gap-2 text-[11px]">
               <span className="min-w-0 truncate">{settingText.label}</span>
-              <span className="shrink-0 tabular-nums">{value}</span>
+              {needsPreciseInput ? (
+                <NumberSetting
+                  label={settingText.label}
+                  value={value}
+                  min={min}
+                  max={max}
+                  disabled={disabled}
+                  onChange={(next) => handleSetting(plugin.id, key, next)}
+                />
+              ) : (
+                <span className="shrink-0 tabular-nums">{value}</span>
+              )}
             </div>
+            {/* Under the label row, not beside the input: a long hint gets the card's full width. */}
+            {hint && (
+              <p className="text-muted-foreground/80 mb-1.5 text-[10px] leading-snug">{hint}</p>
+            )}
             <div className="flex items-center gap-2">
               {settingText.minLabel && (
                 <span className="text-muted-foreground shrink-0 text-[10px]">
@@ -126,8 +216,8 @@ export function PluginSettings({
               )}
               <input
                 type="range"
-                min={field.min ?? 0}
-                max={field.max ?? 100}
+                min={min}
+                max={max}
                 value={value}
                 disabled={disabled}
                 aria-label={settingText.label}

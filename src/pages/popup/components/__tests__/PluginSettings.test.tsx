@@ -1,6 +1,6 @@
 import { act } from 'react';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { BUILTIN_PLUGINS } from '@/features/plugins/builtin';
 import readingTypography from '@/features/plugins/catalog/sites/deepseek/plugins/reading-typography/plugin.json';
@@ -11,9 +11,12 @@ import type { PluginManifest, PluginSettings } from '@/features/plugins/types';
 
 import {
   container,
+  nativeSetSliderValue,
   mockLanguage,
+  mockMessages,
   renderSettings as render,
   compactTimelinePlugin,
+  setPluginSetting,
   setPluginSettings,
   PLUGIN_ID,
   widthPlugin,
@@ -31,6 +34,26 @@ const timelines = [
   ),
   deepseek.data,
 ];
+
+/** Mirrors the Pro weekly allowance: a 0–10,000 span where 50/100/200 are the useful values. */
+const wideNumberPlugin: PluginManifest = {
+  ...widthPlugin,
+  contributes: {
+    settings: {
+      weeklyLimit: {
+        type: 'number',
+        label: 'Weekly Pro allowance',
+        default: 0,
+        min: 0,
+        max: 10_000,
+        messageKeys: {
+          label: 'chatgptProUsageWeeklyLimit',
+          hint: 'chatgptProUsageWeeklyLimitHint',
+        },
+      },
+    },
+  },
+};
 
 describe.each(timelines)('$name style setting', (plugin) => {
   it('lets a user choose the ruler timeline style', async () => {
@@ -334,6 +357,8 @@ describe('PluginSettings setting slider', () => {
     const sliders = Array.from(container.querySelectorAll<HTMLInputElement>('input[type="range"]'));
     expect(sliders.map((input) => input.disabled)).toEqual([true, true, true]);
     expect(sliders.map((input) => input.value)).toEqual(['117', '165', '17']);
+    // Font size and line spacing spans stay within a slider's usable precision.
+    expect(container.querySelector('input[type="number"]')).toBeNull();
     const switches = Array.from(
       container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
     );
@@ -357,9 +382,99 @@ describe('PluginSettings setting slider', () => {
 
     expect(container.textContent).toContain('阅读宽度（px）');
     expect(container.textContent).toContain('768');
+    expect(container.querySelector('input[type="number"]')).toBeNull();
     expect(container.textContent).toContain('更窄');
     expect(container.textContent).toContain('更宽');
     expect(container.textContent).not.toContain('Reading width (px)');
+  });
+});
+describe('PluginSettings number input', () => {
+  it('adds a precise number input for a range the slider cannot resolve', async () => {
+    await render(wideNumberPlugin);
+    const slider = container.querySelector<HTMLInputElement>('input[type="range"]')!;
+    const input = container.querySelector<HTMLInputElement>('input[type="number"]')!;
+    expect(input.value).toBe('0');
+    expect(input.min).toBe('0');
+    expect(input.max).toBe('10000');
+    expect(input.getAttribute('aria-label')).toBe('chatgptProUsageWeeklyLimit');
+    expect(input.disabled).toBe(false);
+
+    act(() => nativeSetSliderValue(input, 100));
+    expect(input.value).toBe('100');
+    expect(slider.value).toBe('100');
+    act(() => vi.advanceTimersByTime(200));
+    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'weeklyLimit', 100);
+  });
+
+  it('keeps the number input in sync when the slider moves', async () => {
+    await render(wideNumberPlugin);
+    const slider = container.querySelector<HTMLInputElement>('input[type="range"]')!;
+    const input = container.querySelector<HTMLInputElement>('input[type="number"]')!;
+
+    act(() => nativeSetSliderValue(slider, 200));
+
+    expect(input.value).toBe('200');
+    act(() => vi.advanceTimersByTime(200));
+    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'weeklyLimit', 200);
+  });
+
+  it('clamps an out-of-range value on blur and restores it when cleared', async () => {
+    await render(wideNumberPlugin);
+    const input = container.querySelector<HTMLInputElement>('input[type="number"]')!;
+
+    act(() => nativeSetSliderValue(input, 20_000));
+    expect(input.value).toBe('20000');
+    expect(setPluginSetting).not.toHaveBeenCalled();
+
+    act(() => {
+      input.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+    });
+    expect(input.value).toBe('10000');
+    act(() => vi.advanceTimersByTime(200));
+    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'weeklyLimit', 10_000);
+
+    act(() => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+      setter?.call(input, '');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(input.value).toBe('');
+    act(() => {
+      input.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+    });
+    expect(input.value).toBe('10000');
+    expect(setPluginSetting).toHaveBeenCalledTimes(1);
+  });
+
+  it('clamps a below-minimum value on Enter', async () => {
+    pluginState.current = {
+      [PLUGIN_ID]: { enabled: true, installedAt: 0, settings: { weeklyLimit: 50 } },
+    };
+    await render(wideNumberPlugin);
+    const input = container.querySelector<HTMLInputElement>('input[type="number"]')!;
+
+    act(() => nativeSetSliderValue(input, -5));
+    expect(input.value).toBe('-5');
+    expect(setPluginSetting).not.toHaveBeenCalled();
+
+    act(() => {
+      input.focus();
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    });
+    expect(input.value).toBe('0');
+    act(() => vi.advanceTimersByTime(200));
+    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'weeklyLimit', 0);
+  });
+
+  it('shows the hint of a number setting the way switch settings do', async () => {
+    mockMessages.current = {
+      chatgptProUsageWeeklyLimit: 'Weekly Pro allowance',
+      chatgptProUsageWeeklyLimitHint: 'Leave at 0 to set it automatically.',
+    };
+    await render(wideNumberPlugin);
+
+    expect(container.textContent).toContain('Weekly Pro allowance');
+    expect(container.textContent).toContain('Leave at 0 to set it automatically.');
   });
 });
 describe('PluginSettings boolean setting', () => {
