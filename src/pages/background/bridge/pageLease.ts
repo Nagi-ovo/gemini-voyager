@@ -60,6 +60,8 @@ export const LEASE_DURATION_MS: Readonly<Partial<Record<OpName, number>>> = {
   'model.select': 25_000,
   'composer.attach': 120_000,
   'composer.send': 30_000,
+  // One click, then the card leaves the thread within 10 s.
+  'turns.approve': 20_000,
   // A project page renders after the route; the switch to chat follows it.
   'project.open': 40_000,
   'project.create': 30_000,

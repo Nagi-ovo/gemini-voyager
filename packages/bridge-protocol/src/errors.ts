@@ -24,6 +24,8 @@ export const ERROR_CATEGORIES = {
   'model-not-found': 'user-action',
   'effort-unavailable': 'user-action',
   'composer-busy': 'user-action',
+  /** The reply waits on an app's approval card; `turns.approve` can answer it. */
+  'approval-required': 'user-action',
   'tab-hidden': 'user-action',
   'busy-stale': 'user-action',
   'extension-offline': 'user-action',

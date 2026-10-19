@@ -9,6 +9,7 @@ import {
   MAX_ATTACHMENTS,
   MAX_FILE_CANDIDATES,
   WAIT_REPLY_MAX_TIMEOUT_MS,
+  type ApprovalChoice,
   type BlobRef,
   type CatalogRefreshStatus,
   type ChatMode,
@@ -52,6 +53,7 @@ import { PROJECT_PARAM_READERS, PROJECT_RESULT_READERS } from './projectOps';
 
 const CHAT_MODES: readonly ChatMode[] = ['chat', 'work', 'unknown'];
 const SWITCHABLE_MODES: readonly SwitchableMode[] = ['chat', 'work'];
+const APPROVAL_CHOICES: readonly ApprovalChoice[] = ['always', 'once'];
 const HTTPS_URL = { pattern: /^https:\/\//, maxLength: 4096 } as const;
 const TURN_KEY = { maxLength: 256 } as const;
 const LABEL = { maxLength: 200, allowEmpty: true } as const;
@@ -241,12 +243,22 @@ const PARAM_READERS: { readonly [K in OpName]: Reader<OpParamsMap[K]> } = {
       max: WAIT_REPLY_MAX_TIMEOUT_MS,
     });
     const stableMs = optionalInt(rec, 'stableMs', path, issues, { max: 60_000 });
+    const stopOnApproval = optionalBoolean(rec, 'stopOnApproval', path, issues);
     return {
       conversationId: readConversationId(rec, path, issues),
       afterUserTurnKey: requireString(rec, 'afterUserTurnKey', path, issues, TURN_KEY),
       ...(timeoutMs === undefined ? {} : { timeoutMs }),
       ...(stallMs === undefined ? {} : { stallMs }),
       ...(stableMs === undefined ? {} : { stableMs }),
+      ...(stopOnApproval === undefined ? {} : { stopOnApproval }),
+    };
+  },
+  'turns.approve': (raw, path, issues) => {
+    const rec = readObject(raw, path, issues);
+    return {
+      conversationId: readConversationId(rec, path, issues),
+      afterUserTurnKey: requireString(rec, 'afterUserTurnKey', path, issues, TURN_KEY),
+      choice: requireLiteral(rec, 'choice', path, issues, APPROVAL_CHOICES),
     };
   },
   'turns.read': (raw, path, issues) => {
@@ -372,6 +384,14 @@ const RESULT_READERS: { readonly [K in OpName]: Reader<OpResultMap[K]> } = {
       assistantTurnKey: requireString(rec, 'assistantTurnKey', path, issues, TURN_KEY),
       status: requireLiteral(rec, 'status', path, issues, ['complete'] as const),
       elapsedMs: requireInt(rec, 'elapsedMs', path, issues),
+      evidence: requireRecord(rec, 'evidence', path, issues),
+    };
+  },
+  'turns.approve': (raw, path, issues) => {
+    const rec = readObject(raw, path, issues);
+    return {
+      clicked: requireBoolean(rec, 'clicked', path, issues),
+      app: requireString(rec, 'app', path, issues, LABEL),
       evidence: requireRecord(rec, 'evidence', path, issues),
     };
   },

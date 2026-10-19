@@ -17,6 +17,7 @@ export const OP_NAMES = [
   'composer.attach',
   'composer.send',
   'turns.waitReply',
+  'turns.approve',
   'turns.read',
   'files.download',
   'catalog.refresh',
@@ -211,6 +212,13 @@ export interface TurnsWaitReplyParams {
   readonly stallMs?: number;
   /** Default `WAIT_REPLY_DEFAULT_STABLE_MS`. */
   readonly stableMs?: number;
+  /**
+   * Fail `approval-required` as soon as the reply shows an app's approval card
+   * (ChatGPT asking the person to let Google Drive, GitHub… run a tool), with
+   * {@link ApprovalCardEvidence} as its details. Without it, the wait goes on
+   * while the card waits for a click; an older extension ignores this.
+   */
+  readonly stopOnApproval?: boolean;
 }
 
 export interface TurnsWaitReplyResult {
@@ -225,6 +233,35 @@ export interface WaitReplyProgress {
   readonly phase: 'thinking' | 'streaming' | 'finalizing';
   readonly textLength: number;
   readonly elapsedMs: number;
+}
+
+/** The details of an `approval-required` failure: what the card in the reply asks for. */
+export interface ApprovalCardEvidence {
+  /** The app the card names, e.g. `Google Drive`; empty when it names none. */
+  readonly app: string;
+  /** The card's text, whitespace collapsed, at most 300 characters. */
+  readonly text: string;
+  /** The answers the card offers that `turns.approve` can click. */
+  readonly choices: readonly ApprovalChoice[];
+}
+
+// turns.approve (leased): answer an app's approval card in the reply
+
+/** `always` is ChatGPT's own "Always allow": it keeps that tool allowed in the person's settings. */
+export type ApprovalChoice = 'always' | 'once';
+
+export interface TurnsApproveParams {
+  readonly conversationId: string;
+  /** The prompt whose reply shows the card, as for `turns.waitReply`. */
+  readonly afterUserTurnKey: string;
+  readonly choice: ApprovalChoice;
+}
+
+export interface TurnsApproveResult {
+  /** False when no card was left to answer: the person, or another run, answered it first. */
+  readonly clicked: boolean;
+  readonly app: string;
+  readonly evidence: Evidence;
 }
 
 // turns.read (passive)
@@ -327,6 +364,7 @@ export interface OpParamsMap extends ProjectOpParamsMap {
   'composer.attach': ComposerAttachParams;
   'composer.send': ComposerSendParams;
   'turns.waitReply': TurnsWaitReplyParams;
+  'turns.approve': TurnsApproveParams;
   'turns.read': TurnsReadParams;
   'files.download': FilesDownloadParams;
   'catalog.refresh': CatalogRefreshParams;
@@ -341,6 +379,7 @@ export interface OpResultMap extends ProjectOpResultMap {
   'composer.attach': ComposerAttachResult;
   'composer.send': ComposerSendResult;
   'turns.waitReply': TurnsWaitReplyResult;
+  'turns.approve': TurnsApproveResult;
   'turns.read': TurnsReadResult;
   'files.download': FilesDownloadResult;
   'catalog.refresh': CatalogRefreshResult;

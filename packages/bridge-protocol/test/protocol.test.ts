@@ -134,6 +134,14 @@ describe('validators', () => {
     expect(task.op === 'turns.waitReply' && task.params.afterUserTurnKey).toBe('t-7');
   });
 
+  it('lets the page click only the approval answers it knows', () => {
+    const params = { conversationId: 'abc', afterUserTurnKey: 't-7' };
+    expect(validateOpParams('turns.approve', { ...params, choice: 'always' }).ok).toBe(true);
+    expect(validateOpParams('turns.approve', { ...params, choice: 'once' }).ok).toBe(true);
+    expect(validateOpParams('turns.approve', { ...params, choice: 'deny' }).ok).toBe(false);
+    expect(validateOpParams('turns.approve', params).ok).toBe(false);
+  });
+
   it('checks the payload inside an envelope at its own path', () => {
     const ok = validateEnvelope(
       {

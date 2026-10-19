@@ -25,6 +25,7 @@ export const SUPPORTED_BRIDGE_OPS: ReadonlySet<OpName> = new Set<OpName>([
   'composer.attach',
   'composer.send',
   'turns.waitReply',
+  'turns.approve',
   'turns.read',
   'files.download',
   'project.list',

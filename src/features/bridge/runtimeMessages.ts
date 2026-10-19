@@ -179,6 +179,7 @@ export const LEASED_OPS: ReadonlySet<OpName> = new Set<OpName>([
   'model.select',
   'composer.attach',
   'composer.send',
+  'turns.approve',
   'project.create',
   'project.open',
   'project.files',

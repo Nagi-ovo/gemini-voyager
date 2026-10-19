@@ -26,6 +26,9 @@
  * After a frozen stretch (`resume`), the activity clock restarts: the frozen
  * time is the browser's, not a stall.
  *
+ * With `stopOnApproval`, an app's approval card in the reply ends the wait
+ * (`approval-required`); `turns.approve` answers it.
+ *
  * The page is never touched: no scroll, no click. Progress goes out every
  * {@link PROGRESS_EVERY_MS}.
  */
@@ -42,6 +45,7 @@ import type { SiteAdapter } from '@/features/plugins/types';
 
 import type { OpContext } from '../opContext';
 import type { WakeScope } from '../wake';
+import { describeApprovalCard, findApprovalCard } from './approvalCard';
 import {
   composerFormOf,
   conversationItems,
@@ -177,6 +181,14 @@ export async function runTurnsWaitReply(
     }
     const banner = rateLimitBanner(limitCopy);
     if (banner) ctx.fail('rate-limited', 'ChatGPT reports a usage limit.', { banner });
+    const card = params.stopOnApproval ? findApprovalCard(params.afterUserTurnKey) : null;
+    if (card) {
+      ctx.fail(
+        'approval-required',
+        'ChatGPT asks to allow one of its apps before the reply goes on.',
+        { ...describeApprovalCard(card) },
+      );
+    }
 
     const target = findTarget(params.afterUserTurnKey);
     const reply = target?.reply ?? null;

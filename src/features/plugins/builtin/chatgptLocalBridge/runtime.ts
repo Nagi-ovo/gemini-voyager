@@ -50,6 +50,7 @@ import {
   createOpContext,
   defaultOpEnvironment,
 } from './opContext';
+import { runTurnsApprove } from './ops/approvalCard';
 import { type BlobChunkReader, readBlobReply } from './ops/blobBytes';
 import {
   type BlobWriter,
@@ -284,6 +285,8 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
         return runComposerSend(ctx, task.params, snapshot, activity);
       case 'turns.waitReply':
         return runTurnsWaitReply(ctx, task.params, snapshot);
+      case 'turns.approve':
+        return runTurnsApprove(ctx, task.params);
       case 'turns.read':
         return runTurnsRead(ctx, task.params, snapshot, pageData);
       case 'files.download':
