@@ -10,6 +10,7 @@ import {
   PAIRING_TOKEN_PATTERN,
   MAX_BLOB_CHUNK_BASE64,
   MAX_BLOB_CHUNK_BYTES,
+  base64DecodedLength,
   POLICY_STATES,
   type BlobChunk,
   type BlobChunkRange,
@@ -283,13 +284,19 @@ const READERS: { readonly [K in MessageKind]: Reader<MessageMap[K]> } = {
 
   blobChunk: (raw, path, issues) => {
     const rec = readObject(raw, path, issues);
+    // A repeated group, `(?:x{4})*`, recurses per match in V8 and overflows the stack on a full
+    // chunk; a flat character class plus the length check is linear.
+    const base64 = requireString(rec, 'base64', path, issues, {
+      pattern: /^[A-Za-z0-9+/]*={0,2}$/,
+      maxLength: MAX_BLOB_CHUNK_BASE64,
+    });
+    if (base64.length > 0 && base64DecodedLength(base64) === undefined) {
+      fail(issues, at(path, 'base64'), 'must be padded base64');
+    }
     return {
       blobId: requireString(rec, 'blobId', path, issues, ID),
       offset: requireInt(rec, 'offset', path, issues),
-      base64: requireString(rec, 'base64', path, issues, {
-        pattern: /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/,
-        maxLength: MAX_BLOB_CHUNK_BASE64,
-      }),
+      base64,
     };
   },
 

@@ -4,6 +4,7 @@ import {
   bridgeError,
   ERROR_CODES,
   isExtensionOrigin,
+  MAX_BLOB_CHUNK_BASE64,
   negotiateProtocol,
   normalizePairingCode,
   parseProtocolHeader,
@@ -65,6 +66,16 @@ describe('pairing input', () => {
 });
 
 describe('validators', () => {
+  it('takes a blob chunk of the full size without overflowing the stack', () => {
+    const base64 = 'A'.repeat(MAX_BLOB_CHUNK_BASE64);
+    expect(validateMessage('blobChunk', { blobId: 'b1', offset: 0, base64 }).ok).toBe(true);
+    for (const bad of ['QUJD=', 'QU=JD', 'QUJD!']) {
+      expect(validateMessage('blobChunk', { blobId: 'b1', offset: 0, base64: bad }).ok, bad).toBe(
+        false,
+      );
+    }
+  });
+
   it('accepts every error built by bridgeError', () => {
     for (const code of ERROR_CODES) {
       const result = validateMessage('bridgeError', bridgeError(code, 'm', { a: 1 }));
