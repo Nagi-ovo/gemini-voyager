@@ -59,19 +59,8 @@
   display: none;
 }
 
-/* The count is quiet trailing text; on hover or focus, or while a removal
- * confirm asks about the row, the folder's actions take its place, as
- * ChatGPT's own row actions do. */
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__count {
-  min-width: 0;
-  padding: 0 4px;
-  background: none;
-  color: var(--gv-site-folder-section__heading);
-  font-size: 12px;
-  line-height: 16px;
-  font-variant-numeric: tabular-nums;
-}
-
+/* A folder's actions show on hover or focus, or while a removal confirm asks
+ * about the row, as ChatGPT's own row actions do. */
 :host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--add-child,
 :host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--menu,
 :host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--star,
@@ -96,12 +85,6 @@
   :is(.gv-floating-folder-panel__icon-button--star, .gv-floating-folder-panel__icon-button--remove),
 :host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--active {
   display: inline-flex;
-}
-
-:host(.gv-site-folder-section[data-gv-scheme])
-  .gv-floating-folder-panel__folder-header:is(:hover, :focus-within, [data-gv-confirm-anchor])
-  .gv-floating-folder-panel__count {
-  display: none;
 }
 
 /* A conversation's title lines up with its folder's name. */

@@ -60,6 +60,8 @@ import type { SectionSite } from './types';
 function baseTreeSite(site: SectionSite): TreeSiteOptions {
   return {
     lineIcons: true,
+    // No per-folder count, as in Gemini's sidebar.
+    hideFolderCount: true,
     folderMenuButton: { labelKey: 'folder_settings' },
     folderBodyDrop: true,
     folderDrag: true,
