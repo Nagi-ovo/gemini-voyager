@@ -71,11 +71,16 @@ describe('timeline floating surfaces', () => {
 });
 
 describe('timeline rail background', () => {
+  // Every block with this exact selector: a scheme selector such as
+  // `html[data-gv-scheme='dark']` is declared by several parts (the ui tokens
+  // come first), and the film may live in any of them.
   function rule(selector: string): string {
     const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const body = readSurfaceStyles().match(new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`))?.[2];
-    if (!body) throw new Error(`Missing rule for ${selector}`);
-    return body;
+    const bodies = [
+      ...readSurfaceStyles().matchAll(new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`, 'g')),
+    ].map((match) => match[2]);
+    if (bodies.length === 0) throw new Error(`Missing rule for ${selector}`);
+    return bodies.join('\n');
   }
 
   it('paints a hairline-visible film when the outer container is shown', () => {
