@@ -13,15 +13,46 @@ Voyager runs on several AI sites and gains more. A page describes a feature once
 
 1. One page per feature, never per platform. Open with one or two plain sentences on what it does for the person.
 2. Right after the intro, `<SiteSupport feature="<id>" :labels="{ … }" />` (`docs/.vitepress/theme/components/SiteSupport.vue`). Its rows and ticks come from shipped code through `docs/.vitepress/siteSupport.ts`: the feature's own row from the plugin table (`pluginsPage.ts` `featureRows`), then the capability rows in `FEATURE_CAPABILITIES`. The page only supplies row labels; an unlabelled row shows its id.
-3. A capability that differs by site gets a row in `FEATURE_CAPABILITIES`, derived from code data (plugin manifests, `catalog/sites/<site>/site.json`, popup allowlists). Trace where it is wired before adding one. Never write a hand-ticked table. When no data can say it, add one "Only on" bullet under the table naming the sites, and say so in your report.
-4. Sections by operation (filing, nesting, import/export, …), not by platform. Short sentences, no marketing filler, no em-dash asides.
+3. A capability that differs by site gets a row in `FEATURE_CAPABILITIES`, derived from code data (plugin manifests, `catalog/sites/<site>/site.json`, popup allowlists). Trace where it is wired before adding one. When no data can say it, add a footer row by hand, `:only="[{ id: 'move-menu', sites: ['gemini', 'claude'] }]"` with its label in `:labels` (`**…**` bolds a UI label), and say so in your report. Nothing else is hand-ticked.
+4. Sections by operation (filing, nesting, import/export, …), not by platform. Short sentences, no marketing filler, no em-dash asides. An operation is a lead sentence, then 3 to 5 bullets that each open with a bold trigger word and stay within two lines; longer asides go in `<GuideNote>`.
 5. Every claim is checked against code before it is written. Quote UI labels from `src/locales/<lang>/messages.json` exactly. Drop or fix anything stale rather than carrying it over.
 6. Zh (`docs/guide/`) and en are written natively. The other 8 locales are translated naturally from en with the same structure, links to their own locale's pages, and the same images.
+
+## Layout blocks
+
+Registered in `docs/.vitepress/theme/index.ts`, styled in `theme/guide.css` (`gvg-` classes). Markdown inside a block needs a blank line after the opening tag and before the closing one; a one-line form breaks hydration.
+
+```
+<GuideHero src="/assets/x-light.png" dark="/assets/x-dark.png" alt="…">
+
+Where it is, as the caption.
+
+</GuideHero>
+
+## Operation heading
+
+<GuideOp side="end">
+
+<GuideShot src="/assets/x-nested-zh.png" alt="…" :width="240" />
+
+Lead sentence.
+
+- **Trigger**: what it does.
+
+</GuideOp>
+```
+
+- Page order: intro, `<SiteSupport>`, `<GuideHero>` (no "where is it" heading; its sentence is the caption), then `##` sections. The hero is full width at 16:10; without `dark` the light image serves both themes.
+- `<GuideShot>`: `width` is always set, in CSS px (half the 2x asset). `kind="crop"` (default) is a Voyager element on a soft backdrop; `kind="panel"` is a popup or window region in a card frame. The slot, if any, is the caption.
+- `<GuideOp side="end">` moves its shot beside the text in a 288px column once the section is 600px wide, and puts it first below that. Use it for tall crops (width/height ≤ 1.2) up to 256px wide; a wide crop goes in a plain `<GuideOp>` after the text, with a `width` up to the column (about 640). Text-only sections still use `<GuideOp>`. One crop per operation; split into an `###` with its own `<GuideOp>` for a second one.
+- Small related facts: their own `##`, then `<GuideFacts>` holding `<GuideFact title="…">` cards (2-up). A card's "read more" is a markdown link as its last paragraph, so the build checks it; a shot inside is capped at 160px.
+- Procedures: `<GuideSteps>` with one `<GuideStep>` per step (numbered by CSS); a `kind="panel"` shot may sit inside a step.
+- No inline `style`/`width` on images and no bare `<img>` in guide pages. Headings get space, not rules, on these pages.
 
 ## Screenshots
 
 ```
-- [ ] Exactly one in-page screenshot answering "where is it"
+- [ ] Exactly one `<GuideHero>` answering "where is it": light and dark, about 1380×860 (sidebar plus some of the page, demo folders only)
 - [ ] At most one element-only crop per operation, of Voyager's own component
 - [ ] Taken live from the dev build (verify-in-browser), light theme, about 2x
 - [ ] Saved under docs/public/assets/ with a descriptive name; -zh and -en variants when the crop has text
@@ -35,4 +66,4 @@ For 2x clarity, set `document.documentElement.style.zoom = '2'` before `zoom` + 
 
 ## Verify
 
-`bun run docs:build` (it fails on dead links), `bunx oxfmt --check` on changed files, and the `docs/.vitepress/*.test.ts` tests when `siteSupport.ts` changes. Then run `bun run docs:dev`, open the zh and en pages, and capture the rendered page in light and dark (VitePress theme toggle) so the owner sees the real site.
+`bun run docs:build` (it fails on dead links), `bunx oxfmt --check` on changed files, and the `docs/.vitepress/*.test.ts` tests when `siteSupport.ts` changes. Then run `bun run docs:dev`, open the zh and en pages, and capture the rendered page in light and dark (VitePress theme toggle) at 1280px, plus zh at 375px, so the owner sees the real site. Check `ar` once for RTL when a block changes.

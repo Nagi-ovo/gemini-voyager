@@ -10,8 +10,25 @@ import HomeReviews from './components/HomeReviews.vue';
 import HomeTeaser from './components/HomeTeaser.vue';
 import SafariDownloadLink from './components/SafariDownloadLink.vue';
 import SiteSupport from './components/SiteSupport.vue';
+import GuideFact from './components/guide/GuideFact.vue';
+import GuideHero from './components/guide/GuideHero.vue';
+import GuideOp from './components/guide/GuideOp';
+import GuideShot from './components/guide/GuideShot.vue';
+import { GuideFacts, GuideNote, GuideStep, GuideSteps } from './components/guide/wrappers';
 import { HomeFeaturesLazy } from './components/homeFeatures/lazy';
+import './guide.css';
 import './style.css';
+
+const GUIDE_BLOCKS = {
+  GuideHero,
+  GuideShot,
+  GuideOp,
+  GuideFacts,
+  GuideFact,
+  GuideSteps,
+  GuideStep,
+  GuideNote,
+};
 
 export default {
   extends: DefaultTheme,
@@ -30,6 +47,7 @@ export default {
     app.component('HomeAskAI', HomeAskAI);
     app.component('SafariDownloadLink', SafariDownloadLink);
     app.component('SiteSupport', SiteSupport);
+    for (const [name, block] of Object.entries(GUIDE_BLOCKS)) app.component(name, block);
     // Only data-viewer.md uses it; loading it on demand keeps it out of every other page.
     // SSR still renders it in place.
     app.component(

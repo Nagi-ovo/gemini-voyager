@@ -135,12 +135,45 @@ function bundledAdapters(): Partial<Record<PluginSite, SiteAdapter>> {
   return adapters;
 }
 
+/** The table's legend, by `PLUGINS_LOCALES` prefix; `**…**` marks a popup label. */
+const LEGEND: Readonly<Record<string, { ready: string; toggle: string }>> = {
+  '': { ready: '装好就能用', toggle: '在弹窗 **插件** 区域开启' },
+  zh_TW: { ready: '裝好就能用', toggle: '在彈出視窗 **外掛** 區域開啟' },
+  en: { ready: 'Works once installed', toggle: "Turn on in the popup's **Plugins** area" },
+  ja: { ready: 'インストールするだけで使える', toggle: 'ポップアップの **プラグイン** 欄でオン' },
+  ko: { ready: '설치만 하면 바로 사용', toggle: '팝업의 **플러그인** 영역에서 켜기' },
+  fr: {
+    ready: 'Fonctionne dès l’installation',
+    toggle: 'S’active dans la zone **Extensions** de la fenêtre',
+  },
+  es: {
+    ready: 'Funciona nada más instalar',
+    toggle: 'Se activa en la zona **Complementos** de la ventana',
+  },
+  pt: { ready: 'Funciona logo após instalar', toggle: 'Ative na área **Plugins** da janela' },
+  ar: { ready: 'تعمل فور التثبيت', toggle: 'فعّلها من منطقة **الإضافات** في النافذة' },
+  ru: {
+    ready: 'Работает сразу после установки',
+    toggle: 'Включается в разделе **Плагины** всплывающего окна',
+  },
+};
+
+export interface SiteSupportWords {
+  /** The first header. */
+  feature: string;
+  defaultOn: string;
+  /** Beside the filled tick: works without switching anything on. */
+  ready: string;
+  /** Beside the plain tick: where to switch it on. */
+  toggle: string;
+}
+
 export interface SiteSupportData {
   sites: { id: PluginSite; label: string; mark: string }[];
   /** Every feature the plugin table has, by feature id. */
   features: Record<string, SupportRow[]>;
-  /** By VitePress locale key (`root` is Chinese): the first header and the legend. */
-  locales: Record<string, { feature: string; defaultOn: string }>;
+  /** By VitePress locale key (`root` is Chinese). */
+  locales: Record<string, SiteSupportWords>;
 }
 
 export function loadSiteSupport(): SiteSupportData {
@@ -158,7 +191,11 @@ export function loadSiteSupport(): SiteSupportData {
     locales: Object.fromEntries(
       PLUGINS_LOCALES.map((locale) => [
         locale.prefix || 'root',
-        { feature: locale.feature, defaultOn: locale.defaultOn },
+        {
+          feature: locale.feature,
+          defaultOn: locale.defaultOn,
+          ...(LEGEND[locale.prefix] ?? LEGEND.en),
+        },
       ]),
     ),
   };

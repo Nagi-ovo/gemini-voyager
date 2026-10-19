@@ -1,0 +1,521 @@
+/* Guide page layout: the blocks in `components/guide/` and `SiteSupport.vue`.
+   The rules live in `.agents/skills/writing-docs/SKILL.md`. The doc column is
+   688px beside the outline and wider without it, so layouts switch on
+   container queries, never on the viewport. */
+
+:root {
+  --gvg-radius: 14px;
+  --gvg-card-shadow: 0 1px 2px oklch(0 0 0 / 0.04), 0 12px 32px -12px oklch(0 0 0 / 0.12);
+  --gvg-on-bg: var(--vp-c-brand-3);
+  --gvg-on-fg: #fff;
+}
+
+.dark {
+  --gvg-card-shadow: 0 12px 32px -12px oklch(0 0 0 / 0.6);
+  /* The dark brand is light; a dark tick reads on it where white does not. */
+  --gvg-on-bg: var(--vp-c-brand-1);
+  --gvg-on-fg: var(--vp-c-bg);
+}
+
+/* Section rhythm on a page built from these blocks: space, not rules, between sections. */
+.vp-doc:has(.gvg-hero) h2 {
+  margin: 64px 0 12px;
+  border-top: 0;
+  padding-top: 0;
+}
+
+.vp-doc:has(.gvg-hero) h2 .header-anchor {
+  top: 0;
+}
+
+.vp-doc:has(.gvg-hero) h3 {
+  margin: 32px 0 8px;
+}
+
+.vp-doc .gvg-caption {
+  margin-top: 10px;
+  color: var(--vp-c-text-2);
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: start;
+}
+
+.vp-doc .gvg-caption p {
+  margin: 0;
+  line-height: inherit;
+}
+
+/* Hero: the page's one "where is it" screenshot. */
+.vp-doc .gvg-hero {
+  margin: 32px 0 0;
+}
+
+.gvg-hero-frame {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: var(--gvg-radius);
+  background: var(--vp-c-bg-soft);
+  box-shadow: var(--gvg-card-shadow);
+}
+
+.vp-doc .gvg-hero-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* The screenshot itself is left-to-right, also on an RTL page. */
+  object-position: top left;
+}
+
+.gvg-hero--paired .gvg-hero-dark,
+.dark .gvg-hero--paired .gvg-hero-light {
+  display: none;
+}
+
+.dark .gvg-hero--paired .gvg-hero-dark {
+  display: block;
+}
+
+/* Screenshot: a crop on a soft backdrop, or a panel in the card frame. */
+.vp-doc .gvg-shot {
+  --gvg-shot-pad: 20px;
+  width: calc(var(--gvg-shot-w) + 2 * var(--gvg-shot-pad));
+  max-width: 100%;
+  margin: 24px 0;
+}
+
+.vp-doc .gvg-shot--panel {
+  --gvg-shot-pad: 0px;
+}
+
+.gvg-shot-frame {
+  border-radius: var(--gvg-radius);
+}
+
+.gvg-shot--crop .gvg-shot-frame {
+  padding: var(--gvg-shot-pad);
+  background: var(--vp-c-bg-soft);
+}
+
+.vp-doc .gvg-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.vp-doc .gvg-shot--crop img {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.12);
+}
+
+.gvg-shot--panel .gvg-shot-frame {
+  overflow: hidden;
+  border: 1px solid var(--vp-c-divider);
+  box-shadow: var(--gvg-card-shadow);
+}
+
+/* Operation section: text, and a tall crop beside it at the inline end. */
+.vp-doc .gvg-op {
+  container-type: inline-size;
+}
+
+.gvg-op > :first-child,
+.gvg-op-text > :first-child {
+  margin-top: 0;
+}
+
+.gvg-op > :last-child,
+.gvg-op-text > :last-child {
+  margin-bottom: 0;
+}
+
+.gvg-op-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.vp-doc .gvg-op-shot .gvg-shot {
+  margin: 0;
+}
+
+@container (min-width: 600px) {
+  /* One track width for every side shot, so text and backdrops keep the same
+     edges from section to section; each crop is centred on its backdrop. */
+  .gvg-op-grid {
+    grid-template-columns: minmax(0, 1fr) 288px;
+    align-items: start;
+    gap: 28px;
+  }
+
+  .vp-doc .gvg-op-shot .gvg-shot {
+    width: 100%;
+  }
+
+  .vp-doc .gvg-op-shot .gvg-shot img {
+    width: min(var(--gvg-shot-w), 100%);
+    margin-inline: auto;
+  }
+
+  .gvg-op-text {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .gvg-op-shot {
+    position: sticky;
+    top: calc(var(--vp-nav-height) + 24px);
+    grid-row: 1;
+    grid-column: 2;
+  }
+}
+
+/* Small facts: a 2-up grid of cards under their own h2. */
+.vp-doc .gvg-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(260px, calc((100% - 16px) / 2)), 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.gvg-fact {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: var(--gvg-radius);
+  background: var(--vp-c-bg-soft);
+}
+
+.vp-doc h3.gvg-fact-title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+.gvg-fact-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  color: var(--vp-c-text-2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.vp-doc .gvg-fact-body > * {
+  margin: 0;
+}
+
+.vp-doc .gvg-fact-body > * + * {
+  margin-top: 8px;
+}
+
+.vp-doc .gvg-fact-body p {
+  line-height: inherit;
+}
+
+.vp-doc .gvg-fact-body strong {
+  color: var(--vp-c-text-1);
+}
+
+/* A last line that is only a link sits at the card's foot. */
+.vp-doc .gvg-fact-body > p:last-child:has(> a:only-child) {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.vp-doc .gvg-fact-body > p:last-child > a:only-child {
+  text-decoration: none;
+}
+
+.vp-doc .gvg-fact-body > p:last-child > a:only-child:hover {
+  text-decoration: underline;
+}
+
+.vp-doc .gvg-fact-body > p:last-child > a:only-child::after {
+  content: ' →';
+}
+
+html[dir='rtl'] .vp-doc .gvg-fact-body > p:last-child > a:only-child::after {
+  content: ' ←';
+}
+
+.vp-doc .gvg-fact .gvg-shot {
+  --gvg-shot-pad: 12px;
+  max-width: calc(160px + 2 * var(--gvg-shot-pad));
+  margin-top: 14px;
+}
+
+/* The card is already soft; its crop sits on the page colour instead. */
+.gvg-fact .gvg-shot--crop .gvg-shot-frame {
+  background: var(--vp-c-bg);
+}
+
+/* Numbered procedure: a disc per step on a thin rail. */
+.vp-doc .gvg-steps {
+  counter-reset: gvg-step;
+  margin: 16px 0;
+}
+
+.gvg-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  column-gap: 16px;
+  padding-block: 10px;
+  counter-increment: gvg-step;
+}
+
+.gvg-step::before {
+  content: counter(gvg-step);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--vp-c-brand-1) 14%, transparent);
+  color: var(--vp-c-brand-2);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.gvg-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  inset-block: 42px -6px;
+  inset-inline-start: 13.5px;
+  width: 1px;
+  background: var(--vp-c-divider);
+}
+
+.gvg-step-body {
+  padding-top: 1px;
+  font-size: 15px;
+  line-height: 26px;
+}
+
+.vp-doc .gvg-step-body > * {
+  margin: 0;
+}
+
+.vp-doc .gvg-step-body > * + * {
+  margin-top: 10px;
+}
+
+.vp-doc .gvg-step-body p {
+  line-height: inherit;
+}
+
+.vp-doc .gvg-step-body .gvg-shot {
+  max-width: min(100%, 480px);
+  margin-top: 14px;
+}
+
+/* Note: a longer aside after a section. */
+.vp-doc .gvg-note {
+  margin: 20px 0 0;
+  padding: 12px 16px;
+  border-inline-start: 3px solid var(--vp-c-brand-1);
+  border-start-end-radius: 10px;
+  border-end-end-radius: 10px;
+  background: var(--vp-c-bg-soft);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.vp-doc .gvg-note > * {
+  margin: 0;
+}
+
+.vp-doc .gvg-note > * + * {
+  margin-top: 6px;
+}
+
+.vp-doc .gvg-note p {
+  line-height: inherit;
+}
+
+.vp-doc .gvg-note ul {
+  padding: 0;
+  padding-inline-start: 1.1em;
+}
+
+.vp-doc .gvg-note li + li {
+  margin-top: 4px;
+}
+
+/* Support table (`SiteSupport.vue`). VitePress makes every table a scrolling
+   block with cell borders; this one is a full-width card instead. */
+.vp-doc .gvg-support {
+  container-type: inline-size;
+  margin: 24px 0 0;
+}
+
+.gvg-support-scroll {
+  overflow: hidden;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: var(--gvg-radius);
+  background: var(--vp-c-bg);
+  box-shadow: var(--gvg-card-shadow);
+}
+
+.vp-doc .gvg-support table {
+  display: table;
+  width: 100%;
+  margin: 0;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+}
+
+.gvg-support col.gvg-support-name {
+  width: 40%;
+}
+
+.vp-doc .gvg-support tr {
+  border: 0;
+  background: var(--vp-c-bg);
+}
+
+.vp-doc .gvg-support thead tr,
+.vp-doc .gvg-support tbody tr:nth-child(even) {
+  background: var(--vp-c-bg-soft);
+}
+
+.vp-doc .gvg-support :is(th, td) {
+  border: 0;
+  padding: 10px 6px;
+  background: inherit;
+  color: var(--vp-c-text-1);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.vp-doc .gvg-support :is(th, td):first-child {
+  padding-inline: 20px 12px;
+  text-align: start;
+}
+
+.vp-doc .gvg-support thead th {
+  padding-block: 14px 10px;
+  color: var(--vp-c-text-2);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.vp-doc .gvg-support-mark svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin: 0 auto 6px;
+}
+
+.vp-doc .gvg-support .gvg-tick {
+  color: var(--vp-c-brand-1);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.vp-doc .gvg-support .gvg-tick-on {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gvg-on-bg);
+  color: var(--gvg-on-fg);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.vp-doc .gvg-support .gvg-tick-no {
+  color: var(--vp-c-text-3);
+}
+
+/* Footer: the legend, then facts true on only some sites. */
+.vp-doc .gvg-support tfoot tr:first-child > * {
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.vp-doc .gvg-support-legend td {
+  padding-block: 12px;
+  color: var(--vp-c-text-2);
+  font-size: 13px;
+}
+
+.gvg-support-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  /* The visible width, also while a narrow table scrolls under it. */
+  max-width: calc(100cqi - 32px);
+}
+
+.gvg-support-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vp-doc .gvg-support-key strong {
+  color: var(--vp-c-text-1);
+  font-weight: 600;
+}
+
+.vp-doc .gvg-support-only :is(th, td) {
+  padding-block: 6px;
+  color: var(--vp-c-text-2);
+  font-size: 13px;
+}
+
+.vp-doc .gvg-support-only:last-child :is(th, td) {
+  padding-bottom: 14px;
+}
+
+.vp-doc .gvg-support-only .gvg-tick {
+  font-size: 14px;
+}
+
+@container (max-width: 639px) {
+  .gvg-support-scroll {
+    overflow-x: auto;
+  }
+
+  /* A narrower name column keeps three sites in view before the scroll. */
+  .vp-doc .gvg-support table {
+    min-width: 460px;
+  }
+
+  .gvg-support col.gvg-support-name {
+    width: 140px;
+  }
+
+  .vp-doc .gvg-support :is(th, td):first-child {
+    padding-inline: 16px 8px;
+  }
+
+  .vp-doc .gvg-support :is(th, td):first-child:not([colspan]) {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 1;
+  }
+
+  /* The legend spans the scrolled table, so it is its content that stays put. */
+  .gvg-support-keys {
+    position: sticky;
+    inset-inline-start: 16px;
+  }
+}
