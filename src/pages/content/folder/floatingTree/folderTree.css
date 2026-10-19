@@ -86,8 +86,15 @@
  * panel header's own SVG buttons sit outside the tree. */
 .gv-floating-folder-panel__tree .gv-floating-folder-panel__icon-button svg,
 .gv-floating-folder-panel__caret svg {
+  flex: none;
   width: 16px;
   height: 16px;
+}
+
+/* The caret is a <button>: without this, its default 6px side padding leaves a
+ * 20px caret 8px for the chevron, which then shrinks to a flat dash. */
+.gv-floating-folder-panel__caret {
+  padding: 0;
 }
 
 /* The chevron points at the reading direction and turns down when open. */
