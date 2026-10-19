@@ -1,109 +1,123 @@
-/* Hide-Archived Onboarding Nudge (lives inside .gv-folder-container) */
+/* The one-time onboarding card (hideArchivedNudge.ts), shared by Gemini's and
+   AI Studio's hide-archived nudge and the sidebar-collapse nudge. It speaks the
+   folder settings popover's vocabulary: the same neutral ink, 26px controls and
+   the Voyager accent for the one action. Surface and border are alpha washes of
+   that ink rather than fills, so one rule set sits quietly on every host
+   sidebar (Gemini #f0f4f9 / #1b1c1d, AI Studio #fff / dark) without a
+   per-site palette. */
 .gv-hide-archived-nudge {
+  --gv-nudge-text: oklch(0.14 0.004 285);
+  --gv-nudge-muted: oklch(0.38 0.008 285);
+  --gv-nudge-surface: oklch(0.14 0.004 285 / 0.04);
+  --gv-nudge-border: oklch(0.14 0.004 285 / 0.09);
+  --gv-nudge-hover: oklch(0.14 0.004 285 / 0.06);
+  --gv-nudge-accent: var(--gv-pm-brand, var(--gv-pm-brand-default));
+
+  position: relative;
   margin: 4px 8px 10px 0;
-  padding: 12px 14px;
+  padding: 12px 12px 10px;
+  border: 1px solid var(--gv-nudge-border);
   border-radius: 12px;
-  border: 1px solid rgba(99, 102, 241, 0.28);
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.06) 100%);
-  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  background: var(--gv-nudge-surface);
+  color: var(--gv-nudge-text);
+  font-family: inherit;
   font-size: 13px;
-  line-height: 1.45;
-  color: inherit;
+  line-height: 1.5;
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateY(-2px);
   transition:
     opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
     transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
 }
+
+html[data-gv-scheme='dark'] .gv-hide-archived-nudge {
+  --gv-nudge-text: oklch(0.92 0.004 250);
+  --gv-nudge-muted: oklch(0.76 0.006 250);
+  --gv-nudge-surface: oklch(0.92 0.004 250 / 0.045);
+  --gv-nudge-border: oklch(0.92 0.004 250 / 0.1);
+  --gv-nudge-hover: oklch(0.92 0.004 250 / 0.08);
+}
+
 .gv-hide-archived-nudge.gv-hide-archived-nudge--show {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
+
 .gv-hide-archived-nudge.gv-sidebar-collapse-nudge {
   margin: 6px 16px 10px;
 }
-.gv-hide-archived-nudge.gv-sidebar-collapse-nudge .gv-hide-archived-nudge__actions {
-  margin-bottom: 0;
-}
+
 .gv-hide-archived-nudge__title {
-  font-weight: 600;
-  font-size: 13px;
   margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--gv-nudge-text);
 }
-.gv-hide-archived-nudge__title::before {
-  content: '✨';
-  font-size: 14px;
-}
+
 .gv-hide-archived-nudge__body {
-  font-size: 12px;
-  opacity: 0.82;
   margin-bottom: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--gv-nudge-muted);
 }
+
 .gv-hide-archived-nudge__actions {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   justify-content: flex-end;
-  margin-bottom: 6px;
 }
+
 .gv-hide-archived-nudge__btn {
+  min-height: 26px;
   padding: 4px 10px;
-  border-radius: 6px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--gv-nudge-muted);
+  font-family: inherit;
   font-size: 12px;
   font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
   cursor: pointer;
-  border: 1px solid transparent;
-  font-family: inherit;
   transition:
-    background-color 120ms,
-    border-color 120ms,
-    filter 120ms;
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
-.gv-hide-archived-nudge__btn--primary {
-  background: rgba(99, 102, 241, 0.9);
-  color: #fff;
-  border-color: rgba(99, 102, 241, 0.9);
+
+.gv-hide-archived-nudge__btn:focus-visible {
+  outline: 2px solid var(--gv-nudge-accent);
+  outline-offset: 2px;
 }
-.gv-hide-archived-nudge__btn--primary:hover {
-  filter: brightness(1.08);
-}
-.gv-hide-archived-nudge__btn--secondary {
-  background: transparent;
-  color: inherit;
-  border-color: rgba(148, 163, 184, 0.35);
-}
+
 .gv-hide-archived-nudge__btn--secondary:hover {
-  background: rgba(148, 163, 184, 0.12);
-}
-.gv-hide-archived-nudge__footnote {
-  font-size: 11px;
-  opacity: 0.55;
-  line-height: 1.35;
+  background: var(--gv-nudge-hover);
+  color: var(--gv-nudge-text);
 }
 
-/* Light theme */
-html[data-gv-scheme='light'] .gv-hide-archived-nudge {
-  color: #1f2937;
-  border-color: rgba(99, 102, 241, 0.32);
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.08) 100%);
+.gv-hide-archived-nudge__btn--primary {
+  background: var(--gv-nudge-accent);
+  color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
 }
 
-/* Dark theme */
-html[data-gv-scheme='dark'] .gv-hide-archived-nudge {
-  color: #e5e7eb;
-  border-color: rgba(129, 140, 248, 0.35);
-  background: linear-gradient(135deg, rgba(129, 140, 248, 0.12) 0%, rgba(167, 139, 250, 0.1) 100%);
+.gv-hide-archived-nudge__btn--primary:hover {
+  background: var(--gv-pm-brand-hover);
 }
-html[data-gv-scheme='dark'] .gv-hide-archived-nudge__btn--secondary {
-  border-color: rgba(148, 163, 184, 0.28);
+
+@media (prefers-reduced-motion: reduce) {
+  .gv-hide-archived-nudge {
+    transform: none;
+    transition: none;
+  }
 }
 
 /* RTL */
 body.gv-rtl .gv-hide-archived-nudge {
   margin: 4px 0 10px 8px;
+}
+body.gv-rtl .gv-hide-archived-nudge.gv-sidebar-collapse-nudge {
+  margin: 6px 16px 10px;
 }
 body.gv-rtl .gv-hide-archived-nudge__actions {
   justify-content: flex-start;

@@ -758,10 +758,6 @@
     "message": "Pas maintenant",
     "description": "Dismiss button on the AI Studio hide-archived nudge"
   },
-  "aistudio_hide_archived_nudge_footnote": {
-    "message": "Concerne uniquement AI Studio — votre préférence Gemini est conservée séparément.",
-    "description": "Footnote on the AI Studio hide-archived nudge noting the setting is scoped per platform"
-  },
   "folder_import": {
     "message": "Importer dossiers",
     "description": "Import folders button tooltip"
@@ -973,10 +969,6 @@
   "hideArchivedNudgeDismiss": {
     "message": "Plus tard",
     "description": "Secondary button that dismisses the nudge"
-  },
-  "hideArchivedNudgeFootnote": {
-    "message": "Modifiable à tout moment dans la popup de l'extension → Options des dossiers.",
-    "description": "Footnote explaining where to toggle the setting later"
   },
   "floatingPanelTitle": {
     "message": "Dossiers",

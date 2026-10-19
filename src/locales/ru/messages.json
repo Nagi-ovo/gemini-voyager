@@ -758,10 +758,6 @@
     "message": "Не сейчас",
     "description": "Dismiss button on the AI Studio hide-archived nudge"
   },
-  "aistudio_hide_archived_nudge_footnote": {
-    "message": "Работает только в AI Studio — настройка для Gemini сохраняется отдельно.",
-    "description": "Footnote on the AI Studio hide-archived nudge noting the setting is scoped per platform"
-  },
   "folder_import": {
     "message": "Импорт папок",
     "description": "Import folders button tooltip"
@@ -973,10 +969,6 @@
   "hideArchivedNudgeDismiss": {
     "message": "Не сейчас",
     "description": "Secondary button that dismisses the nudge"
-  },
-  "hideArchivedNudgeFootnote": {
-    "message": "Изменить можно в любое время во всплывающем окне расширения → Настройки папок.",
-    "description": "Footnote explaining where to toggle the setting later"
   },
   "floatingPanelTitle": {
     "message": "Папки",

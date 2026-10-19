@@ -758,10 +758,6 @@
     "message": "あとで",
     "description": "Dismiss button on the AI Studio hide-archived nudge"
   },
-  "aistudio_hide_archived_nudge_footnote": {
-    "message": "AI Studio でのみ有効 — Gemini の設定とは別に保存されます。",
-    "description": "Footnote on the AI Studio hide-archived nudge noting the setting is scoped per platform"
-  },
   "folder_import": {
     "message": "フォルダをインポート",
     "description": "Import folders button tooltip"
@@ -973,10 +969,6 @@
   "hideArchivedNudgeDismiss": {
     "message": "後で",
     "description": "Secondary button that dismisses the nudge"
-  },
-  "hideArchivedNudgeFootnote": {
-    "message": "拡張機能ポップアップ → フォルダオプションでいつでも切り替えできます。",
-    "description": "Footnote explaining where to toggle the setting later"
   },
   "floatingPanelTitle": {
     "message": "フォルダ",

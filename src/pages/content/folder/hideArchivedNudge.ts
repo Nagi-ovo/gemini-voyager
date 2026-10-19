@@ -21,7 +21,6 @@ export type NudgeI18nKeys = {
   body: string;
   enable: string;
   dismiss: string;
-  footnote: string;
 };
 
 const DEFAULT_I18N_KEYS: NudgeI18nKeys = {
@@ -29,7 +28,6 @@ const DEFAULT_I18N_KEYS: NudgeI18nKeys = {
   body: 'hideArchivedNudgeBody',
   enable: 'hideArchivedNudgeEnable',
   dismiss: 'hideArchivedNudgeDismiss',
-  footnote: 'hideArchivedNudgeFootnote',
 };
 
 type MountArgs = {
@@ -83,14 +81,9 @@ export function mountHideArchivedNudge({
   actions.appendChild(dismissBtn);
   actions.appendChild(enableBtn);
 
-  const footnote = document.createElement('div');
-  footnote.className = `${NUDGE_CLASS}__footnote`;
-  footnote.textContent = t(keys.footnote);
-
   card.appendChild(title);
   card.appendChild(body);
   card.appendChild(actions);
-  card.appendChild(footnote);
 
   const cleanup = () => {
     card.remove();

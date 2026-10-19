@@ -718,10 +718,6 @@
     "message": "暫不開啟",
     "description": "AI Studio 隱藏已歸檔引導卡的次按鈕"
   },
-  "aistudio_hide_archived_nudge_footnote": {
-    "message": "僅對 AI Studio 生效 —— Gemini 的偏好獨立保存。",
-    "description": "AI Studio 隱藏已歸檔引導卡的註腳，說明設定分平台保存"
-  },
   "folder_import": {
     "message": "匯入資料夾",
     "description": "匯入資料夾按鈕提示"
@@ -933,10 +929,6 @@
   "hideArchivedNudgeDismiss": {
     "message": "暫不開啟",
     "description": "Secondary button that dismisses the nudge"
-  },
-  "hideArchivedNudgeFootnote": {
-    "message": "可在擴充功能彈窗 → 資料夾選項中關閉此功能。",
-    "description": "Footnote explaining where to toggle the setting later"
   },
   "floatingPanelTitle": {
     "message": "資料夾",

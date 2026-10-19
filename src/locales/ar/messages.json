@@ -758,10 +758,6 @@
     "message": "ليس الآن",
     "description": "Dismiss button on the AI Studio hide-archived nudge"
   },
-  "aistudio_hide_archived_nudge_footnote": {
-    "message": "يُطبَّق على AI Studio فقط — تبقى تفضيلاتك في Gemini محفوظة بشكل منفصل.",
-    "description": "Footnote on the AI Studio hide-archived nudge noting the setting is scoped per platform"
-  },
   "folder_import": {
     "message": "استيراد المجلدات",
     "description": "Import folders button tooltip"
@@ -973,10 +969,6 @@
   "hideArchivedNudgeDismiss": {
     "message": "ليس الآن",
     "description": "Secondary button that dismisses the nudge"
-  },
-  "hideArchivedNudgeFootnote": {
-    "message": "يمكنك تغيير ذلك في أي وقت من نافذة الإضافة ← خيارات المجلد.",
-    "description": "Footnote explaining where to toggle the setting later"
   },
   "floatingPanelTitle": {
     "message": "المجلدات",

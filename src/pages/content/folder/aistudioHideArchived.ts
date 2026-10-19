@@ -24,7 +24,6 @@ const NUDGE_I18N_KEYS = {
   body: 'aistudio_hide_archived_nudge_body',
   enable: 'aistudio_hide_archived_nudge_enable',
   dismiss: 'aistudio_hide_archived_nudge_dismiss',
-  footnote: 'aistudio_hide_archived_nudge_footnote',
 };
 
 /** Whether any real folder (not Uncategorized) holds a prompt: the nudge needs something to hide. */

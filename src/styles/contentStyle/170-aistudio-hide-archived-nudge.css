@@ -1,30 +1,8 @@
 /* Hide archived conversations in the AI Studio /library table when the feature is on.
-   The class is toggled per-row by AIStudioFolderManager.applyHideArchivedToLibraryTable. */
+   The class is toggled per-row by applyHideArchivedRows (aistudioLibraryTable.ts).
+   The setting's nudge card needs no AI Studio colours: its base rules
+   (300-hide-archived-nudge.css) follow the scheme on every host. */
 .gv-aistudio-root tr.mat-mdc-row.gv-conversation-archived,
 .gv-aistudio-root tr[mat-row].gv-conversation-archived {
   display: none !important;
-}
-
-/* AI Studio–scoped theming for the shared hide-archived nudge. The base class targets
-   Gemini's own Material tokens, which AI Studio does not define, so we re-color under
-   the aistudio variant to match the platform's always-dark surface. */
-.gv-hide-archived-nudge--aistudio {
-  color: var(--mat-sys-on-surface, #e3e3e3);
-  border-color: rgba(138, 180, 248, 0.3);
-  background: linear-gradient(135deg, rgba(138, 180, 248, 0.12) 0%, rgba(167, 139, 250, 0.09) 100%);
-}
-
-.gv-hide-archived-nudge--aistudio .gv-hide-archived-nudge__btn--primary {
-  background: rgba(138, 180, 248, 0.92);
-  color: #1a1c1e;
-  border-color: rgba(138, 180, 248, 0.92);
-}
-
-.gv-hide-archived-nudge--aistudio .gv-hide-archived-nudge__btn--secondary {
-  color: var(--mat-sys-on-surface-variant, #c4c7c5);
-  border-color: rgba(255, 255, 255, 0.14);
-}
-
-.gv-hide-archived-nudge--aistudio .gv-hide-archived-nudge__btn--secondary:hover {
-  background: rgba(255, 255, 255, 0.06);
 }

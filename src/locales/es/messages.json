@@ -758,10 +758,6 @@
     "message": "Ahora no",
     "description": "Dismiss button on the AI Studio hide-archived nudge"
   },
-  "aistudio_hide_archived_nudge_footnote": {
-    "message": "Aplica solo a AI Studio — tu preferencia de Gemini se guarda por separado.",
-    "description": "Footnote on the AI Studio hide-archived nudge noting the setting is scoped per platform"
-  },
   "folder_import": {
     "message": "Importar carpetas",
     "description": "Import folders button tooltip"
@@ -973,10 +969,6 @@
   "hideArchivedNudgeDismiss": {
     "message": "Ahora no",
     "description": "Secondary button that dismisses the nudge"
-  },
-  "hideArchivedNudgeFootnote": {
-    "message": "Puedes cambiarlo en cualquier momento desde el popup de la extensión → Opciones de Carpetas.",
-    "description": "Footnote explaining where to toggle the setting later"
   },
   "floatingPanelTitle": {
     "message": "Carpetas",
