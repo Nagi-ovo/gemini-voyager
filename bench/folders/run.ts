@@ -6,7 +6,7 @@
  *
  * 1. Bundles `node/entry.ts` and runs the data cases in node.
  * 2. Bundles `browser/entry.ts`, serves it on 127.0.0.1 with
- *    `public/contentStyle.css`, starts a headless Chrome with a throwaway
+ *    the assembled `contentStyle.css`, starts a headless Chrome with a throwaway
  *    profile, runs every surface over the DevTools protocol, then closes it.
  * 3. Writes `.results/latest.json` and `.results/latest.md` next to this file.
  *
@@ -20,6 +20,7 @@ import type { AddressInfo } from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 
+import { assembleContentStyle } from '../../scripts/lib/contentStyle';
 import { BENCH_DIR, REPO_ROOT, bundle } from './build';
 import {
   DATASETS,
@@ -78,7 +79,7 @@ const PAGE = `<!doctype html>
 </head><body><script type="module" src="/bench.js"></script></body></html>`;
 
 async function serve(script: string): Promise<Server> {
-  const css = await readFile(path.join(REPO_ROOT, 'public/contentStyle.css'), 'utf8');
+  const css = assembleContentStyle(REPO_ROOT);
   const files: Record<string, [string, string]> = {
     '/': ['text/html', PAGE],
     '/bench.js': ['text/javascript', script],

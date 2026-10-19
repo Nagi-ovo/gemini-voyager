@@ -1,0 +1,165 @@
+.gv-pm-panel,
+.gv-pm-trigger,
+.gv-pm-header,
+.gv-pm-list,
+.gv-pm-item,
+.gv-pm-starred-item,
+.gv-pm-chip,
+.gv-pm-tag,
+.gv-pm-footer,
+.gv-pm-search input,
+.gv-pm-input-text,
+.gv-pm-input-tags,
+.gv-pm-input-name,
+.gv-pm-save,
+.gv-pm-cancel,
+.gv-pm-settings,
+.gv-pm-support {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.gv-pm-input-text,
+.gv-pm-input-tags,
+.gv-pm-input-name {
+  -webkit-user-select: text;
+  user-select: text;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Voyager accent (brand) — single source of truth for all accent colour.
+   JS sets --gv-pm-brand / --gv-pm-brand-fg INLINE on <html> per site (the user's
+   custom colour, or an adapter brand); when absent, everything falls back to the
+   theme-aware Everforest sage *-default below via var(--gv-pm-brand, …).
+   CRITICAL: the overridable vars are NEVER declared in CSS. Anything below
+   <html> redeclaring --gv-pm-brand would SHADOW the inline value for every
+   Voyager surface inside it, so a custom colour would never reach it. Only the *-default vars are
+   theme-scoped; the effective accent is always var(--gv-pm-brand, …-default).
+   Solid fills use the full token, not a rebuilt hue that loses a custom accent.
+   Keep data-gv-theme rules token-driven too: that layer wins on the prompt panel. */
+:root {
+  --gv-pm-brand-default: oklch(0.601 0.1 140);
+  --gv-pm-brand-fg-default: #ffffff;
+  --gv-pm-brand-h-default: 140;
+  --gv-pm-brand-hover: color-mix(
+    in srgb,
+    var(--gv-pm-brand, var(--gv-pm-brand-default)) 82%,
+    black
+  );
+  --gv-pm-brand-soft: color-mix(
+    in srgb,
+    var(--gv-pm-brand, var(--gv-pm-brand-default)) 14%,
+    transparent
+  );
+}
+
+/* Gemini-like timeline styling with CSS variables and theme awareness */
+:root {
+  --timeline-dot-color: #94a3b8;
+  --timeline-dot-active-color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  --timeline-dot-active-glow: color-mix(
+    in srgb,
+    var(--gv-pm-brand, var(--gv-pm-brand-default)) 50%,
+    transparent
+  );
+  --timeline-star-color: #f59e0b;
+  /* The same oklch surfaces the prompt panel and its preview use. These were
+     Tailwind-era hex, and the dark one was a blue-black (#0b1220) against the
+     panel's neutral, so two Voyager surfaces sitting on the same page read as
+     two different products. Shared with the timeline context menu, which is why
+     the whole family moves together. */
+  --timeline-tooltip-bg: oklch(0.995 0.002 250);
+  --timeline-tooltip-text: oklch(0.14 0.004 285);
+  --timeline-tooltip-border: oklch(0.92 0.004 250 / 0.7);
+  --timeline-tooltip-radius: 14px;
+  /* One restrained lift, matching the prompt preview. The old pair of shadows
+     read as a heavier, separate layer than every other floating Voyager
+     surface. */
+  --timeline-tooltip-shadow: 0 6px 20px oklch(0 0 0 / 0.28);
+  --timeline-tooltip-lh: 18px;
+  --timeline-tooltip-pad-y: 10px;
+  --timeline-tooltip-pad-x: 12px;
+  --timeline-tooltip-border-w: 1px;
+  --timeline-tooltip-arrow-size: 8px;
+  --timeline-tooltip-arrow-outside: 4px;
+  --timeline-tooltip-anim-in: 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --timeline-tooltip-anim-out: 100ms linear;
+  --timeline-bar-bg: rgba(248, 250, 252, 0.88);
+  --timeline-dot-size: 12px;
+  --timeline-active-ring: 3px;
+  --timeline-track-padding: 16px;
+  --timeline-tooltip-max: 288px;
+  --timeline-min-gap: 24px;
+  --timeline-hit-size: 30px;
+  --timeline-tooltip-gap-visual: 8px;
+  --timeline-tooltip-gap-box: 4px;
+  --timeline-hold-ms: 550ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --gv-pm-brand-default: oklch(0.773 0.091 126);
+    --gv-pm-brand-fg-default: #1f2a24;
+    --gv-pm-brand-h-default: 126;
+    --timeline-dot-color: #475569;
+    --timeline-dot-active-color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+    --timeline-dot-active-glow: color-mix(
+      in srgb,
+      var(--gv-pm-brand, var(--gv-pm-brand-default)) 50%,
+      transparent
+    );
+    --timeline-star-color: #f59e0b;
+    --timeline-tooltip-bg: oklch(0.2 0.008 285);
+    --timeline-tooltip-text: oklch(0.92 0.004 250);
+    --timeline-tooltip-border: oklch(0.3 0.008 285 / 0.7);
+    --timeline-bar-bg: rgba(2, 6, 23, 0.75);
+  }
+}
+
+/* Gemini theme support - Overrides system preferences on Gemini site */
+html[data-gv-scheme='dark'] {
+  --gv-pm-brand-default: oklch(0.773 0.091 126);
+  --gv-pm-brand-fg-default: #1f2a24;
+  --gv-pm-brand-h-default: 126;
+  --timeline-dot-color: #475569;
+  --timeline-dot-active-color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  --timeline-dot-active-glow: color-mix(
+    in srgb,
+    var(--gv-pm-brand, var(--gv-pm-brand-default)) 50%,
+    transparent
+  );
+  --timeline-star-color: #f59e0b;
+  --timeline-tooltip-bg: oklch(0.2 0.008 285);
+  --timeline-tooltip-text: oklch(0.92 0.004 250);
+  --timeline-tooltip-border: oklch(0.3 0.008 285 / 0.7);
+  --timeline-bar-bg: rgba(2, 6, 23, 0.75);
+  /* The rail's ground: a film over whatever the host paints behind it, not a
+     surface of its own. The old opaque slabs were picked when Gemini's dark was
+     a blue slate; against today's near-black #0f0f0f the dark one measured a
+     contrast ratio of 1.04. The default rail is 4px, so the film has to read as
+     a hairline: 0.12 / 0.08 alpha was findable on a 24px pill and gone on a 4px
+     line, which made unchecking "Hide outer container" look like a no-op. Kept
+     apart from --timeline-bar-bg, which .timeline-preview-toggle reads as an
+     opaque panel. */
+  --timeline-rail-film: rgba(255, 255, 255, 0.28);
+}
+
+html[data-gv-scheme='light'] {
+  --gv-pm-brand-default: oklch(0.601 0.1 140);
+  --gv-pm-brand-fg-default: #ffffff;
+  --gv-pm-brand-h-default: 140;
+  --timeline-dot-color: #94a3b8;
+  --timeline-dot-active-color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  --timeline-dot-active-glow: color-mix(
+    in srgb,
+    var(--gv-pm-brand, var(--gv-pm-brand-default)) 50%,
+    transparent
+  );
+  --timeline-star-color: #f59e0b;
+  --timeline-tooltip-bg: oklch(0.995 0.002 250);
+  --timeline-tooltip-text: oklch(0.14 0.004 285);
+  --timeline-tooltip-border: oklch(0.92 0.004 250 / 0.7);
+  --timeline-bar-bg: rgba(248, 250, 252, 0.88);
+  --timeline-rail-film: rgba(0, 0, 0, 0.2);
+}

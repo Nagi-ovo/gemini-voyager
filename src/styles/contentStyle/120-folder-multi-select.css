@@ -1,0 +1,314 @@
+/* ========================================
+   Multi-select Selection Styles
+   Subtle design inspired by starred conversations
+   ======================================== */
+
+/* Shared selection base styles - subtle like starred items */
+.gv-folder-conversation-selected,
+[data-test-id='conversation'].gv-conversation-selected {
+  position: relative;
+  /* Very subtle gradient background (similar opacity to starred: ~10%) */
+  background: linear-gradient(
+    to right,
+    var(--folder-selected-glow) 0%,
+    transparent 100%
+  ) !important;
+  transition: background 200ms ease;
+}
+
+/* Gemini's lr26 sidebar overhaul wraps the conversation row in
+ * <gem-nav-list-item data-test-id="conversation"> with the visible row
+ * (<a class="mat-mdc-list-item gem-nav-list-item">) nested inside. The inner
+ * <a> paints its own opaque background, which covers the gradient we set on
+ * the host. Propagate the gradient down to the inner <a> so the highlight is
+ * actually visible — without this only the ::before accent stripe peeks out. */
+[data-test-id='conversation'].gv-conversation-selected > a.mat-mdc-list-item,
+[data-test-id='conversation'].gv-conversation-selected > a.gem-nav-list-item {
+  background: linear-gradient(
+    to right,
+    var(--folder-selected-glow) 0%,
+    transparent 100%
+  ) !important;
+  border-radius: 12px !important;
+  transition: background 200ms ease;
+}
+
+/* Folder conversation specific adjustments */
+.gv-folder-conversation-selected {
+  border-radius: 10px;
+}
+
+/* Native conversation specific adjustments */
+[data-test-id='conversation'].gv-conversation-selected {
+  border-radius: 12px !important;
+}
+
+/* Subtle left accent indicator (similar to starred dot) */
+.gv-folder-conversation-selected::before,
+[data-test-id='conversation'].gv-conversation-selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 2px 2px 0;
+  background-color: var(--folder-selected-accent);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* Ensure content is above the gradient overlay */
+.gv-folder-conversation-selected > *,
+[data-test-id='conversation'].gv-conversation-selected > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Invalid selection feedback animation */
+.gv-invalid-selection {
+  animation: invalidShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes invalidShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+/* Hide archived conversations (conversations that are in folders) */
+[data-test-id='conversation'].gv-conversation-archived,
+.gv-conversation-archived-actions {
+  display: none !important;
+}
+
+/* Multi-select mode indicator */
+.gv-multi-select-indicator {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin: 8px 8px 0 12px;
+  /* Elegant twilight gradient background matching selection */
+  background: linear-gradient(
+    135deg,
+    var(--folder-selected-bg-start) 0%,
+    var(--folder-selected-bg-end) 100%
+  );
+  border: 1px solid var(--folder-selected-border);
+  border-radius: 10px;
+  box-shadow:
+    0 4px 12px var(--folder-selected-glow),
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 0 0 1px var(--folder-selected-border);
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gv-multi-select-mode .gv-multi-select-indicator {
+  display: flex;
+}
+
+.gv-multi-select-indicator-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gv-multi-select-indicator-content mat-icon {
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  color: var(--folder-selected-border);
+}
+
+.gv-multi-select-indicator-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--folder-text);
+}
+
+/* Multi-select actions container */
+.gv-multi-select-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Common styling for action buttons */
+.gv-multi-select-action-btn {
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--folder-icon-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-multi-select-action-btn mat-icon {
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Delete button specific styling */
+.gv-multi-select-delete-btn {
+  color: #ef4444;
+}
+
+.gv-multi-select-delete-btn:hover {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  transform: scale(1.05);
+}
+
+.gv-multi-select-delete-btn:active {
+  transform: scale(0.95);
+}
+
+/* Exit button specific styling */
+.gv-multi-select-exit-btn:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: var(--folder-text);
+  transform: scale(1.05);
+}
+
+.gv-multi-select-exit-btn:active {
+  transform: scale(0.95);
+}
+
+/* Draggable conversations in folders */
+.gv-folder-conversation[draggable='true'] {
+  cursor: grab;
+}
+
+.gv-folder-conversation[draggable='true']:active {
+  cursor: grabbing;
+}
+
+.gv-folder-drag-image {
+  position: fixed;
+  top: -1000px;
+  left: -1000px;
+  z-index: -1;
+  max-width: 220px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--folder-bg);
+  color: var(--folder-text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  font:
+    12px/1.4 'Google Sans',
+    Roboto,
+    Arial,
+    sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  contain: strict;
+}
+
+.gv-conversation-title {
+  flex: 1;
+  font-size: 14px;
+  color: var(--folder-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gv-folder-container:not(.gv-aistudio) .gv-conversation-title {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+/* Star button - hidden by default, show on hover to save space */
+.gv-conversation-star-btn {
+  min-width: 24px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  padding: 0;
+  opacity: 0;
+}
+
+.gv-folder-conversation:hover .gv-conversation-star-btn {
+  opacity: 1;
+}
+
+/* Starred state */
+.gv-conversation-star-btn.starred {
+  opacity: 1 !important;
+  color: #fbbf24;
+}
+
+.gv-conversation-star-btn:hover {
+  background-color: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+  transform: scale(1.05);
+}
+
+.gv-conversation-star-btn.starred:hover {
+  background-color: rgba(251, 191, 36, 0.15);
+}
+
+.gv-conversation-star-btn mat-icon,
+.gv-conversation-star-btn > svg {
+  width: 18px !important;
+  height: 18px !important;
+  transition: transform 0.2s;
+}
+
+.gv-conversation-star-btn > svg {
+  display: block;
+}
+
+.gv-conversation-star-btn:active mat-icon,
+.gv-conversation-star-btn:active > svg {
+  transform: scale(0.9);
+}

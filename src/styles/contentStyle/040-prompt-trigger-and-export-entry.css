@@ -1,0 +1,339 @@
+/* Prompt Manager styles (scoped) */
+.gv-pm-trigger {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 46px;
+  height: 46px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    var(--gv-pm-brand, var(--gv-pm-brand-default)),
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 85%, white)
+  );
+  border: 1.5px solid var(--gv-pm-brand, var(--gv-pm-brand-default));
+  box-shadow:
+    0 6px 24px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 35%, transparent),
+    0 2px 8px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 20%, transparent),
+    inset 0 1px 0 oklch(1 0 0 / 0.15);
+  color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
+  /* Keep every prompt-manager surface above the floating usage bar
+     (2147483000), including when the two are dragged into the same area. */
+  z-index: 2147483100;
+  cursor: pointer;
+  transition:
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-pm-trigger:hover {
+  transform: scale(1.08) translateY(-1px);
+  box-shadow:
+    0 10px 32px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent),
+    0 4px 12px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 30%, transparent),
+    inset 0 1px 0 oklch(1 0 0 / 0.2);
+}
+
+.gv-pm-trigger:active {
+  transform: scale(0.94);
+}
+
+.gv-pm-trigger img {
+  pointer-events: none;
+}
+
+/* Circular avatar: the cut-out fills the ball. Theme shows through
+   silhouette gaps only. Drop the 1.5px brand border so it is not a halo. */
+.gv-pm-trigger--mascot {
+  border: none;
+  box-shadow:
+    0 6px 24px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 35%, transparent),
+    0 2px 8px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 20%, transparent);
+}
+
+.gv-pm-trigger--mascot:hover {
+  box-shadow:
+    0 10px 32px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent),
+    0 4px 12px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 30%, transparent);
+}
+
+.gv-pm-trigger--mascot img {
+  width: 46px;
+  height: 46px;
+  object-fit: cover;
+  object-position: left bottom;
+  border-radius: inherit;
+}
+
+/* Changelog badge on trigger */
+.gv-pm-trigger-new::after {
+  content: 'NEW';
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  color: oklch(0.95 0.02 95);
+  background: linear-gradient(120deg, oklch(0.76 0.18 50), oklch(0.68 0.2 30));
+  box-shadow: 0 4px 12px oklch(0 0 0 / 0.16);
+  animation: gv-pm-float 1.8s ease-in-out infinite;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-pm-trigger-new::after {
+    background: linear-gradient(120deg, oklch(0.72 0.18 45), oklch(0.62 0.2 28));
+    color: oklch(0.98 0.01 96);
+    box-shadow: 0 6px 16px oklch(0 0 0 / 0.24);
+  }
+}
+
+/* Logo hover dropdown for export */
+.gv-logo-dropdown-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: max-content;
+  pointer-events: none;
+}
+
+.gv-logo-dropdown-wrapper [data-test-id='logo'],
+.gv-logo-dropdown-wrapper .logo {
+  pointer-events: auto;
+}
+
+/* Invisible bridge between logo and dropdown so hover doesn't break in the gap */
+.gv-logo-dropdown-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 12px;
+  pointer-events: none;
+}
+
+.gv-logo-dropdown-wrapper:hover::after {
+  pointer-events: auto;
+}
+
+.gv-logo-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  padding: 4px;
+  min-width: 140px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.96);
+  transform-origin: top left;
+  transition:
+    opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition-delay: 0.12s;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.gv-logo-dropdown-wrapper:hover .gv-logo-dropdown,
+.gv-logo-dropdown:hover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  transition-delay: 0.05s;
+}
+
+.gv-export-dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: transparent;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: left;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.gv-export-dropdown-btn:hover {
+  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
+}
+
+.gv-export-dropdown-btn:active {
+  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.16);
+}
+
+.gv-export-dropdown-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex-shrink: 0;
+  background: currentColor;
+  -webkit-mask: url('data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3e%3cpath fill=%22%23000%22 d=%22M12 3a1 1 0 011 1v8.586l2.293-2.293a1 1 0 111.414 1.414l-4.007 4.007a1 1 0 01-1.414 0L7.279 11.707a1 1 0 011.414-1.414L11 12.586V4a1 1 0 011-1zm-7 14a1 1 0 011-1h12a1 1 0 011 1v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z%22/%3e%3c/svg%3e')
+    center / contain no-repeat;
+  mask: url('data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3e%3cpath fill=%22%23000%22 d=%22M12 3a1 1 0 011 1v8.586l2.293-2.293a1 1 0 111.414 1.414l-4.007 4.007a1 1 0 01-1.414 0L7.279 11.707a1 1 0 011.414-1.414L11 12.586V4a1 1 0 011-1zm-7 14a1 1 0 011-1h12a1 1 0 011 1v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z%22/%3e%3c/svg%3e')
+    center / contain no-repeat;
+}
+
+.gv-export-dropdown-label {
+  white-space: nowrap;
+}
+
+/* Dark theme support */
+html[data-gv-scheme='dark'] .gv-logo-dropdown {
+  background: rgba(30, 30, 30, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+html[data-gv-scheme='dark'] .gv-export-dropdown-btn {
+  color: #e5e7eb;
+}
+
+html[data-gv-scheme='dark'] .gv-export-dropdown-btn:hover {
+  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.14);
+}
+
+/* Add subtle indicator on logo when hovering */
+.gv-logo-dropdown-wrapper [data-test-id='logo']::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: 4px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  vertical-align: middle;
+}
+
+.gv-logo-dropdown-wrapper:hover [data-test-id='logo']::after {
+  opacity: 0.5;
+  transform: translateY(0);
+}
+
+/* Persistent top-right export toolbar — fallback for lr26+ Gemini UI
+ * where the logo (the usual inline injection point) is absent. */
+.gv-persistent-export-toolbar {
+  position: fixed;
+  top: 12px;
+  right: var(--gv-persistent-export-right, 84px);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.gv-persistent-export-toolbar[data-gv-platform='chatgpt'] {
+  /* Same row as ChatGPT's header actions. Horizontal offset is computed so
+   * the button sits to the left of Share / more instead of over the title. */
+  top: 12px;
+}
+
+.gv-persistent-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.gv-persistent-export-btn:hover {
+  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.12);
+  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.45);
+  color: oklch(0.4 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.gv-persistent-export-btn:active {
+  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.2);
+}
+
+.gv-persistent-export-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+  flex-shrink: 0;
+  background: currentColor;
+  -webkit-mask: url('data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3e%3cpath fill=%22%23000%22 d=%22M12 3a1 1 0 011 1v8.586l2.293-2.293a1 1 0 111.414 1.414l-4.007 4.007a1 1 0 01-1.414 0L7.279 11.707a1 1 0 011.414-1.414L11 12.586V4a1 1 0 011-1zm-7 14a1 1 0 011-1h12a1 1 0 011 1v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z%22/%3e%3c/svg%3e')
+    center / contain no-repeat;
+  mask: url('data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3e%3cpath fill=%22%23000%22 d=%22M12 3a1 1 0 011 1v8.586l2.293-2.293a1 1 0 111.414 1.414l-4.007 4.007a1 1 0 01-1.414 0L7.279 11.707a1 1 0 011.414-1.414L11 12.586V4a1 1 0 011-1zm-7 14a1 1 0 011-1h12a1 1 0 011 1v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z%22/%3e%3c/svg%3e')
+    center / contain no-repeat;
+}
+
+.gv-persistent-export-label {
+  white-space: nowrap;
+}
+
+/* Dark theme */
+html[data-gv-scheme='dark'] .gv-persistent-export-btn {
+  background: rgba(30, 30, 30, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+}
+
+html[data-gv-scheme='dark'] .gv-persistent-export-btn:hover {
+  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.18);
+  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
+  color: oklch(0.78 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+}
+
+/* Keep the fallback export entry in the top-right control area even in RTL.
+ * Gemini's left rail is already occupied by navigation icons. */
+body.gv-rtl .gv-persistent-export-toolbar {
+  right: var(--gv-persistent-export-right, 84px);
+  left: auto;
+}

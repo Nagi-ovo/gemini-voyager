@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
-import { beforePaints, injectStylesheets } from '@/tests/pseudoElementPaint';
+import { readContentStyle } from '@/tests/contentStyle';
+import { beforePaints, injectStyleText } from '@/tests/pseudoElementPaint';
 
 const mocks = vi.hoisted(() => ({
   getTranslationSync: vi.fn((key: string) => key),
@@ -105,7 +106,7 @@ describe('ruler timeline coachmark', () => {
   });
 
   it('previews the ruler without a rail, as the live ruler draws, and dots with one', async () => {
-    const removeStyles = injectStylesheets('public/contentStyle.css');
+    const removeStyles = injectStyleText(readContentStyle());
     mocks.storageGet.mockResolvedValue({ [StorageKeys.TIMELINE_STYLE]: 'dots' });
     const { maybeShowRulerTimelineCoachmark } = await import('../rulerTimelineCoachmark');
     const liveTimeline = document.createElement('div');

@@ -1,0 +1,227 @@
+.gv-input-vim-hud-mount {
+  position: relative;
+  overflow: visible;
+}
+
+.gv-input-vim-hud-composer-mount {
+  position: relative;
+}
+
+.gv-input-vim-hud {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 14px);
+  z-index: 2;
+  display: inline-flex;
+  box-sizing: border-box;
+  transform: translateY(-50%);
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  margin-left: 0;
+  padding: 0 9px;
+  /* The same surface the timeline tooltip and the prompt preview sit on, so
+     one chip does not read as a different product from the rest of Voyager. */
+  border: 1px solid var(--timeline-tooltip-border);
+  border-radius: 7px;
+  background: var(--timeline-tooltip-bg);
+  color: var(--timeline-tooltip-text);
+  font:
+    600 11px/1 Google Sans,
+    Roboto,
+    Arial,
+    sans-serif;
+  letter-spacing: 0;
+  vertical-align: middle;
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.18);
+  pointer-events: none;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* Keep the mode badge in the composer's bottom gutter, below the editable text.
+   The left offset is measured from the live input so it also follows layout variants. */
+.gv-input-vim-hud[data-placement='composer'] {
+  top: auto;
+  bottom: 1px;
+  left: var(--gv-input-vim-hud-left, 48px);
+  transform: none;
+  gap: 4px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 5px;
+  font-size: 10px;
+}
+
+.gv-input-vim-hud[data-placement='composer'] .gv-input-vim-hud-buffer {
+  min-width: 8px;
+  padding-left: 4px;
+}
+
+/* Claude and ChatGPT do not reserve a bottom gutter in their composers. Float
+   the badge just above the editor so it never covers prompt text or controls. */
+.gv-input-vim-hud[data-placement='floating'] {
+  top: auto;
+  bottom: calc(100% + 6px);
+  left: var(--gv-input-vim-hud-left, 16px);
+  transform: none;
+  gap: 4px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 5px;
+  font-size: 10px;
+}
+
+.gv-input-vim-hud[data-placement='floating'] .gv-input-vim-hud-buffer {
+  min-width: 8px;
+  padding-left: 4px;
+}
+
+/* Gemini's historical-prompt editor reserves a small subscript row below the
+   outlined textarea. Keep Vim state there instead of covering its border/text. */
+.gv-input-vim-hud[data-placement='edit'] {
+  top: auto;
+  bottom: 0;
+  left: var(--gv-input-vim-hud-left, 28px);
+  transform: none;
+  gap: 4px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 9px;
+}
+
+.gv-input-vim-hud[data-placement='edit'] .gv-input-vim-hud-buffer {
+  min-width: 8px;
+  padding-left: 4px;
+}
+
+/* Claude and ChatGPT render historical-message editors as standalone cards.
+   Their action rows have different layouts, so keep the Vim badge in the
+   card's existing bottom margin instead of injecting it beside host buttons. */
+.gv-input-vim-hud[data-placement='edit-floating'] {
+  top: calc(100% + 4px);
+  bottom: auto;
+  left: var(--gv-input-vim-hud-left, 12px);
+  transform: none;
+  gap: 4px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 5px;
+  font-size: 10px;
+}
+
+.gv-input-vim-hud[data-placement='edit-floating'] .gv-input-vim-hud-buffer {
+  min-width: 8px;
+  padding-left: 4px;
+}
+
+.gv-input-vim-hud[data-active='false'] {
+  opacity: 0.56;
+}
+
+/* NORMAL means Voyager owns the keys, so it takes the site's accent; INSERT
+   means it is out of the way, so it just dims. A third fixed hue would collide
+   with whatever brand the next site brings — DeepSeek's blue already sat on
+   top of the old INSERT blue. */
+.gv-input-vim-hud[data-mode='normal'] .gv-input-vim-hud-mode {
+  color: oklch(0.5 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+}
+
+.gv-input-vim-hud[data-mode='insert'] .gv-input-vim-hud-mode {
+  opacity: 0.62;
+}
+
+.gv-input-vim-hud[data-mode='visual'] .gv-input-vim-hud-mode {
+  color: #b06000;
+}
+
+.gv-input-vim-hud-buffer {
+  min-width: 12px;
+  padding-left: 6px;
+  border-left: 1px solid var(--timeline-tooltip-border);
+  opacity: 0.72;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.gv-input-vim-mode-normal,
+.gv-input-vim-mode-visual {
+  caret-color: transparent !important;
+}
+
+.gv-input-vim-mode-insert {
+  caret-color: auto;
+}
+
+.gv-input-vim-cursor {
+  position: fixed;
+  z-index: 2147483647;
+  pointer-events: none;
+  border-radius: 2px;
+  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.72);
+  opacity: 0.94;
+  box-shadow: 0 0 0 transparent;
+  mix-blend-mode: multiply;
+  transition:
+    background-color 70ms ease,
+    opacity 45ms ease,
+    box-shadow 70ms ease;
+  will-change: opacity;
+}
+
+.gv-input-vim-cursor-moving {
+  animation: gv-input-vim-cursor-flash 70ms ease-out;
+  box-shadow: 0 0 8px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.24);
+}
+
+.gv-input-vim-cursor[data-mode='visual'] {
+  width: 2px !important;
+  background: rgba(176, 96, 0, 0.9);
+}
+
+.gv-input-vim-cursor[data-mode='visual'].gv-input-vim-cursor-moving {
+  box-shadow: 0 0 8px rgba(176, 96, 0, 0.24);
+}
+
+@keyframes gv-input-vim-cursor-flash {
+  0% {
+    opacity: 0.62;
+  }
+  100% {
+    opacity: 0.94;
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-input-vim-hud[data-mode='normal'] .gv-input-vim-hud-mode {
+  color: oklch(0.82 0.13 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+}
+
+html[data-gv-scheme='dark'] .gv-input-vim-hud[data-mode='visual'] .gv-input-vim-hud-mode {
+  color: #fdd663;
+}
+
+html[data-gv-scheme='dark'] .gv-input-vim-cursor {
+  background: oklch(0.77 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.72);
+  mix-blend-mode: screen;
+}
+
+/* VISUAL is the one mode that keeps its own colour, and the accent rule above
+   outranks the light amber it is given, so dark needs the pale one stated here
+   — otherwise selection reads as an ordinary cursor. */
+html[data-gv-scheme='dark'] .gv-input-vim-cursor[data-mode='visual'] {
+  background: oklch(0.85 0.14 80 / 0.72);
+}
+
+html[data-gv-scheme='dark'] .gv-input-vim-cursor-moving {
+  box-shadow: 0 0 16px oklch(0.77 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.36);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gv-input-vim-cursor {
+    transition: none;
+  }
+
+  .gv-input-vim-cursor-moving {
+    animation: none;
+  }
+}

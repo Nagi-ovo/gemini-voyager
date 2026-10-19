@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { readContentStyle } from '@/tests/contentStyle';
 
 import {
   type CodeBlockCollapse,
@@ -225,7 +225,7 @@ describe('codeBlockCollapse', () => {
   });
 
   it('keeps the header out of the sticky layer for collapsible blocks', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     const rule =
       css.match(
         /code-block\.gv-code-block-collapsible \.code-block-decoration\s*{([\s\S]*?)}/,

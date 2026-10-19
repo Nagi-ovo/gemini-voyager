@@ -2,14 +2,15 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-function readContentStyle(): string {
+import { readContentStyle } from '@/tests/contentStyle';
+
+function readSurfaceStyles(): string {
   return [
-    'public/contentStyle.css',
-    'src/features/timeline/timeline.css',
-    'src/features/timeline/timelinePreview.css',
-  ]
-    .map((path) => readFileSync(resolve(process.cwd(), path), 'utf8'))
-    .join('\n');
+    readContentStyle(),
+    ...['src/features/timeline/timeline.css', 'src/features/timeline/timelinePreview.css'].map(
+      (path) => readFileSync(resolve(process.cwd(), path), 'utf8'),
+    ),
+  ].join('\n');
 }
 
 /** Every declaration of `name`, in source order. */
@@ -25,7 +26,7 @@ describe('timeline floating surfaces', () => {
   // (#0b1220) against the prompt panel's neutral, so two Voyager surfaces on
   // the same page read as two different products.
   it('draws its surfaces from the same oklch set as the prompt panel', () => {
-    const css = readContentStyle();
+    const css = readSurfaceStyles();
 
     for (const token of [
       '--timeline-tooltip-bg',
@@ -41,7 +42,7 @@ describe('timeline floating surfaces', () => {
   });
 
   it('shares the panel surfaces exactly, so the two read as one product', () => {
-    const css = readContentStyle();
+    const css = readSurfaceStyles();
 
     expect(declarations(css, '--timeline-tooltip-bg')).toContain('oklch(0.2 0.008 285)');
     expect(declarations(css, '--timeline-tooltip-bg')).toContain('oklch(0.995 0.002 250)');
@@ -49,7 +50,7 @@ describe('timeline floating surfaces', () => {
   });
 
   it('lifts with one restrained shadow rather than a heavier stacked pair', () => {
-    const shadow = declarations(readContentStyle(), '--timeline-tooltip-shadow')[0];
+    const shadow = declarations(readSurfaceStyles(), '--timeline-tooltip-shadow')[0];
 
     expect(shadow).toBe('0 6px 20px oklch(0 0 0 / 0.28)');
   });
@@ -57,7 +58,7 @@ describe('timeline floating surfaces', () => {
   it('pins its own font stack instead of inheriting a host page font', () => {
     // Gemini, Claude and ChatGPT each set a different body font, and
     // 'Google Sans' is one host's.
-    const block = readContentStyle().match(/\.timeline-tooltip\s*\{([^}]*)\}/)?.[1] ?? '';
+    const block = readSurfaceStyles().match(/\.timeline-tooltip\s*\{([^}]*)\}/)?.[1] ?? '';
     // Comments stripped: this rule explains itself by naming the font it left.
     const declared = block.replace(/\/\*[\s\S]*?\*\//g, '');
 
@@ -69,7 +70,7 @@ describe('timeline floating surfaces', () => {
 describe('timeline rail background', () => {
   function rule(selector: string): string {
     const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const body = readContentStyle().match(new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`))?.[2];
+    const body = readSurfaceStyles().match(new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`))?.[2];
     if (!body) throw new Error(`Missing rule for ${selector}`);
     return body;
   }

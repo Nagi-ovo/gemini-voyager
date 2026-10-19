@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+
+import { readContentStyle } from '@/tests/contentStyle';
 
 function cssBlock(css: string, selector: string): string {
   const escaped = selector
@@ -11,10 +11,6 @@ function cssBlock(css: string, selector: string): string {
   const block = css.match(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`))?.[1];
   if (!block) throw new Error(`Missing CSS block for ${selector}`);
   return block;
-}
-
-function readContentStyle(): string {
-  return readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
 }
 
 describe('prompt hover preview styling', () => {

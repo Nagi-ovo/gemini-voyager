@@ -1,0 +1,163 @@
+/* ----- Template variables -----
+ * A prompt is a template only when it carries `{{name}}` placeholders. Two
+ * surfaces: a chip that advertises them wherever a body is rendered, and the
+ * fill card that collects their values before the text reaches the composer. */
+
+/* The read-only marker for a placeholder, painted into rendered prose so the
+   list shows which prompts are templates. Deliberately quieter than
+   `.gv-pm-slot`: that one is an input the user types into and keeps the solid
+   accent underline, this one is an indicator and must not out-shout the
+   sentence carrying it. */
+.gv-pm-var {
+  /* No font-family or font-size override, on purpose. A monospace run at
+     0.88em inside 13px CJK prose broke the line twice over: a different
+     x-height, and the one token that matters rendered smaller and weaker than
+     the words around it. Placeholder names may themselves be CJK - `NAME` in
+     promptTemplate.ts admits 一-龥 - and any size step renders those ideographs
+     at an obviously different height from the prose. Weight and tint carry the
+     distinction instead. */
+  font-weight: 500;
+  padding: 1px 6px;
+  /* 6px against 1px of vertical padding keeps the corner concentric with the
+     ~5px inner curve of the text run it wraps. */
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 18%, transparent);
+  /* A hairline ring instead of the old `inset 0 -1.5px 0`. That rule was
+     heavier than the 11px text sitting on it and read as a broken link, while
+     the 14% background underneath was too faint to register - so the chip
+     announced itself entirely through the one part that looked like damage. */
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 30%, transparent);
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  white-space: nowrap;
+}
+
+/* The sage accent is mid-lightness, which is legible on the dark card but thin
+   against a near-white one. The panel already carries a darkened variant. */
+[data-gv-theme='light'] .gv-pm-var {
+  color: var(--gv-pm-brand-hover);
+}
+
+.gv-pm-fill {
+  position: fixed;
+  z-index: 2147483646;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(460px, calc(100vw - 24px));
+  max-height: 60vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 16px 18px 14px;
+  border-radius: 14px;
+  /* Same pinned stack as the panel: the host page's font must not leak in. */
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    'Apple Color Emoji',
+    'Segoe UI Emoji';
+  font-size: 13px;
+  background: oklch(0.2 0.008 285);
+  color: oklch(0.92 0.004 250);
+  border: 1px solid oklch(0.3 0.008 285 / 0.7);
+  box-shadow: 0 8px 26px oklch(0 0 0 / 0.32);
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.92 0.004 250 / 0.22) transparent;
+}
+
+.gv-pm-fill[data-gv-theme='light'] {
+  background: oklch(0.995 0.002 250);
+  color: oklch(0.14 0.004 285);
+  border-color: oklch(0.92 0.004 250 / 0.7);
+  box-shadow: 0 8px 26px oklch(0 0 0 / 0.12);
+  scrollbar-color: oklch(0.14 0.004 285 / 0.22) transparent;
+}
+
+.gv-pm-fill-title {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.gv-pm-fill-doc {
+  /* Prompt bodies carry their own line breaks, and the text runs are inserted
+     as raw text nodes around the slots. */
+  white-space: pre-wrap;
+  word-break: break-word;
+  /* Loose enough that an inline input never crowds the line above it. */
+  line-height: 2.1;
+  color: inherit;
+}
+
+/* The slot is a blank in a sentence, so it is drawn as a rule under the words
+   rather than as another boxed field. */
+.gv-pm-slot {
+  /* An editable span, so a long value wraps with the sentence instead of
+     growing the slot past the card that holds it. Nothing here sets a width:
+     the line decides. */
+  display: inline;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-bottom: 1.5px solid var(--gv-pm-brand, var(--gv-pm-brand-default));
+  border-radius: 0;
+  padding: 0 5px 1px;
+  margin: 0 1px;
+  min-width: 4.5em;
+  outline: none;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* The variable's name, shown until something is typed. An input carried this
+   as `placeholder`; a span has to draw it. */
+.gv-pm-slot:empty::before {
+  content: attr(data-gv-placeholder);
+  opacity: 0.45;
+}
+
+.gv-pm-slot::placeholder {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88em;
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  opacity: 0.75;
+}
+
+.gv-pm-slot:focus {
+  background: var(--gv-pm-brand-soft);
+}
+
+.gv-pm-fill-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+body.gv-rtl .gv-pm-fill-doc {
+  direction: rtl;
+}
+
+/* Offered only while the body would actually change under the rewrite, so the
+   form carries no permanent chrome for a one-off migration. */
+.gv-pm-convert-braces {
+  justify-self: start;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  background: var(--gv-pm-brand-soft);
+  border: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+
+.gv-pm-convert-braces:hover {
+  border-color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+}

@@ -54,14 +54,19 @@ function outranks(a: Candidate, b: Candidate): boolean {
   return a.order > b.order;
 }
 
-/** Load stylesheets from the repo into the document; returns the cleanup. */
-export function injectStylesheets(...paths: string[]): () => void {
+/** Load CSS text into the document; returns the cleanup. */
+export function injectStyleText(css: string): () => void {
   const style = document.createElement('style');
-  style.textContent = paths
-    .map((path) => readFileSync(resolve(process.cwd(), path), 'utf8'))
-    .join('\n');
+  style.textContent = css;
   document.head.appendChild(style);
   return () => style.remove();
+}
+
+/** Load stylesheets from the repo into the document; returns the cleanup. */
+export function injectStylesheets(...paths: string[]): () => void {
+  return injectStyleText(
+    paths.map((path) => readFileSync(resolve(process.cwd(), path), 'utf8')).join('\n'),
+  );
 }
 
 /** Whether `selector` matches `element`; jsdom rejects some selectors (`:has()` in places). */

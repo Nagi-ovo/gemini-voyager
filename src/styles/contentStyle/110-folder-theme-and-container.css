@@ -1,0 +1,327 @@
+/* ========================================
+   Folder Manager Styles
+   ======================================== */
+
+/* CSS Variables for folder theming */
+:root {
+  --folder-bg: #ffffff;
+  --folder-text: #1f2937;
+  --folder-border: #e5e7eb;
+  --folder-hover-bg: #f3f4f6;
+  --folder-active-bg: #e0e7ff;
+  --folder-icon-color: #6b7280;
+  --folder-menu-bg: #ffffff;
+  --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --folder-dragover-bg: #dbeafe;
+  --folder-dragover-border: #3b82f6;
+  /* Selection colors adapted to shadcn/ui primary (emerald/green) theme */
+  --folder-selected-bg-start: #f0fdf4;
+  /* green-50 - subtle background */
+  --folder-selected-bg-end: #dcfce7;
+  /* green-100 - slightly deeper */
+  --folder-selected-border: #10b981;
+  /* emerald-500 - matches primary tone */
+  --folder-selected-accent: #34d399;
+  /* emerald-400 - vibrant accent */
+  --folder-selected-glow: rgba(16, 185, 129, 0.12);
+  /* emerald-500 with low opacity */
+}
+
+/* ========================================
+   Dark Theme Variable Definitions
+
+   The site's own theme arrives as html[data-gv-scheme='dark'], resolved by
+   platformTheme from the active SiteAdapter.
+
+   ⚠️ The @media (prefers-color-scheme: dark) blocks below are still a second
+   copy of these values and still have to be kept in step.
+
+   SSOT (Single Source of Truth) - Subtle Selection Colors (shadcn/ui emerald):
+   Light Mode:
+   - Accent Bar: #34d399 (emerald-400)
+   - Background Glow: rgba(16, 185, 129, 0.12) - emerald-500 at 12% opacity
+
+   Dark Mode:
+   - Accent Bar: #6ee7b7 (emerald-300)
+   - Background Glow: rgba(16, 185, 129, 0.10) - emerald-500 at 10% opacity
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --folder-bg: #1f2937;
+    --folder-text: #e5e7eb;
+    --folder-border: #374151;
+    --folder-hover-bg: #374151;
+    --folder-active-bg: #1e40af;
+    --folder-icon-color: #9ca3af;
+    --folder-menu-bg: #1f2937;
+    --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --folder-dragover-bg: #1e3a8a;
+    --folder-dragover-border: #60a5fa;
+    /* Subtle selection colors for dark mode (shadcn/ui emerald theme) */
+    --folder-selected-accent: #6ee7b7;
+    /* emerald-300 - bright for dark bg */
+    --folder-selected-glow: rgba(16, 185, 129, 0.1);
+    /* emerald-500 at 10% opacity */
+    --folder-selected-bg-start: #065f46;
+    /* emerald-800 */
+    --folder-selected-bg-end: #064e3b;
+    /* emerald-900 */
+  }
+}
+
+/* Theme support - Overrides system preferences on Gemini/AI Studio */
+html[data-gv-scheme='dark'] {
+  --folder-bg: #1f2937;
+  --folder-text: #e5e7eb;
+  --folder-border: #374151;
+  --folder-hover-bg: #374151;
+  --folder-active-bg: #1e40af;
+  --folder-icon-color: #9ca3af;
+  --folder-menu-bg: #1f2937;
+  --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --folder-dragover-bg: #1e3a8a;
+  --folder-dragover-border: #60a5fa;
+  /* Subtle selection colors for dark theme (shadcn/ui emerald theme) */
+  --folder-selected-accent: #6ee7b7;
+  /* emerald-300 - bright for dark bg */
+  --folder-selected-glow: rgba(16, 185, 129, 0.1);
+  /* emerald-500 at 10% opacity */
+  --folder-selected-bg-start: #065f46;
+  /* emerald-800 */
+  --folder-selected-bg-end: #064e3b;
+  /* emerald-900 */
+}
+
+html[data-gv-scheme='light'] {
+  --folder-bg: #ffffff;
+  --folder-text: #1f2937;
+  --folder-border: #e5e7eb;
+  --folder-hover-bg: #f3f4f6;
+  --folder-active-bg: #e0e7ff;
+  --folder-icon-color: #6b7280;
+  --folder-menu-bg: #ffffff;
+  --folder-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --folder-dragover-bg: #dbeafe;
+  --folder-dragover-border: #3b82f6;
+  /* Subtle selection colors for light theme (shadcn/ui emerald theme) */
+  --folder-selected-accent: #34d399;
+  /* emerald-400 - vibrant accent */
+  --folder-selected-glow: rgba(16, 185, 129, 0.12);
+  /* emerald-500 at 12% opacity */
+  /* Reset here too: a dark OS would otherwise keep the dark emerald gradient. */
+  --folder-selected-bg-start: #f0fdf4;
+  /* green-50 */
+  --folder-selected-bg-end: #dcfce7;
+  /* green-100 */
+}
+
+/* Folder Container */
+.gv-folder-container {
+  --gv-folder-section-gutter: 14px;
+  --gv-folder-list-edge: 4px;
+  --gv-folder-activity-row-inset: calc(
+    var(--gv-folder-section-gutter) - var(--gv-folder-list-edge)
+  );
+  /* Top padding is 0 so the Folders title sits flush against the bottom of the
+   * adjacent native section (Notebooks/Recents), matching Gemini's own
+   * inter-section density after the 2026 redesign. Bottom uses a thin 4px
+   * gap that keeps the folder list visually grouped with the title without
+   * crowding the next native section below. */
+  margin-bottom: 4px;
+  padding: 0 0 4px 0;
+  margin-left: 0;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+/* Header, search, and Activity copy share Gemini's native 14px section axis.
+ * The header's layout and buttons are the shared folder header's
+ * (src/pages/content/folder/folderHeader/folderHeader.css). */
+.gv-folder-header {
+  padding-block: 4px;
+  padding-inline-start: var(--gv-folder-section-gutter);
+  padding-inline-end: 6px;
+  margin-bottom: 2px;
+  border-radius: 8px;
+  transition:
+    background-color 0.2s,
+    border 0.2s;
+}
+
+.gv-folder-header.gv-folder-list-dragover {
+  background-color: var(--folder-dragover-bg);
+  border: 2px dashed var(--folder-dragover-border);
+}
+
+/* Match Gemini's native section title (.expandable-section-title.gds-body-s). */
+.gv-folder-container:not(.gv-aistudio) .gv-folder-header .title {
+  margin: 0;
+  padding-left: 0;
+  font-size: 13px;
+  line-height: 17px;
+  font-weight: 400;
+  opacity: 1;
+  color: rgba(255, 255, 255, 0.54);
+}
+
+html[data-gv-scheme='light'] .gv-folder-container:not(.gv-aistudio) .gv-folder-header .title {
+  color: rgba(31, 31, 31, 0.6);
+}
+
+.gv-folder-search {
+  position: relative;
+  padding-block: 0 4px;
+  padding-inline-start: var(--gv-folder-section-gutter);
+  padding-inline-end: 8px;
+}
+
+.gv-folder-search-input {
+  width: 100%;
+  height: 28px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--folder-text);
+  padding: 0 10px;
+  font:
+    400 12px/16px 'Google Sans',
+    Roboto,
+    Arial,
+    sans-serif;
+  outline: none;
+}
+
+.gv-folder-search-folder-mode .gv-folder-search-input {
+  padding-right: 92px;
+}
+
+.gv-folder-search-mode-badge {
+  position: absolute;
+  top: 14px;
+  right: 34px;
+  max-width: 72px;
+  overflow: hidden;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--folder-selected-bg-end);
+  color: var(--folder-text);
+  font:
+    500 11px/18px 'Google Sans',
+    Roboto,
+    Arial,
+    sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.gv-folder-search-input::placeholder {
+  color: var(--folder-icon-color);
+  opacity: 0.7;
+}
+
+.gv-folder-search-input:focus {
+  border-color: #4285f4;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+html[data-gv-scheme='light'] .gv-folder-search-input {
+  border-color: rgba(31, 31, 31, 0.14);
+  background: rgba(31, 31, 31, 0.04);
+}
+
+html[data-gv-scheme='light'] .gv-folder-search-input:focus {
+  background: rgba(66, 133, 244, 0.06);
+}
+
+/* Folder List */
+.gv-folder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 24px;
+  /* Reduced min-height for better visual balance when empty */
+  padding: 2px 4px;
+  border-radius: 8px;
+  transition:
+    background-color 0.2s,
+    border 0.2s;
+}
+
+.gv-folder-collapsed {
+  padding-bottom: 0;
+}
+
+.gv-folder-collapsed .gv-folder-search,
+.gv-folder-collapsed .gv-folder-list {
+  display: none;
+}
+
+.gv-folder-list-dragover {
+  background-color: var(--folder-dragover-bg);
+  border: 2px dashed var(--folder-dragover-border);
+}
+
+/* Empty state placeholder */
+.gv-folder-empty {
+  padding: 4px 16px;
+  font-size: 12px;
+  color: var(--folder-icon-color);
+  opacity: 0.7;
+  user-select: none;
+}
+
+/* Conversation Item in Folder */
+.gv-folder-conversation {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    opacity 0.2s;
+  position: relative;
+}
+
+.gv-folder-conversation:hover {
+  background-color: var(--folder-hover-bg);
+}
+
+.gv-folder-conversation-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gv-folder-conversation-link:visited,
+.gv-folder-conversation-link:hover,
+.gv-folder-conversation-link:active {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Starred conversation - subtle gold accent on the left */
+.gv-folder-conversation.gv-starred {
+  background: linear-gradient(to right, rgba(251, 191, 36, 0.08) 0%, transparent 100%);
+}
+
+.gv-folder-conversation.gv-starred::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: linear-gradient(to bottom, #fbbf24, #f59e0b);
+  border-radius: 0 2px 2px 0;
+  opacity: 0.9;
+}

@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import { contentStylePartPaths } from '@/tests/contentStyle';
+
 /**
  * Light and dark reach injected CSS through one hook, `html[data-gv-scheme]`,
  * which `platformTheme` stamps from the active `SiteAdapter`.
@@ -14,7 +16,7 @@ import { describe, expect, it } from 'vitest';
  * what keeps it that way.
  */
 const STYLESHEETS = [
-  'public/contentStyle.css',
+  ...contentStylePartPaths(),
   'src/features/timeline/timeline.css',
   'src/features/timeline/timelinePreview.css',
   'src/pages/content/defaultModel/styles.css',

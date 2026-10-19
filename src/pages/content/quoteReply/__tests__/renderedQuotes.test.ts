@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { readContentStyle } from '@/tests/contentStyle';
 
 import { renderQuotedUserMessages, startRenderedQuoteStyling } from '../renderedQuotes';
 import { startQuoteReply } from './startQuoteReply';
@@ -256,7 +256,7 @@ describe('rendered Quote Reply blocks', () => {
   });
 
   it('uses Voyager theme variables and logical properties in every browser', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     // Collect the rules by what they style, not by slicing between two comments:
     // the previous end anchor was an unrelated comment, so editing that comment
     // silently emptied this block and every assertion below passed on nothing.

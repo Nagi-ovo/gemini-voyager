@@ -1,0 +1,98 @@
+/* ==========================
+   AI Studio specific tweaks
+   - Compact spacing + icon fallbacks
+   - Do NOT affect gemini.google UI
+   - Let AI Studio manage sidebar width natively
+   ========================== */
+
+/* Allow folder container to adapt to native sidebar width */
+.gv-aistudio-root ms-prompt-history-v3 {
+  /* Ensure folder content doesn't overflow */
+  overflow-x: hidden;
+}
+
+.gv-aistudio-root .nav-content.v3-left-nav {
+  /* Just add padding for folder icons, don't force width */
+  padding-right: 4px;
+}
+
+.gv-aistudio .gv-folder-header {
+  padding: 6px 8px 6px 0;
+  margin-bottom: 6px;
+}
+
+.gv-aistudio .gv-folder-title {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Reduce container/list side paddings to utilize width */
+.gv-aistudio.gv-folder-container {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+.gv-aistudio .gv-folder-header-actions .gv-folder-action-btn {
+  padding: 2px;
+}
+
+/* Icon fallbacks: hide ligature text and use simple glyphs */
+.gv-aistudio .gv-folder-add-btn .google-symbols,
+.gv-aistudio .gv-folder-action-btn .google-symbols {
+  font-family: inherit !important;
+  /* Don’t rely on Material Symbols in aistudio */
+  font-weight: 400;
+  font-size: 0;
+  /* Hide text like 'push_pin' */
+  line-height: 20px;
+  display: inline-block;
+  width: 20px;
+  /* bigger box to avoid clipping */
+  height: 20px;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.gv-aistudio .google-symbols::before {
+  display: block;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  font-size: 18px;
+}
+
+tr.gv-library-row-selected,
+tr.gv-library-row-selected:hover {
+  background: color-mix(in srgb, var(--folder-selected-accent) 7%, transparent) !important;
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--folder-selected-accent) 82%, transparent);
+}
+
+tr.gv-library-row-selected td {
+  background: transparent !important;
+}
+
+.gv-aistudio .google-symbols[data-icon='add']::before {
+  content: '+';
+  font-size: 16px;
+}
+
+.gv-aistudio .google-symbols[data-icon='download']::before {
+  content: '⬇';
+  font-size: 16px;
+}
+
+.gv-aistudio .google-symbols[data-icon='upload']::before {
+  content: '⬆';
+  font-size: 16px;
+}
+
+.gv-aistudio .google-symbols[data-icon='close']::before {
+  content: '×';
+  font-size: 14px;
+}
+
+.gv-aistudio .google-symbols[data-icon='library_books']::before {
+  content: '📚';
+  font-size: 14px;
+}

@@ -1,0 +1,54 @@
+/* Quote Reply: keep raw Markdown for Gemini while grouping quoted context visually. */
+.gv-rendered-quote {
+  box-sizing: border-box;
+  display: grid;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  gap: 8px;
+  border: 0;
+  border-inline-start: 3px solid
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 78%, transparent);
+  border-start-end-radius: 12px;
+  border-end-end-radius: 12px;
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 9%, transparent);
+  color: inherit;
+}
+
+.gv-rendered-quote > .gv-rendered-quote-line {
+  margin: 0 !important;
+  padding: 0;
+  color: inherit;
+}
+
+.gv-rendered-quote > .gv-rendered-quote-empty,
+.gv-rendered-quote-marker {
+  display: none;
+}
+
+.query-text-line + .gv-rendered-quote,
+.gv-rendered-quote + .query-text-line {
+  margin-block-start: 14px;
+}
+
+/* Keep the editable text untouched so caret, IME, and the submitted Markdown stay native. */
+.gv-composer-quote-line {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 !important;
+  padding-inline: 12px;
+  border-inline-start: 3px solid
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 78%, transparent);
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 9%, transparent);
+  color: inherit;
+}
+
+.gv-composer-quote-start {
+  padding-block-start: 8px;
+  border-start-end-radius: 12px;
+}
+
+.gv-composer-quote-end {
+  padding-block-end: 8px;
+  border-end-end-radius: 12px;
+}

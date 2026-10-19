@@ -1,5 +1,5 @@
 /**
- * Browser page entry. `run.ts` serves this bundle with `public/contentStyle.css`
+ * Browser page entry. `run.ts` serves this bundle with the assembled `contentStyle.css`
  * and calls `window.__folderBench.run(options)` over the DevTools protocol.
  */
 import './timing';

@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import { contentStylePartPaths } from '@/tests/contentStyle';
+
 import manifestChrome from '../../../../manifest.json';
 
 /**
@@ -14,7 +16,7 @@ import manifestChrome from '../../../../manifest.json';
  * so they can never render below this floor.
  */
 const STATIC_CONTENT_STYLESHEETS = [
-  'public/contentStyle.css',
+  ...contentStylePartPaths(),
   'src/core/ui/tokens.css',
   'src/core/ui/confirm.css',
   'src/core/ui/toast/toast.css',

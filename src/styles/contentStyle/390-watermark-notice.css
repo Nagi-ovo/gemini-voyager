@@ -1,0 +1,308 @@
+/* ── Native media-watermark notice ─────────────────────────────────────────
+   One-time dialog telling users Gemini now ships its own watermark switch.
+   Colors run through tokens so the dark override below only restates the
+   palette, not the layout. */
+.gv-wm-notice {
+  --gv-wmn-surface: #ffffff;
+  --gv-wmn-border: #dfe4ee;
+  --gv-wmn-divider: #eef2f7;
+  --gv-wmn-title: #172033;
+  --gv-wmn-text: #344054;
+  --gv-wmn-muted: #6b7280;
+  --gv-wmn-subtle-bg: #f8fafc;
+  /* Matches the screenshot's own cream background so the hero reads as one
+     surface instead of a pasted-in rectangle. */
+  --gv-wmn-hero-bg: #fbf6e6;
+  --gv-wmn-accent: #5f8f55;
+  --gv-wmn-accent-hover: #527c49;
+  --gv-wmn-on-accent: #ffffff;
+  --gv-wmn-error: #b42318;
+
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 72px 20px 20px;
+  /* The layer only positions the helper card. Everything outside the card
+     stays interactive so the user can follow the guide in Gemini. */
+  pointer-events: none;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  animation: gv-fade-in 0.2s ease-out;
+}
+
+.gv-wm-notice__dialog {
+  width: min(100%, 390px);
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  max-height: min(calc(100vh - 92px), 620px);
+  max-height: min(calc(100dvh - 92px), 620px);
+  overflow: auto;
+  pointer-events: auto;
+  border: 1px solid var(--gv-wmn-border);
+  border-radius: 12px;
+  background: var(--gv-wmn-surface);
+  box-shadow:
+    0 16px 40px rgba(15, 23, 42, 0.14),
+    0 2px 8px rgba(15, 23, 42, 0.06);
+  animation: gv-slide-up 0.3s ease-out;
+}
+
+/* No bottom rule here — the hero image butts straight up against the
+   headline, so a divider would just cut the dialog into slices. */
+.gv-wm-notice__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px 16px 12px;
+}
+
+.gv-wm-notice__heading {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.gv-wm-notice__title {
+  margin: 0;
+  color: var(--gv-wmn-title);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+/* Supporting evidence stays on the same typographic plane as the title. */
+.gv-wm-notice__detected {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gv-wmn-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.gv-wm-notice__detected::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: var(--gv-wmn-accent);
+}
+
+.gv-wm-notice__close {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--gv-wmn-muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  transition: background-color 0.2s;
+}
+
+.gv-wm-notice__close:hover {
+  background: var(--gv-wmn-subtle-bg);
+  color: var(--gv-wmn-title);
+}
+
+/* The annotated screenshot stays in the existing card, but at helper scale
+   rather than taking over the page like a modal illustration. */
+.gv-wm-notice__hero {
+  margin: 0;
+  background: var(--gv-wmn-hero-bg);
+  border-block: 1px solid var(--gv-wmn-divider);
+}
+
+.gv-wm-notice__image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+.gv-wm-notice__hero-caption {
+  padding: 8px 16px 10px;
+}
+
+/* Breadcrumb replaces the old numbered list — the markers drawn on the
+   screenshot already number the steps. */
+.gv-wm-notice__trail {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.gv-wm-notice__trail-hop {
+  color: var(--gv-wmn-text);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.gv-wm-notice__trail-hop--target {
+  color: var(--gv-wmn-accent);
+  font-weight: 600;
+}
+
+.gv-wm-notice__trail-sep {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  color: var(--gv-wmn-muted);
+  background: currentcolor;
+  /* Chevron drawn as a mask so it inherits color and flips under RTL. */
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 6l6 6-6 6' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+.gv-wm-notice__body {
+  padding: 12px 16px 0;
+  color: var(--gv-wmn-text);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.gv-wm-notice__lead {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.gv-wm-notice__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px 15px;
+}
+
+.gv-wm-notice__caveat {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--gv-wmn-divider);
+  color: var(--gv-wmn-muted);
+  font-size: 11.5px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.gv-wm-notice__buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.gv-wm-notice__btn {
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: normal;
+  transition:
+    background-color 0.2s,
+    opacity 0.2s;
+}
+
+.gv-wm-notice__btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.gv-wm-notice__btn--secondary {
+  min-height: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--gv-wmn-muted);
+  font-size: 12.5px;
+}
+
+.gv-wm-notice__btn--secondary:hover:not(:disabled) {
+  background: var(--gv-wmn-subtle-bg);
+}
+
+.gv-wm-notice__btn--primary {
+  min-height: 42px;
+  background: var(--gv-wmn-accent);
+  color: var(--gv-wmn-on-accent);
+}
+
+.gv-wm-notice__btn--primary:hover:not(:disabled) {
+  background: var(--gv-wmn-accent-hover);
+}
+
+.gv-wm-notice__done {
+  margin: 0;
+  color: var(--gv-wmn-accent);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: end;
+}
+
+.gv-wm-notice__error {
+  margin: 0;
+  color: var(--gv-wmn-error);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: end;
+}
+
+html[data-gv-scheme='dark'] .gv-wm-notice {
+  --gv-wmn-surface: #202124;
+  --gv-wmn-border: #3c4043;
+  --gv-wmn-divider: #3c4043;
+  --gv-wmn-title: #e8eaed;
+  --gv-wmn-text: #cbd5e1;
+  --gv-wmn-muted: #9aa0a6;
+  --gv-wmn-subtle-bg: #303134;
+  /* Hero keeps the screenshot's cream in dark mode too — a dark frame around a
+     light screenshot reads as a pasted rectangle, while matching it lets the
+     shot sit there like a photograph. */
+  --gv-wmn-accent: #a7c080;
+  --gv-wmn-accent-hover: #b6cc93;
+  /* Sage on dark is light enough that white label text loses contrast. */
+  --gv-wmn-on-accent: #1b2418;
+  --gv-wmn-error: #ffb4ab;
+}
+
+html[data-gv-scheme='dark'] .gv-wm-notice__dialog {
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+/* Narrow viewports keep the helper at the top, where it does not cover
+   Gemini's bottom settings affordance. */
+@media (max-width: 460px) {
+  .gv-wm-notice {
+    padding: 12px;
+  }
+
+  .gv-wm-notice__dialog {
+    width: min(100%, 360px);
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+  }
+}
+
+body.gv-rtl .gv-wm-notice {
+  justify-content: flex-start;
+}
+
+body.gv-rtl .gv-wm-notice__trail-sep {
+  transform: scaleX(-1);
+}

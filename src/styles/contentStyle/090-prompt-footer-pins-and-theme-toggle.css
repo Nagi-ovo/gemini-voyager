@@ -1,0 +1,504 @@
+.gv-pm-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 14px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+html[data-gv-scheme='light'] .gv-pm-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Footer button groups */
+.gv-pm-footer-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.gv-pm-saved-footer-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.gv-pm-saved-footer-button {
+  width: 100%;
+  height: 36px;
+  min-width: 0;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(229, 231, 235, 0.78);
+  cursor: pointer;
+  font-size: 11.5px;
+  font-weight: 650;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.gv-pm-saved-footer-button svg {
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
+body.gv-rtl .gv-pm-saved-footer-primary .lucide-arrow-left {
+  transform: scaleX(-1);
+}
+
+.gv-pm-saved-footer-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gv-pm-saved-footer-button:hover,
+.gv-pm-saved-export-open .gv-pm-saved-export-trigger {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.1);
+  color: #f9fafb;
+}
+
+.gv-pm-saved-footer-primary {
+  border-color: transparent;
+  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.11);
+  color: oklch(0.78 0.12 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+}
+
+.gv-pm-saved-footer-primary:hover {
+  border-color: transparent;
+  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.18);
+  color: oklch(0.84 0.12 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+}
+
+.gv-pm-saved-footer-button:focus-visible,
+.gv-pm-saved-export-option:focus-visible {
+  outline: 2px solid oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  outline-offset: 2px;
+}
+
+.gv-pm-saved-export-wrap {
+  position: relative;
+  min-width: 0;
+}
+
+.gv-pm-saved-export-trigger .lucide-chevron-down {
+  margin-inline-start: auto;
+  transition: transform 0.15s ease;
+}
+
+.gv-pm-saved-export-open .lucide-chevron-down {
+  transform: rotate(180deg);
+}
+
+.gv-pm-saved-export-menu {
+  position: absolute;
+  inset-inline: 0;
+  bottom: calc(100% + 8px);
+  z-index: 5;
+  display: grid;
+  gap: 3px;
+  padding: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 10px;
+  background: oklch(0.22 0.008 285);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
+}
+
+.gv-pm-saved-export-option {
+  width: 100%;
+  height: 34px;
+  padding: 0 9px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: rgba(229, 231, 235, 0.78);
+  cursor: pointer;
+  font-size: 11.5px;
+  font-weight: 620;
+  text-align: start;
+}
+
+.gv-pm-saved-export-option svg {
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
+.gv-pm-saved-export-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f9fafb;
+}
+
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-footer-button {
+  border-color: rgba(31, 41, 55, 0.11);
+  background: rgba(31, 41, 55, 0.035);
+  color: rgba(31, 41, 55, 0.72);
+}
+
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-footer-button:hover,
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-export-open .gv-pm-saved-export-trigger {
+  border-color: rgba(31, 41, 55, 0.18);
+  background: rgba(31, 41, 55, 0.07);
+  color: #111827;
+}
+
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-footer-primary {
+  border-color: transparent;
+  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
+  color: oklch(0.48 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+}
+
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-footer-primary:hover {
+  border-color: transparent;
+  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.17);
+  color: oklch(0.42 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+}
+
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-export-menu {
+  border-color: rgba(31, 41, 55, 0.1);
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(31, 41, 55, 0.14);
+}
+
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-export-option {
+  color: rgba(31, 41, 55, 0.76);
+}
+
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-export-option:hover {
+  background: rgba(31, 41, 55, 0.06);
+  color: #111827;
+}
+
+.gv-pm-footer-secondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Primary starred-library action */
+.gv-pm-backup-btn {
+  height: 34px;
+  border-radius: 9px;
+  padding: 0 14px;
+  background: var(--gv-pm-brand-soft);
+  border: none;
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.gv-pm-backup-btn:hover {
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 22%, transparent);
+}
+
+.gv-pm-backup-btn:active {
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 28%, transparent);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-backup-btn {
+  background: var(--gv-pm-brand-soft);
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+}
+
+html[data-gv-scheme='dark'] .gv-pm-backup-btn:hover {
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 22%, transparent);
+}
+
+/* Settings button */
+.gv-pm-settings {
+  height: 30px;
+  border-radius: 8px;
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+  color: rgba(229, 231, 235, 0.6);
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gv-pm-settings::before {
+  content: '⚙';
+  flex: 0 0 auto;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.gv-pm-settings:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+}
+
+html[data-gv-scheme='light'] .gv-pm-settings {
+  background: transparent;
+  border: none;
+  color: rgba(31, 41, 55, 0.5);
+}
+
+html[data-gv-scheme='light'] .gv-pm-settings:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #1f2937;
+}
+
+html[data-gv-scheme='dark'] .gv-pm-settings {
+  background: transparent;
+  border: none;
+  color: rgba(229, 231, 235, 0.6);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-settings:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+}
+
+/* Support link button */
+.gv-pm-support {
+  height: 30px;
+  border-radius: 8px;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(229, 231, 235, 0.6);
+  white-space: nowrap;
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.gv-pm-support:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+}
+
+.gv-pm-support svg {
+  flex: 0 0 auto;
+}
+
+.gv-pm-support-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-gv-scheme='light'] .gv-pm-support {
+  background: transparent;
+  border: none;
+  color: rgba(31, 41, 55, 0.5);
+}
+
+html[data-gv-scheme='light'] .gv-pm-support:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #1f2937;
+}
+
+html[data-gv-scheme='dark'] .gv-pm-support {
+  background: transparent;
+  border: none;
+  color: rgba(229, 231, 235, 0.6);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-support:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+}
+
+/* Pin toggle. It trails the action cluster; a pinned row keeps it visible at
+ * rest, because once the other icons fade out the row still has to say why it
+ * is sitting above the divider. */
+.gv-pm-pin::before {
+  --gv-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linejoin="round"><path d="m12 3.6 2.6 5.3 5.8.85-4.2 4.1 1 5.75L12 16.9l-5.2 2.7 1-5.75-4.2-4.1 5.8-.85Z"/></svg>');
+}
+
+/* Outranks every per-theme colour above, which dresses the resting star: a
+ * pinned one is brand-coloured in light and dark alike. The `:hover` twin is
+ * what carries that past the per-theme hover rules, which match at the same
+ * specificity and would otherwise grey the star out under the cursor. */
+.gv-pm-item .gv-pm-actions > .gv-pm-pin[aria-pressed='true'],
+.gv-pm-item .gv-pm-actions > .gv-pm-pin[aria-pressed='true']:hover {
+  color: oklch(0.75 0.14 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+}
+
+.gv-pm-pin[aria-pressed='true']::before {
+  --gv-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="m12 3.6 2.6 5.3 5.8.85-4.2 4.1 1 5.75L12 16.9l-5.2 2.7 1-5.75-4.2-4.1 5.8-.85Z"/></svg>');
+}
+
+/* Separates the pinned block from the rest. Rendered only when both sides have
+ * rows, so it never floats alone at the top or bottom of the list. */
+.gv-pm-pin-divider {
+  height: 1px;
+  margin: 5px 2px;
+  background: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+html[data-gv-scheme='light'] .gv-pm-pin-divider {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.gv-pm-drag {
+  width: 10px;
+  height: 14px;
+  margin-left: -6px;
+  margin-right: 6px;
+  position: relative;
+  opacity: 0.7;
+  cursor: move;
+}
+
+.gv-pm-drag::before {
+  content: '⠿';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.gv-locked .gv-pm-drag {
+  cursor: default;
+  opacity: 0.9;
+}
+
+/* ========================================
+   PM Theme Toggle
+   ======================================== */
+
+.gv-pm-theme-toggle {
+  width: 38px;
+  height: 20px;
+  border-radius: 999px;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  border: none;
+  padding: 0;
+  background: linear-gradient(135deg, oklch(0.82 0.12 80), oklch(0.72 0.15 50));
+  box-shadow:
+    inset 0 1px 2px oklch(0 0 0 / 0.08),
+    0 1px 3px oklch(0 0 0 / 0.06);
+  transition:
+    background 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s ease;
+  outline: none;
+}
+
+/* Thumb (white circle) */
+.gv-pm-theme-toggle::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.18);
+  transition:
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+.gv-pm-theme-toggle svg {
+  position: absolute;
+  top: 4.5px;
+  left: 4.5px;
+  color: oklch(0.5 0.14 62);
+  pointer-events: none;
+  z-index: 1;
+  transition:
+    color 0.4s ease,
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-pm-theme-toggle:hover {
+  box-shadow:
+    inset 0 1px 2px oklch(0 0 0 / 0.1),
+    0 2px 8px oklch(0 0 0 / 0.12);
+}
+
+.gv-pm-theme-toggle:focus-visible {
+  box-shadow:
+    0 0 0 2px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4),
+    inset 0 1px 2px oklch(0 0 0 / 0.08);
+}
+
+/* Dark state — vibrant purple gradient */
+.gv-pm-theme-toggle.gv-pm-theme-dark {
+  background: linear-gradient(135deg, oklch(0.45 0.18 285), oklch(0.35 0.22 300));
+}
+
+.gv-pm-theme-toggle.gv-pm-theme-dark::before {
+  transform: translateX(18px);
+  background: white;
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.25);
+}
+
+.gv-pm-theme-toggle.gv-pm-theme-dark svg {
+  color: oklch(0.42 0.14 290);
+  transform: translateX(18px);
+}
+
+/* Smooth panel theme transition */
+.gv-pm-panel.gv-pm-transitioning,
+.gv-pm-panel.gv-pm-transitioning * {
+  transition:
+    background 0.4s ease,
+    color 0.4s ease,
+    border-color 0.4s ease,
+    box-shadow 0.4s ease !important;
+}

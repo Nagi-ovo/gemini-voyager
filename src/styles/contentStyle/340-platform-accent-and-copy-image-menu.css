@@ -1,0 +1,166 @@
+/* ============================================================================
+   Platform-adaptive accent. On a themed platform (Claude / ChatGPT, or any
+   plugin that declares `theme.brand`), src/pages/content/platformTheme injects
+   --gv-pm-brand on the document root (<html>) + adds .gv-platform-themed there.
+   We derive the hover / soft / foreground shades from that ONE variable via
+   color-mix; the rules below repaint Voyager UI with !important so they win over
+   every per-theme variant — including the high-specificity
+   .gv-pm-panel[data-gv-theme=...] ones that a body-scoped override couldn't beat.
+   Single source of truth for the colour is data (per-site user override →
+   adapter.brandColor / plugin theme), not this file. Gemini / AI Studio with no
+   override get no inline variable/class → the theme-aware Everforest sage
+   default defined on :root.
+   ============================================================================ */
+/* --gv-pm-brand / -hover / -soft / -fg are defined once on :root (theme-aware
+   sage default) and re-derived automatically; applyBrandTheme() only overrides
+   --gv-pm-brand and --gv-pm-brand-fg inline per site, so no per-class derivation
+   is needed here. The .gv-platform-themed class still gates the !important
+   surface repaints below so themed sites win over per-theme panel variants. */
+
+/* Solid accent surfaces (filled Add/Save buttons + floating trigger): brand
+   background, WHITE text/icon, neutral shadow so no green glow leaks through. */
+:root.gv-platform-themed .gv-pm-add,
+:root.gv-platform-themed .gv-pm-save,
+:root.gv-platform-themed .gv-pm-trigger {
+  background: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
+  border-color: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
+  color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default)) !important;
+  box-shadow:
+    0 4px 16px rgb(0 0 0 / 0.18),
+    inset 0 1px 0 rgb(255 255 255 / 0.15) !important;
+}
+:root.gv-platform-themed .gv-pm-add:hover,
+:root.gv-platform-themed .gv-pm-save:hover,
+:root.gv-platform-themed .gv-pm-trigger:hover {
+  background: var(--gv-pm-brand-hover) !important;
+  border-color: var(--gv-pm-brand-hover) !important;
+}
+:root.gv-platform-themed .gv-pm-trigger.gv-pm-trigger--mascot {
+  border: none !important;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.18) !important;
+}
+:root.gv-platform-themed .gv-pm-trigger.gv-pm-trigger--mascot:hover {
+  border: none !important;
+  box-shadow:
+    0 10px 32px rgb(0 0 0 / 0.22),
+    0 4px 12px rgb(0 0 0 / 0.16) !important;
+}
+
+/* Ghost / soft accent surfaces (footer Starred-Library button and compact-view grid toggle). */
+:root.gv-platform-themed .gv-pm-backup-btn,
+:root.gv-platform-themed .gv-pm-view-mode.gv-pm-view-mode-compact {
+  background: var(--gv-pm-brand-soft) !important;
+  border-color: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
+}
+:root.gv-platform-themed .gv-pm-backup-btn:hover,
+:root.gv-platform-themed .gv-pm-backup-btn:active {
+  background: color-mix(
+    in srgb,
+    var(--gv-pm-brand, var(--gv-pm-brand-default)) 22%,
+    transparent
+  ) !important;
+  border-color: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
+}
+
+/* Hover hints that only tint a border (view-mode toggle, lock button). */
+:root.gv-platform-themed .gv-pm-view-mode:hover,
+:root.gv-platform-themed .gv-pm-lock:hover {
+  border-color: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
+}
+
+/* Search field focus ring. */
+:root.gv-platform-themed .gv-pm-search input[type='search']:focus {
+  border-color: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
+  box-shadow: 0 0 0 3px var(--gv-pm-brand-soft) !important;
+}
+
+/* Version + language pickers: brand-tint their hover/focus highlight. */
+:root.gv-platform-themed .gv-pm-version:hover,
+:root.gv-platform-themed .gv-pm-version-outdated,
+:root.gv-platform-themed .gv-pm-lang:hover,
+:root.gv-platform-themed .gv-pm-lang:focus,
+:root.gv-platform-themed .gv-pm-lang:focus-within {
+  border-color: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
+}
+
+/* Accent text + faint brand pill on the panel surface (list tag chips). */
+:root.gv-platform-themed .gv-pm-chip {
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
+  background: var(--gv-pm-brand-soft) !important;
+}
+/* Floating NEW badge: the base rule paints an orange gradient, and tinting
+   only the text with the brand colour left brand-on-orange (unreadable on
+   Claude, whose brand IS orange-ish). Paint the whole pill with the brand
+   colour and use the platform's on-brand foreground instead — derived purely
+   from --gv-pm-brand / --gv-pm-brand-fg so any future site adapter inherits
+   a readable badge automatically. */
+:root.gv-platform-themed .gv-pm-trigger-new::after {
+  color: var(--gv-pm-brand-fg, #ffffff) !important;
+  background: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
+}
+:root.gv-platform-themed .gv-pm-chip:hover {
+  background: color-mix(
+    in srgb,
+    var(--gv-pm-brand, var(--gv-pm-brand-default)) 24%,
+    transparent
+  ) !important;
+}
+
+/* Active filter tag + active lock: brand text on a faint brand pill. */
+:root.gv-platform-themed .gv-pm-tag.active,
+:root.gv-platform-themed .gv-pm-lock.active {
+  background: var(--gv-pm-brand-soft) !important;
+  border-color: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
+}
+
+/* Active lock's focus-ring glow follows the brand too. */
+:root.gv-platform-themed .gv-pm-lock.active {
+  box-shadow: 0 0 0 3px var(--gv-pm-brand-soft) !important;
+}
+
+/* Response action copy image menu */
+.gv-response-image-menu {
+  position: fixed;
+  background-color: var(--timeline-tooltip-bg);
+  border: 1px solid var(--timeline-tooltip-border);
+  border-radius: 8px;
+  box-shadow: var(--timeline-tooltip-shadow);
+  padding: 4px 0;
+  z-index: 2147483647;
+  min-width: 140px;
+  animation: gv-menu-in 0.12s ease-out;
+}
+
+@keyframes gv-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.gv-response-image-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--timeline-tooltip-text);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.1s ease;
+}
+
+.gv-response-image-menu-item:hover {
+  background-color: var(--timeline-dot-active-color);
+  color: #fff;
+}

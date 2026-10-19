@@ -1,13 +1,13 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+
+import { readContentStyle } from '@/tests/contentStyle';
 
 /**
  * A dark OS turns on the `prefers-color-scheme: dark` copies of the theme
  * tokens even when the site itself is light. The site's light scheme block is
  * what puts them back, so it has to reset every token those copies change.
  */
-const css = readFileSync(resolve(__dirname, '../../../../../public/contentStyle.css'), 'utf8')
+const css = readContentStyle()
   // A comment may hold braces or token names; only parsed CSS counts.
   .replace(/\/\*[\s\S]*?\*\//g, ' ');
 

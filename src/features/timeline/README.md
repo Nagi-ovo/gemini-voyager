@@ -105,7 +105,7 @@ waits for a successful retry. Stored aliases and mounted identity use separate p
 unverified Gemini DOM-window `u-N` cannot receive a stored full-history turn’s star or deep link.
 
 Rail and preview styles are injected from `timeline.css` and `timelinePreview.css` by the view and removed on teardown. Shared theme tokens and
-coachmark replicas remain in `public/contentStyle.css` because other features use them. Existing
+coachmark replicas remain in `src/styles/contentStyle/` because other features use them. Existing
 `.gemini-timeline-bar`, `.timeline-track-content` and `.timeline-style-compact` classes remain the
 highlight marker DOM contract. New DOM ownership metadata is `gv-` prefixed.
 

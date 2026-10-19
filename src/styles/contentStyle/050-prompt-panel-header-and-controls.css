@@ -1,0 +1,436 @@
+.gv-pm-panel {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  width: 440px;
+  max-width: calc(100vw - 20px);
+  max-height: min(75vh, 600px);
+  overflow: hidden;
+  /* Pin a base font-size so the panel never inherits the host page's (which is
+     larger on Claude/ChatGPT, and oversized on Gemini too) — keeps the Add
+     button and all panel text consistent across every platform. */
+  font-size: 14px;
+  --gv-pm-surface: oklch(0.995 0.002 250);
+  border-radius: 18px;
+  background: oklch(0.995 0.002 250);
+  border: 1px solid oklch(0.92 0.004 250 / 0.7);
+  box-shadow: none;
+  /* The panel must stay above both its trigger and the floating usage bar. */
+  z-index: 2147483200;
+  color: oklch(0.14 0.004 285);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    'Apple Color Emoji',
+    'Segoe UI Emoji';
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-pm-panel {
+    --gv-pm-surface: oklch(0.2 0.008 285);
+    background: oklch(0.2 0.008 285);
+    color: oklch(0.92 0.004 250);
+    border-color: oklch(0.3 0.008 285 / 0.7);
+    box-shadow: none;
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-pm-panel {
+  --gv-pm-surface: oklch(0.2 0.008 285);
+  background: oklch(0.2 0.008 285);
+  color: oklch(0.92 0.004 250);
+  border-color: oklch(0.3 0.008 285 / 0.7);
+}
+
+html[data-gv-scheme='light'] .gv-pm-panel {
+  --gv-pm-surface: oklch(0.995 0.002 250);
+  background: oklch(0.995 0.002 250);
+  color: oklch(0.14 0.004 285);
+  border-color: oklch(0.92 0.004 250 / 0.7);
+}
+
+.gv-hidden {
+  display: none !important;
+}
+
+.gv-pm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  gap: 6px;
+  border-bottom: 1px solid oklch(0.92 0.004 250 / 0.5);
+  cursor: default;
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-pm-header {
+    border-bottom-color: oklch(0.3 0.008 285 / 0.5);
+  }
+}
+
+.gv-pm-title {
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+  color: oklch(0.14 0.004 285);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-pm-title {
+    color: oklch(0.92 0.004 250);
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-pm-title {
+  color: oklch(0.92 0.004 250);
+}
+
+html[data-gv-scheme='light'] .gv-pm-title {
+  color: oklch(0.14 0.004 285);
+}
+
+.gv-pm-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.gv-pm-version {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  flex-shrink: 0;
+  position: relative;
+  border-radius: 999px;
+  background: oklch(0.95 0.004 250 / 0.6);
+  color: oklch(0.4 0.006 250);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  border: 1px solid oklch(0.92 0.004 250 / 0.5);
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.04);
+  transition:
+    transform 120ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+  white-space: nowrap;
+}
+
+.gv-pm-version:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px oklch(0 0 0 / 0.08);
+  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
+  background: oklch(0.95 0.004 250 / 0.8);
+}
+
+.gv-pm-version-outdated {
+  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.6);
+}
+
+.gv-pm-version-outdated::after {
+  content: 'NEW';
+  position: absolute;
+  top: -14px;
+  right: -2px;
+  transform: translateX(35%);
+  padding: 3px 7px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: oklch(0.95 0.02 95);
+  background: linear-gradient(120deg, oklch(0.76 0.18 50), oklch(0.68 0.2 30));
+  box-shadow: 0 8px 18px oklch(0 0 0 / 0.16);
+  animation: gv-pm-float 1.8s ease-in-out infinite;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+@keyframes gv-pm-float {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateY(-2px);
+    opacity: 0.92;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-pm-title-row {
+    color: oklch(0.92 0.004 250);
+  }
+
+  .gv-pm-version {
+    background: oklch(0.26 0.008 285 / 0.7);
+    color: oklch(0.72 0.006 250);
+    border-color: oklch(0.3 0.008 285 / 0.6);
+    box-shadow: 0 1px 4px oklch(0 0 0 / 0.2);
+  }
+
+  .gv-pm-version:hover {
+    border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
+    background: oklch(0.28 0.008 285 / 0.8);
+  }
+
+  .gv-pm-version-outdated::after {
+    background: linear-gradient(120deg, oklch(0.72 0.18 45), oklch(0.62 0.2 28));
+    color: oklch(0.98 0.01 96);
+    box-shadow: 0 6px 16px oklch(0 0 0 / 0.3);
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-pm-version {
+  background: oklch(0.26 0.008 285 / 0.7);
+  color: oklch(0.72 0.006 250);
+  border-color: oklch(0.3 0.008 285 / 0.6);
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.2);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-version:hover {
+  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
+  background: oklch(0.28 0.008 285 / 0.8);
+}
+
+.gv-pm-header .gv-pm-controls {
+  margin-left: auto;
+}
+
+.gv-pm-drag {
+  margin-left: 4px;
+  margin-right: 8px;
+}
+
+.gv-pm-controls {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.gv-pm-lang {
+  background: oklch(0.995 0.002 250);
+  color: oklch(0.38 0.006 250);
+  border: 1px solid oklch(0.92 0.004 250);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.05);
+  transition: all 0.2s ease;
+}
+
+/* Draw our OWN dropdown chevron for the language <select>. The native arrow is
+   inconsistent across hosts — ChatGPT's reset hides it, others place it tight to
+   the edge. `appearance:none` removes the native one; a self-contained SVG sits
+   at a controlled inset (mirrored under RTL). !important only on the arrow layer
+   + appearance, so each theme keeps its own background-color. */
+.gv-pm-lang {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  padding-inline-end: 30px !important;
+}
+
+body.gv-rtl .gv-pm-lang {
+  background-position: left 10px center !important;
+}
+
+.gv-pm-lang:hover {
+  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
+  box-shadow: 0 2px 6px oklch(0 0 0 / 0.06);
+}
+
+html[data-gv-scheme='light'] .gv-pm-lang {
+  background: oklch(0.995 0.002 250);
+  color: oklch(0.38 0.006 250);
+  border-color: oklch(0.92 0.004 250);
+}
+
+html[data-gv-scheme='light'] .gv-pm-lang:hover {
+  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
+  box-shadow: 0 2px 6px oklch(0 0 0 / 0.06);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-lang {
+  background: oklch(0.24 0.008 285);
+  color: oklch(0.72 0.006 250);
+  border-color: oklch(0.3 0.008 285);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-lang:hover {
+  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-pm-lang {
+    background: oklch(0.24 0.008 285);
+    color: oklch(0.72 0.006 250);
+    border-color: oklch(0.3 0.008 285);
+  }
+
+  .gv-pm-lang:hover {
+    border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
+  }
+}
+
+.gv-pm-lock {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: oklch(0.995 0.002 250);
+  border: 1px solid oklch(0.92 0.004 250);
+  position: relative;
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.05);
+  transition: all 0.2s ease;
+}
+
+.gv-pm-lock svg {
+  pointer-events: none;
+}
+
+.gv-pm-lock:hover {
+  background: oklch(0.96 0.003 250);
+  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
+}
+
+.gv-pm-lock.active {
+  background: oklch(0.94 0.015 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  box-shadow: 0 0 0 3px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
+}
+
+html[data-gv-scheme='light'] .gv-pm-lock {
+  background: oklch(0.995 0.002 250);
+  border-color: oklch(0.92 0.004 250);
+}
+
+html[data-gv-scheme='light'] .gv-pm-lock:hover {
+  background: oklch(0.96 0.003 250);
+  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
+}
+
+html[data-gv-scheme='light'] .gv-pm-lock.active {
+  background: oklch(0.94 0.015 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  box-shadow: 0 0 0 3px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-lock {
+  background: oklch(0.24 0.008 285);
+  border-color: oklch(0.3 0.008 285);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-lock:hover {
+  background: oklch(0.28 0.008 285);
+  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-lock.active {
+  background: oklch(0.28 0.008 285);
+  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  box-shadow: 0 0 0 3px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-pm-lock {
+    background: oklch(0.24 0.008 285);
+    border-color: oklch(0.3 0.008 285);
+  }
+
+  .gv-pm-lock:hover {
+    background: oklch(0.28 0.008 285);
+    border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
+  }
+
+  .gv-pm-lock.active {
+    background: oklch(0.28 0.008 285);
+    border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+    box-shadow: 0 0 0 3px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
+  }
+}
+
+.gv-pm-add {
+  height: 33px;
+  border-radius: 10px;
+  padding: 0 16px;
+  background: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 3px 10px
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 35%, transparent);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.gv-pm-add::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.6s,
+    height 0.6s;
+}
+
+.gv-pm-add:active::before {
+  width: 300px;
+  height: 300px;
+  transition:
+    width 0s,
+    height 0s;
+}
+
+.gv-pm-add:hover {
+  background: var(--gv-pm-brand-hover);
+  box-shadow: 0 6px 18px
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent);
+  transform: translateY(-2px);
+}
+
+.gv-pm-add:active {
+  transform: translateY(0);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-pm-add {
+    background: var(--gv-pm-brand, var(--gv-pm-brand-default));
+    color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
+  }
+
+  .gv-pm-add:hover {
+    background: var(--gv-pm-brand-hover);
+  }
+}

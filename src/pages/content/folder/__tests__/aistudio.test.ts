@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createToaster } from '@/core/ui/toast/toaster';
 import { confirmDriver } from '@/tests/confirmDriver';
+import { readContentStyle } from '@/tests/contentStyle';
 import { toastDriver } from '@/tests/toastDriver';
 import { createTranslator } from '@/utils/i18n';
 
@@ -426,7 +427,7 @@ describe('AIStudio theme compatibility', () => {
     // This used to require AI Studio's own body selector. The palette hangs off
     // the shared scheme hook now, so AI Studio, DeepSeek and whatever comes next
     // are covered by the same two blocks.
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     const palettes = [...css.matchAll(/([^{}]+)\{([^{}]*--folder-bg[^{}]*)\}/g)];
 
     for (const scheme of ['dark', 'light']) {

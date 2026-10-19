@@ -2,9 +2,11 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import { readContentStyle } from '@/tests/contentStyle';
+
 describe('folder sidebar typography', () => {
   it('locks Gemini folder text to native sidebar sizing without affecting AI Studio', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     const titleBlock =
       css.match(
         /\.gv-folder-container:not\(\.gv-aistudio\) \.gv-folder-header \.title\s*{([\s\S]*?)}/,
@@ -28,7 +30,7 @@ describe('folder sidebar typography', () => {
   });
 
   it('keeps Activity headings and rows on the shared native section axis', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     const activityCss = readFileSync(
       resolve(process.cwd(), 'src/pages/content/folder/sidebarActivityList.css'),
       'utf8',

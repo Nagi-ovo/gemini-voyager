@@ -1,0 +1,507 @@
+/* ============================================================================
+   Prompt History (#923)
+   ========================================================================== */
+.gv-ph-trigger {
+  position: fixed;
+  right: 58px;
+  top: 80px;
+  width: 46px;
+  height: 46px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    var(--gv-pm-brand, var(--gv-pm-brand-default)),
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 85%, white)
+  );
+  border: 1.5px solid var(--gv-pm-brand, var(--gv-pm-brand-default));
+  box-shadow:
+    0 6px 24px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 35%, transparent),
+    0 2px 8px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 20%, transparent),
+    inset 0 1px 0 oklch(1 0 0 / 0.15);
+  color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
+  z-index: 2147483150;
+  cursor: pointer;
+  transition:
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-ph-trigger:focus-visible,
+.gv-ph-action:focus-visible {
+  outline: 2px solid var(--gv-pm-brand, var(--gv-pm-brand-default));
+  outline-offset: 2px;
+}
+
+.gv-ph-trigger:hover {
+  transform: scale(1.08) translateY(-1px);
+}
+
+.gv-ph-trigger:active {
+  transform: scale(0.94);
+}
+
+.gv-ph-trigger-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.gv-ph-panel {
+  position: fixed;
+  right: 58px;
+  top: 132px;
+  display: flex;
+  flex-direction: column;
+  width: min(440px, calc(100vw - 76px));
+  max-height: min(70vh, 560px, calc(100dvh - 144px));
+  overflow: hidden;
+  font-size: 14px;
+  --gv-pm-surface: oklch(0.995 0.002 250);
+  border-radius: 18px;
+  background: oklch(0.995 0.002 250);
+  border: 1px solid oklch(0.92 0.004 250 / 0.7);
+  z-index: 2147483200;
+  color: oklch(0.14 0.004 285);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    'Apple Color Emoji',
+    'Segoe UI Emoji';
+}
+
+.gv-ph-panel:focus-visible {
+  outline: 2px solid var(--gv-pm-brand, var(--gv-pm-brand-default));
+  outline-offset: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-ph-panel {
+    background: oklch(0.2 0.008 285);
+    color: oklch(0.92 0.004 250);
+    border-color: oklch(0.3 0.008 285 / 0.7);
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-ph-panel {
+  background: oklch(0.2 0.008 285);
+  color: oklch(0.92 0.004 250);
+  border-color: oklch(0.3 0.008 285 / 0.7);
+}
+
+html[data-gv-scheme='light'] .gv-ph-panel {
+  background: oklch(0.995 0.002 250);
+  color: oklch(0.14 0.004 285);
+  border-color: oklch(0.92 0.004 250 / 0.7);
+}
+
+.gv-ph-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  gap: 6px;
+  border-bottom: 1px solid oklch(0.92 0.004 250 / 0.5);
+}
+
+.gv-ph-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.gv-ph-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gv-ph-empty {
+  padding: 24px 12px;
+  text-align: center;
+  opacity: 0.6;
+}
+
+.gv-ph-item {
+  border: 1px solid oklch(0.92 0.004 250 / 0.6);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gv-ph-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gv-ph-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.gv-ph-badge-sent {
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 15%, transparent);
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+}
+
+.gv-ph-badge-edited {
+  background: oklch(0.6 0.13 45 / 0.15);
+  color: oklch(0.55 0.13 45);
+}
+
+.gv-ph-time {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.gv-ph-item-text {
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.gv-ph-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.gv-ph-action {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid oklch(0.92 0.004 250 / 0.6);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    transform 100ms ease;
+}
+
+.gv-ph-action:hover {
+  background: oklch(0.5 0 0 / 0.08);
+}
+
+.gv-ph-action:active {
+  transform: scale(0.97);
+}
+
+.gv-ph-action-primary {
+  border-color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+}
+
+.gv-ph-action-primary:hover {
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 12%, transparent);
+}
+
+.gv-ph-action-danger {
+  color: oklch(0.55 0.16 25);
+  border-color: oklch(0.6 0.15 25 / 0.4);
+}
+
+.gv-ph-action-danger:hover {
+  background: oklch(0.55 0.16 25 / 0.1);
+}
+
+.gv-ph-notice {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 2;
+  box-shadow: 0 4px 16px oklch(0 0 0 / 0.2);
+}
+
+.gv-ph-notice-ok {
+  background: oklch(0.5 0.13 155 / 0.9);
+  color: oklch(1 0 0);
+}
+
+.gv-ph-notice-error {
+  background: oklch(0.55 0.16 25 / 0.9);
+  color: oklch(1 0 0);
+}
+
+body.gv-rtl .gv-ph-trigger,
+body.gv-rtl .gv-ph-panel {
+  right: auto;
+  left: 58px;
+}
+
+body.gv-rtl .gv-ph-panel {
+  direction: rtl;
+}
+
+@media (max-height: 440px) {
+  .gv-ph-trigger {
+    top: 12px;
+  }
+
+  .gv-ph-panel {
+    top: 64px;
+    max-height: calc(100dvh - 76px);
+  }
+}
+
+/* ----- Gemini compatibility: edit-mode action row -----
+ * Gemini right-aligns the Cancel/Update row with `justify-self: flex-end` on
+ * `.edit-button-area`, which is a block-level flex container inside a block
+ * parent. Self-alignment in block layout is a Chrome-only feature today, so
+ * Safari drops the declaration, the row stretches to the full container width
+ * per spec, and its `justify-content: flex-start` parks both buttons at the far
+ * left, detached from the edit box they belong to.
+ *
+ * Reproduce the same result with properties every engine implements. Measured
+ * against Gemini's own layout: Chrome renders x=904 w=172 with and without this
+ * rule, and Safari matches that instead of x=352 w=724. `!important` is
+ * required because Gemini's own `margin: 0` rule carries two attribute
+ * selectors and would otherwise win. */
+.user-query-container .edit-button-area {
+  width: fit-content !important;
+  margin-inline-start: auto !important;
+}
+
+/* A sent prompt, standing in for the wall of template text Gemini stored.
+   The prompt is re-rendered by this feature rather than revealed in place, so
+   it can be set apart as a quotation and the filled values marked inside it.
+   Gemini's own lines stay hidden throughout. */
+.gv-pm-sent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.gv-pm-sent-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.gv-pm-sent-chip {
+  display: inline-flex;
+  align-items: center;
+  /* Room for the icon, sized so it reads as a label rather than a button with
+     a picture on it. */
+  gap: 6px;
+  max-width: 100%;
+  /* `font: inherit` so the chip sits on the bubble's own type, not the
+     browser's form font. */
+  font: inherit;
+  font-weight: 500;
+  padding: 2px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 18%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 30%, transparent);
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* Named, not `all`: the bubble around this animates on its own. */
+  transition-property: background-color, box-shadow, scale;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.gv-pm-slash-token .lucide,
+.gv-pm-slash-textarea-token .lucide {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  opacity: 0.9;
+}
+
+.gv-pm-sent-chip .lucide {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  opacity: 0.9;
+}
+
+.gv-pm-sent-chip::after {
+  content: '\25B8';
+  margin-left: 6px;
+  font-size: 0.8em;
+  opacity: 0.75;
+}
+
+.gv-pm-sent-open .gv-pm-sent-chip::after {
+  content: '\25BE';
+}
+
+.gv-pm-sent-chip:hover {
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 26%, transparent);
+}
+
+.gv-pm-sent-chip:active {
+  scale: 0.96;
+}
+
+.gv-pm-sent-chip:focus-visible {
+  outline: 2px solid var(--gv-pm-brand, var(--gv-pm-brand-default));
+  outline-offset: 2px;
+}
+
+[data-gv-theme='light'] .gv-pm-sent-chip,
+[data-gv-theme='light'] .gv-pm-sent-value {
+  color: var(--gv-pm-brand-hover);
+}
+
+/* The template, quoted. Indent and one step of contrast say "this part is the
+   prompt, not what the person wrote" without adding a card, a border box or a
+   heading that Gemini's own turns never carry. */
+.gv-pm-sent-body {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 2px solid
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 30%, transparent);
+  /* Dimmed through colour, not `opacity`: opacity applies to the whole subtree
+     and cannot be undone by a child, so the filled values would have been
+     dimmed along with the template they sit in. */
+  color: color-mix(in srgb, currentcolor 68%, transparent);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.gv-pm-sent-body p {
+  margin: 0;
+  min-height: 1em;
+}
+
+/* What was typed into a placeholder. Without it a filled template reads as one
+   undifferentiated wall and the reader cannot find their own answer in it. */
+.gv-pm-sent-value {
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 20%, transparent);
+  /* The accent the chip already uses: the value and the prompt it was typed
+     into read as one thing, and it lifts clear of the dimmed quotation. */
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  border-radius: 4px;
+  padding: 0 3px;
+  font-weight: 500;
+}
+
+/* The person's own words, kept at full contrast in both states. */
+.gv-pm-sent-rest {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Gemini's copy of the same text, and its show-more control for it. Hidden
+   with `display: none` so neither reaches the accessibility tree or
+   find-in-page while this feature is presenting the turn. */
+.gv-pm-sent-line,
+.gv-pm-sent-toggle-hidden {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gv-pm-sent-chip {
+    transition-duration: 0ms;
+  }
+
+  .gv-pm-sent-chip:active {
+    scale: 1;
+  }
+}
+
+/* The rest of the selected name, drawn past the caret while the query is still
+   being typed. It is a separate fixed element, never text inside the composer,
+   so backspace, caret movement and IME composition all behave as they did. */
+.gv-pm-slash-ghost {
+  position: fixed;
+  z-index: 2147483646;
+  display: none;
+  align-items: center;
+  color: color-mix(in srgb, currentcolor 42%, transparent);
+  pointer-events: none;
+  user-select: none;
+  white-space: pre;
+}
+
+.gv-pm-slash-ghost-visible {
+  display: inline-flex;
+}
+
+/* What was typed into a placeholder, inside a composer token's preview. The
+   token carries an already-resolved body, so without this the preview is a wall
+   of template text with the reader's own answers buried in it. Same accent the
+   sent-prompt body uses, so a filled value looks the same wherever it appears. */
+.gv-pm-slash-tooltip-value {
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 20%, transparent);
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  border-radius: 4px;
+  padding: 0 3px;
+  font-weight: 500;
+  /* An editable span, so it wraps with the sentence around it and needs no
+     width of its own. An `<input>` cannot wrap, and a long value ran off the
+     side of the card. */
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.gv-pm-slash-tooltip-value:focus {
+  outline: 2px solid
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 55%, transparent);
+  outline-offset: 1px;
+}
+
+/* Only a preview that offers fields takes the pointer. A read-only one stays
+   transparent to it, so hovering the token behind it is unaffected. */
+.gv-pm-slash-tooltip-editable {
+  pointer-events: auto;
+}
+
+.gv-pm-slash-tooltip[data-gv-theme='light'] .gv-pm-slash-tooltip-value {
+  color: var(--gv-pm-brand-hover);
+}
+
+/* Shown only while content remains below the fold, set from the scroll
+   position rather than always-on: a permanent fade would wash out the last
+   line of a prompt the user has already scrolled to the end of. Sticky, so it
+   rides the bottom of the scrollport instead of the end of the content. */
+.gv-pm-tooltip-more::after {
+  content: '';
+  display: block;
+  position: sticky;
+  bottom: -12px;
+  height: 32px;
+  margin-top: -32px;
+  background: linear-gradient(to bottom, transparent, oklch(0.2 0.008 285));
+  pointer-events: none;
+}
+
+.gv-pm-tooltip-more[data-gv-theme='light']::after {
+  background: linear-gradient(to bottom, transparent, oklch(0.995 0.002 250));
+}

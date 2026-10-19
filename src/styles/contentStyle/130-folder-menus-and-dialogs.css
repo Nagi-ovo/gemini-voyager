@@ -1,0 +1,579 @@
+/* Folder Context Menu */
+/* ── Folder Context Menu ── */
+.gv-folder-menu {
+  background: oklch(0.995 0.002 250);
+  border: 1px solid oklch(0.92 0.004 250 / 0.7);
+  border-radius: 14px;
+  box-shadow:
+    0 12px 40px oklch(0 0 0 / 0.1),
+    0 4px 16px oklch(0 0 0 / 0.05);
+  padding: 6px;
+  z-index: 2147483647;
+  min-width: 170px;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    'Apple Color Emoji',
+    'Segoe UI Emoji';
+  animation: gv-folder-fadeIn 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-folder-menu {
+    background: oklch(0.2 0.008 285);
+    border-color: oklch(0.3 0.008 285 / 0.7);
+    box-shadow:
+      0 12px 40px oklch(0 0 0 / 0.35),
+      0 4px 16px oklch(0 0 0 / 0.2);
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-folder-menu {
+  background: oklch(0.2 0.008 285);
+  border-color: oklch(0.3 0.008 285 / 0.7);
+  box-shadow:
+    0 12px 40px oklch(0 0 0 / 0.35),
+    0 4px 16px oklch(0 0 0 / 0.2);
+}
+
+html[data-gv-scheme='light'] .gv-folder-menu {
+  background: oklch(0.995 0.002 250);
+  border-color: oklch(0.92 0.004 250 / 0.7);
+  box-shadow:
+    0 12px 40px oklch(0 0 0 / 0.1),
+    0 4px 16px oklch(0 0 0 / 0.05);
+}
+
+.gv-folder-menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 9px 14px;
+  border: none;
+  background: transparent;
+  color: oklch(0.14 0.004 285);
+  text-align: left;
+  cursor: pointer;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-folder-menu-item:hover {
+  background: oklch(0.14 0.004 285 / 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-folder-menu-item {
+    color: oklch(0.92 0.004 250);
+  }
+  .gv-folder-menu-item:hover {
+    background: oklch(0.92 0.004 250 / 0.08);
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-folder-menu-item {
+  color: oklch(0.92 0.004 250);
+}
+
+html[data-gv-scheme='dark'] .gv-folder-menu-item:hover {
+  background: oklch(0.92 0.004 250 / 0.08);
+}
+
+html[data-gv-scheme='light'] .gv-folder-menu-item {
+  color: oklch(0.14 0.004 285);
+}
+
+html[data-gv-scheme='light'] .gv-folder-menu-item:hover {
+  background: oklch(0.14 0.004 285 / 0.06);
+}
+
+/* Inline-SVG icon slot inside .gv-folder-menu-item (used when an item ships its
+   own SVG instead of a Material Symbols ligature, e.g. cloud upload/sync). */
+.gv-folder-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.gv-folder-menu-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Color Picker Dialog ── */
+.gv-color-picker-dialog {
+  position: fixed;
+  background: oklch(0.995 0.002 250);
+  border: 1px solid oklch(0.92 0.004 250 / 0.7);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow:
+    0 12px 40px oklch(0 0 0 / 0.1),
+    0 4px 16px oklch(0 0 0 / 0.05);
+  z-index: 10001;
+  display: grid;
+  grid-template-columns: repeat(4, 36px);
+  gap: 8px;
+  animation: gv-folder-fadeIn 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes gv-folder-fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-color-picker-dialog {
+    background: oklch(0.2 0.008 285);
+    border-color: oklch(0.3 0.008 285 / 0.7);
+    box-shadow:
+      0 12px 40px oklch(0 0 0 / 0.35),
+      0 4px 16px oklch(0 0 0 / 0.2);
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-color-picker-dialog {
+  background: oklch(0.2 0.008 285);
+  border-color: oklch(0.3 0.008 285 / 0.7);
+  box-shadow:
+    0 12px 40px oklch(0 0 0 / 0.35),
+    0 4px 16px oklch(0 0 0 / 0.2);
+}
+
+html[data-gv-scheme='light'] .gv-color-picker-dialog {
+  background: oklch(0.995 0.002 250);
+  border-color: oklch(0.92 0.004 250 / 0.7);
+}
+
+.gv-color-picker-item {
+  width: 36px;
+  height: 36px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  padding: 0;
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.08);
+}
+
+.gv-color-picker-item:hover {
+  transform: scale(1.12);
+  border-color: oklch(0.14 0.004 285 / 0.3);
+  box-shadow: 0 3px 10px oklch(0 0 0 / 0.15);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-color-picker-item:hover {
+    border-color: oklch(0.92 0.004 250 / 0.4);
+  }
+}
+
+.gv-color-picker-item.selected {
+  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  box-shadow: 0 0 0 3px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.25);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-color-picker-item.selected {
+    border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+    box-shadow: 0 0 0 3px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.25);
+  }
+}
+
+.gv-color-picker-item.selected::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  text-shadow: 0 1px 2px oklch(0 0 0 / 0.3);
+}
+
+/* Drag cursor for original conversation elements */
+[data-test-id='conversation'][draggable='true'] {
+  cursor: grab;
+}
+
+[data-test-id='conversation'][draggable='true']:active {
+  cursor: grabbing;
+}
+
+/* Inline Input/Rename Styles */
+.gv-folder-inline-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: var(--folder-hover-bg);
+  border-radius: 8px;
+  margin: 4px 0;
+}
+
+.gv-folder-name-input,
+.gv-folder-rename-input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--folder-border);
+  border-radius: 4px;
+  background-color: var(--folder-bg);
+  color: var(--folder-text);
+  font-size: 14px;
+  outline: none;
+}
+
+.gv-folder-name-input:focus,
+.gv-folder-rename-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.gv-folder-rename-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.gv-folder-inline-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--folder-icon-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  padding: 0;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+  flex-shrink: 0;
+}
+
+.gv-folder-inline-btn:hover {
+  background-color: var(--folder-hover-bg);
+}
+
+.gv-folder-inline-save:hover {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+.gv-folder-inline-cancel:hover {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.gv-folder-inline-btn mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.gv-hidden {
+  display: none !important;
+}
+
+/* ── Move to Folder Dialog ── */
+.gv-folder-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: oklch(0 0 0 / 0.35);
+  /* Modal level: above the floating panel (…45), below shared confirm and toast
+     (…47), so an import error shows over the dialog whichever mounted first. */
+  z-index: 2147483646;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: gv-folder-overlayIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes gv-folder-overlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.gv-folder-dialog {
+  background: oklch(0.995 0.002 250);
+  border: 1px solid oklch(0.92 0.004 250 / 0.7);
+  border-radius: 18px;
+  box-shadow:
+    0 16px 48px oklch(0 0 0 / 0.12),
+    0 6px 20px oklch(0 0 0 / 0.06);
+  padding: 0;
+  min-width: 340px;
+  max-width: 420px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    'Apple Color Emoji',
+    'Segoe UI Emoji';
+  animation: gv-folder-fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-folder-dialog {
+    background: oklch(0.2 0.008 285);
+    border-color: oklch(0.3 0.008 285 / 0.7);
+    box-shadow:
+      0 16px 48px oklch(0 0 0 / 0.4),
+      0 6px 20px oklch(0 0 0 / 0.25);
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-folder-dialog {
+  background: oklch(0.2 0.008 285);
+  border-color: oklch(0.3 0.008 285 / 0.7);
+  box-shadow:
+    0 16px 48px oklch(0 0 0 / 0.4),
+    0 6px 20px oklch(0 0 0 / 0.25);
+}
+
+html[data-gv-scheme='light'] .gv-folder-dialog {
+  background: oklch(0.995 0.002 250);
+  border-color: oklch(0.92 0.004 250 / 0.7);
+}
+
+.gv-folder-dialog-title {
+  color: oklch(0.14 0.004 285);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  padding: 16px 18px 12px 18px;
+  border-bottom: 1px solid oklch(0.92 0.004 250 / 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-folder-dialog-title {
+    color: oklch(0.92 0.004 250);
+    border-bottom-color: oklch(0.3 0.008 285 / 0.5);
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-folder-dialog-title {
+  color: oklch(0.92 0.004 250);
+  border-bottom-color: oklch(0.3 0.008 285 / 0.5);
+}
+
+html[data-gv-scheme='light'] .gv-folder-dialog-title {
+  color: oklch(0.14 0.004 285);
+  border-bottom-color: oklch(0.92 0.004 250 / 0.5);
+}
+
+.gv-folder-dialog-search {
+  margin: 10px 12px 4px;
+  padding: 9px 11px;
+  border: 1px solid oklch(0.86 0.008 250 / 0.9);
+  border-radius: 10px;
+  background: oklch(0.98 0.002 250);
+  color: oklch(0.14 0.004 285);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.3;
+  outline: none;
+}
+
+.gv-folder-dialog-search:focus {
+  border-color: oklch(0.62 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  box-shadow: 0 0 0 3px oklch(0.62 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.16);
+}
+
+html[data-gv-scheme='dark'] .gv-folder-dialog-search {
+  background: oklch(0.24 0.008 285);
+  border-color: oklch(0.36 0.008 285 / 0.9);
+  color: oklch(0.92 0.004 250);
+}
+
+html[data-gv-scheme='dark'] .gv-folder-dialog-search:focus {
+  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  box-shadow: 0 0 0 3px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.18);
+}
+
+.gv-folder-dialog-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 8px;
+  min-height: 200px;
+  max-height: 400px;
+  scrollbar-gutter: stable;
+}
+
+.gv-folder-dialog-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: oklch(0.14 0.004 285);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+}
+
+.gv-folder-dialog-item:not(:disabled):hover {
+  background: oklch(0.14 0.004 285 / 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-folder-dialog-item {
+    color: oklch(0.92 0.004 250);
+  }
+  .gv-folder-dialog-item:not(:disabled):hover {
+    background: oklch(0.92 0.004 250 / 0.08);
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-folder-dialog-item {
+  color: oklch(0.92 0.004 250);
+}
+
+html[data-gv-scheme='dark'] .gv-folder-dialog-item:not(:disabled):hover {
+  background: oklch(0.92 0.004 250 / 0.08);
+}
+
+html[data-gv-scheme='light'] .gv-folder-dialog-item {
+  color: oklch(0.14 0.004 285);
+}
+
+html[data-gv-scheme='light'] .gv-folder-dialog-item:not(:disabled):hover {
+  background: oklch(0.14 0.004 285 / 0.06);
+}
+
+.gv-folder-dialog-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.gv-folder-dialog-item mat-icon {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-folder-dialog-item mat-icon {
+    color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  }
+}
+
+.gv-folder-dialog-item span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gv-folder-dialog-item-text {
+  min-width: 72px;
+}
+
+.gv-folder-dialog-item-path {
+  color: oklch(0.5 0.01 285);
+  font-size: 11px;
+  font-weight: 500;
+  text-align: right;
+}
+
+html[data-gv-scheme='dark'] .gv-folder-dialog-item-path {
+  color: oklch(0.72 0.01 285);
+}
+
+.gv-folder-dialog-empty {
+  padding: 26px 12px;
+  color: oklch(0.5 0.01 285);
+  font-size: 13px;
+  text-align: center;
+}
+
+html[data-gv-scheme='dark'] .gv-folder-dialog-empty {
+  color: oklch(0.72 0.01 285);
+}
+
+.gv-folder-dialog-cancel {
+  padding: 12px 18px;
+  border: none;
+  border-top: 1px solid oklch(0.92 0.004 250 / 0.5);
+  background: transparent;
+  color: oklch(0.14 0.004 285);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 0 0 18px 18px;
+}
+
+.gv-folder-dialog-cancel:hover {
+  background: oklch(0.14 0.004 285 / 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-folder-dialog-cancel {
+    color: oklch(0.92 0.004 250);
+    border-top-color: oklch(0.3 0.008 285 / 0.5);
+  }
+  .gv-folder-dialog-cancel:hover {
+    background: oklch(0.92 0.004 250 / 0.06);
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-folder-dialog-cancel {
+  color: oklch(0.92 0.004 250);
+  border-top-color: oklch(0.3 0.008 285 / 0.5);
+}
+
+html[data-gv-scheme='dark'] .gv-folder-dialog-cancel:hover {
+  background: oklch(0.92 0.004 250 / 0.06);
+}
+
+html[data-gv-scheme='light'] .gv-folder-dialog-cancel {
+  color: oklch(0.14 0.004 285);
+  border-top-color: oklch(0.92 0.004 250 / 0.5);
+}
+
+html[data-gv-scheme='light'] .gv-folder-dialog-cancel:hover {
+  background: oklch(0.14 0.004 285 / 0.06);
+}

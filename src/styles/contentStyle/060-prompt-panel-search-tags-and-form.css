@@ -1,0 +1,405 @@
+.gv-pm-search {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gv-pm-search input[type='search'] {
+  flex: 1;
+  min-width: 0;
+  border-radius: 10px;
+  background: rgba(31, 41, 55, 0.5);
+  color: #e5e7eb;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  padding: 9px 12px;
+  font-size: 13px;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+  outline: none;
+}
+
+.gv-pm-search input[type='search']:focus {
+  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
+  background: rgba(31, 41, 55, 0.7);
+  box-shadow: 0 0 0 3px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
+}
+
+html[data-gv-scheme='light'] .gv-pm-search input[type='search'] {
+  background: rgba(0, 0, 0, 0.04);
+  color: #1f2937;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+}
+
+html[data-gv-scheme='light'] .gv-pm-search input[type='search']:focus {
+  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
+  background: rgba(0, 0, 0, 0.02);
+  box-shadow: 0 0 0 3px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.08);
+}
+
+html[data-gv-scheme='light'] .gv-pm-search input[type='search']::placeholder {
+  color: #6b7280;
+  opacity: 0.7;
+}
+
+html[data-gv-scheme='dark'] .gv-pm-search input[type='search'] {
+  background: rgba(31, 41, 55, 0.5);
+  color: #e5e7eb;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-search input[type='search']:focus {
+  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
+  background: rgba(31, 41, 55, 0.7);
+  box-shadow: 0 0 0 3px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-search input[type='search']::placeholder {
+  color: #9ca3af;
+  opacity: 0.7;
+}
+
+.gv-pm-saved-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px 8px;
+}
+
+.gv-pm-saved-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+  width: 100%;
+  padding: 3px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.gv-pm-saved-filter {
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: rgba(229, 231, 235, 0.62);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gv-pm-saved-filter:hover {
+  color: #e5e7eb;
+}
+
+.gv-pm-saved-filter.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: oklch(0.76 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+.gv-pm-saved-filter:focus-visible {
+  outline: 2px solid oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  outline-offset: 2px;
+}
+
+html[data-gv-scheme='light'] .gv-pm-saved-filters,
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-filters {
+  background: rgba(0, 0, 0, 0.055);
+}
+
+html[data-gv-scheme='light'] .gv-pm-saved-filter,
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-filter {
+  color: rgba(31, 41, 55, 0.62);
+}
+
+html[data-gv-scheme='light'] .gv-pm-saved-filter:hover,
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-filter:hover {
+  color: #1f2937;
+}
+
+html[data-gv-scheme='light'] .gv-pm-saved-filter.active,
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-filter.active {
+  background: #fff;
+  color: oklch(0.5 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.gv-pm-tags-wrap {
+  position: relative;
+  padding: 0 16px 8px 16px;
+}
+
+.gv-pm-tags-wrap::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 8px;
+  height: 22px;
+  background: linear-gradient(to bottom, oklch(0 0 0 / 0), var(--gv-pm-surface));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.gv-pm-tags-wrap.gv-pm-tags-scrollable:not(.gv-pm-tags-scroll-end)::before {
+  opacity: 1;
+}
+
+.gv-pm-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: min(24vh, 180px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.gv-pm-tags-scroll-hint {
+  position: absolute;
+  right: 18px;
+  bottom: 10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  line-height: 1;
+  background: oklch(0.2 0.008 285 / 0.72);
+  color: oklch(0.92 0.004 250);
+  box-shadow: 0 4px 10px oklch(0 0 0 / 0.2);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(2px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.gv-pm-tags-wrap.gv-pm-tags-scrollable:not(.gv-pm-tags-scroll-end) .gv-pm-tags-scroll-hint {
+  opacity: 0.9;
+  transform: translateY(0);
+}
+
+.gv-pm-tag {
+  border-radius: 9999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(55, 65, 81, 0.4);
+  color: rgba(229, 231, 235, 0.8);
+  border: none;
+  transition: all 0.15s ease;
+}
+
+.gv-pm-tag:hover {
+  background: rgba(55, 65, 81, 0.6);
+  color: #e5e7eb;
+}
+
+.gv-pm-tag.active {
+  background: var(--gv-pm-brand-soft);
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  font-weight: 600;
+}
+
+html[data-gv-scheme='light'] .gv-pm-tag {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(31, 41, 55, 0.7);
+  border: none;
+}
+
+html[data-gv-scheme='light'] .gv-pm-tag:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #1f2937;
+}
+
+html[data-gv-scheme='light'] .gv-pm-tag.active {
+  background: var(--gv-pm-brand-soft);
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+}
+
+html[data-gv-scheme='dark'] .gv-pm-tag {
+  background: rgba(55, 65, 81, 0.4);
+  color: rgba(229, 231, 235, 0.8);
+  border: none;
+}
+
+html[data-gv-scheme='dark'] .gv-pm-tag:hover {
+  background: rgba(55, 65, 81, 0.6);
+  color: #e5e7eb;
+}
+
+html[data-gv-scheme='dark'] .gv-pm-tag.active {
+  background: var(--gv-pm-brand-soft);
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+}
+
+.gv-pm-add-form {
+  padding: 12px 16px 14px 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.gv-pm-input-text,
+.gv-pm-input-tags,
+.gv-pm-input-name {
+  width: 100%;
+  border-radius: 10px;
+  padding: 9px 12px;
+  /* Form controls do not inherit type by default, so without this the fields
+     render in the browser's form font while the rest of the panel does not. */
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  /* Inherit the panel foreground rather than restating a hex per theme. */
+  color: inherit;
+  background: oklch(0.14 0.004 285 / 0.03);
+  border: 1px solid oklch(0.92 0.004 250 / 0.9);
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.gv-pm-input-text {
+  resize: vertical;
+  min-height: 68px;
+  max-height: 200px;
+}
+
+.gv-pm-input-text::placeholder,
+.gv-pm-input-tags::placeholder,
+.gv-pm-input-name::placeholder {
+  color: currentcolor;
+  opacity: 0.45;
+}
+
+/* One focus treatment for every field, built from the accent token instead of
+   from its hue, so a custom brand colour keeps its own lightness and chroma. */
+.gv-pm-input-text:focus,
+.gv-pm-input-tags:focus,
+.gv-pm-input-name:focus {
+  border-color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  box-shadow: 0 0 0 3px var(--gv-pm-brand-soft);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-pm-input-text,
+  .gv-pm-input-tags,
+  .gv-pm-input-name {
+    background: oklch(0.92 0.004 250 / 0.04);
+    border-color: oklch(0.3 0.008 285 / 0.9);
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-pm-input-text,
+html[data-gv-scheme='dark'] .gv-pm-input-tags,
+html[data-gv-scheme='dark'] .gv-pm-input-name {
+  background: oklch(0.92 0.004 250 / 0.04);
+  border-color: oklch(0.3 0.008 285 / 0.9);
+}
+
+html[data-gv-scheme='light'] .gv-pm-input-text,
+html[data-gv-scheme='light'] .gv-pm-input-tags,
+html[data-gv-scheme='light'] .gv-pm-input-name {
+  background: oklch(0.14 0.004 285 / 0.03);
+  border-color: oklch(0.92 0.004 250 / 0.9);
+}
+
+.gv-pm-add-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 2px;
+}
+
+.gv-pm-inline-hint {
+  margin-right: auto;
+  font-size: 12px;
+  color: #fca5a5;
+  opacity: 0.95;
+}
+
+.gv-pm-inline-hint.ok {
+  color: #86efac;
+}
+
+.gv-pm-save,
+.gv-pm-cancel {
+  border-radius: 10px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+/* The accent comes straight from the brand token. The previous rule rebuilt the
+   colour out of --gv-pm-brand-h alone and then hardcoded hue 158 in :hover and
+   hue 160 in the dark foreground, so a user's custom accent snapped back to the
+   default green as soon as the pointer touched the button. */
+.gv-pm-save {
+  background: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
+  border: 1px solid transparent;
+  /* The panel is a flat, bordered surface. A lifting, glowing primary button
+     belongs to a different design language, so it neither rises nor glows. */
+  box-shadow: none;
+}
+
+.gv-pm-save:hover {
+  background: var(--gv-pm-brand-hover);
+}
+
+.gv-pm-cancel {
+  background: transparent;
+  /* Inherit the panel foreground instead of restating it per theme. */
+  color: inherit;
+  border: 1px solid oklch(0.92 0.004 250 / 0.9);
+}
+
+.gv-pm-cancel:hover {
+  background: oklch(0.14 0.004 285 / 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-pm-cancel {
+    border-color: oklch(0.3 0.008 285 / 0.9);
+  }
+
+  .gv-pm-cancel:hover {
+    background: oklch(0.92 0.004 250 / 0.06);
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-pm-cancel {
+  border-color: oklch(0.3 0.008 285 / 0.9);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-cancel:hover {
+  background: oklch(0.92 0.004 250 / 0.06);
+}
+
+html[data-gv-scheme='light'] .gv-pm-cancel {
+  border-color: oklch(0.92 0.004 250 / 0.9);
+}
+
+html[data-gv-scheme='light'] .gv-pm-cancel:hover {
+  background: oklch(0.14 0.004 285 / 0.05);
+}

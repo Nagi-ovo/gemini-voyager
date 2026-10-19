@@ -8,7 +8,7 @@ halo hider, packaged as an official plugin.
 ## How it works
 
 CSS only: `style.css` holds the same rules as the native module's copy in
-`public/contentStyle.css`, without its `body.gv-hide-input-halo` gate. The
+`src/styles/contentStyle/`, without its `body.gv-hide-input-halo` gate. The
 plugin's stylesheet is the scope instead: the engine adds it only while the
 plugin runs and removes it on unmount. There are no DOM ops, so the plugin
 adds no class, observer or health tracking to the page. The rules do not depend

@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import type { PluginManifest } from '@/features/plugins/types';
+import { readContentStyle } from '@/tests/contentStyle';
 
 import {
   DEFAULT_ACCENT,
@@ -241,7 +242,7 @@ describe('applyBrandTheme', () => {
 
 describe('platform theme CSS', () => {
   it('paints the FAB with the brand and lets nothing repaint it afterwards', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selector, body], order) => ({
       selector: selector
         .replace(/\/\*[\s\S]*?\*\//g, '')
@@ -277,7 +278,7 @@ describe('platform theme CSS', () => {
   });
 
   it('never re-declares the JS-overridable --gv-pm-brand in a scheme block (would shadow the inline custom colour)', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     // Each .theme-host theme block must define only the *-default vars; a bare
     // `--gv-pm-brand:` there would shadow the inline <html> override so a custom
     // colour could never reach the Voyager UI inside .theme-host.
@@ -293,12 +294,11 @@ describe('platform theme CSS', () => {
 
   it('re-hues tinted accents via var(--gv-pm-brand-h), not the low-support oklch(from …) syntax', () => {
     const css = [
-      'public/contentStyle.css',
-      'src/features/timeline/timeline.css',
-      'src/features/timeline/timelinePreview.css',
-    ]
-      .map((path) => readFileSync(resolve(process.cwd(), path), 'utf8'))
-      .join('\n');
+      readContentStyle(),
+      ...['src/features/timeline/timeline.css', 'src/features/timeline/timelinePreview.css'].map(
+        (path) => readFileSync(resolve(process.cwd(), path), 'utf8'),
+      ),
+    ].join('\n');
     // CSS relative-colour syntax is too new (Chrome 119+/Safari 16.4+/Firefox 128+);
     // tints must use the broadly-supported oklch(L C var(--gv-pm-brand-h)) form.
     // Matched as a regex, not a substring: the formatter wraps long values, and a
@@ -311,7 +311,7 @@ describe('platform theme CSS', () => {
   });
 
   it('uses the site accent for formula hover instead of hard-coded Gemini blue', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     const formulaHover =
       css.match(
         /:root\.gv-formula-copy-enabled \.math-inline:not\(\.gv-formula-copy-ignored\):hover,\s*:root\.gv-formula-copy-enabled \.math-display:not\(\.gv-formula-copy-ignored\):hover,\s*:root\.gv-formula-copy-enabled \[data-math\]:not\(\.gv-formula-copy-ignored\):hover\s*{([\s\S]*?)}/,

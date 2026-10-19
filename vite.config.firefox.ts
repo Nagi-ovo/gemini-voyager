@@ -81,7 +81,7 @@ export const firefoxManifest = appendFirefoxChangelogResources({
       // The CSS side has to hold this floor too, and nothing about it is
       // visible at build time: an unsupported selector silently invalidates
       // the whole rule group. Anything newer than 115 lives behind an
-      // @supports guard in public/contentStyle.css, and
+      // @supports guard in src/styles/contentStyle/, and
       // firefoxCssFloor.test.ts fails on an unguarded use.
       strict_min_version: '115.0',
       data_collection_permissions: {

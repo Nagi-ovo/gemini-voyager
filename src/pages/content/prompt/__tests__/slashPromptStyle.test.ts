@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+
+import { readContentStyle } from '@/tests/contentStyle';
 
 function cssBlock(css: string, selector: string): string {
   const escapedSelector = selector
@@ -15,7 +15,7 @@ function cssBlock(css: string, selector: string): string {
 
 describe('slash prompt token styling', () => {
   it('keeps prompt markers unpadded so they align with Gemini plain text', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     const nativeToken = cssBlock(css, ".gv-pm-slash-token[contenteditable='false']");
     const rebuiltMarker = cssBlock(css, '.gv-pm-slash-textarea-token');
 
@@ -26,7 +26,7 @@ describe('slash prompt token styling', () => {
   });
 
   it('keeps the native hit-test marker invisible in every theme', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
 
     // The marker sits on top of the editor's real token purely for hover. A
     // single-class colour rule must never outrank it, or light theme paints a
@@ -38,7 +38,7 @@ describe('slash prompt token styling', () => {
   });
 
   it('keeps rebuilt contenteditable markers from repainting the prompt name', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     const contenteditableMarker = cssBlock(
       css,
       ".gv-pm-slash-textarea-tokens[data-gv-input-kind='contenteditable']\n  .gv-pm-slash-textarea-token",
@@ -48,7 +48,7 @@ describe('slash prompt token styling', () => {
   });
 
   it('shows a single theme-coloured overlay only after its source is covered', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     const coveredMarker = cssBlock(
       css,
       ".gv-pm-slash-textarea-tokens[data-gv-input-kind='contenteditable']\n  .gv-pm-slash-textarea-token-covered-source",
@@ -62,7 +62,7 @@ describe('slash prompt token styling', () => {
   });
 
   it('lets the marker cover Prompt selections without exposing native selection paint', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     const nativeSelection = cssBlock(css, '.gv-pm-slash-prompt-only-selection *::selection');
     const selectedMarker = cssBlock(css, '.gv-pm-slash-textarea-token-selected');
 

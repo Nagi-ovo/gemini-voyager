@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+
+import { readContentStyle } from '@/tests/contentStyle';
 
 /**
  * Declarations of the top-level rule whose selector list is exactly `selector`.
@@ -14,26 +14,26 @@ function ruleBody(css: string, selector: string): string {
 
 describe('selection mode interaction', () => {
   it('pins the selection bar to the top', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
 
     expect(ruleBody(css, '.gv-export-select-bar')).toMatch(/\btop:\s*12px;/);
   });
 
   it('supports dark-theme selectors for the export dialog', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
 
     expect(css).toContain("html[data-gv-scheme='dark'] .gv-export-dialog");
   });
 
   it('styles the Markdown prompt heading switch for dark and RTL layouts', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
 
     expect(css).toContain("html[data-gv-scheme='dark'] .gv-export-prompt-heading-section");
     expect(css).toContain('body.gv-rtl .gv-export-prompt-heading-switch .gv-coach-knob');
   });
 
   it('keeps logo wrapper from blocking top-bar button clicks', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     const wrapperBlock = ruleBody(css, '.gv-logo-dropdown-wrapper');
     const logoBlock = ruleBody(
       css,
@@ -46,7 +46,7 @@ describe('selection mode interaction', () => {
   });
 
   it('applies horizontal scrolling to the export selection bar and prevents text wrapping', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
 
     // Check for container scroll behaviors
     const barBlock = ruleBody(css, '.gv-export-select-bar');

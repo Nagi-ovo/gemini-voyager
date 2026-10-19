@@ -1,0 +1,425 @@
+/* ==========================================================================
+   Export Dialog Styles
+   ========================================================================== */
+
+/* Dialog overlay */
+.gv-export-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: gv-fade-in 0.2s ease-out;
+}
+
+@keyframes gv-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Dialog container */
+.gv-export-dialog {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  min-width: 420px;
+  max-width: 500px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  animation: gv-slide-up 0.3s ease-out;
+}
+
+@keyframes gv-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-export-dialog {
+  background: #1e1e1e;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Dialog title */
+.gv-export-dialog-title {
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #202124;
+}
+
+html[data-gv-scheme='dark'] .gv-export-dialog-title {
+  color: #e8eaed;
+}
+
+/* Dialog subtitle */
+.gv-export-dialog-subtitle {
+  font-size: 14px;
+  color: #5f6368;
+  margin-bottom: 20px;
+}
+
+html[data-gv-scheme='dark'] .gv-export-dialog-subtitle {
+  color: #9aa0a6;
+}
+
+/* Warning message */
+.gv-export-dialog-warning {
+  font-size: 13px;
+  color: #d93025;
+  background-color: #fef7e0;
+  border: 1px solid #f9ab00;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+html[data-gv-scheme='dark'] .gv-export-dialog-warning {
+  color: #fdd663;
+  background-color: rgba(249, 171, 0, 0.1);
+  border-color: #f9ab00;
+}
+
+/* Format list */
+.gv-export-format-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* Format option */
+.gv-export-format-option {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  border: 2px solid #dadce0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gv-export-format-option:hover {
+  background-color: #f8f9fa;
+  border-color: #1a73e8;
+}
+
+/* Firefox only supports :has() from 121, and manifest.json keeps the floor at
+   115 for the Firefox 115 ESR line. An unsupported pseudo-class invalidates the
+   WHOLE selector list, so these live behind @supports: below 121 the styling is
+   absent, which is the accepted degradation. Do not lift the guard without
+   raising strict_min_version - see firefoxCssFloor.test.ts. */
+@supports selector(:has(*)) {
+  .gv-export-format-option:has(input:checked) {
+    background-color: #e8f0fe;
+    border-color: #1a73e8;
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-export-format-option {
+  border-color: #3c4043;
+}
+
+html[data-gv-scheme='dark'] .gv-export-format-option:hover {
+  background-color: #2d2e30;
+  border-color: #8ab4f8;
+}
+
+@supports selector(:has(*)) {
+  html[data-gv-scheme='dark'] .gv-export-format-option:has(input:checked) {
+    background-color: #1e3a5f;
+    border-color: #8ab4f8;
+  }
+}
+
+/* Radio input */
+.gv-export-format-option input[type='radio'] {
+  margin-right: 12px;
+  margin-top: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: #1a73e8;
+}
+
+/* Format content */
+.gv-export-format-content {
+  flex: 1;
+}
+
+.gv-export-format-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #202124;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+html[data-gv-scheme='dark'] .gv-export-format-label {
+  color: #e8eaed;
+}
+
+.gv-export-format-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #34a853;
+  color: white;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.gv-export-format-description {
+  font-size: 13px;
+  color: #5f6368;
+  line-height: 1.4;
+}
+
+html[data-gv-scheme='dark'] .gv-export-format-description {
+  color: #9aa0a6;
+}
+
+/* Dialog buttons */
+.gv-export-dialog-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.gv-export-dialog-btn {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gv-export-dialog-btn-primary {
+  background: #1a73e8;
+  color: white;
+}
+
+.gv-export-dialog-btn-primary:hover {
+  background: #1765cc;
+  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+}
+
+.gv-export-dialog-btn-secondary {
+  background: transparent;
+  color: #1a73e8;
+  border: 1px solid #dadce0;
+}
+
+.gv-export-dialog-btn-secondary:hover {
+  background: #f8f9fa;
+}
+
+html[data-gv-scheme='dark'] .gv-export-dialog-btn-secondary {
+  color: #8ab4f8;
+  border-color: #3c4043;
+}
+
+html[data-gv-scheme='dark'] .gv-export-dialog-btn-secondary:hover {
+  background: #2d2e30;
+}
+
+/* Dark theme fallback selectors used by some Gemini variants */
+html[data-gv-scheme='dark'] .gv-export-dialog {
+  background: #1e1e1e;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+html[data-gv-scheme='dark'] .gv-export-dialog-title {
+  color: #e8eaed;
+}
+
+html[data-gv-scheme='dark'] .gv-export-dialog-subtitle {
+  color: #9aa0a6;
+}
+
+html[data-gv-scheme='dark'] .gv-export-dialog-warning {
+  color: #fdd663;
+  background-color: rgba(249, 171, 0, 0.1);
+  border-color: #f9ab00;
+}
+
+html[data-gv-scheme='dark'] .gv-export-format-option {
+  border-color: #3c4043;
+}
+
+html[data-gv-scheme='dark'] .gv-export-format-option:hover {
+  background-color: #2d2e30;
+  border-color: #8ab4f8;
+}
+
+@supports selector(:has(*)) {
+  html[data-gv-scheme='dark'] .gv-export-format-option:has(input:checked) {
+    background-color: #1e3a5f;
+    border-color: #8ab4f8;
+  }
+}
+
+html[data-gv-scheme='dark'] .gv-export-format-label {
+  color: #e8eaed;
+}
+
+html[data-gv-scheme='dark'] .gv-export-format-description {
+  color: #9aa0a6;
+}
+
+html[data-gv-scheme='dark'] .gv-export-dialog-btn-secondary {
+  color: #8ab4f8;
+  border-color: #3c4043;
+}
+
+html[data-gv-scheme='dark'] .gv-export-dialog-btn-secondary:hover {
+  background: #2d2e30;
+}
+
+/* Markdown prompt heading option */
+.gv-export-prompt-heading-section {
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.gv-export-prompt-heading-copy {
+  min-width: 0;
+}
+
+.gv-export-prompt-heading-label {
+  margin-bottom: 3px;
+}
+
+.gv-export-prompt-heading-hint {
+  font-size: 12px;
+}
+
+.gv-export-prompt-heading-switch[aria-checked='true'] {
+  border-color: #1a73e8;
+  background: #1a73e8;
+}
+
+html[data-gv-scheme='dark'] .gv-export-prompt-heading-section {
+  border-color: #3c4043;
+  background: #2d2e30;
+}
+
+body.gv-rtl .gv-export-prompt-heading-switch .gv-coach-knob {
+  right: 1px;
+  left: auto;
+}
+
+body.gv-rtl .gv-export-prompt-heading-switch[aria-checked='true'] .gv-coach-knob {
+  transform: translateX(-18px);
+}
+
+.gv-export-speakers-section {
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.gv-export-speakers-title {
+  margin-bottom: 12px;
+  color: #202124;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.gv-export-speakers-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.gv-export-speaker-field {
+  min-width: 0;
+}
+
+.gv-export-speaker-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #5f6368;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.gv-export-speaker-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #bdc1c6;
+  border-radius: 6px;
+  outline: none;
+  background: #fff;
+  color: #202124;
+  font: inherit;
+  font-size: 14px;
+}
+
+.gv-export-speaker-input:focus-visible {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+html[data-gv-scheme='dark'] .gv-export-speakers-section,
+html[data-gv-scheme='dark'] .gv-export-dialog-overlay .gv-export-speakers-section {
+  border-color: #3c4043;
+  background: #2d2e30;
+}
+
+html[data-gv-scheme='dark'] .gv-export-speakers-title,
+html[data-gv-scheme='dark'] .gv-export-speaker-label,
+html[data-gv-scheme='dark'] .gv-export-dialog-overlay .gv-export-speakers-title,
+html[data-gv-scheme='dark'] .gv-export-dialog-overlay .gv-export-speaker-label {
+  color: #e8eaed;
+}
+
+html[data-gv-scheme='dark'] .gv-export-speaker-input,
+html[data-gv-scheme='dark'] .gv-export-dialog-overlay .gv-export-speaker-input {
+  border-color: #5f6368;
+  background: #202124;
+  color: #e8eaed;
+}
+
+@media (max-width: 520px) {
+  .gv-export-speakers-fields {
+    grid-template-columns: 1fr;
+  }
+}

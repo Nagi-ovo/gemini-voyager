@@ -1,0 +1,426 @@
+.gv-pm-item {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+  gap: 6px;
+  align-items: start;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  position: relative;
+  transition: background 0.15s ease;
+}
+
+.gv-pm-item:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+/* Hidden until hover — but the fade sits on each button, never on the cluster.
+ * A parent at opacity 0 clamps its children, and the pin has to stay lit on a
+ * pinned row after the rest have faded back out. */
+.gv-pm-item .gv-pm-actions > * {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.gv-pm-item:hover .gv-pm-actions > *,
+.gv-pm-item:focus-within .gv-pm-actions > * {
+  opacity: 1;
+}
+
+.gv-pm-item-text-container {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.gv-pm-item-text {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #e5e7eb;
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.gv-pm-item-text:hover {
+  opacity: 0.85;
+}
+
+.gv-md-collapsed {
+  max-height: 7.5em;
+  overflow: hidden;
+  position: relative;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  line-clamp: 5;
+}
+
+.gv-md-collapsed::after {
+  content: '...';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding-left: 1.5em;
+  background: none;
+}
+
+/* Ensure markdown content overflow handling */
+.gv-md {
+  width: 100%;
+  min-width: 0;
+}
+
+.gv-md pre,
+.gv-md code {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.gv-md pre {
+  margin: 0;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+html[data-gv-scheme='light'] .gv-md pre {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html[data-gv-scheme='light'] .gv-md-collapsed::after {
+  background: none;
+}
+
+html[data-gv-scheme='dark'] .gv-md-collapsed::after {
+  background: none;
+}
+
+/* Pin and reorder handle: the same icon button as edit/delete. The handle adds
+ * the grab cursor and the `touch-action: none` a pointer-driven drag needs to
+ * own the gesture. */
+.gv-pm-pin {
+  background: transparent;
+  color: rgba(229, 231, 235, 0.5);
+}
+
+.gv-pm-pin:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+}
+
+.gv-pm-reorder {
+  background: transparent;
+  color: rgba(229, 231, 235, 0.5);
+  cursor: grab;
+  touch-action: none;
+}
+
+.gv-pm-reorder:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+}
+
+/* The press is preventDefault'ed, so :active never lands during a drag — the
+ * list carries the state instead. */
+.gv-pm-list-reordering,
+.gv-pm-list-reordering .gv-pm-reorder {
+  cursor: grabbing;
+}
+
+.gv-pm-list-reordering {
+  user-select: none;
+}
+
+.gv-pm-item-dragging {
+  opacity: 0.4;
+}
+
+/* The gap the row would land in. Rows are already `position: relative` and
+ * leave ::after free; the 4px inset keeps the rule off the rounded corners. */
+.gv-pm-item[data-gv-drop]::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  pointer-events: none;
+}
+
+.gv-pm-item[data-gv-drop='before']::after {
+  top: -3px;
+}
+
+.gv-pm-item[data-gv-drop='after']::after {
+  bottom: -3px;
+}
+
+/* The pin rides along with the reorder handle: same icon button, same ink. Its
+ * own base colour is the dark one, so without these it renders near-white on a
+ * light panel. A pinned star keeps its brand colour — the rule that sets it
+ * outranks everything here. */
+html[data-gv-scheme='light'] .gv-pm-reorder,
+html[data-gv-scheme='light'] .gv-pm-pin {
+  color: rgba(31, 41, 55, 0.4);
+}
+
+html[data-gv-scheme='light'] .gv-pm-reorder:hover,
+html[data-gv-scheme='light'] .gv-pm-pin:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #1f2937;
+}
+
+html[data-gv-scheme='dark'] .gv-pm-reorder,
+html[data-gv-scheme='dark'] .gv-pm-pin {
+  color: rgba(229, 231, 235, 0.5);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-reorder:hover,
+html[data-gv-scheme='dark'] .gv-pm-pin:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+}
+
+html[data-gv-scheme='light'] .gv-pm-item {
+  background: rgba(0, 0, 0, 0.04);
+  border: none;
+}
+
+html[data-gv-scheme='light'] .gv-pm-item:hover {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+html[data-gv-scheme='light'] .gv-pm-item-text {
+  color: #1f2937;
+}
+
+html[data-gv-scheme='dark'] .gv-pm-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+}
+
+html[data-gv-scheme='dark'] .gv-pm-item:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-item-text {
+  color: #e5e7eb;
+}
+
+.gv-pm-edit,
+.gv-pm-del,
+.gv-pm-reorder,
+.gv-pm-pin {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  transition: background 0.15s ease;
+}
+
+.gv-pm-edit {
+  background: transparent;
+  color: rgba(229, 231, 235, 0.5);
+}
+
+.gv-pm-edit:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+}
+
+.gv-pm-item + .gv-pm-item {
+  margin-top: 4px;
+}
+
+.gv-pm-bottom {
+  grid-row: 2;
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gv-pm-item-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  min-width: 0;
+}
+
+.gv-pm-chip {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.12);
+  color: oklch(0.8 0.08 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gv-pm-chip:hover {
+  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.22);
+}
+
+html[data-gv-scheme='light'] .gv-pm-chip {
+  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.08);
+  color: oklch(0.4 0.12 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  border: none;
+}
+
+html[data-gv-scheme='light'] .gv-pm-chip:hover {
+  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.15);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-chip {
+  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.12);
+  color: oklch(0.8 0.08 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  border: none;
+}
+
+.gv-pm-chip.gv-pm-name-conflict,
+.gv-pm-chip.gv-pm-name-conflict:hover {
+  cursor: default;
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+html[data-gv-scheme='light'] .gv-pm-chip.gv-pm-name-conflict,
+html[data-gv-scheme='light'] .gv-pm-chip.gv-pm-name-conflict:hover {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+}
+
+html[data-gv-scheme='dark'] .gv-pm-chip.gv-pm-name-conflict,
+html[data-gv-scheme='dark'] .gv-pm-chip.gv-pm-name-conflict:hover {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+.gv-pm-actions {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.gv-pm-del {
+  background: transparent;
+  color: rgba(229, 231, 235, 0.5);
+  border: none;
+  position: relative;
+}
+
+.gv-pm-del.armed {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.gv-pm-del:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+}
+
+html[data-gv-scheme='light'] .gv-pm-edit {
+  background: transparent;
+  border: none;
+  color: rgba(31, 41, 55, 0.4);
+}
+
+html[data-gv-scheme='light'] .gv-pm-edit:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #1f2937;
+}
+
+html[data-gv-scheme='light'] .gv-pm-del {
+  background: transparent;
+  color: rgba(31, 41, 55, 0.4);
+  border: none;
+}
+
+html[data-gv-scheme='light'] .gv-pm-del:hover {
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+}
+
+html[data-gv-scheme='light'] .gv-pm-del.armed {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+html[data-gv-scheme='dark'] .gv-pm-edit {
+  background: transparent;
+  border: none;
+  color: rgba(229, 231, 235, 0.5);
+}
+
+html[data-gv-scheme='dark'] .gv-pm-edit:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+}
+
+html[data-gv-scheme='dark'] .gv-pm-del {
+  background: transparent;
+  color: rgba(229, 231, 235, 0.5);
+  border: none;
+}
+
+html[data-gv-scheme='dark'] .gv-pm-del:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+}
+
+html[data-gv-scheme='dark'] .gv-pm-del.armed {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.gv-pm-edit::before,
+.gv-pm-del::before,
+.gv-pm-reorder::before,
+.gv-pm-pin::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  display: block;
+  background: currentColor;
+  -webkit-mask: var(--gv-icon) center / contain no-repeat;
+  mask: var(--gv-icon) center / contain no-repeat;
+}
+
+/* Material Symbols outlined "edit" — matches Gemini's native action icons. */
+.gv-pm-edit::before {
+  --gv-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M3 17.46V21h3.54L17.81 9.73l-3.54-3.54L3 17.46ZM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></svg>');
+}
+
+/* Three rules, the iOS list-reorder convention. A six-dot grid packs far more
+ * texture into the same 24px box than the single-stroke pencil and bin beside
+ * it, and it doubles as a multi-select affordance elsewhere. */
+.gv-pm-reorder::before {
+  --gv-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><rect x="4" y="6.25" width="16" height="1.75" rx="0.875"/><rect x="4" y="11.125" width="16" height="1.75" rx="0.875"/><rect x="4" y="16" width="16" height="1.75" rx="0.875"/></svg>');
+}
+
+/* Material Symbols outlined "delete" — matches Gemini's native action icons. */
+.gv-pm-del::before {
+  --gv-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12ZM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4Z"/></svg>');
+}

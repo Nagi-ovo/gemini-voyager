@@ -4,7 +4,7 @@
  *
  * All page-derived text (answers, titles, links) is written with
  * `textContent` / `value`, never `innerHTML`. Styles live in
- * `public/contentStyle.css` under `gv-rp-`.
+ * `src/styles/contentStyle/` under `gv-rp-`.
  */
 import { askConfirm } from '@/core/ui/confirm';
 import { createToaster } from '@/core/ui/toast/toaster';

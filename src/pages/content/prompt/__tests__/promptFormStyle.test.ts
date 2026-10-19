@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+
+import { readContentStyle } from '@/tests/contentStyle';
 
 /**
  * Every rule block that targets the class `cls`, as [selector, body] pairs.
@@ -17,10 +17,6 @@ function blocksFor(css: string, cls: string): Array<[string, string]> {
     if (boundary.test(selector)) out.push([selector, m[2]]);
   }
   return out;
-}
-
-function readContentStyle(): string {
-  return readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
 }
 
 describe('prompt form accent', () => {

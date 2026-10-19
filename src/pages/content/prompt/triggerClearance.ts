@@ -11,7 +11,7 @@ import { findChatInput } from '../chatInput';
 
 export const PROMPT_TRIGGER_ELEMENT_ID = 'gv-pm-trigger';
 
-/** `.gv-pm-trigger` in public/contentStyle.css: 46px, 18px in from the bottom inline-end corner. */
+/** `.gv-pm-trigger` in src/styles/contentStyle/: 46px, 18px in from the bottom inline-end corner. */
 export const PROMPT_TRIGGER_DEFAULT_INSET = 18;
 export const PROMPT_TRIGGER_SIZE = 46;
 

@@ -1,0 +1,113 @@
+/* ============================================================================
+ * Code blocks follow the page theme (#705).
+ *
+ * Gemini's "luminous" code block is hard-dark even in light mode (#141414 with
+ * a light-on-dark highlight.js palette), so it glares on a light page. In light
+ * mode we repaint that single surface with a tasteful light syntax theme
+ * (Catppuccin Latte) — a soft lavender-grey base, not glaring white, with a
+ * full accent palette so every token stays legible. Dark mode is left to
+ * Gemini's native styling. No toggle: dark page → dark code, light page → light
+ * code. `!important` overrides Gemini's own token colors.
+ * ========================================================================== */
+html[data-gv-scheme='light']
+  code-block.enable-luminous-code-block
+  .formatted-code-block-internal-container {
+  background: #eff1f5 !important; /* Latte base */
+  border: 1px solid #dce0e8 !important; /* Latte crust — hairline edge on white */
+  border-radius: 16px !important;
+  overflow: clip !important;
+}
+/*
+ * Gemini now paints the dark surface on the nested pre/code elements rather
+ * than only on the luminous container. Keep every layer on the same light
+ * surface or the Latte token colors become unreadable on the native dark fill.
+ */
+html[data-gv-scheme='light'] code-block.enable-luminous-code-block pre,
+html[data-gv-scheme='light'] code-block.enable-luminous-code-block code.code-container {
+  background: #eff1f5 !important;
+}
+html[data-gv-scheme='light'] code-block.enable-luminous-code-block .code-block-decoration {
+  background: #e6e9ef !important; /* Latte mantle */
+  border-bottom: 1px solid #dce0e8 !important;
+}
+/* Base text + the header (language label, copy / expand icons). */
+html[data-gv-scheme='light'] code-block.enable-luminous-code-block code,
+html[data-gv-scheme='light'] code-block.enable-luminous-code-block pre,
+html[data-gv-scheme='light'] code-block.enable-luminous-code-block .hljs {
+  color: #4c4f69 !important; /* Latte text */
+}
+html[data-gv-scheme='light'] code-block.enable-luminous-code-block .code-block-decoration,
+html[data-gv-scheme='light'] code-block.enable-luminous-code-block button,
+html[data-gv-scheme='light'] code-block.enable-luminous-code-block mat-icon {
+  color: #6c6f85 !important; /* Latte subtext0 */
+}
+html[data-gv-scheme='light'] code-block.enable-luminous-code-block button:hover {
+  color: #4c4f69 !important;
+}
+
+/* Catppuccin Latte syntax palette (highlight.js token classes). */
+html[data-gv-scheme='light'] code-block .hljs-comment,
+html[data-gv-scheme='light'] code-block .hljs-quote {
+  color: #8c8fa1 !important; /* overlay1 */
+  font-style: italic;
+}
+html[data-gv-scheme='light'] code-block .hljs-keyword,
+html[data-gv-scheme='light'] code-block .hljs-selector-tag,
+html[data-gv-scheme='light'] code-block .hljs-meta-keyword {
+  color: #8839ef !important; /* mauve */
+}
+html[data-gv-scheme='light'] code-block .hljs-title,
+html[data-gv-scheme='light'] code-block .hljs-title.function_,
+html[data-gv-scheme='light'] code-block .hljs-section,
+html[data-gv-scheme='light'] code-block .hljs-name {
+  color: #1e66f5 !important; /* blue */
+}
+html[data-gv-scheme='light'] code-block .hljs-built_in,
+html[data-gv-scheme='light'] code-block .hljs-type,
+html[data-gv-scheme='light'] code-block .hljs-title.class_,
+html[data-gv-scheme='light'] code-block .hljs-attr,
+html[data-gv-scheme='light'] code-block .hljs-attribute {
+  color: #df8e1d !important; /* yellow */
+}
+html[data-gv-scheme='light'] code-block .hljs-string,
+html[data-gv-scheme='light'] code-block .hljs-meta .hljs-string {
+  color: #40a02b !important; /* green */
+}
+html[data-gv-scheme='light'] code-block .hljs-number,
+html[data-gv-scheme='light'] code-block .hljs-literal {
+  color: #fe640b !important; /* peach */
+}
+html[data-gv-scheme='light'] code-block .hljs-variable,
+html[data-gv-scheme='light'] code-block .hljs-template-variable {
+  color: #e64553 !important; /* maroon */
+}
+html[data-gv-scheme='light'] code-block .hljs-symbol,
+html[data-gv-scheme='light'] code-block .hljs-bullet,
+html[data-gv-scheme='light'] code-block .hljs-regexp,
+html[data-gv-scheme='light'] code-block .hljs-link {
+  color: #179299 !important; /* teal */
+}
+html[data-gv-scheme='light'] code-block .hljs-meta {
+  color: #fe640b !important; /* peach — decorators / preprocessor */
+}
+html[data-gv-scheme='light'] code-block .hljs-deletion {
+  color: #d20f39 !important; /* red */
+}
+html[data-gv-scheme='light'] code-block .hljs-addition {
+  color: #40a02b !important; /* green */
+}
+/* Tokens Gemini paints light (e.g. plain function/operator text) → readable. */
+html[data-gv-scheme='light'] code-block .hljs-function,
+html[data-gv-scheme='light'] code-block .hljs-operator,
+html[data-gv-scheme='light'] code-block .hljs-punctuation,
+html[data-gv-scheme='light'] code-block .hljs-property,
+html[data-gv-scheme='light'] code-block .hljs-params,
+html[data-gv-scheme='light'] code-block .hljs-subst {
+  color: #4c4f69 !important; /* Latte text */
+}
+html[data-gv-scheme='light'] code-block .hljs-emphasis {
+  font-style: italic;
+}
+html[data-gv-scheme='light'] code-block .hljs-strong {
+  font-weight: 700;
+}

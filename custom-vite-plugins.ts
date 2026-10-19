@@ -3,6 +3,30 @@ import { basename, resolve } from 'path';
 import type { NormalizedInputOptions, NormalizedOutputOptions, OutputChunk } from 'rollup';
 import type { PluginOption } from 'vite';
 
+import {
+  CONTENT_STYLE_FILE_NAME,
+  assembleContentStyle,
+  listContentStyleParts,
+} from './scripts/lib/contentStyle';
+
+// Emits contentStyle.css from its parts where public/ used to supply it. It is
+// emitted at buildStart so the asset is already in the bundle when CRXJS checks
+// the manifest's files, and each part is watched for `vite build --watch`.
+export function contentStyleAsset(repoRoot: string): PluginOption {
+  return {
+    name: 'voyager-content-style',
+    apply: 'build',
+    buildStart() {
+      for (const part of listContentStyleParts(repoRoot)) this.addWatchFile(part);
+      this.emitFile({
+        type: 'asset',
+        fileName: CONTENT_STYLE_FILE_NAME,
+        source: assembleContentStyle(repoRoot),
+      });
+    },
+  };
+}
+
 // plugin to remove dev icons from prod build
 export function stripDevIcons(isDev: boolean) {
   if (isDev) return null;

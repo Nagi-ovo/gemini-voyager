@@ -1,8 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
+import { readContentStyle } from '@/tests/contentStyle';
 
 import { createVimCommands } from '../vimCommands';
 import type { VimMode } from '../vimCommands';
@@ -298,6 +297,6 @@ export function presentationFor(input: HTMLElement, mode: VimMode = 'normal') {
 export function loadVimStyles(): void {
   const style = document.createElement('style');
   style.dataset.vimTestStyles = '';
-  style.textContent = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+  style.textContent = readContentStyle();
   document.head.appendChild(style);
 }

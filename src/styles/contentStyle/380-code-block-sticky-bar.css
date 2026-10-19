@@ -1,0 +1,79 @@
+/* ============================================================================
+ * Sticky copy/action bar on code blocks (#752).
+ *
+ * Gemini's code block header (language label, copy button, expand button)
+ * scrolls away when code is long. Making it sticky at the top keeps the
+ * copy button accessible without scrolling back up.
+ * ========================================================================== */
+code-block .code-block-decoration,
+.code-block .code-block-decoration {
+  position: sticky !important;
+  /* Gemini's new rule uses -16px and pushes the bar into its 72px top mask. */
+  top: 0 !important;
+  z-index: 1;
+}
+
+/* Long code blocks: an unobtrusive action next to Gemini's copy button (#817). */
+code-block.gv-code-block-collapsible .formatted-code-block-internal-container {
+  position: relative;
+}
+/*
+ * Once a long block has its own collapse action, keeping Gemini's whole header
+ * sticky makes it cut across the middle of the code while the page scrolls.
+ */
+code-block.gv-code-block-collapsible .code-block-decoration {
+  position: static !important;
+  top: auto !important;
+}
+code-block.gv-code-block-collapsed .formatted-code-block-internal-container {
+  /* Compact enough that the state change is obvious even above the composer. */
+  max-height: clamp(240px, 38vh, 340px);
+  overflow: hidden !important;
+}
+code-block.gv-code-block-collapsed .formatted-code-block-internal-container::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 72px;
+  background: linear-gradient(transparent, rgb(39 46 51 / 96%));
+  pointer-events: none;
+}
+html[data-gv-scheme='light']
+  code-block.gv-code-block-collapsed
+  .formatted-code-block-internal-container::after {
+  background: linear-gradient(transparent, rgb(239 241 245 / 96%));
+}
+code-block .gv-code-block-toggle {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    transform 100ms ease;
+}
+code-block .gv-code-block-toggle:hover {
+  background: rgb(127 127 127 / 14%);
+}
+code-block .gv-code-block-toggle:active {
+  transform: scale(0.97);
+}
+code-block .gv-code-block-toggle:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 1px;
+}
+code-block .gv-code-block-toggle svg {
+  width: 20px;
+  height: 20px;
+}

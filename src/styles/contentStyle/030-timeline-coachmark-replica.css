@@ -1,0 +1,135 @@
+/* Hide the live timeline while its coachmark preview is visible. This avoids
+ * drawing the classic rail and the preview on top of each other. */
+.gemini-timeline-bar.gv-coach-timeline-hidden,
+.timeline-left-slider.gv-coach-timeline-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Timeline replica used by the one-time style coachmarks. Its box, rail and
+ * marker metrics mirror `.gemini-timeline-bar` in timeline.css so each choice
+ * previews what the user will get; markers morph between full-height dots and
+ * the centred dense ticks as the inline switch changes. The script pins the box
+ * to the live rail when one is laid out; these values are the rail's defaults. */
+.gv-timeline-style-preview {
+  position: fixed;
+  top: 60px;
+  right: 15px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 128px);
+  width: 24px;
+  pointer-events: none;
+}
+
+.gv-timeline-style-preview::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  left: 50%;
+  width: var(--timeline-bar-width, 4px);
+  border-radius: calc(var(--timeline-bar-width, 4px) / 2);
+  background-color: var(--timeline-bar-bg);
+  box-shadow: 0 2px 12px oklch(0 0 0 / 0.06);
+  transform: translateX(-50%);
+  transition: opacity 180ms ease;
+}
+
+/* Same film as the live rail on sites that stamp a scheme (timeline.css). */
+html[data-gv-scheme] .gv-timeline-style-preview::before {
+  background-color: var(--timeline-rail-film);
+}
+
+/* The live dense styles clip ticks to the rail's 24px column (their track is
+ * overflow: hidden), so the longest ticks stop at its edge here too. */
+.gv-timeline-style-preview.is-compact,
+.gv-timeline-style-preview.is-ruler {
+  overflow: hidden;
+}
+
+/* Like the live rail, ruler and compact draw no film; `gv-no-rail` mirrors a
+ * hidden outer container for the dots preview. */
+.gv-timeline-style-preview.is-compact::before,
+.gv-timeline-style-preview.is-ruler::before,
+.gv-timeline-style-preview.gv-no-rail::before {
+  opacity: 0;
+}
+
+.gv-timeline-style-preview span {
+  position: absolute;
+  top: calc(
+    var(--timeline-track-padding) + (100% - 2 * var(--timeline-track-padding)) *
+      var(--gv-coach-n, 0)
+  );
+  left: 50%;
+  display: block;
+  width: var(--timeline-dot-size);
+  height: var(--timeline-dot-size);
+  border-radius: 50%;
+  background-color: var(--timeline-dot-color);
+  transform: translate(-50%, -50%);
+  transition:
+    top 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    width 180ms ease,
+    height 180ms ease,
+    transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-radius 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    opacity 180ms ease;
+}
+
+.gv-timeline-style-preview span.active {
+  box-shadow:
+    0 0 0 var(--timeline-active-ring) var(--timeline-dot-active-color),
+    0 0 14px var(--timeline-dot-active-glow);
+}
+
+/* Dense styles stack ticks around the middle and anchor them on the rail line,
+ * growing toward the page content. */
+.gv-timeline-style-preview.is-compact span,
+.gv-timeline-style-preview.is-ruler span {
+  top: calc(50% + var(--gv-coach-offset, 0px));
+  box-shadow: none;
+  transform: translate(-100%, -50%);
+}
+
+.gv-timeline-style-preview.is-compact span {
+  width: 12px;
+  height: 3px;
+  border-radius: 1px;
+  opacity: 0.72;
+}
+
+.gv-timeline-style-preview.is-compact span.active {
+  width: 16px;
+  background-color: var(--timeline-dot-active-color);
+  opacity: 1;
+}
+
+.gv-timeline-style-preview.is-ruler span {
+  width: 24px;
+  height: 2px;
+  border-radius: 9999px;
+  opacity: var(--gv-coach-ruler-opacity, 0.42);
+  transform: translate(-100%, -50%) scaleX(var(--gv-coach-ruler-scale, 0.29));
+  transform-origin: right center;
+}
+
+.gv-timeline-style-preview.is-ruler span.active {
+  background-color: var(--timeline-dot-active-color);
+  opacity: 1;
+}
+
+body.gv-rtl .gv-timeline-style-preview {
+  right: auto;
+  left: 15px;
+}
+
+/* A rail on the left half points its ticks right, like the live rail. */
+.gv-timeline-style-preview.gv-inward-right.is-compact span {
+  transform: translate(0, -50%);
+}
+
+.gv-timeline-style-preview.gv-inward-right.is-ruler span {
+  transform: translate(0, -50%) scaleX(var(--gv-coach-ruler-scale, 0.29));
+  transform-origin: left center;
+}

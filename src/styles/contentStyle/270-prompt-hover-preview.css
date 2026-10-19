@@ -1,0 +1,188 @@
+/* ----- Custom hover tooltip (issue #586 feedback item 5) -----
+ * Native title="" has a ~1–3s browser delay. We roll a lightweight tooltip
+ * that pops in after ~250ms so users can peek full prompt text quickly. */
+.gv-pm-tooltip {
+  position: fixed;
+  z-index: 2147483647;
+  box-sizing: border-box;
+  max-width: 420px;
+  max-height: 360px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 12px 14px;
+  border-radius: 14px;
+  /* Pin the panel's font stack: without this the preview inherits the host
+     page's font (Gemini/Claude/ChatGPT each differ) while the panel beneath
+     it does not, so the two surfaces never look like one product. */
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    'Apple Color Emoji',
+    'Segoe UI Emoji';
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: break-word;
+  background: oklch(0.2 0.008 285);
+  color: oklch(0.92 0.004 250);
+  border: 1px solid oklch(0.3 0.008 285 / 0.7);
+  /* The panel is flat (box-shadow: none) because it is an anchored surface.
+     This one floats over arbitrary host-page content, so it keeps a shadow —
+     but a restrained one, sized to lift it off the page rather than to look
+     like a separate heavier layer. */
+  box-shadow: 0 6px 20px oklch(0 0 0 / 0.28);
+  /* Interactive: users can move their mouse onto the tooltip and scroll it
+   * to read long prompts. JS handles the hover-grace logic that keeps it
+   * open while traveling from row → gap → tooltip. */
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(2px);
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease;
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.92 0.004 250 / 0.22) transparent;
+}
+
+/* Plain-text fallback shown for the instant before `marked` resolves (and if
+   it fails to load at all). Only this state needs newline preservation —
+   rendered Markdown must wrap normally. */
+.gv-pm-tooltip-raw {
+  white-space: pre-wrap;
+}
+
+/* While hidden, fully inert so stray scroll / click events don't catch it. */
+.gv-pm-tooltip:not(.gv-pm-tooltip-visible) {
+  pointer-events: none;
+}
+
+.gv-pm-tooltip.gv-pm-tooltip-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.gv-pm-tooltip[data-gv-theme='light'] {
+  background: oklch(0.995 0.002 250);
+  color: oklch(0.14 0.004 285);
+  border-color: oklch(0.92 0.004 250 / 0.7);
+  box-shadow: 0 6px 20px oklch(0 0 0 / 0.1);
+  scrollbar-color: oklch(0.14 0.004 285 / 0.22) transparent;
+}
+
+/* ----- Markdown typography inside the hover preview -----
+ * Prompts are authored as Markdown, so the preview renders it (same marked +
+ * KaTeX + DOMPurify path as the comfortable-mode list item). Host-page
+ * heading sizes would blow the card apart, so every block is re-scaled
+ * against the card's own 13px base and given tight, even rhythm. */
+.gv-pm-tooltip .gv-md > :first-child {
+  margin-top: 0;
+}
+
+.gv-pm-tooltip .gv-md > :last-child {
+  margin-bottom: 0;
+}
+
+.gv-pm-tooltip .gv-md h1,
+.gv-pm-tooltip .gv-md h2,
+.gv-pm-tooltip .gv-md h3,
+.gv-pm-tooltip .gv-md h4,
+.gv-pm-tooltip .gv-md h5,
+.gv-pm-tooltip .gv-md h6 {
+  margin: 0.9em 0 0.35em;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.gv-pm-tooltip .gv-md h1 {
+  font-size: 15px;
+}
+
+.gv-pm-tooltip .gv-md h2 {
+  font-size: 14px;
+}
+
+.gv-pm-tooltip .gv-md h3,
+.gv-pm-tooltip .gv-md h4,
+.gv-pm-tooltip .gv-md h5,
+.gv-pm-tooltip .gv-md h6 {
+  font-size: 13px;
+}
+
+.gv-pm-tooltip .gv-md p,
+.gv-pm-tooltip .gv-md ul,
+.gv-pm-tooltip .gv-md ol,
+.gv-pm-tooltip .gv-md blockquote,
+.gv-pm-tooltip .gv-md pre,
+.gv-pm-tooltip .gv-md table {
+  margin: 0 0 0.55em;
+}
+
+.gv-pm-tooltip .gv-md ul,
+.gv-pm-tooltip .gv-md ol {
+  padding-inline-start: 1.35em;
+}
+
+.gv-pm-tooltip .gv-md li {
+  margin: 0 0 0.2em;
+}
+
+.gv-pm-tooltip .gv-md li > ul,
+.gv-pm-tooltip .gv-md li > ol {
+  margin: 0.2em 0 0;
+}
+
+.gv-pm-tooltip .gv-md blockquote {
+  padding-inline-start: 0.75em;
+  border-inline-start: 2px solid currentcolor;
+  opacity: 0.75;
+}
+
+.gv-pm-tooltip .gv-md hr {
+  height: 1px;
+  margin: 0.9em 0;
+  border: 0;
+  background: currentcolor;
+  opacity: 0.16;
+}
+
+.gv-pm-tooltip .gv-md code {
+  padding: 0.1em 0.34em;
+  border-radius: 5px;
+  background: oklch(0.92 0.004 250 / 0.12);
+  font-size: 0.92em;
+}
+
+.gv-pm-tooltip .gv-md pre {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: oklch(0.92 0.004 250 / 0.09);
+}
+
+.gv-pm-tooltip .gv-md pre code {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.gv-pm-tooltip .gv-md a {
+  color: inherit;
+  text-underline-offset: 2px;
+}
+
+.gv-pm-tooltip .gv-md img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.gv-pm-tooltip[data-gv-theme='light'] .gv-md code {
+  background: oklch(0.14 0.004 285 / 0.08);
+}
+
+.gv-pm-tooltip[data-gv-theme='light'] .gv-md pre {
+  background: oklch(0.14 0.004 285 / 0.06);
+}

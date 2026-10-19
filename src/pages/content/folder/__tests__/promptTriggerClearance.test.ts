@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { readContentStyle } from '@/tests/contentStyle';
 
 import {
   type Box,
@@ -345,7 +345,7 @@ describe('floating folder surfaces stay off the Prompt Manager ball', () => {
   });
 
   it('describes the ball slot that the stylesheet draws', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     const trigger = css.match(/\n\.gv-pm-trigger \{([^}]*)\}/)?.[1] ?? '';
     const rtl = css.match(/body\.gv-rtl \.gv-pm-trigger \{([^}]*)\}/)?.[1] ?? '';
     const inset = `${PROMPT_TRIGGER_DEFAULT_INSET}px`;

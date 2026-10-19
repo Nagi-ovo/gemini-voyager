@@ -1,9 +1,9 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import { readContentStyle } from '@/tests/contentStyle';
+
 function readFormulaCopyCss(): string {
-  const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+  const css = readContentStyle();
   const start = css.indexOf('/* ==================== Formula Copy Feature ==================== */');
   const end = css.indexOf('/* Notebooks corner swap toggle', start);
   expect(start).toBeGreaterThan(-1);

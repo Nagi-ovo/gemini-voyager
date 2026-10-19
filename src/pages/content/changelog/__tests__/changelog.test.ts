@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
+import { readContentStyle } from '@/tests/contentStyle';
 
 import {
   extractLocalizedContent,
@@ -157,7 +158,7 @@ describe('changelog quote styles', () => {
       'en',
     );
     const leadingElement = overlay.querySelector('.gv-changelog-body')?.firstElementChild;
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
 
     expect(leadingElement?.classList.contains('gv-changelog-quote')).toBe(true);
     expect(leadingElement?.tagName).toBe('BLOCKQUOTE');

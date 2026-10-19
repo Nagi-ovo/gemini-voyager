@@ -1,12 +1,12 @@
 ---
-globs: ["src/pages/content/**", "public/contentStyle.css"]
+globs: ["src/pages/content/**", "src/styles/contentStyle/**"]
 ---
 
 # Content Script Rules
 
 ## CSS
 - All injected CSS classes MUST be prefixed with `gv-` (e.g., `.gv-rtl`, `.gv-pm-trigger`)
-- Shared/static injected CSS goes in `public/contentStyle.css` by default. Feature-specific dynamic CSS may be injected by content modules or the plugin runtime when values are computed at runtime; keep it `gv-` prefixed and tear it down.
+- Shared/static injected CSS goes in the matching part under `src/styles/contentStyle/` by default; the build joins the parts in file-name order into the shipped `contentStyle.css`, so the number prefix is cascade order. Add a numbered part rather than grow one past the commit size limit. Feature-specific dynamic CSS may be injected by content modules or the plugin runtime when values are computed at runtime; keep it `gv-` prefixed and tear it down.
 - Support both light and dark themes through `html[data-gv-scheme='dark']` / `html[data-gv-scheme='light']`, which `platformTheme` stamps from each site's `site.json` theme descriptor. Never target a host's own theme markers (`.theme-host.dark-theme`, `body.dark-theme`, `html.dark`, …); `src/core/utils/__tests__/contentStyleTheme.test.ts` rejects them.
 - RTL layout: use `body.gv-rtl` selector for RTL overrides (see `src/core/utils/rtl.ts`)
 

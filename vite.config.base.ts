@@ -6,6 +6,7 @@ import { BuildOptions, defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 import {
+  contentStyleAsset,
   crxI18n,
   selfContainedContentScripts,
   stripDevIcons,
@@ -86,6 +87,7 @@ export default defineConfig({
     stripDevIcons(isDev),
     stripI18nDescriptions(isDev),
     crxI18n({ localize, src: './src/locales', stripDescriptions: !isDev }),
+    contentStyleAsset(__dirname),
     // Must install its window listener synchronously at document_start.
     selfContainedContentScripts(['src/pages/content/shadowKeyGuardEntry.ts']),
   ],

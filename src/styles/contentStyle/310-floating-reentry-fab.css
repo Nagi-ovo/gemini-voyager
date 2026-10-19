@@ -1,0 +1,124 @@
+/* ─── Floating-mode re-entry FAB ───────────────────────────────────────────
+ * Small persistent corner button that reopens the floating folder panel.
+ * Tone: quiet. Neutral tonal surface that blends with Gemini's chrome,
+ * indigo accent only on the icon. No candy-colored gradient, no saturated
+ * halo. Depth comes from a soft shadow + a 1px border, not from color.
+ */
+.gv-floating-fab {
+  position: fixed;
+  z-index: 2147483645;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: none;
+}
+.gv-floating-fab.gv-floating-fab--show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.gv-floating-fab.gv-floating-fab--dragging {
+  cursor: grabbing;
+  transition: none;
+}
+.gv-floating-fab:focus-visible {
+  outline: none;
+}
+.gv-floating-fab:focus-visible .gv-floating-fab__inner {
+  box-shadow:
+    0 0 0 2px rgba(129, 140, 248, 0.55),
+    0 6px 18px rgba(0, 0, 0, 0.28);
+}
+
+/* Inner body — matte tonal surface tuned to match Gemini's dark chrome. */
+.gv-floating-fab__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #2a2c33;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.28),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.gv-floating-fab:hover .gv-floating-fab__inner {
+  background: #33363d;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.34),
+    0 1px 2px rgba(0, 0, 0, 0.24);
+}
+.gv-floating-fab:active .gv-floating-fab__inner {
+  background: #24262c;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Halo — disabled by default; kept in the DOM for backward compat but no
+ * longer visible. The hover state now lives on the inner surface itself. */
+.gv-floating-fab__halo {
+  display: none;
+}
+
+.gv-floating-fab__icon {
+  color: rgba(165, 180, 252, 0.92);
+  transition: color 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.gv-floating-fab:hover .gv-floating-fab__icon {
+  color: rgba(199, 210, 254, 1);
+}
+
+/* Light theme — cool off-white surface with a soft cool shadow. */
+html[data-gv-scheme='light'] .gv-floating-fab__inner {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 6px 18px rgba(15, 23, 42, 0.12),
+    0 1px 2px rgba(15, 23, 42, 0.08);
+}
+html[data-gv-scheme='light'] .gv-floating-fab:hover .gv-floating-fab__inner {
+  background: #f6f7fb;
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.16),
+    0 1px 2px rgba(15, 23, 42, 0.1);
+}
+html[data-gv-scheme='light'] .gv-floating-fab:active .gv-floating-fab__inner {
+  background: #eef0f5;
+}
+html[data-gv-scheme='light'] .gv-floating-fab__icon {
+  color: rgba(79, 70, 229, 0.88);
+}
+html[data-gv-scheme='light'] .gv-floating-fab:hover .gv-floating-fab__icon {
+  color: rgba(67, 56, 202, 1);
+}
+
+/* Reduced-motion: skip the enter transform + hover transitions. */
+@media (prefers-reduced-motion: reduce) {
+  .gv-floating-fab,
+  .gv-floating-fab__inner,
+  .gv-floating-fab__icon {
+    transition-duration: 0ms;
+  }
+}

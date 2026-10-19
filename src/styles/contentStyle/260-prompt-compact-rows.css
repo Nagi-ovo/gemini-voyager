@@ -1,0 +1,224 @@
+/* ===== Prompt Manager: view-mode toggle + compact rows ===== */
+
+/* View-mode toggle — lives on the right edge of the search row so the header
+ * title doesn't have to shrink. Icon-only, sized to align with the search
+ * input baseline. */
+.gv-pm-view-mode {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  color: rgba(229, 231, 235, 0.65);
+}
+
+.gv-pm-view-mode svg {
+  pointer-events: none;
+}
+
+.gv-pm-view-mode:hover {
+  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.35);
+  color: #e5e7eb;
+}
+
+.gv-pm-view-mode.gv-pm-view-mode-compact {
+  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.6);
+  color: oklch(0.8 0.08 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
+}
+
+html[data-gv-scheme='light'] .gv-pm-view-mode,
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-view-mode {
+  border-color: rgba(0, 0, 0, 0.08);
+  color: rgba(31, 41, 55, 0.6);
+}
+
+html[data-gv-scheme='light'] .gv-pm-view-mode:hover,
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-view-mode:hover {
+  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
+  color: #1f2937;
+}
+
+html[data-gv-scheme='light'] .gv-pm-view-mode.gv-pm-view-mode-compact,
+.gv-pm-panel[data-gv-theme='light'] .gv-pm-view-mode.gv-pm-view-mode-compact {
+  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.6);
+  color: oklch(0.4 0.12 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.08);
+}
+
+/* ----- Compact list row ----- */
+
+/* A compact row is ~36px tall regardless of which actions happen to be
+ * visible. Hover only changes icon opacity, never layout, so rows never
+ * jitter as the mouse moves down the list.
+ *
+ * Override the base grid layout with flex so the single-line title is
+ * vertically centered against the 36px min-height — with grid + auto row,
+ * the extra vertical space fell below the content row by default, pushing
+ * the title a couple pixels above the absolute-positioned right cluster. */
+.gv-pm-item-compact {
+  display: flex;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 8px;
+  min-height: 36px;
+  box-sizing: border-box;
+}
+
+.gv-pm-item-compact + .gv-pm-item-compact {
+  margin-top: 3px;
+}
+
+.gv-pm-item-compact .gv-pm-item-text-container {
+  align-items: center;
+  gap: 6px;
+  /* Reserve room for the absolutely-positioned action cluster: four 24px icon
+   * buttons, their 2px gaps and the cluster's own 8px offset, less this row's
+   * 10px padding. The tag chips moved in here beside the title, so anything
+   * short of that leaves them running under the reorder handle on hover. */
+  padding-right: 100px;
+  /* Base rule sets width:100%; with default content-box, the 196px padding
+   * above would be added on top of the full width, forcing each row 196px
+   * wider than the panel and introducing a stray horizontal scrollbar. */
+  box-sizing: border-box;
+}
+
+.gv-pm-item-compact .gv-pm-item-text {
+  font-size: 13px;
+  line-height: 1.4;
+  align-self: center;
+  min-width: 0;
+  /* Shrink to the title so the chips sit right after it instead of being
+   * pushed to the far edge. */
+  flex: 0 1 auto;
+}
+
+/* Compact title: a single-line plaintext headline. A fixed ch-based max-width
+ * keeps the preview to roughly the first ~22 visible characters, which makes
+ * all rows feel uniform and independent of row/panel width. */
+.gv-pm-compact-title {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  line-height: 1.4;
+  font-size: 13px;
+  margin: 0;
+  padding: 0;
+  max-width: 22ch;
+}
+
+/* Anchor the inline bottom-row (tags + ▼ expand + edit + delete) to the
+ * right, vertically centered. Width is auto so the cluster shrinks to its
+ * content and can't overflow its siblings — the title reserves a 196px
+ * cushion above which more than covers the max cluster width. */
+.gv-pm-item-compact .gv-pm-bottom {
+  grid-row: 1;
+  grid-column: 1;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: auto;
+  justify-content: flex-end;
+  /* Explicit center so every member of the cluster — chip pill, SVG icon
+   * buttons, and the ▼ character — lines up on a shared midline, matching
+   * the row's text baseline. */
+  align-items: center;
+  gap: 6px;
+}
+
+/* Individual chips ellipsize themselves (see below), so long labels like
+ * "paper reading" render in full when there's room. Chips do not shrink, so a
+ * row with more tags than fit overflows this box — and the box ends exactly
+ * where the action cluster's lane begins. Clip there, or the tail of the last
+ * chip paints under the reorder handle. */
+.gv-pm-item-compact .gv-pm-item-meta {
+  flex-wrap: nowrap;
+  align-items: center;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.gv-pm-item-compact:hover .gv-pm-item-meta {
+  opacity: 1;
+}
+
+.gv-pm-item-compact .gv-pm-chip {
+  font-size: 9px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+  /* Allow a generous but bounded width so the most common tags show in
+   * full; very long ones ellipsize inside the pill instead of being
+   * clipped by the outer meta container. */
+  max-width: 104px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  line-height: 1.5;
+}
+
+/* Actions: always laid out (so height never shifts) but invisible at rest, so
+ * a row at rest is title + tags and nothing else. Hover or keyboard focus
+ * brings them in. Layout never changes, only opacity. */
+.gv-pm-item-compact .gv-pm-actions {
+  gap: 2px;
+}
+
+.gv-pm-item-compact .gv-pm-actions > * {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.gv-pm-item-compact:hover .gv-pm-actions > *,
+.gv-pm-item-compact:focus-within .gv-pm-actions > * {
+  opacity: 1;
+}
+
+/* A pin is state, not just an action: it outlives the hover that set it, so it
+ * stays lit while the rest of the cluster fades back out. Declared after the
+ * cluster's own fade so it wins the tie at equal specificity. */
+.gv-pm-item .gv-pm-actions > .gv-pm-pin[aria-pressed='true'],
+.gv-pm-item-compact .gv-pm-actions > .gv-pm-pin[aria-pressed='true'] {
+  opacity: 1;
+}
+
+.gv-pm-item-compact .gv-pm-edit,
+.gv-pm-item-compact .gv-pm-del,
+.gv-pm-item-compact .gv-pm-reorder,
+.gv-pm-item-compact .gv-pm-pin {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+
+.gv-pm-item-compact .gv-pm-edit::before,
+.gv-pm-item-compact .gv-pm-del::before,
+.gv-pm-item-compact .gv-pm-reorder::before,
+.gv-pm-item-compact .gv-pm-pin::before {
+  width: 14px;
+  height: 14px;
+}
+
+/* RTL: mirror the absolute-positioned action bar to the left edge. */
+body.gv-rtl .gv-pm-item-compact .gv-pm-item-text-container {
+  padding-right: 0;
+  padding-left: 100px;
+}
+
+body.gv-rtl .gv-pm-item-compact .gv-pm-bottom {
+  right: auto;
+  left: 8px;
+}

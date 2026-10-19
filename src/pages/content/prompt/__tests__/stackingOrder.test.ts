@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+
+import { readContentStyle } from '@/tests/contentStyle';
 
 function zIndexFor(css: string, selector: string): number {
   const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -13,7 +13,7 @@ function zIndexFor(css: string, selector: string): number {
 
 describe('prompt manager stacking order', () => {
   it('keeps the trigger and panel above the floating usage bar', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
     const usageBar = zIndexFor(css, '.gv-usage-pill');
     const trigger = zIndexFor(css, '.gv-pm-trigger');
     const panel = zIndexFor(css, '.gv-pm-panel');
@@ -23,7 +23,7 @@ describe('prompt manager stacking order', () => {
   });
 
   it('keeps a Prompt Manager opened over the Research Pack on top of it', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = readContentStyle();
 
     // Opening the Research Pack closes the Prompt Manager, so the newer panel
     // is on top either way only while the Prompt Manager outranks it.
