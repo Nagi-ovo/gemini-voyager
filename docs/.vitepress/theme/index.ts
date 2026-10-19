@@ -9,6 +9,7 @@ import HomeAskAI from './components/HomeAskAI.vue';
 import HomeReviews from './components/HomeReviews.vue';
 import HomeTeaser from './components/HomeTeaser.vue';
 import SafariDownloadLink from './components/SafariDownloadLink.vue';
+import SiteSupport from './components/SiteSupport.vue';
 import { HomeFeaturesLazy } from './components/homeFeatures/lazy';
 import './style.css';
 
@@ -28,6 +29,7 @@ export default {
     app.component('HomeTeaser', HomeTeaser);
     app.component('HomeAskAI', HomeAskAI);
     app.component('SafariDownloadLink', SafariDownloadLink);
+    app.component('SiteSupport', SiteSupport);
     // Only data-viewer.md uses it; loading it on demand keeps it out of every other page.
     // SSR still renders it in place.
     app.component(

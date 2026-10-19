@@ -324,7 +324,7 @@ export function builtinPlugins(manifests: readonly PluginManifest[]): SitePlugin
  * Read from disk rather than `marketplace.json`, which leaves out Gemini's and
  * AI Studio's official plugins.
  */
-function catalogPlugins(): SitePlugin[] {
+export function catalogPlugins(): SitePlugin[] {
   return PLUGIN_SITES.flatMap((site) => {
     const dir = join(CATALOG_DIR, 'sites', site, 'plugins');
     if (!existsSync(dir)) return [];
@@ -366,7 +366,11 @@ function featureName(row: FeatureRow, locale: string): string {
 }
 
 /** A site's cell counts as on by default only when the reader has nothing to switch on. */
-function onByDefault(row: FeatureRow, site: PluginSite, defaultEnabled: ReadonlySet<string>) {
+export function onByDefault(
+  row: FeatureRow,
+  site: PluginSite,
+  defaultEnabled: ReadonlySet<string>,
+) {
   if (row.native.includes(site)) return true;
   return row.plugins[site]!.every((manifest) => defaultEnabled.has(manifest.id));
 }
