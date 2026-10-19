@@ -1,51 +1,48 @@
 ---
 name: verify-in-browser
-description: Verify Voyager content-script or injected-CSS behavior in a live browser, including stale-build diagnosis.
+description: Proves a Voyager change on the live host page and shows the evidence as screenshots. Use after changing content scripts, injected CSS, MAIN-world scripts or plugin site code, and when someone reports a feature missing or still old in their browser.
 metadata:
-  version: '1.0.0'
+  version: '2.0.0'
 ---
 
-# Verify a content-script change in a live browser
+# Verify a change in the live browser
 
-Unit fixtures cannot prove the current host DOM matches our assumptions. If the first fix fails, inspect the real DOM and loaded build before editing again.
+Unit fixtures prove the fixture, not today's host DOM. Run the whole loop yourself: build, load, drive the page, capture, show. The person only steps in for what no tool can do (signing in, 2FA, a CAPTCHA); say which one and why.
 
-## Load the intended build
+Copy this checklist and tick it off:
 
-1. Identify the affected browser, installed Voyager extension, its loaded directory, and the target tab (including the user's reported tab when diagnosing stale behavior).
-2. Build or refresh the artifact that browser actually loads: Chrome development uses `bun run dev:chrome` / `dist_chrome_dev`; production verification uses `bun run build:chrome` / `dist_chrome`. Use `AGENTS.md` for cross-browser build requirements. Reuse an existing build if its relevant inputs are unchanged.
-3. Reload the extension. The unpacked `dist_chrome_dev` reloads itself about a second after each dev build finishes (`src/pages/background/devAutoReload.ts`, with Chrome's Developer mode on), so it needs no reload step; for a one-off dev build without the `dev:chrome` watcher, run the `exec` command in `nodemon.chrome.json` with `__DEV__=true`. Other builds use an extension-management tool or the browser UI: with Chrome DevTools, `list_extensions` identifies Voyager and `reload_extension` reloads it (the repo's `.codex/config.toml` enables both on `chrome-devtools-mcp` with `--categoryExtensions=true`; other clients need the same server and flag); request manual reload only when no available capability can do it. Safari uses `update-safari-extension`.
-4. Refresh the target content-script tab so it runs the updated code. Check for unsent input or an active response before refreshing; preserve that state or use a disposable test tab until the target can be refreshed safely. Reload additional tabs only when the requested workflow needs them.
-5. Confirm a build-specific marker or changed behavior in that tab before collecting evidence. An extension reload alone does not replace content scripts already running in open tabs.
+```
+- [ ] Build loaded: the tab shows a marker or behavior from this change
+- [ ] Workflow driven on each changed site
+- [ ] Crops saved: changed element, light and dark when CSS changed
+- [ ] Evidence shown: paths, or one published page when several crops
+- [ ] Test residue listed; own tabs closed
+```
 
-If the user was seeing an old build, verify their reported tab too when safe; a new test tab alone does not resolve that report. Distinguish refreshing a test session from implementing normal conversation navigation, which must preserve the native navigation rules in `AGENTS.md`.
+## 1. Load the build
 
-## Read and measure the page
+Chrome loads the unpacked `dist_chrome_dev` of the main checkout, which reloads itself about a second after its build id changes (`src/pages/background/devAutoReload.ts`). Build it with `bun run dev:chrome`, or once with the `exec` command in `nodemon.chrome.json` and `__DEV__=true`. From a worktree, build there and `rsync -a --delete dist_chrome_dev/ <main checkout>/dist_chrome_dev/`. Production checks use `bun run build:chrome` / `dist_chrome`, reloaded through an extension tool (with chrome-devtools-mcp, `list_extensions` and `reload_extension`); Safari uses `update-safari-extension`.
 
-Use the available DOM/browser tools. Compare actual selectors, text, computed styles and lifecycle behavior against the assumption under test; record the first mismatch and enough surrounding DOM to explain it. Keep conversation content private in shared evidence.
+The dev build runs on every host in `manifest.dev.json` `host_permissions`. A plugin site missing there gets added to that list and rebuilt; that is how the dev build gains site access without a click.
 
-A temporary element can test a new CSS rule when that rule distinguishes the build; remove the probe afterward. Use an actual new marker from this change, rather than copying an unrelated class from an old fix.
+Open your own tab, or refresh the reported one once it has no unsent draft or running response, then confirm a marker from this change before collecting evidence: an extension reload alone leaves old content scripts running in open tabs. When someone reported an old build, check their tab too. A refresh to test is not normal navigation; `AGENTS.md` keeps those rules.
 
-Extension pages (the popup, options) are out of reach of page-scripting tools. To read or change a setting under test on the `dist_chrome_dev` build, post to the dev settings bridge from the page and await its `gv-dev-settings-result` reply; `src/pages/content/devSettingsBridge.ts` documents the request shape. Read the value first and restore it when done. It writes storage only, so popup-side steps such as permission prompts still need the person.
+## 2. Drive the page
 
-`area` defaults to `'sync'`, which holds ordinary settings and the switch of every Gemini/AI Studio official plugin: an id listed in `LEGACY_ENABLE_BINDINGS` (`src/features/plugins/storage/legacySettingBindings.ts`) is on or off through that entry's sync `key`, and its `gvPluginsState` entry is ignored. Every other plugin (plugin-site builtins, catalog and local plugins) keeps `enabled` and its settings in `gvPluginsState` with `area: 'local'` (`storage/pluginState.ts`); a missing entry means its default (`storage/pluginDefaults.ts`). `set` replaces the whole map, so `get` it, change one entry, and `set` the result.
+Read the real DOM and computed styles, and compare them with the assumption under test; record the first mismatch with enough surrounding DOM to explain it. Before reasoning about a host's markup, read the site's section of [references/host-shapes.md](references/host-shapes.md).
 
-## Gemini shapes that make static reasoning wrong
+- **Coordinates**: clicks use the frame the screenshot result reports. Compute targets in JavaScript as CSS px divided by `innerWidth / frameWidth`, then click the result.
+- **Typing**: type only right after a JavaScript check shows `document.activeElement` is the Voyager input you expect (inside the section's shadow root when it has one). Enter goes only to that input. A click that opened something else gets closed before the next step.
+- **Settings**: the popup and options pages are out of reach of page scripts. On the dev build, post to the dev settings bridge from the page and await its `gv-dev-settings-result` reply (`src/pages/content/devSettingsBridge.ts` has the request shape). Read the value first and restore it when done. `area: 'sync'` holds ordinary settings and the Gemini/AI Studio plugins bound in `LEGACY_ENABLE_BINDINGS` (`src/features/plugins/storage/legacySettingBindings.ts`); every other plugin keeps `enabled` and settings in `gvPluginsState` with `area: 'local'`, a missing entry meaning its default (`storage/pluginDefaults.ts`). `set` replaces the whole map: `get`, change one entry, `set`.
+- **Background tabs**: a tab opened by a tool can stay `visibilityState: 'hidden'`, where `requestAnimationFrame` never fires, so focus or layout done in a frame callback looks broken there. Check `document.visibilityState` before calling it a bug.
+- **Themes**: to capture the other theme, flip the host's own theme marker on the page (the attribute or class its `site.json` theme descriptor reads), capture, and flip it back; the person's site setting stays as it was.
+- **Probes**: a temporary element can test a CSS rule when the rule is new in this change; remove it afterward.
+- **Test data**: name what you create "Voyager 测试" so it is easy to find; filing and unfiling are reversible. The host's own send, delete, rename and pin stay untouched.
 
-Each of these cost a wrong fix before it was measured.
+## 3. Show the evidence
 
-- A user turn's `textContent` is **not** the message. The bubble also carries a
-  screen-reader "You said" prefix and the copy/edit/expand controls, which render
-  through a Material Symbols icon font whose glyph _is_ the element's text — so
-  the string gains literal words like `content_copy`. Read `.query-text-line`.
-- A long turn is **collapsed, not truncated**: all 62 lines sit in the DOM
-  behind a CSS height clamp and an expand chevron. Do not design around
-  recovering text that is already there.
-- Text typed after a slash token lands on the prompt's **own last line**, with no
-  newline between them. Anything that assumes a line boundary between the
-  template and the person's words never fires.
+Capture the changed element with `zoom` and `save_to_disk`, cropped to the part a reviewer needs, in light and dark when CSS changed. Keep conversation content out of shared captures when it is private.
 
-## Before you finish
+One crop: report its path. Several crops or sites: put them in one page with a caption per crop and publish it as an Artifact (or an HTML file when Artifacts are unavailable), and give the link. A page from earlier in the session gets republished to the same link.
 
-- State what you verified in the browser and what you only inferred. If the
-  extension could not be reloaded, the check did not happen — say so.
-- Close any tab this session created.
+Report each site at the level you reached (`Loaded`, `Live` in [browser-testing.md](../voyager-contribute/references/browser-testing.md)). A step you could not drive is unverified: say which and why. List anything you left behind (test folders, a stray message) so the person can decide whether to delete it, and close the tabs you opened.

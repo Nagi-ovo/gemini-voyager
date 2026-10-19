@@ -67,7 +67,7 @@ Use `StorageService` where suitable; established direct `chrome.storage`/`browse
 
 Choose checks by changed surface. Repeat passing checks only after relevant changes or new evidence. Code contributions run `bun run verify:pr` once, on the final tree, right before a PR is opened or updated or `main` is pushed; it covers the automated checks below. While review fixes are still pending the tree is not final, so the full suite waits. Prose-only contributions use the applicable rows below. Native checks remain separate; releases use the final-tree gates in the `release` skill.
 
-A change to content scripts, injected CSS, MAIN-world scripts or anything else a host page shows is proven in the live browser: run the [verify-in-browser](.agents/skills/verify-in-browser/SKILL.md) skill on the dev build before reporting it works. Passing tests prove the fixtures, not the current host page.
+A change to content scripts, injected CSS, MAIN-world scripts or anything else a host page shows is proven in the live browser and shown: run the [verify-in-browser](.agents/skills/verify-in-browser/SKILL.md) skill on the dev build yourself, and report with its screenshots. Passing tests prove the fixtures, not the current host page.
 
 While iterating, and when a subagent finishes its part of a larger change, run `bun run test:changed` (tests affected by changes since `main`; CSS, locale or config changes run the whole suite) plus `bun run typecheck` and `bun run lint:check`. Worktrees share one machine, so queue every full run behind one lock (`lockf -k /tmp/voyager-verify.lock bun run verify:pr` on macOS, `flock` on Linux). Overlapping suites starve each other into timeouts; a failure that passes when its file reruns alone is load, not a regression.
 
