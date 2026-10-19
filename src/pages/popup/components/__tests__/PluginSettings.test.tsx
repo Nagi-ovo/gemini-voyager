@@ -13,6 +13,7 @@ import {
   container,
   nativeSetSliderValue,
   mockLanguage,
+  mockMessages,
   renderSettings as render,
   compactTimelinePlugin,
   setPluginSetting,
@@ -33,6 +34,26 @@ const timelines = [
   ),
   deepseek.data,
 ];
+
+/** Mirrors the Pro weekly allowance: a 0–10,000 span where 50/100/200 are the useful values. */
+const wideNumberPlugin: PluginManifest = {
+  ...widthPlugin,
+  contributes: {
+    settings: {
+      weeklyLimit: {
+        type: 'number',
+        label: 'Weekly Pro allowance',
+        default: 0,
+        min: 0,
+        max: 10_000,
+        messageKeys: {
+          label: 'chatgptProUsageWeeklyLimit',
+          hint: 'chatgptProUsageWeeklyLimitHint',
+        },
+      },
+    },
+  },
+};
 
 describe.each(timelines)('$name style setting', (plugin) => {
   it('lets a user choose the ruler timeline style', async () => {
@@ -243,12 +264,10 @@ describe('PluginSettings setting slider', () => {
     };
     await render(plugin);
     const slider = container.querySelector<HTMLInputElement>('input[type="range"]')!;
-    const numberInput = container.querySelector<HTMLInputElement>('input[type="number"]')!;
     const toggle = container.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
     expect(slider.disabled).toBe(true);
     expect(slider.value).toBe('900');
-    expect(numberInput.disabled).toBe(true);
-    expect(numberInput.value).toBe('900');
+    expect(container.textContent).toContain('900');
     slider.focus();
     expect(document.activeElement).not.toBe(slider);
     expect(setPluginSettings).not.toHaveBeenCalled();
@@ -256,13 +275,11 @@ describe('PluginSettings setting slider', () => {
     act(() => toggle.click());
     expect(slider.disabled).toBe(false);
     expect(slider.value).toBe('900');
-    expect(numberInput.disabled).toBe(false);
     expect(setPluginSettings).toHaveBeenLastCalledWith(plugin.id, { enabled: true });
     act(() => toggle.click());
     expect(slider.disabled).toBe(true);
     expect(slider.value).toBe('900');
-    expect(numberInput.disabled).toBe(true);
-    expect(numberInput.value).toBe('900');
+    expect(container.textContent).toContain('900');
     expect(setPluginSettings).toHaveBeenLastCalledWith(plugin.id, { enabled: false });
   });
 
@@ -303,7 +320,6 @@ describe('PluginSettings setting slider', () => {
       const select = container.querySelector('select')!;
       const inputs = [
         container.querySelector<HTMLInputElement>('input[type="range"]')!,
-        container.querySelector<HTMLInputElement>('input[type="number"]')!,
         checkbox,
         select,
       ];
@@ -341,6 +357,8 @@ describe('PluginSettings setting slider', () => {
     const sliders = Array.from(container.querySelectorAll<HTMLInputElement>('input[type="range"]'));
     expect(sliders.map((input) => input.disabled)).toEqual([true, true, true]);
     expect(sliders.map((input) => input.value)).toEqual(['117', '165', '17']);
+    // Font size and line spacing spans stay within a slider's usable precision.
+    expect(container.querySelector('input[type="number"]')).toBeNull();
     const switches = Array.from(
       container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
     );
@@ -363,56 +381,57 @@ describe('PluginSettings setting slider', () => {
     await render();
 
     expect(container.textContent).toContain('阅读宽度（px）');
-    expect(container.querySelector<HTMLInputElement>('input[type="number"]')!.value).toBe('768');
+    expect(container.textContent).toContain('768');
+    expect(container.querySelector('input[type="number"]')).toBeNull();
     expect(container.textContent).toContain('更窄');
     expect(container.textContent).toContain('更宽');
     expect(container.textContent).not.toContain('Reading width (px)');
   });
 });
 describe('PluginSettings number input', () => {
-  it('adds a precise number input next to the slider', async () => {
-    await render();
+  it('adds a precise number input for a range the slider cannot resolve', async () => {
+    await render(wideNumberPlugin);
     const slider = container.querySelector<HTMLInputElement>('input[type="range"]')!;
     const input = container.querySelector<HTMLInputElement>('input[type="number"]')!;
-    expect(input.value).toBe('768');
-    expect(input.min).toBe('600');
-    expect(input.max).toBe('1600');
-    expect(input.getAttribute('aria-label')).toBe('Reading width (px)');
+    expect(input.value).toBe('0');
+    expect(input.min).toBe('0');
+    expect(input.max).toBe('10000');
+    expect(input.getAttribute('aria-label')).toBe('chatgptProUsageWeeklyLimit');
     expect(input.disabled).toBe(false);
 
-    act(() => nativeSetSliderValue(input, 900));
-    expect(input.value).toBe('900');
-    expect(slider.value).toBe('900');
+    act(() => nativeSetSliderValue(input, 100));
+    expect(input.value).toBe('100');
+    expect(slider.value).toBe('100');
     act(() => vi.advanceTimersByTime(200));
-    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'width', 900);
+    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'weeklyLimit', 100);
   });
 
   it('keeps the number input in sync when the slider moves', async () => {
-    await render();
+    await render(wideNumberPlugin);
     const slider = container.querySelector<HTMLInputElement>('input[type="range"]')!;
     const input = container.querySelector<HTMLInputElement>('input[type="number"]')!;
 
-    act(() => nativeSetSliderValue(slider, 1000));
+    act(() => nativeSetSliderValue(slider, 200));
 
-    expect(input.value).toBe('1000');
+    expect(input.value).toBe('200');
     act(() => vi.advanceTimersByTime(200));
-    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'width', 1000);
+    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'weeklyLimit', 200);
   });
 
   it('clamps an out-of-range value on blur and restores it when cleared', async () => {
-    await render();
+    await render(wideNumberPlugin);
     const input = container.querySelector<HTMLInputElement>('input[type="number"]')!;
 
-    act(() => nativeSetSliderValue(input, 2000));
-    expect(input.value).toBe('2000');
+    act(() => nativeSetSliderValue(input, 20_000));
+    expect(input.value).toBe('20000');
     expect(setPluginSetting).not.toHaveBeenCalled();
 
     act(() => {
       input.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
     });
-    expect(input.value).toBe('1600');
+    expect(input.value).toBe('10000');
     act(() => vi.advanceTimersByTime(200));
-    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'width', 1600);
+    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'weeklyLimit', 10_000);
 
     act(() => {
       const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
@@ -423,24 +442,39 @@ describe('PluginSettings number input', () => {
     act(() => {
       input.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
     });
-    expect(input.value).toBe('1600');
+    expect(input.value).toBe('10000');
     expect(setPluginSetting).toHaveBeenCalledTimes(1);
   });
+
   it('clamps a below-minimum value on Enter', async () => {
-    await render();
+    pluginState.current = {
+      [PLUGIN_ID]: { enabled: true, installedAt: 0, settings: { weeklyLimit: 50 } },
+    };
+    await render(wideNumberPlugin);
     const input = container.querySelector<HTMLInputElement>('input[type="number"]')!;
 
-    act(() => nativeSetSliderValue(input, 10));
-    expect(input.value).toBe('10');
+    act(() => nativeSetSliderValue(input, -5));
+    expect(input.value).toBe('-5');
     expect(setPluginSetting).not.toHaveBeenCalled();
 
     act(() => {
       input.focus();
       input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     });
-    expect(input.value).toBe('600');
+    expect(input.value).toBe('0');
     act(() => vi.advanceTimersByTime(200));
-    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'width', 600);
+    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'weeklyLimit', 0);
+  });
+
+  it('shows the hint of a number setting the way switch settings do', async () => {
+    mockMessages.current = {
+      chatgptProUsageWeeklyLimit: 'Weekly Pro allowance',
+      chatgptProUsageWeeklyLimitHint: 'Leave at 0 to set it automatically.',
+    };
+    await render(wideNumberPlugin);
+
+    expect(container.textContent).toContain('Weekly Pro allowance');
+    expect(container.textContent).toContain('Leave at 0 to set it automatically.');
   });
 });
 describe('PluginSettings boolean setting', () => {

@@ -12,6 +12,15 @@ import { useLanguage } from '../../../contexts/LanguageContext';
 import { ExperimentalBadge } from './ExperimentalBadge';
 import { pickLocalized, pickLocalizedSetting } from './PluginIdentity';
 
+/**
+ * A popup slider track is a few hundred pixels wide, so a span up to 1,000 still
+ * lands on the value people want — reading width (600–1,600) and text size
+ * (80–150) keep their original display. A wider span cannot (the Pro weekly
+ * allowance is 0–10,000 but useful values are 50/100/200), so only those get a
+ * precise number input.
+ */
+const PRECISE_NUMBER_MIN_RANGE = 1000;
+
 interface NumberSettingProps {
   readonly label: string;
   readonly value: number;
@@ -22,10 +31,9 @@ interface NumberSettingProps {
 }
 
 /**
- * A range slider alone cannot set a small value on a wide range (the Pro weekly
- * allowance is 0–10,000 but useful values are 50/100/200), so the number input
- * is the precise path. A draft lets the person clear or overshoot while typing;
- * valid values update the slider immediately, invalid ones clamp on blur.
+ * The precise path for a wide number setting. A draft lets the person clear or
+ * overshoot while typing; valid values update the slider immediately, invalid
+ * ones clamp on blur.
  */
 function NumberSetting({ label, value, min, max, disabled, onChange }: NumberSettingProps) {
   const [draft, setDraft] = useState(String(value));
@@ -174,22 +182,36 @@ export function PluginSettings({
         const value = Number(rawValue);
         const min = field.min ?? 0;
         const max = field.max ?? 100;
+        const needsPreciseInput = max - min > PRECISE_NUMBER_MIN_RANGE;
         return (
           <div
             key={key}
             title={`${settingText.label}: ${value}`}
             className={disabled ? 'opacity-50' : undefined}
           >
-            <div className="text-muted-foreground mb-1 flex items-center justify-between gap-2 text-[11px]">
-              <span className="min-w-0 truncate">{settingText.label}</span>
-              <NumberSetting
-                label={settingText.label}
-                value={value}
-                min={min}
-                max={max}
-                disabled={disabled}
-                onChange={(next) => handleSetting(plugin.id, key, next)}
-              />
+            <div
+              className={`text-muted-foreground mb-1 flex justify-between gap-2 text-[11px] ${hint ? 'items-start' : 'items-center'}`}
+            >
+              <span className="min-w-0">
+                <span className="block truncate">{settingText.label}</span>
+                {hint && (
+                  <span className="text-muted-foreground/80 mt-0.5 block text-[10px] leading-snug">
+                    {hint}
+                  </span>
+                )}
+              </span>
+              {needsPreciseInput ? (
+                <NumberSetting
+                  label={settingText.label}
+                  value={value}
+                  min={min}
+                  max={max}
+                  disabled={disabled}
+                  onChange={(next) => handleSetting(plugin.id, key, next)}
+                />
+              ) : (
+                <span className="shrink-0 tabular-nums">{value}</span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               {settingText.minLabel && (
