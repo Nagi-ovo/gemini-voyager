@@ -1,6 +1,6 @@
 import { act } from 'react';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { BUILTIN_PLUGINS } from '@/features/plugins/builtin';
 import readingTypography from '@/features/plugins/catalog/sites/deepseek/plugins/reading-typography/plugin.json';
@@ -11,9 +11,11 @@ import type { PluginManifest, PluginSettings } from '@/features/plugins/types';
 
 import {
   container,
+  nativeSetSliderValue,
   mockLanguage,
   renderSettings as render,
   compactTimelinePlugin,
+  setPluginSetting,
   setPluginSettings,
   PLUGIN_ID,
   widthPlugin,
@@ -241,10 +243,12 @@ describe('PluginSettings setting slider', () => {
     };
     await render(plugin);
     const slider = container.querySelector<HTMLInputElement>('input[type="range"]')!;
+    const numberInput = container.querySelector<HTMLInputElement>('input[type="number"]')!;
     const toggle = container.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
     expect(slider.disabled).toBe(true);
     expect(slider.value).toBe('900');
-    expect(container.textContent).toContain('900');
+    expect(numberInput.disabled).toBe(true);
+    expect(numberInput.value).toBe('900');
     slider.focus();
     expect(document.activeElement).not.toBe(slider);
     expect(setPluginSettings).not.toHaveBeenCalled();
@@ -252,11 +256,13 @@ describe('PluginSettings setting slider', () => {
     act(() => toggle.click());
     expect(slider.disabled).toBe(false);
     expect(slider.value).toBe('900');
+    expect(numberInput.disabled).toBe(false);
     expect(setPluginSettings).toHaveBeenLastCalledWith(plugin.id, { enabled: true });
     act(() => toggle.click());
     expect(slider.disabled).toBe(true);
     expect(slider.value).toBe('900');
-    expect(container.textContent).toContain('900');
+    expect(numberInput.disabled).toBe(true);
+    expect(numberInput.value).toBe('900');
     expect(setPluginSettings).toHaveBeenLastCalledWith(plugin.id, { enabled: false });
   });
 
@@ -297,6 +303,7 @@ describe('PluginSettings setting slider', () => {
       const select = container.querySelector('select')!;
       const inputs = [
         container.querySelector<HTMLInputElement>('input[type="range"]')!,
+        container.querySelector<HTMLInputElement>('input[type="number"]')!,
         checkbox,
         select,
       ];
@@ -356,10 +363,84 @@ describe('PluginSettings setting slider', () => {
     await render();
 
     expect(container.textContent).toContain('阅读宽度（px）');
-    expect(container.textContent).toContain('768');
+    expect(container.querySelector<HTMLInputElement>('input[type="number"]')!.value).toBe('768');
     expect(container.textContent).toContain('更窄');
     expect(container.textContent).toContain('更宽');
     expect(container.textContent).not.toContain('Reading width (px)');
+  });
+});
+describe('PluginSettings number input', () => {
+  it('adds a precise number input next to the slider', async () => {
+    await render();
+    const slider = container.querySelector<HTMLInputElement>('input[type="range"]')!;
+    const input = container.querySelector<HTMLInputElement>('input[type="number"]')!;
+    expect(input.value).toBe('768');
+    expect(input.min).toBe('600');
+    expect(input.max).toBe('1600');
+    expect(input.getAttribute('aria-label')).toBe('Reading width (px)');
+    expect(input.disabled).toBe(false);
+
+    act(() => nativeSetSliderValue(input, 900));
+    expect(input.value).toBe('900');
+    expect(slider.value).toBe('900');
+    act(() => vi.advanceTimersByTime(200));
+    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'width', 900);
+  });
+
+  it('keeps the number input in sync when the slider moves', async () => {
+    await render();
+    const slider = container.querySelector<HTMLInputElement>('input[type="range"]')!;
+    const input = container.querySelector<HTMLInputElement>('input[type="number"]')!;
+
+    act(() => nativeSetSliderValue(slider, 1000));
+
+    expect(input.value).toBe('1000');
+    act(() => vi.advanceTimersByTime(200));
+    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'width', 1000);
+  });
+
+  it('clamps an out-of-range value on blur and restores it when cleared', async () => {
+    await render();
+    const input = container.querySelector<HTMLInputElement>('input[type="number"]')!;
+
+    act(() => nativeSetSliderValue(input, 2000));
+    expect(input.value).toBe('2000');
+    expect(setPluginSetting).not.toHaveBeenCalled();
+
+    act(() => {
+      input.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+    });
+    expect(input.value).toBe('1600');
+    act(() => vi.advanceTimersByTime(200));
+    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'width', 1600);
+
+    act(() => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+      setter?.call(input, '');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(input.value).toBe('');
+    act(() => {
+      input.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+    });
+    expect(input.value).toBe('1600');
+    expect(setPluginSetting).toHaveBeenCalledTimes(1);
+  });
+  it('clamps a below-minimum value on Enter', async () => {
+    await render();
+    const input = container.querySelector<HTMLInputElement>('input[type="number"]')!;
+
+    act(() => nativeSetSliderValue(input, 10));
+    expect(input.value).toBe('10');
+    expect(setPluginSetting).not.toHaveBeenCalled();
+
+    act(() => {
+      input.focus();
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    });
+    expect(input.value).toBe('600');
+    act(() => vi.advanceTimersByTime(200));
+    expect(setPluginSetting).toHaveBeenLastCalledWith(PLUGIN_ID, 'width', 600);
   });
 });
 describe('PluginSettings boolean setting', () => {
