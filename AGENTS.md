@@ -21,6 +21,7 @@ Read matching rules before editing; do not assume the client auto-loaded `.claud
 | `src/pages/content/changelog/notes/**` (release notes)                   | [.agents/skills/release/references/changelog.md](.agents/skills/release/references/changelog.md), including its opening quote               |
 | Contribution or release                                                  | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md); matching workflows in [.agents/skills/](.agents/skills/)                                |
 | `src/features/plugins/catalog/**`, `verbs/**` or `sites/**`              | [.agents/skills/create-voyager-plugin/SKILL.md](.agents/skills/create-voyager-plugin/SKILL.md)                                              |
+| `docs/**/guide/**` (guide pages in every locale)                         | [.agents/skills/writing-docs/SKILL.md](.agents/skills/writing-docs/SKILL.md)                                                                |
 
 Use `package.json`, build configs, manifests and CI to verify command names and current wiring. Keep `CLAUDE.md` as a pointer here.
 
