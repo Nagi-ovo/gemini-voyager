@@ -22,6 +22,9 @@ const STATIC_CONTENT_STYLESHEETS = [
   'src/features/timeline/timelinePreview.css',
   'src/pages/content/defaultModel/styles.css',
   'src/pages/content/folder/floatingPanel.css',
+  'src/pages/content/folder/floatingPanelPolish.css',
+  'src/pages/content/folder/floatingPanelPolishSchemes.css',
+  'src/pages/content/folder/floatingPanelSiteOptions.css',
   'src/pages/content/folder/folderHeader/folderHeader.css',
   'src/pages/content/folder/folderHeader/folderHeaderMenu.css',
 ] as const;

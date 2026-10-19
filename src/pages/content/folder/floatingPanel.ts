@@ -3,7 +3,7 @@ import type { ConversationSortMode } from '@/features/folder/model/folderData';
 import type { FolderSitePolicy } from '@/features/folder/owner/folderOwnerPolicy';
 
 import { clearOfPromptTrigger } from '../prompt/triggerClearance';
-import panelCss from './floatingPanel.css?raw';
+import { FLOATING_PANEL_CSS as panelCss } from './floatingPanelCss';
 import { type FolderDropTarget, folderDropTargetAt } from './floatingTree/dropTargets';
 import { FLOATING_PANEL_CLASS, type TreeActions, t } from './floatingTree/shared';
 import { mountFolderTree } from './floatingTree/treeController';

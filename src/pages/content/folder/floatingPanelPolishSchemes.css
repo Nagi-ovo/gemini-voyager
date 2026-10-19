@@ -1,0 +1,149 @@
+/* Dark, light and RTL variants of the Material polish, and the move hints. */
+:host([data-gv-scheme='dark']) {
+  --gv-floating-folder-panel__surface: #1f1f1f;
+  --gv-floating-folder-panel__surface-container: #282a2d;
+  --gv-floating-folder-panel__surface-hover: rgba(232, 234, 237, 0.08);
+  --gv-floating-folder-panel__surface-active: rgba(138, 180, 248, 0.16);
+  --gv-floating-folder-panel__outline: rgba(232, 234, 237, 0.14);
+  --gv-floating-folder-panel__outline-subtle: rgba(232, 234, 237, 0.1);
+  --gv-floating-folder-panel__text: #e8eaed;
+  --gv-floating-folder-panel__text-muted: #bdc1c6;
+  --gv-floating-folder-panel__accent: #8ab4f8;
+  --gv-floating-folder-panel__accent-soft: rgba(138, 180, 248, 0.18);
+  --gv-floating-folder-panel__danger: #f28b82;
+  --gv-floating-folder-panel__danger-soft: rgba(242, 139, 130, 0.13);
+  background: var(--gv-floating-folder-panel__surface) !important;
+  color: var(--gv-floating-folder-panel__text) !important;
+  border-color: var(--gv-floating-folder-panel__outline) !important;
+  box-shadow:
+    0 18px 52px rgba(0, 0, 0, 0.46),
+    0 4px 18px rgba(0, 0, 0, 0.32) !important;
+}
+
+:host([data-gv-scheme='dark']) .gv-floating-folder-panel__header {
+  background: var(--gv-floating-folder-panel__surface);
+  border-bottom-color: var(--gv-floating-folder-panel__outline-subtle);
+}
+
+:host([data-gv-scheme='dark']) .gv-floating-folder-panel__body {
+  scrollbar-color: rgba(189, 193, 198, 0.34) transparent;
+}
+
+:host([data-gv-scheme='dark']) .gv-floating-folder-panel__body::-webkit-scrollbar-thumb {
+  background-color: rgba(189, 193, 198, 0.28);
+}
+
+:host([data-gv-scheme='dark']) .gv-floating-folder-panel__context-menu {
+  background: var(--gv-floating-folder-panel__surface);
+  color: var(--gv-floating-folder-panel__text);
+  border-color: var(--gv-floating-folder-panel__outline);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.44),
+    0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+:host([data-gv-rtl]) .gv-floating-folder-panel__header {
+  padding: 7px 14px 7px 8px;
+}
+
+.gv-floating-folder-panel__move-hint {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--gv-floating-folder-panel__outline-subtle, rgba(60, 64, 67, 0.1));
+  color: var(--gv-floating-folder-panel__text-muted, #5f6368);
+  background: var(--gv-floating-folder-panel__surface, #ffffff);
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  font-size: 11.5px;
+  line-height: 16px;
+}
+
+.gv-floating-folder-panel__hint-stack {
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--gv-floating-folder-panel__outline-subtle, rgba(60, 64, 67, 0.1));
+  background: var(--gv-floating-folder-panel__surface, #ffffff);
+}
+
+.gv-floating-folder-panel__hint-stack .gv-floating-folder-panel__move-hint {
+  min-height: 20px;
+  padding: 1px 0;
+  border-bottom: 0;
+  background: transparent;
+}
+
+:host {
+  min-width: 280px !important;
+  min-height: 320px !important;
+  max-width: min(640px, calc(100vw - 32px)) !important;
+  max-height: calc(100vh - 32px) !important;
+  resize: both !important;
+}
+
+.gv-floating-folder-panel__move-hint-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.78;
+}
+
+.gv-floating-folder-panel__move-hint-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 380px) {
+  .gv-floating-folder-panel__move-hint-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+  }
+}
+
+:host([data-gv-rtl]) .gv-floating-folder-panel__move-hint {
+  direction: rtl;
+}
+
+:host([data-gv-scheme='light']) {
+  background: var(--gv-floating-folder-panel__surface) !important;
+  color: var(--gv-floating-folder-panel__text) !important;
+  border-color: var(--gv-floating-folder-panel__outline) !important;
+  box-shadow:
+    0 16px 48px rgba(60, 64, 67, 0.22),
+    0 4px 14px rgba(60, 64, 67, 0.12) !important;
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__header {
+  background: var(--gv-floating-folder-panel__surface);
+  border-bottom-color: var(--gv-floating-folder-panel__outline-subtle);
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__folder-header:hover,
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__conv:hover {
+  background: var(--gv-floating-folder-panel__surface-hover);
+}
+
+/* The row an open removal confirm asks about (`data-gv-confirm-anchor`, set
+ * by askConfirm): lit as an active row, so it stays marked while the pointer
+ * hovers another row. Prefixed like the hover rules above so it outranks them. */
+:host([data-gv-scheme]) .gv-floating-folder-panel__folder-header[data-gv-confirm-anchor],
+:host([data-gv-scheme]) .gv-floating-folder-panel__conv[data-gv-confirm-anchor] {
+  background: var(--gv-floating-folder-panel__surface-active);
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__count {
+  background: rgba(95, 99, 104, 0.1);
+  color: var(--gv-floating-folder-panel__text-muted);
+}

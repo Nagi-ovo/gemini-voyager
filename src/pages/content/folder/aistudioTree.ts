@@ -6,7 +6,7 @@ import { canCreateFolderUnder } from '@/features/folder/model/folderDepth';
 import { placeConversations } from '@/features/folder/model/placeConversations';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
 
-import panelCss from './floatingPanel.css?raw';
+import { FLOATING_PANEL_CSS as panelCss } from './floatingPanelCss';
 import {
   FLOATING_PANEL_CLASS,
   type TreeActions,

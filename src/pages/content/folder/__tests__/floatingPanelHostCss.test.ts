@@ -6,7 +6,14 @@ import { AISTUDIO_TREE_CSS } from '../aistudioTree';
 import { POPOVER_LAYER_HOST_CSS } from '../floatingTree/popoverLayer';
 
 // The vitest config swallows `?raw` CSS outside the plugin catalog, so read the file.
-const panelCss = readFileSync(resolve(__dirname, '../floatingPanel.css'), 'utf8');
+const panelCss = [
+  'floatingPanel.css',
+  'floatingPanelPolish.css',
+  'floatingPanelPolishSchemes.css',
+  'floatingPanelSiteOptions.css',
+]
+  .map((file) => readFileSync(resolve(__dirname, '..', file), 'utf8'))
+  .join('\n');
 
 // jsdom has no cascade across shadow boundaries, so this guards the stylesheet
 // contract directly: a page rule that matches the host (`* {}`, `div {}`, a CSS

@@ -1,0 +1,111 @@
+/* ─── Site options (TreeSiteOptions) ───────────────────────────────────── */
+/* The open conversation. Prefixed with the scheme host so it outranks the
+ * scheme-specific row hover above. */
+:host([data-gv-scheme]) .gv-floating-folder-panel__conv--active,
+:host([data-gv-scheme]) .gv-floating-folder-panel__conv--active:hover {
+  background: var(--gv-floating-folder-panel__surface-active);
+  color: var(--gv-floating-folder-panel__accent);
+}
+
+.gv-floating-folder-panel__conv--active .gv-floating-folder-panel__conv-title {
+  font-weight: 500;
+}
+
+.gv-floating-folder-panel__folder-header .gv-floating-folder-panel__icon-button--menu {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 8px;
+  font-size: 16px;
+  opacity: 0;
+}
+
+.gv-floating-folder-panel__folder-header:hover .gv-floating-folder-panel__icon-button--menu,
+.gv-floating-folder-panel__folder-header:focus-within .gv-floating-folder-panel__icon-button--menu,
+.gv-floating-folder-panel__folder-header[data-gv-confirm-anchor]
+  .gv-floating-folder-panel__icon-button--menu {
+  opacity: 1;
+}
+
+/* Drop here to file a conversation at the root; present even with no folders. */
+.gv-floating-folder-panel__root-drop {
+  min-height: 24px;
+  margin: 6px 6px 0;
+  border: 1px dashed var(--gv-floating-folder-panel__outline);
+  border-radius: 8px;
+}
+
+.gv-floating-folder-panel__root-drop.gv-floating-folder-panel__drop-target {
+  border-color: var(--gv-floating-folder-panel__accent);
+  box-shadow: none;
+}
+
+.gv-floating-folder-panel__root-section {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--gv-floating-folder-panel__outline-subtle);
+}
+
+.gv-floating-folder-panel__root-section-title {
+  padding: 4px 8px;
+  padding-inline-start: 12px;
+  border-radius: 8px;
+  color: var(--gv-floating-folder-panel__text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+/* Rows a site's selection mode holds (Gemini's long-press multi-select): an
+   even ring, as a one-sided bar bends round the rounded corners. */
+:host([data-gv-scheme]) .gv-floating-folder-panel__conv--selected,
+:host([data-gv-scheme]) .gv-floating-folder-panel__conv--selected:hover {
+  background: var(--gv-floating-folder-panel__surface-active);
+  box-shadow: inset 0 0 0 1px var(--gv-floating-folder-panel__accent);
+}
+
+/* Titles that are links (`conversationHref`) look like the button titles. */
+a.gv-floating-folder-panel__conv-title {
+  text-decoration: none;
+}
+
+.gv-floating-folder-panel__conv-icon {
+  flex: 0 0 auto;
+  margin-inline-end: 6px;
+  font-family: 'Google Symbols';
+  font-size: 18px;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  opacity: 0.8;
+}
+
+/* A drop beside a row (`reorder`): a straight line on the edge it lands at,
+   inset off the rounded corners. It sits inside the row, as rows clip. */
+.gv-floating-folder-panel__tree-row [data-drop-position] {
+  position: relative;
+}
+
+.gv-floating-folder-panel__tree-row [data-drop-position]::after {
+  content: '';
+  position: absolute;
+  inset-inline: 6px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--gv-floating-folder-panel__drop-line, var(--gv-floating-folder-panel__accent));
+  pointer-events: none;
+}
+
+.gv-floating-folder-panel__tree-row [data-drop-position='before']::after {
+  top: 0;
+}
+
+.gv-floating-folder-panel__tree-row [data-drop-position='after']::after {
+  bottom: 0;
+}

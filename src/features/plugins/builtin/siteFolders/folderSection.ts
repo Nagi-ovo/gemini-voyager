@@ -10,7 +10,7 @@
 import type { FolderData } from '@/core/types/folder';
 import type { ConversationSortMode } from '@/features/folder/model/folderData';
 import { hasSeenCoachmark } from '@/pages/content/coachmark';
-import panelCss from '@/pages/content/folder/floatingPanel.css?raw';
+import { FLOATING_PANEL_CSS as panelCss } from '@/pages/content/folder/floatingPanelCss';
 import {
   type FolderDropTarget,
   folderDropTargetAt,
