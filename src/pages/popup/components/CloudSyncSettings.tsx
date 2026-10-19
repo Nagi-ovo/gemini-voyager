@@ -9,7 +9,7 @@ import { Card, CardContent, CardTitle } from '../../../components/ui/card';
 import { Label } from '../../../components/ui/label';
 import { Switch } from '../../../components/ui/switch';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { IconChatGPT } from './WebsiteLogos';
+import { IconChatGPT, IconClaude, IconDeepSeek } from './WebsiteLogos';
 import { useCloudSyncSettings } from './useCloudSyncSettings';
 
 /**
@@ -36,6 +36,8 @@ const PLATFORM_PRESENTATION: Record<
     logo: 'https://www.gstatic.com/images/branding/productlogos/ai_studio/v1/web-512dp/logo_ai_studio_color_1x_web_512dp.png',
   },
   chatgpt: { labelKey: 'platformChatGPT', logo: IconChatGPT },
+  claude: { labelKey: 'platformClaude', logo: IconClaude },
+  deepseek: { labelKey: 'platformDeepSeek', logo: IconDeepSeek },
 };
 
 export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) {

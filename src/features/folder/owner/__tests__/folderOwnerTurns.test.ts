@@ -22,6 +22,8 @@ const authority = (gemini: FolderAuthority): Record<FolderSite, FolderAuthority>
   gemini,
   aistudio: 'legacy',
   chatgpt: 'legacy',
+  claude: 'legacy',
+  deepseek: 'legacy',
 });
 
 /** Gemini and AI Studio keys, each with one registered client and one accepted, undrained op. */

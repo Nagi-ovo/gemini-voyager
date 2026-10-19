@@ -12,6 +12,13 @@ export const FOLDER_STORAGE_KEYS = {
   CHATGPT_FOLDER_PANEL: 'gvChatGptFolderPanel',
   // The ChatGPT sidebar folder section's collapse and conversation order on this device.
   CHATGPT_FOLDER_SECTION: 'gvChatGptFolderSection',
+  // Claude and DeepSeek folders plugins: each its own bucket, panel and section state, as ChatGPT's.
+  FOLDER_DATA_CLAUDE: 'gvFolderDataClaude',
+  CLAUDE_FOLDER_PANEL: 'gvClaudeFolderPanel',
+  CLAUDE_FOLDER_SECTION: 'gvClaudeFolderSection',
+  FOLDER_DATA_DEEPSEEK: 'gvFolderDataDeepSeek',
+  DEEPSEEK_FOLDER_PANEL: 'gvDeepSeekFolderPanel',
+  DEEPSEEK_FOLDER_SECTION: 'gvDeepSeekFolderSection',
   FOLDER_ENABLED: 'geminiFolderEnabled',
   BATCH_DELETE_ENABLED: 'gvBatchDeleteEnabled',
   FOLDER_HIDE_ARCHIVED_CONVERSATIONS: 'geminiFolderHideArchivedConversations',

@@ -450,7 +450,13 @@ describe('bundle recovery scheduling (R3.6)', () => {
     const setTimer = vi.fn(() => () => {});
     const recovery = createBundleRecovery({
       area: storage.area,
-      authority: { gemini: 'legacy', aistudio: 'legacy', chatgpt: 'legacy' },
+      authority: {
+        gemini: 'legacy',
+        aistudio: 'legacy',
+        chatgpt: 'legacy',
+        claude: 'legacy',
+        deepseek: 'legacy',
+      },
       serialize: createWriteQueue(),
       subscribe,
       setTimer,

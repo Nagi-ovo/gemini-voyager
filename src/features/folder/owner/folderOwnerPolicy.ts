@@ -39,6 +39,20 @@ export interface FolderSitePolicy {
   addPlacement: (via: AddVia) => ConversationPlacement;
 }
 
+/** Claude and DeepSeek file as ChatGPT does: exact ids, any number of folders per chat. */
+function pluginSitePolicy(site: 'claude' | 'deepseek'): FolderSitePolicy {
+  return {
+    site,
+    hosts: FOLDER_PLATFORMS[site].hosts,
+    rootBucketId: ROOT_CONVERSATIONS_ID,
+    keysOf: EXACT_CONVERSATION_IDENTITY.keysOf,
+    idKey: EXACT_CONVERSATION_IDENTITY.idKey,
+    resetAddedAtOnMove: false,
+    singleBucket: false,
+    addPlacement: (via) => (via === 'outside-drop' ? 'append' : 'top'),
+  };
+}
+
 export const FOLDER_SITE_POLICIES: Readonly<Record<FolderSite, FolderSitePolicy>> = {
   gemini: {
     site: 'gemini',
@@ -71,6 +85,8 @@ export const FOLDER_SITE_POLICIES: Readonly<Record<FolderSite, FolderSitePolicy>
     singleBucket: false,
     addPlacement: (via) => (via === 'outside-drop' ? 'append' : 'top'),
   },
+  claude: pluginSitePolicy('claude'),
+  deepseek: pluginSitePolicy('deepseek'),
 };
 
 const ACCOUNT_SUFFIX = /^:acct:[0-9a-z]{1,7}$/;

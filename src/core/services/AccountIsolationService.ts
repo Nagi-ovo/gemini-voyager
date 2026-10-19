@@ -79,7 +79,8 @@ function isGeminiHost(hostname: string | null): boolean {
  * Resolve the folder/account platform that owns a page.
  *
  * Returns `null` for any other web page (ChatGPT, Claude, DeepSeek, custom websites): those sites
- * have no account-isolated bucket. ChatGPT folders remain unscoped until isolation is supported.
+ * have no account-isolated bucket. ChatGPT, Claude and DeepSeek folders remain unscoped until
+ * isolation is supported.
  * Without a web page (missing URL, new tab, extension pages) the historical Gemini default stays,
  * matching the popup's full Gemini settings surface on those tabs.
  */

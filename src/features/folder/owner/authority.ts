@@ -7,4 +7,6 @@ export const FOLDER_WRITE_AUTHORITY: Readonly<Record<FolderSite, FolderAuthority
   chatgpt: 'legacy',
   aistudio: 'legacy',
   gemini: 'legacy',
+  claude: 'legacy',
+  deepseek: 'legacy',
 };

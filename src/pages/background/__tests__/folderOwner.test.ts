@@ -29,6 +29,8 @@ const GEMINI_OWNER: Record<FolderSite, FolderAuthority> = {
   gemini: 'owner',
   aistudio: 'legacy',
   chatgpt: 'legacy',
+  claude: 'legacy',
+  deepseek: 'legacy',
 };
 
 function handlerWorld(authority?: Record<FolderSite, FolderAuthority>) {

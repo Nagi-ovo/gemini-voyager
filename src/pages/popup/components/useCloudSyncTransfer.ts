@@ -297,7 +297,7 @@ async function restoreCloudDownload(
       throw new CloudRestoreError(
         [],
         ['folders'],
-        new Error('Invalid ChatGPT folder backup'),
+        new Error(`Invalid ${definition.folderExport.platform} folder backup`),
         validated.reason === 'wrong-site'
           ? 'folder_import_wrong_site'
           : 'folder_import_invalid_format',

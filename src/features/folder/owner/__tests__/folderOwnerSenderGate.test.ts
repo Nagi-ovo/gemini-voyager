@@ -10,6 +10,8 @@ const OWNER: Record<FolderSite, FolderAuthority> = {
   gemini: 'owner',
   aistudio: 'owner',
   chatgpt: 'owner',
+  claude: 'owner',
+  deepseek: 'owner',
 };
 const env = { extensionId: ID, extensionBaseUrl: BASE, authority: OWNER };
 

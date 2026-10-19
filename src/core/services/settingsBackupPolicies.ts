@@ -55,6 +55,36 @@ export const NON_SETTINGS_BACKUP_POLICIES = {
     disposition: 'device-local',
     reason: 'ChatGPT folder section collapse and order are local UI state, as on Gemini.',
   },
+  [StorageKeys.FOLDER_DATA_CLAUDE]: {
+    storage: 'local',
+    disposition: 'separate-file',
+    reason: 'Claude folder content has its own unscoped Drive file.',
+  },
+  [StorageKeys.CLAUDE_FOLDER_PANEL]: {
+    storage: 'local',
+    disposition: 'device-local',
+    reason: 'Viewport coordinates and panel state should not be restored across different screens.',
+  },
+  [StorageKeys.CLAUDE_FOLDER_SECTION]: {
+    storage: 'local',
+    disposition: 'device-local',
+    reason: 'Claude folder section collapse and order are local UI state, as on ChatGPT.',
+  },
+  [StorageKeys.FOLDER_DATA_DEEPSEEK]: {
+    storage: 'local',
+    disposition: 'separate-file',
+    reason: 'DeepSeek folder content has its own unscoped Drive file.',
+  },
+  [StorageKeys.DEEPSEEK_FOLDER_PANEL]: {
+    storage: 'local',
+    disposition: 'device-local',
+    reason: 'Viewport coordinates and panel state should not be restored across different screens.',
+  },
+  [StorageKeys.DEEPSEEK_FOLDER_SECTION]: {
+    storage: 'local',
+    disposition: 'device-local',
+    reason: 'DeepSeek folder section collapse and order are local UI state, as on ChatGPT.',
+  },
   [StorageKeys.FOLDER_FLOATING_NUDGE_SHOWN]: {
     storage: 'sync',
     disposition: 'deprecated',

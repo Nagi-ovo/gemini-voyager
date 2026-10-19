@@ -63,6 +63,8 @@ export const ALL_OWNER: Readonly<Record<FolderSite, FolderAuthority>> = {
   gemini: 'owner',
   aistudio: 'owner',
   chatgpt: 'owner',
+  claude: 'owner',
+  deepseek: 'owner',
 };
 
 export function createWorld(

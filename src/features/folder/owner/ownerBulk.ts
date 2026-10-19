@@ -6,9 +6,13 @@
  * review (REVIEW-addendum-P3P4 findings 1 and 4), so it is refused unapplied.
  */
 import type { FolderData } from '@/core/types/folder';
+import type { FolderExportPlatform } from '@/core/types/sync';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 import type { ImportResult } from '@/features/folder/types/import-export';
 import { importChatGptFolders } from '@/features/plugins/builtin/chatgptFolders/transfer';
+import { CLAUDE_TRANSFER } from '@/features/plugins/builtin/claudeFolders/claudeIdentity';
+import { DEEPSEEK_TRANSFER } from '@/features/plugins/builtin/deepseekFolders/deepseekIdentity';
+import type { SiteTransfer } from '@/features/plugins/builtin/siteFolders/siteTransfer';
 import { mergeAIStudioImport, readAIStudioImportFile } from '@/pages/content/folder/aistudioImport';
 
 import { type FolderOpBody, type OpOutcome, parseFolderOpBody, rejected } from './folderOps';
@@ -58,14 +62,16 @@ async function importGemini(body: ImportFile, current: FolderData): Promise<Impo
 
 const MERGE_ONLY: Imported = { ok: false, outcome: rejected('unsupported') };
 
-/** Today's ChatGPT import (merge only, as its panel offers; `replace` is refused unapplied). */
-async function importChatGpt(body: ImportFile, current: FolderData): Promise<Imported> {
-  if (body.strategy !== 'merge') return MERGE_ONLY;
-  const result = await importChatGptFolders(body.payload, current);
-  if (result.ok) return { ok: true, data: result.data, stats: result.stats };
-  return refuse(
-    result.reason === 'wrong-site' ? 'folder_import_wrong_site' : 'folder_import_invalid_format',
-  );
+/** A plugin site's import (merge only, as its panel offers; `replace` is refused unapplied). */
+function pluginSiteImporter(importInto: SiteTransfer<FolderExportPlatform>['importInto']) {
+  return async (body: ImportFile, current: FolderData): Promise<Imported> => {
+    if (body.strategy !== 'merge') return MERGE_ONLY;
+    const result = await importInto(body.payload, current);
+    if (result.ok) return { ok: true, data: result.data, stats: result.stats };
+    return refuse(
+      result.reason === 'wrong-site' ? 'folder_import_wrong_site' : 'folder_import_invalid_format',
+    );
+  };
 }
 
 /** Today's AI Studio import (merge only; `replace` is refused unapplied). */
@@ -81,8 +87,10 @@ const IMPORTERS: Record<
   (body: ImportFile, current: FolderData) => Promise<Imported> | Imported
 > = {
   gemini: importGemini,
-  chatgpt: importChatGpt,
+  chatgpt: pluginSiteImporter(importChatGptFolders),
   aistudio: importAIStudio,
+  claude: pluginSiteImporter(CLAUDE_TRANSFER.importInto),
+  deepseek: pluginSiteImporter(DEEPSEEK_TRANSFER.importInto),
 };
 
 type Target =

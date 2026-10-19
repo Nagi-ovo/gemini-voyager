@@ -22,6 +22,8 @@ const ALL_LEGACY: Readonly<Record<FolderSite, FolderAuthority>> = {
   gemini: 'legacy',
   aistudio: 'legacy',
   chatgpt: 'legacy',
+  claude: 'legacy',
+  deepseek: 'legacy',
 };
 
 /** Index and meta an owner build leaves behind with two registered tabs, as after a rollback. */

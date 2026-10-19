@@ -2,14 +2,16 @@ import { StorageKeys } from '@/core/types/common';
 import type { FolderExportPlatform } from '@/core/types/sync';
 import type { FolderExportPayload, ImportStrategy } from '@/features/folder/types/import-export';
 import { readChatGptFolderExport } from '@/features/plugins/builtin/chatgptFolders/transfer';
+import { CLAUDE_TRANSFER } from '@/features/plugins/builtin/claudeFolders/claudeIdentity';
+import { DEEPSEEK_TRANSFER } from '@/features/plugins/builtin/deepseekFolders/deepseekIdentity';
 
 /**
  * Sites that own a Voyager folder bucket. Every per-platform storage key, Drive file, sync
  * timestamp and host list is looked up here, so adding a platform does not compile until each
- * one is defined. Any other site (Claude, DeepSeek, custom websites) has no folder
- * bucket: helpers return `null` and callers must skip folder storage, backup and sync.
+ * one is defined. Any other site (custom websites) has no folder bucket: helpers
+ * return `null` and callers must skip folder storage, backup and sync.
  */
-export type FolderPlatform = 'gemini' | 'aistudio' | 'chatgpt';
+export type FolderPlatform = 'gemini' | 'aistudio' | 'chatgpt' | 'claude' | 'deepseek';
 
 export interface FolderPlatformDefinition {
   /** Page hosts whose content scripts own this bucket; the owner and sync trust only these. */
@@ -89,6 +91,35 @@ export const FOLDER_PLATFORMS = {
     lastUploadTimeStorageKey: 'gvLastUploadTimeChatGPT',
     lastSyncTimeField: 'lastSyncTimeChatGPT',
     lastSyncTimeStorageKey: 'gvLastSyncTimeChatGPT',
+  },
+  // Plugin sites like ChatGPT: one unscoped bucket per browser profile, folders only.
+  claude: {
+    hosts: ['claude.ai'],
+    folderStorageKey: StorageKeys.FOLDER_DATA_CLAUDE,
+    accountIsolationStorageKey: null,
+    syncsSharedData: false,
+    folderExport: { platform: 'claude', read: CLAUDE_TRANSFER.read },
+    driveFoldersFileName: 'gemini-voyager-claude-folders.json',
+    syncsConversationExtras: false,
+    backupNamespace: 'claude-folders',
+    lastUploadTimeField: 'lastUploadTimeClaude',
+    lastUploadTimeStorageKey: 'gvLastUploadTimeClaude',
+    lastSyncTimeField: 'lastSyncTimeClaude',
+    lastSyncTimeStorageKey: 'gvLastSyncTimeClaude',
+  },
+  deepseek: {
+    hosts: ['chat.deepseek.com'],
+    folderStorageKey: StorageKeys.FOLDER_DATA_DEEPSEEK,
+    accountIsolationStorageKey: null,
+    syncsSharedData: false,
+    folderExport: { platform: 'deepseek', read: DEEPSEEK_TRANSFER.read },
+    driveFoldersFileName: 'gemini-voyager-deepseek-folders.json',
+    syncsConversationExtras: false,
+    backupNamespace: 'deepseek-folders',
+    lastUploadTimeField: 'lastUploadTimeDeepSeek',
+    lastUploadTimeStorageKey: 'gvLastUploadTimeDeepSeek',
+    lastSyncTimeField: 'lastSyncTimeDeepSeek',
+    lastSyncTimeStorageKey: 'gvLastSyncTimeDeepSeek',
   },
 } as const satisfies Readonly<Record<FolderPlatform, FolderPlatformDefinition>>;
 
