@@ -52,12 +52,14 @@ function cutShort(item: HTMLElement, notice: string): void {
 describe('Local Bridge on a reply cut short by a lost connection', () => {
   it('does not save a reply cut short as finished, and stalls with what the page showed', async () => {
     const item = page.addTurn({ key: 'turn-1', user: 'render the scene' });
-    bridge.start('turns.waitReply', { ...WAIT, stallMs: 2 * 60_000 });
+    bridge.start('turns.waitReply', WAIT);
     cutShort(item, EN_NOTICE);
-    await vi.advanceTimersByTimeAsync(30_000);
+    await vi.advanceTimersByTimeAsync(10_000);
     expect(bridge.outcome()).toBeUndefined();
 
-    await vi.advanceTimersByTimeAsync(100_000);
+    // A jump, not 20 minutes of one-second looks: those timed out on CI.
+    vi.setSystemTime(Date.now() + 20 * 60_000);
+    await vi.advanceTimersByTimeAsync(2_000);
     const outcome = bridge.outcome();
     expect(errorCode(outcome)).toBe('reply-stalled');
     expect(outcome?.ok === false && outcome.error.details).toMatchObject({
@@ -74,7 +76,7 @@ describe('Local Bridge on a reply cut short by a lost connection', () => {
     const item = page.addTurn({ key: 'turn-1', user: 'render the scene' });
     bridge.start('turns.waitReply', WAIT);
     cutShort(item, ZH_NOTICE);
-    await vi.advanceTimersByTimeAsync(30_000);
+    await vi.advanceTimersByTimeAsync(10_000);
     expect(bridge.outcome()).toBeUndefined();
   });
 
