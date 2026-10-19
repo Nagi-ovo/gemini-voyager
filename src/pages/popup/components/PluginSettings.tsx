@@ -189,17 +189,8 @@ export function PluginSettings({
             title={`${settingText.label}: ${value}`}
             className={disabled ? 'opacity-50' : undefined}
           >
-            <div
-              className={`text-muted-foreground mb-1 flex justify-between gap-2 text-[11px] ${hint ? 'items-start' : 'items-center'}`}
-            >
-              <span className="min-w-0">
-                <span className="block truncate">{settingText.label}</span>
-                {hint && (
-                  <span className="text-muted-foreground/80 mt-0.5 block text-[10px] leading-snug">
-                    {hint}
-                  </span>
-                )}
-              </span>
+            <div className="text-muted-foreground mb-1 flex items-center justify-between gap-2 text-[11px]">
+              <span className="min-w-0 truncate">{settingText.label}</span>
               {needsPreciseInput ? (
                 <NumberSetting
                   label={settingText.label}
@@ -213,6 +204,10 @@ export function PluginSettings({
                 <span className="shrink-0 tabular-nums">{value}</span>
               )}
             </div>
+            {/* Under the label row, not beside the input: a long hint gets the card's full width. */}
+            {hint && (
+              <p className="text-muted-foreground/80 mb-1.5 text-[10px] leading-snug">{hint}</p>
+            )}
             <div className="flex items-center gap-2">
               {settingText.minLabel && (
                 <span className="text-muted-foreground shrink-0 text-[10px]">
