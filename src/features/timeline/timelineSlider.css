@@ -1,0 +1,51 @@
+.timeline-left-slider {
+  position: fixed;
+  top: 0;
+  width: 12px;
+  height: 160px;
+  opacity: 0;
+  transition: opacity 180ms ease;
+  z-index: 2147483646;
+  pointer-events: none;
+}
+
+.timeline-left-slider.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.timeline-left-slider::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+}
+
+html[data-gv-scheme='dark'] .timeline-left-slider::before {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.timeline-left-handle {
+  position: absolute;
+  left: 2px;
+  width: 8px;
+  height: 22px;
+  background: rgba(16, 163, 127, 0.28);
+  border-radius: 9999px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+  cursor: grab;
+  transition: background-color 120ms ease;
+}
+
+.timeline-left-handle:hover {
+  background: rgba(16, 163, 127, 0.45);
+}
+
+.timeline-left-handle:active {
+  cursor: grabbing;
+}

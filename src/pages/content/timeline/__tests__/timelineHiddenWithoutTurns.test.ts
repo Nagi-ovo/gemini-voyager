@@ -28,7 +28,7 @@ const FIRST: GeminiTurn = { prompt: 'Plan a trip to Kyoto', serverId: 'aaaaaaaaa
 // Tests stub app CSS imports, so load the stylesheets the view injects to compute visibility.
 function installTimelineStyles(): void {
   const style = document.createElement('style');
-  style.textContent = ['timeline.css', 'timelinePreview.css']
+  style.textContent = ['timeline.css', 'timelineSlider.css', 'timelinePreview.css']
     .map((file) => readFileSync(resolve(process.cwd(), 'src/features/timeline', file), 'utf8'))
     .join('\n');
   document.head.replaceChildren(style);

@@ -9,7 +9,9 @@ import { TimelinePreviewPanel } from './TimelinePreviewPanel';
 import { TimelineRailPlacement } from './TimelineRailPlacement';
 import { TimelineSlider } from './TimelineSlider';
 import timelineStyles from './timeline.css?inline';
+import contextMenuStyles from './timelineContextMenu.css?inline';
 import previewStyles from './timelinePreview.css?inline';
+import sliderStyles from './timelineSlider.css?inline';
 /** Hides every rail surface until the conversation has a turn to mark. */
 const EMPTY_RAIL_CLASS = 'gv-timeline-empty';
 /** Everything a timeline view and its engine put on the page. */
@@ -160,7 +162,12 @@ export class TimelineView {
     for (const stale of document.querySelectorAll(TIMELINE_PAGE_NODES)) stale.remove();
     this.styleElement = document.createElement('style');
     this.styleElement.dataset.gvTimeline = '';
-    this.styleElement.textContent = `${timelineStyles}\n${previewStyles}`;
+    this.styleElement.textContent = [
+      timelineStyles,
+      contextMenuStyles,
+      sliderStyles,
+      previewStyles,
+    ].join('\n');
     document.head.appendChild(this.styleElement);
     const anchor = this.options.mountAnchor ?? document.body;
     const bar = document.createElement('div');

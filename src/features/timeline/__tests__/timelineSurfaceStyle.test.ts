@@ -7,9 +7,12 @@ import { readContentStyle } from '@/tests/contentStyle';
 function readSurfaceStyles(): string {
   return [
     readContentStyle(),
-    ...['src/features/timeline/timeline.css', 'src/features/timeline/timelinePreview.css'].map(
-      (path) => readFileSync(resolve(process.cwd(), path), 'utf8'),
-    ),
+    ...[
+      'src/features/timeline/timeline.css',
+      'src/features/timeline/timelineContextMenu.css',
+      'src/features/timeline/timelineSlider.css',
+      'src/features/timeline/timelinePreview.css',
+    ].map((path) => readFileSync(resolve(process.cwd(), path), 'utf8')),
   ].join('\n');
 }
 

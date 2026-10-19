@@ -18,6 +18,8 @@ import { contentStylePartPaths } from '@/tests/contentStyle';
 const STYLESHEETS = [
   ...contentStylePartPaths(),
   'src/features/timeline/timeline.css',
+  'src/features/timeline/timelineContextMenu.css',
+  'src/features/timeline/timelineSlider.css',
   'src/features/timeline/timelinePreview.css',
   'src/pages/content/defaultModel/styles.css',
   'src/pages/content/folder/floatingPanel.css',
