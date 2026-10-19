@@ -6,6 +6,7 @@
 :host(.gv-folder-tree-popover-layer) {
   --gv-deepseek-folder-section__row-height: 40px;
   --gv-deepseek-folder-section__row-radius: 12px;
+  --gv-deepseek-folder-section__header-height: 36px;
 }
 
 :host(.gv-deepseek-folder-section[data-gv-scheme]),
@@ -24,6 +25,7 @@
     rgba(0, 0, 0, 0.08)
   );
   --gv-floating-folder-panel__outline: var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.12));
+  --gv-deepseek-folder-section__sidebar: var(--dsw-specific-sidebar-fill, #f9fafb);
   --gv-deepseek-folder-section__danger: var(--dsw-alias-state-error-primary, #ef4444);
   --gv-deepseek-folder-section__danger-soft: var(
     --dsw-alias-interactive-bg-hover-danger,
@@ -47,4 +49,36 @@
     rgba(255, 255, 255, 0.12)
   );
   --gv-floating-folder-panel__outline: var(--dsw-alias-border-l2, rgba(255, 255, 255, 0.12));
+  --gv-deepseek-folder-section__sidebar: var(--dsw-specific-sidebar-fill, #1b1b1c);
+}
+
+/* ─── Header: beside DeepSeek's pinned "select chats" button ──────────── */
+/* DeepSeek pins that button (22px, 10px from the edge, above everything in
+ * the history) to the top right of the history's scroll area, beside its
+ * sticky date heading, and the section sits at the top of that area. So the
+ * header keeps the button's corner clear, and sticks with an opaque fill the
+ * way DeepSeek's headings do, so no folder row scrolls under the button. */
+.gv-deepseek-folder-section__header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  box-sizing: border-box;
+  height: var(--gv-deepseek-folder-section__header-height);
+  padding-inline-end: 28px;
+  background: var(--gv-deepseek-folder-section__sidebar);
+}
+
+:host(.gv-deepseek-folder-section[data-gv-scheme])
+  .gv-deepseek-folder-section__header.gv-floating-folder-panel__drop-target {
+  background:
+    linear-gradient(
+      var(--gv-floating-folder-panel__surface-active),
+      var(--gv-floating-folder-panel__surface-active)
+    ),
+    var(--gv-deepseek-folder-section__sidebar) !important;
+}
+
+/* The multi-select bar sticks just below the header, clear of the button. */
+.gv-deepseek-folder-section__selection {
+  top: var(--gv-deepseek-folder-section__header-height);
 }
