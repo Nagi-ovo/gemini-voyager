@@ -21,7 +21,7 @@ Copy this checklist and tick it off:
 
 ## 1. Load the build
 
-Chrome loads the unpacked `dist_chrome_dev` of the main checkout, which reloads itself about a second after its build id changes (`src/pages/background/devAutoReload.ts`). Build it with `bun run dev:chrome`, or once with the `exec` command in `nodemon.chrome.json` and `__DEV__=true`. From a worktree, build there and `rsync -a --delete dist_chrome_dev/ <main checkout>/dist_chrome_dev/`. Production checks use `bun run build:chrome` / `dist_chrome`, reloaded through an extension tool (with chrome-devtools-mcp, `list_extensions` and `reload_extension`); Safari uses `update-safari-extension`.
+Chrome loads the unpacked `dist_chrome_dev` of the main checkout, which reloads itself about a second after its build id changes (`src/pages/background/devAutoReload.ts`). Build it with `bun run dev:chrome`, or once with the `exec` command in `nodemon.chrome.json` and `__DEV__=true`. From a worktree, build there and copy the build id last, so the reload never sees a half-copied bundle (a reload mid-copy can read a partial manifest and leave the extension disabled for a permission increase): `rsync -a --delete --exclude .voyager-build-ready dist_chrome_dev/ <main checkout>/dist_chrome_dev/`, then `cp dist_chrome_dev/.voyager-build-ready <main checkout>/dist_chrome_dev/`. Production checks use `bun run build:chrome` / `dist_chrome`, reloaded through an extension tool (with chrome-devtools-mcp, `list_extensions` and `reload_extension`); Safari uses `update-safari-extension`.
 
 The dev build runs on every host in `manifest.dev.json` `host_permissions`. A plugin site missing there gets added to that list and rebuilt; that is how the dev build gains site access without a click.
 
