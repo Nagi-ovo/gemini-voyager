@@ -1,8 +1,10 @@
 /* The folder section inside a site's sidebar (`sectionCss.ts` puts the site's
  * class in place of `gv-site-folder-section`). It reuses the floating panel's
- * shadow sheet and tree, and turns them into one of the site's own sidebar
- * sections: the panel's colour tokens point at the site's (inherited from the
- * page, with fallbacks), and rows take its metrics. The defaults are ChatGPT's:
+ * shadow sheet and the inline tree (sectionTree.css sets its tokens), and turns
+ * them into one of the site's own sidebar sections: the panel's colour tokens
+ * point at the site's (inherited from the page, with fallbacks), and rows take
+ * its metrics. The inline tree sheet lays out the host; this one adds what a
+ * section in the page's flex sidebar needs. The defaults are ChatGPT's:
  * 14px/20px text, its row height and radius tokens, 6px outer and 10px inner
  * inset. Another site redefines the tokens in a sheet of its own, after this one.
  *
@@ -16,28 +18,14 @@
  * never match it, or the 0×0 fixed layer would become a block in the page. */
 :host(.gv-site-folder-section),
 :host(.gv-site-folder-section[data-gv-scheme]) {
-  position: relative !important;
-  z-index: auto !important;
-  display: block !important;
   width: auto !important;
   height: auto !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
   /* The sidebar is a flex column: without this, a long Recents list shrinks
      the section to 0px and the tree overlaps it. */
   flex-shrink: 0 !important;
-  max-width: none !important;
-  max-height: none !important;
-  resize: none !important;
   /* The neighbouring native sections bring their own spacing. */
   margin: 0 !important;
-  background: transparent !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  overflow: visible !important;
   font-family: inherit !important;
-  font-size: 14px !important;
   /* ChatGPT turns off pointer events on its sidebar scroll area while a row is
      dragged; the row drag finds our folders by hit testing. */
   pointer-events: auto !important;
@@ -105,12 +93,6 @@
   --gv-site-folder-section__row-height: var(--height-token-row, 36px);
   --gv-site-folder-section__row-radius: var(--radius-lg, 10px);
   --gv-tree-step: calc(32px + var(--gv-folder-indent, -8px));
-}
-
-/* The folder spacing setting, as a gap below each row; none until it is set.
- * Inside the row shell, so the virtualizer measures it. */
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__tree-row {
-  padding-block-end: var(--gv-folder-row-gap, 0px);
 }
 
 /* ─── Header: one of ChatGPT's section headings ────────────────────────── */
@@ -327,4 +309,69 @@
 .gv-site-folder-section__selection .gv-multi-select-action-btn:focus-visible {
   outline: 2px solid var(--gv-floating-folder-panel__outline);
   outline-offset: 1px;
+}
+
+/* ─── Activity: the shared list on the rows' column, in ChatGPT's colours ─ */
+/* Titles start 16px into the section, under the header's; two-line rows keep
+ * the list's own height, in the page's font and row weight. */
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-folder-activity-list {
+  --gv-folder-activity-text: var(--gv-floating-folder-panel__text);
+  --gv-folder-activity-muted: var(--gv-site-folder-section__heading);
+  --gv-folder-activity-hover: var(--gv-floating-folder-panel__surface-hover);
+  --gv-folder-list-edge: 6px;
+  --gv-folder-activity-row-inset: 10px;
+}
+
+:host(.gv-site-folder-section)
+  :is(
+    .gv-folder-activity-heading,
+    .gv-folder-activity-text .gv-conversation-title,
+    .gv-folder-activity-context,
+    .gv-folder-activity-time,
+    .gv-folder-activity-empty
+  ) {
+  font-family: inherit;
+}
+
+/* Activity titles follow the font size setting too, as on Gemini. */
+:host(.gv-site-folder-section) .gv-folder-activity-text .gv-conversation-title {
+  font-size: var(--gv-folder-item-font-size, 14px);
+  font-weight: 400;
+  line-height: var(--gv-folder-item-line-height, 20px);
+}
+
+:host(.gv-site-folder-section) .gv-folder-activity-item {
+  border-radius: var(--gv-site-folder-section__row-radius);
+}
+
+:host(.gv-site-folder-section) .gv-folder-activity-empty {
+  padding-inline: 10px;
+  font-size: 14px;
+  line-height: 20px;
+  opacity: 1;
+}
+
+/* ─── Folder menu: ChatGPT's menu shape, in the page's font ────────────── */
+/* The layer is a child of body: the page's font, not the panel's. */
+:host(.gv-folder-tree-popover-layer) {
+  font-family: inherit !important;
+}
+
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__context-menu,
+:host(.gv-folder-tree-popover-layer[data-gv-scheme]) .gv-floating-folder-panel__context-menu {
+  border-radius: 16px;
+  font-family: inherit;
+}
+
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__menu-item,
+:host(.gv-folder-tree-popover-layer[data-gv-scheme]) .gv-floating-folder-panel__menu-item {
+  min-height: 36px;
+  border-radius: var(--gv-site-folder-section__row-radius);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* ─── RTL ──────────────────────────────────────────────────────────────── */
+:host(.gv-site-folder-section[data-gv-rtl]) .gv-site-folder-section__header {
+  direction: rtl;
 }

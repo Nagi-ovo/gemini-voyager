@@ -1,0 +1,135 @@
+/* Gemini's sidebar skin for the inline folder tree (floatingTree/inlineTree.css).
+ * Rows look as the sidebar's own folder list did before it moved onto the
+ * shared tree: its `--folder-*` colours (set per scheme on the page root, and
+ * inherited here), 8px-rounded rows, the gold edge of a starred chat, the green
+ * one of the open chat, and nesting as the old list's body: each level one
+ * `nest` in (21px at the default indent, 53px at max), its guide under the
+ * folder's chevron, the rows carrying their folders' offset as a margin. */
+:host([data-gv-tree-inline]) {
+  --gv-folder-tree-text: var(--folder-text, #1f2937);
+  --gv-folder-tree-icon: var(--folder-icon-color, #6b7280);
+  --gv-folder-tree-hover: var(--folder-hover-bg, #f3f4f6);
+  --gv-folder-tree-border: var(--folder-border, #e5e7eb);
+  --gv-folder-tree-field: var(--folder-bg, #ffffff);
+  --gv-folder-tree-selected-glow: var(--folder-selected-glow, rgba(16, 185, 129, 0.12));
+  --gv-folder-tree-active-mark: var(--folder-selected-accent, #34d399);
+  --gv-folder-tree-drop-bg: rgba(59, 130, 246, 0.12);
+
+  --gv-folder-tree-row-width: auto;
+  --gv-folder-tree-row-height: 0px;
+  --gv-folder-tree-row-padding-block: var(--gv-folder-row-padding, 5px);
+  --gv-folder-tree-row-radius: 8px;
+  --gv-folder-tree-row-gap: 2px;
+  --gv-folder-tree-row-transition: background-color 0.2s;
+  --gv-folder-tree-nest: calc(21px + (var(--gv-folder-indent, -8px) + 8px) * 0.8);
+  --gv-folder-tree-row-offset: var(--gv-folder-tree-nest);
+  --gv-folder-tree-indent: 0px;
+  --gv-folder-tree-guide: var(--gv-folder-tree-border);
+  --gv-folder-tree-guide-inset: 17.5px;
+  --gv-folder-tree-header-gap: 8px;
+  --gv-folder-tree-header-end: 12px;
+  --gv-folder-tree-conv-gap: 4px;
+  /* Under the folder icon at the default indent. */
+  --gv-folder-tree-conv-start: 19px;
+  --gv-folder-tree-root-conv-start: 24px;
+  --gv-folder-tree-title-inset: 0px;
+  --gv-folder-tree-font-size: 14px;
+  --gv-folder-tree-line-height: 20px;
+  --gv-folder-tree-name-weight: 500;
+
+  --gv-folder-tree-active-bg: linear-gradient(
+    to right,
+    var(--gv-folder-tree-selected-glow) 0%,
+    transparent 100%
+  );
+  --gv-folder-tree-active-radius: 10px;
+  --gv-folder-tree-marks: '';
+  --gv-folder-tree-starred-wash: linear-gradient(
+    to right,
+    rgba(251, 191, 36, 0.08) 0%,
+    transparent 100%
+  );
+  --gv-folder-tree-starred-mark: linear-gradient(to bottom, #fbbf24, #f59e0b);
+
+  /* The old list's 20px chevron and folder icon, 24px buttons with 18px icons. */
+  --gv-folder-tree-caret-radius: 4px;
+  --gv-folder-tree-caret-color: var(--gv-folder-tree-icon);
+  --gv-folder-tree-caret-hover-bg: transparent;
+  --gv-folder-tree-caret-hover-color: var(--gv-folder-tree-icon);
+  --gv-folder-tree-caret-icon: 18px;
+  --gv-folder-tree-folder-icon-box: 20px;
+  --gv-folder-tree-folder-icon-color: var(--gv-folder-tree-icon);
+  --gv-folder-tree-button-size: 24px;
+  --gv-folder-tree-button-radius: 4px;
+  --gv-folder-tree-button-color: var(--gv-folder-tree-icon);
+  --gv-folder-tree-button-icon: 18px;
+  --gv-folder-tree-button-transition: opacity 0.2s, background-color 0.2s, color 0.2s;
+  --gv-folder-tree-button-hover-bg: var(--gv-folder-tree-hover);
+  --gv-folder-tree-button-hover-color: var(--gv-folder-tree-icon);
+  --gv-folder-tree-button-hover-transform: scale(1.05);
+  --gv-folder-tree-button-press: scale(0.9);
+  --gv-folder-tree-button-icon-transition: transform 0.2s;
+  /* A chat's star and remove buttons: grey until hovered; a set star stays gold. */
+  --gv-folder-tree-conv-button-radius: 6px;
+  --gv-folder-tree-conv-button-color: #9ca3af;
+  --gv-folder-tree-conv-button-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --gv-folder-tree-reveal-display: inline-flex;
+  --gv-folder-tree-reveal-opacity: 0;
+  --gv-folder-tree-star: #fbbf24;
+  --gv-folder-tree-star-hover-bg: rgba(251, 191, 36, 0.12);
+  --gv-folder-tree-star-active-hover-bg: rgba(251, 191, 36, 0.15);
+  --gv-folder-tree-remove-hover-bg: rgba(239, 68, 68, 0.12);
+  --gv-folder-tree-remove-hover-color: #ef4444;
+  --gv-folder-tree-drop-ring: inset 0 0 0 1px rgba(66, 133, 244, 0.36);
+
+  --gv-folder-tree-body-padding: 0 0 4px;
+  --gv-folder-tree-root-drop-height: 24px;
+  --gv-folder-tree-form-height: 34px;
+  --gv-folder-tree-form-padding-block: 3px;
+  --gv-folder-tree-form-end: 4px;
+  --gv-folder-tree-form-start: 8px;
+  /* The old inline rename: a bordered field with 24px save and cancel. */
+  --gv-folder-tree-rename-height: 0px;
+  --gv-folder-tree-rename-gap: 4px;
+  --gv-folder-tree-rename-start: 0px;
+  --gv-folder-tree-rename-end: 0px;
+  --gv-folder-tree-input-height: auto;
+  --gv-folder-tree-input-padding: 6px 8px;
+  --gv-folder-tree-input-border: var(--gv-folder-tree-border);
+  --gv-folder-tree-input-radius: 4px;
+  --gv-folder-tree-input-bg: var(--gv-folder-tree-field);
+  --gv-folder-tree-input-color: var(--gv-folder-tree-text);
+  --gv-folder-tree-input-line-height: normal;
+  --gv-folder-tree-input-focus-bg: var(--gv-folder-tree-field);
+  --gv-folder-tree-input-focus-border: #3b82f6;
+  --gv-folder-tree-input-focus-ring: rgba(59, 130, 246, 0.1);
+  --gv-folder-tree-form-button-size: 24px;
+  --gv-folder-tree-form-button-radius: 4px;
+  --gv-folder-tree-form-button-color: var(--gv-folder-tree-icon);
+  --gv-folder-tree-form-button-opacity: 1;
+  --gv-folder-tree-save-hover-bg: rgba(16, 185, 129, 0.1);
+  --gv-folder-tree-save-hover-color: #10b981;
+  --gv-folder-tree-cancel-hover-bg: rgba(239, 68, 68, 0.1);
+  --gv-folder-tree-cancel-hover-color: #ef4444;
+
+  --gv-folder-tree-empty-height: 220px;
+  --gv-folder-tree-empty-direction: column;
+  --gv-folder-tree-empty-justify: center;
+  --gv-folder-tree-empty-gap: 8px;
+  --gv-folder-tree-empty-padding: 8px 12px;
+  --gv-folder-tree-empty-color: var(--gv-floating-folder-panel__text-muted);
+  --gv-folder-tree-empty-align: center;
+  --gv-folder-tree-empty-label-size: 12px;
+  --gv-folder-tree-empty-label-line: 18px;
+}
+
+:host([data-gv-tree-inline][data-gv-scheme='dark']) {
+  --gv-folder-tree-text: var(--folder-text, #e5e7eb);
+  --gv-folder-tree-icon: var(--folder-icon-color, #9ca3af);
+  --gv-folder-tree-hover: var(--folder-hover-bg, #374151);
+  --gv-folder-tree-border: var(--folder-border, #374151);
+  --gv-folder-tree-field: var(--folder-bg, #1f2937);
+  --gv-folder-tree-selected-glow: var(--folder-selected-glow, rgba(16, 185, 129, 0.1));
+  --gv-folder-tree-active-mark: var(--folder-selected-accent, #6ee7b7);
+  --gv-folder-tree-drop-bg: var(--gv-floating-folder-panel__surface-active);
+}

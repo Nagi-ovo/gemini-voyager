@@ -25,6 +25,7 @@ import {
   type FolderTreeController,
   mountFolderTree,
 } from '@/pages/content/folder/floatingTree/treeController';
+import { INLINE_TREE_ATTR } from '@/pages/content/folder/floatingTree/treeStyle';
 import { applyFolderDisplay } from '@/pages/content/folder/folderDisplay';
 import { FOLDER_HEADER_CSS } from '@/pages/content/folder/folderHeader/folderHeader';
 import type { FolderHeaderActionsOptions } from '@/pages/content/folder/folderHeader/folderHeaderActions';
@@ -152,6 +153,7 @@ export class SiteFolderSection {
     this.onPrefsChange = onPrefsChange;
     this.element = document.createElement('div');
     this.element.className = className;
+    this.element.setAttribute(INLINE_TREE_ATTR, '');
     this.element.setAttribute('role', 'region');
     this.element.setAttribute('aria-label', t('floatingPanelTitle'));
     this.element.addEventListener('pointerenter', () => (this.pointerInside = true));

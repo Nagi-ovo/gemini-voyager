@@ -1,205 +1,136 @@
-/* ─── Tree ─────────────────────────────────────────────────────────────── */
-:host(.gv-site-folder-section) .gv-floating-folder-panel__body {
-  flex: none;
-  overflow: visible;
-  overscroll-behavior: auto;
-  padding: 0 6px;
-}
-
-/* Rows: 8px start padding (plus 24px per level) puts the 16px chevron on
- * ChatGPT's 16px icon column; the 18px folder icon and the name follow at 6px
- * gaps, so the name starts 58px into the row. */
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__folder-header,
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv,
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__inline-form {
-  min-height: var(--gv-site-folder-section__row-height);
-  gap: 6px;
-  padding-block: 0;
-  padding-inline-end: 6px;
-  border-radius: var(--gv-site-folder-section__row-radius);
-  color: var(--gv-floating-folder-panel__text);
-}
-
-/* Drops: "into" lights the whole row in the pressed-row token, as ChatGPT
- * shows a row it is acting on; "beside" is a line in the row text colour, as
- * ChatGPT has no accent. */
+/* The sidebar section's skin for the inline folder tree
+ * (pages/content/folder/floatingTree/inlineTree.css), in the section's tokens
+ * (sectionChrome.css), whose defaults are ChatGPT's. Rows take the site's row
+ * height and radius; 8px start padding (plus one nesting step per level) puts
+ * the 16px chevron on ChatGPT's 16px icon column, the 18px folder icon and the
+ * name follow at 6px gaps, and a chat's title lines up with its folder's name.
+ * The open chat is a fill, as the site marks its own; a drop into a row lights
+ * it in the pressed-row fill, a drop beside it is a line in the text colour,
+ * as ChatGPT has no accent. Trailing buttons take the row's end only while it
+ * is in use, as the site's own row actions do. */
 :host(.gv-site-folder-section[data-gv-scheme]) {
   --gv-floating-folder-panel__drop-line: var(--gv-floating-folder-panel__text);
+
+  --gv-folder-tree-text: var(--gv-floating-folder-panel__text);
+  --gv-folder-tree-icon: var(--gv-floating-folder-panel__text-muted);
+  --gv-folder-tree-hover: var(--gv-floating-folder-panel__surface-hover);
+  --gv-folder-tree-row-width: 100%;
+  --gv-folder-tree-row-height: var(--gv-site-folder-section__row-height);
+  --gv-folder-tree-row-padding-block: 0px;
+  --gv-folder-tree-row-radius: var(--gv-site-folder-section__row-radius);
+  /* No gap until the spacing setting sets one. */
+  --gv-folder-tree-row-gap: 0px;
+  --gv-folder-tree-row-transition: background-color 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+  --gv-folder-tree-nest: var(--gv-tree-step);
+  --gv-folder-tree-row-offset: 0px;
+  --gv-folder-tree-indent: var(--gv-tree-step);
+  /* Under each enclosing folder's chevron (row start + 18px). */
+  --gv-folder-tree-guide-inset: 18px;
+  --gv-folder-tree-header-gap: 6px;
+  --gv-folder-tree-header-end: 6px;
+  --gv-folder-tree-conv-gap: 6px;
+  --gv-folder-tree-conv-start: 24px;
+  --gv-folder-tree-root-conv-start: calc(24px - var(--gv-tree-step));
+  --gv-folder-tree-title-inset: 34px;
+  /* ChatGPT's 14px rows, until the folder font size setting picks another. */
+  --gv-folder-tree-font-size: 14px;
+  --gv-folder-tree-line-height: 20px;
+  --gv-folder-tree-name-weight: 400;
+
+  --gv-folder-tree-active-bg: var(--gv-floating-folder-panel__surface-active);
+  --gv-folder-tree-active-radius: var(--gv-site-folder-section__row-radius);
+  --gv-folder-tree-starred-wash: none;
+  --gv-folder-tree-starred-mark: none;
+  --gv-folder-tree-active-mark: none;
+
+  --gv-folder-tree-caret-radius: 6px;
+  --gv-folder-tree-caret-color: var(--gv-floating-folder-panel__text-muted);
+  --gv-folder-tree-caret-hover-color: var(--gv-floating-folder-panel__text);
+  --gv-folder-tree-caret-icon: 16px;
+  --gv-folder-tree-folder-icon-box: 18px;
+  --gv-folder-tree-folder-icon-color: currentColor;
+  --gv-folder-tree-button-size: 28px;
+  --gv-folder-tree-button-radius: 8px;
+  --gv-folder-tree-button-color: var(--gv-floating-folder-panel__text-muted);
+  --gv-folder-tree-button-icon: 16px;
+  --gv-folder-tree-button-transition:
+    background-color 0.16s cubic-bezier(0.4, 0, 0.2, 1), color 0.16s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+  --gv-folder-tree-button-hover-color: var(--gv-floating-folder-panel__text);
+  --gv-folder-tree-button-hover-transform: none;
+  --gv-folder-tree-button-press: none;
+  --gv-folder-tree-button-icon-transition: all 0s;
+  --gv-folder-tree-conv-button-radius: 8px;
+  --gv-folder-tree-conv-button-color: var(--gv-floating-folder-panel__text-muted);
+  --gv-folder-tree-conv-button-transition: var(--gv-folder-tree-button-transition);
+  --gv-folder-tree-reveal-display: none;
+  --gv-folder-tree-reveal-opacity: 1;
+  --gv-folder-tree-star: #fbbc04;
+  --gv-folder-tree-remove-hover-color: var(--gv-floating-folder-panel__danger);
+  --gv-folder-tree-drop-bg: var(--gv-floating-folder-panel__surface-active);
+  --gv-folder-tree-drop-ring: none;
+
+  --gv-folder-tree-body-padding: 0 6px;
+  --gv-folder-tree-root-drop-height: var(--gv-site-folder-section__row-height);
+  --gv-folder-tree-form-height: var(--gv-site-folder-section__row-height);
+  --gv-folder-tree-form-padding-block: 0px;
+  --gv-folder-tree-form-end: 6px;
+  --gv-folder-tree-form-start: 32px;
+  --gv-folder-tree-rename-height: var(--gv-site-folder-section__row-height);
+  --gv-folder-tree-rename-gap: 6px;
+  --gv-folder-tree-rename-start: 8px;
+  --gv-folder-tree-rename-end: 6px;
+  --gv-folder-tree-input-height: 28px;
+  --gv-folder-tree-input-padding: 0 8px;
+  --gv-folder-tree-input-border: var(--gv-floating-folder-panel__outline);
+  --gv-folder-tree-input-radius: 8px;
+  --gv-folder-tree-input-line-height: 20px;
+  --gv-folder-tree-input-focus-border: var(--gv-floating-folder-panel__accent);
+  --gv-folder-tree-input-focus-ring: var(--gv-floating-folder-panel__accent-soft);
+  --gv-folder-tree-form-button-size: 28px;
+  --gv-folder-tree-form-button-radius: 8px;
+  --gv-folder-tree-form-button-color: var(--gv-floating-folder-panel__text-muted);
+  --gv-folder-tree-form-button-opacity: 0.86;
+  --gv-folder-tree-save-hover-color: #0f9d58;
+  --gv-folder-tree-cancel-hover-color: var(--gv-floating-folder-panel__danger);
+
+  /* The site's "No projects": muted text on the row's column, no illustration. */
+  --gv-folder-tree-empty-height: var(--gv-site-folder-section__row-height);
+  --gv-folder-tree-empty-direction: row;
+  --gv-folder-tree-empty-justify: flex-start;
+  --gv-folder-tree-empty-gap: 0px;
+  --gv-folder-tree-empty-padding: 0 10px;
+  --gv-folder-tree-empty-color: var(--gv-site-folder-section__heading);
+  --gv-folder-tree-empty-align: start;
+  --gv-folder-tree-empty-label-size: 14px;
+  --gv-folder-tree-empty-label-line: 20px;
 }
 
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__drop-target {
-  background: var(--gv-floating-folder-panel__surface-active) !important;
-  box-shadow: none;
+/* Light hovers on controls keep the panel's own light wash. */
+:host(.gv-site-folder-section[data-gv-scheme='light']) {
+  --gv-folder-tree-guide: rgba(15, 23, 42, 0.1);
+  --gv-folder-tree-caret-hover-bg: rgba(15, 23, 42, 0.08);
+  --gv-folder-tree-button-hover-bg: rgba(15, 23, 42, 0.08);
+  --gv-folder-tree-star-hover-bg: rgba(15, 23, 42, 0.08);
+  --gv-folder-tree-star-active-hover-bg: rgba(15, 23, 42, 0.08);
+  --gv-folder-tree-remove-hover-bg: rgba(15, 23, 42, 0.08);
+  --gv-folder-tree-save-hover-bg: rgba(15, 23, 42, 0.08);
+  --gv-folder-tree-cancel-hover-bg: rgba(15, 23, 42, 0.08);
+  --gv-folder-tree-input-bg: #ffffff;
+  --gv-folder-tree-input-color: #1f2937;
+  --gv-folder-tree-input-focus-bg: #ffffff;
 }
 
-/* The open conversation: ChatGPT marks its own row with a fill, not a colour. */
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv--active,
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv--active:hover {
-  background: var(--gv-floating-folder-panel__surface-active);
-  color: var(--gv-floating-folder-panel__text);
-}
-
-/* ChatGPT's 14px rows, until the folder font size setting picks another. */
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__folder-name,
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv-title {
-  font-size: var(--gv-folder-item-font-size, 14px);
-  font-weight: 400;
-  line-height: var(--gv-folder-item-line-height, 20px);
-}
-
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__caret {
-  width: 20px;
-  height: 20px;
-  min-width: 20px;
-  border-radius: 6px;
-  opacity: 1;
-}
-
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__pin:empty {
-  display: none;
-}
-
-/* A folder's actions show on hover or focus, or while a removal confirm asks
- * about the row, as ChatGPT's own row actions do. */
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--add-child,
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--menu,
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--star,
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--remove,
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--placeholder {
-  display: none;
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  border-radius: 8px;
-  opacity: 1;
-}
-
-:host(.gv-site-folder-section[data-gv-scheme])
-  .gv-floating-folder-panel__folder-header:is(:hover, :focus-within, [data-gv-confirm-anchor])
-  :is(
-    .gv-floating-folder-panel__icon-button--add-child,
-    .gv-floating-folder-panel__icon-button--menu
-  ),
-:host(.gv-site-folder-section[data-gv-scheme])
-  .gv-floating-folder-panel__conv:is(:hover, :focus-within, [data-gv-confirm-anchor])
-  :is(.gv-floating-folder-panel__icon-button--star, .gv-floating-folder-panel__icon-button--remove),
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--active {
-  display: inline-flex;
-}
-
-/* A conversation's title lines up with its folder's name. */
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv-title {
-  margin-inline-start: 34px;
-  padding-block: max(
-    0px,
-    calc((var(--gv-site-folder-section__row-height) - var(--gv-folder-item-line-height, 20px)) / 2)
-  );
-}
-
-/* Tree guides run under each enclosing folder's chevron (row start + 18px). */
-:host(.gv-site-folder-section[data-gv-scheme])
-  .gv-floating-folder-panel__tree-row[data-guides]::before {
-  left: 18px;
-}
-
-:host(.gv-site-folder-section[data-gv-scheme][data-gv-rtl])
-  .gv-floating-folder-panel__tree-row[data-guides]::before {
-  left: auto;
-  right: 18px;
-}
-
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__inline-input {
-  height: 28px;
-  border-color: var(--gv-floating-folder-panel__outline);
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__inline-input:focus {
-  border-color: var(--gv-floating-folder-panel__accent);
-}
-
-/* ChatGPT's "No projects": muted text on the row's column, no illustration. */
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__empty {
-  min-height: var(--gv-site-folder-section__row-height);
-  flex-direction: row;
-  justify-content: flex-start;
-  gap: 0;
-  padding: 0 10px;
-  color: var(--gv-site-folder-section__heading);
-  text-align: start;
-}
-
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__empty-icon {
-  display: none;
-}
-
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__empty-label {
-  font-size: 14px;
-  line-height: 20px;
-}
-
-/* ─── Activity: the shared list on the rows' column, in ChatGPT's colours ─ */
-/* Titles start 16px into the section, under the header's; two-line rows keep
- * the list's own height, in the page's font and row weight. */
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-folder-activity-list {
-  --gv-folder-activity-text: var(--gv-floating-folder-panel__text);
-  --gv-folder-activity-muted: var(--gv-site-folder-section__heading);
-  --gv-folder-activity-hover: var(--gv-floating-folder-panel__surface-hover);
-  --gv-folder-list-edge: 6px;
-  --gv-folder-activity-row-inset: 10px;
-}
-
-:host(.gv-site-folder-section)
-  :is(
-    .gv-folder-activity-heading,
-    .gv-folder-activity-text .gv-conversation-title,
-    .gv-folder-activity-context,
-    .gv-folder-activity-time,
-    .gv-folder-activity-empty
-  ) {
-  font-family: inherit;
-}
-
-/* Activity titles follow the font size setting too, as on Gemini. */
-:host(.gv-site-folder-section) .gv-folder-activity-text .gv-conversation-title {
-  font-size: var(--gv-folder-item-font-size, 14px);
-  font-weight: 400;
-  line-height: var(--gv-folder-item-line-height, 20px);
-}
-
-:host(.gv-site-folder-section) .gv-folder-activity-item {
-  border-radius: var(--gv-site-folder-section__row-radius);
-}
-
-:host(.gv-site-folder-section) .gv-folder-activity-empty {
-  padding-inline: 10px;
-  font-size: 14px;
-  line-height: 20px;
-  opacity: 1;
-}
-
-/* ─── Folder menu: ChatGPT's menu shape, in the page's font ────────────── */
-/* The layer is a child of body: the page's font, not the panel's. */
-:host(.gv-folder-tree-popover-layer) {
-  font-family: inherit !important;
-}
-
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__context-menu,
-:host(.gv-folder-tree-popover-layer[data-gv-scheme]) .gv-floating-folder-panel__context-menu {
-  border-radius: 16px;
-  font-family: inherit;
-}
-
-:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__menu-item,
-:host(.gv-folder-tree-popover-layer[data-gv-scheme]) .gv-floating-folder-panel__menu-item {
-  min-height: 36px;
-  border-radius: var(--gv-site-folder-section__row-radius);
-  font-size: 14px;
-  line-height: 20px;
-}
-
-/* ─── RTL ──────────────────────────────────────────────────────────────── */
-:host(.gv-site-folder-section[data-gv-rtl]) .gv-site-folder-section__header {
-  direction: rtl;
+:host(.gv-site-folder-section[data-gv-scheme='dark']) {
+  --gv-folder-tree-guide: rgba(255, 255, 255, 0.09);
+  --gv-folder-tree-caret-hover-bg: var(--gv-floating-folder-panel__surface-hover);
+  --gv-folder-tree-button-hover-bg: var(--gv-floating-folder-panel__surface-hover);
+  --gv-folder-tree-star-hover-bg: var(--gv-floating-folder-panel__surface-hover);
+  --gv-folder-tree-star-active-hover-bg: var(--gv-floating-folder-panel__surface-hover);
+  --gv-folder-tree-remove-hover-bg: var(--gv-floating-folder-panel__danger-soft);
+  --gv-folder-tree-save-hover-bg: rgba(15, 157, 88, 0.1);
+  --gv-folder-tree-cancel-hover-bg: var(--gv-floating-folder-panel__danger-soft);
+  --gv-folder-tree-input-bg: var(--gv-floating-folder-panel__surface-container);
+  --gv-folder-tree-input-color: var(--gv-floating-folder-panel__text);
+  --gv-folder-tree-input-focus-bg: var(--gv-floating-folder-panel__surface);
 }

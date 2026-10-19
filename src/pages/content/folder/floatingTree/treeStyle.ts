@@ -1,5 +1,11 @@
 import treeCss from './folderTree.css?raw';
 
+/**
+ * Marks a tree host laid into a site's sidebar, which `inlineTree.css` styles;
+ * the floating panel and the body-level menu layer never carry it.
+ */
+export const INLINE_TREE_ATTR = 'data-gv-tree-inline';
+
 const STYLE_CLASS = 'gv-folder-tree-style';
 const users = new WeakMap<ShadowRoot, number>();
 

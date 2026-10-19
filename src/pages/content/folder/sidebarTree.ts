@@ -18,6 +18,7 @@ import {
   FOLDER_TOGGLE_DELAY_MS,
 } from './floatingTree/shared';
 import { mountFolderTree } from './floatingTree/treeController';
+import { INLINE_TREE_ATTR } from './floatingTree/treeStyle';
 import { normalizeConversationId, resolveConversationRouteId } from './folderConversationIdentity';
 import type { FolderDialogs } from './folderDialogs';
 import { FOLDER_INDENT_PROPERTY } from './folderDisplay';
@@ -218,6 +219,7 @@ export function mountSidebarTree(options: SidebarTreeOptions): SidebarTree {
   const { store } = options;
   const host = document.createElement('div');
   host.className = SIDEBAR_TREE_HOST_CLASS;
+  host.setAttribute(INLINE_TREE_ATTR, '');
   const surface = attachShadowSurface(host, `${panelCss}\n${SIDEBAR_TREE_CSS}`);
   const body = document.createElement('div');
   body.className = `${FLOATING_PANEL_CLASS}__body`;

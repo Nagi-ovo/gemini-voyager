@@ -45,6 +45,17 @@ describe('floating panel host stylesheet', () => {
   });
 });
 
+describe('inline folder tree host stylesheet', () => {
+  const inlineTreeCss = readFileSync(resolve(__dirname, '../floatingTree/inlineTree.css'), 'utf8');
+
+  it('marks every host declaration important, so the sidebar cannot restyle the tree host', () => {
+    const declarations = hostOnlyDeclarations(inlineTreeCss);
+
+    expect(declarations.length).toBeGreaterThan(0);
+    expect(declarations.filter((text) => !text.endsWith('!important'))).toEqual([]);
+  });
+});
+
 describe('AI Studio sidebar tree host stylesheet', () => {
   it('marks every host declaration important, so the nav cannot restyle the tree host', () => {
     const declarations = hostOnlyDeclarations(AISTUDIO_TREE_CSS);

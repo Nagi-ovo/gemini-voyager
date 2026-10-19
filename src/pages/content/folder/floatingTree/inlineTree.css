@@ -1,0 +1,467 @@
+/* The folder tree laid into a site's own sidebar (Gemini, AI Studio, and the
+ * ChatGPT, Claude and DeepSeek sections), after the floating panel's sheet.
+ * Every structural rule lives here once; a site's skin only sets the
+ * `--gv-folder-tree-*` tokens, on its tree host. A host opts in with the
+ * `data-gv-tree-inline` attribute, which the floating panel and the body-level
+ * menu layer never carry, so neither turns into a sidebar block.
+ *
+ * Host rules are `!important`, as page rules that match the host beat any
+ * normal `:host` declaration (floatingPanel.css). Row rules are prefixed with
+ * the scheme attribute too, so they outrank the panel's scheme-specific rules.
+ *
+ * The folder font-size, spacing and indent settings set `--gv-folder-item-*`,
+ * `--gv-folder-row-*` and `--gv-folder-indent` on a light-DOM ancestor; they
+ * inherit into the tree and take precedence over the site's defaults here.
+ *
+ * Each skin sets every `--gv-folder-tree-*` token these rules read; the names
+ * follow the rule they feed (`header-gap`, `caret-hover-bg`, `input-radius`, …).
+ * `marks: ''` turns on the starred and open-chat edges; `reveal-display` and
+ * `reveal-opacity` hold trailing buttons back until a row is in use.
+ */
+
+:host([data-gv-tree-inline]) {
+  position: relative !important;
+  z-index: auto !important;
+  display: block !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  resize: none !important;
+  background: transparent !important;
+  color: var(--gv-folder-tree-text) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  font-size: 14px !important;
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__body {
+  flex: none;
+  overflow: visible;
+  overscroll-behavior: auto;
+  padding: var(--gv-folder-tree-body-padding);
+}
+
+/* The spacing setting's gap, inside the row shell so the virtualizer measures it. */
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__tree-row {
+  padding-block-end: var(--gv-folder-row-gap, var(--gv-folder-tree-row-gap));
+}
+
+/* ─── Guides ───────────────────────────────────────────────────────────────
+ * One line under each enclosing folder's chevron. Specific enough to beat the
+ * tree sheet's own guides, which come after this sheet. The box ends 1px past
+ * the last line, or at a 1.25 pixel ratio the next one shows through the icons. */
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__tree
+  .gv-floating-folder-panel__tree-row[data-guides]::before {
+  left: var(--gv-folder-tree-guide-inset);
+  width: calc((var(--gv-tree-guides, 1) - 1) * var(--gv-folder-tree-nest) + 1px);
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--gv-folder-tree-guide) 0 1px,
+    transparent 1px var(--gv-folder-tree-nest)
+  );
+}
+
+:host([data-gv-tree-inline][data-gv-scheme][data-gv-rtl])
+  .gv-floating-folder-panel__tree
+  .gv-floating-folder-panel__tree-row[data-guides]::before {
+  left: auto;
+  right: var(--gv-folder-tree-guide-inset);
+  background-image: repeating-linear-gradient(
+    to left,
+    var(--gv-folder-tree-guide) 0 1px,
+    transparent 1px var(--gv-folder-tree-nest)
+  );
+}
+
+/* ─── Rows ─────────────────────────────────────────────────────────────────
+ * Each level moves a row by `row-offset` (its margin) and `indent` (its start
+ * padding), in place of the shared tree's inline indent. */
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__folder-header,
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__conv {
+  width: var(--gv-folder-tree-row-width);
+  min-height: var(--gv-folder-tree-row-height);
+  margin-inline-start: calc(var(--gv-tree-guides, 0) * var(--gv-folder-tree-row-offset));
+  padding-block: var(--gv-folder-tree-row-padding-block);
+  border-radius: var(--gv-folder-tree-row-radius);
+  color: var(--gv-folder-tree-text);
+  transition: var(--gv-folder-tree-row-transition);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__folder-header {
+  gap: var(--gv-folder-tree-header-gap);
+  padding-inline-start: calc(
+    8px + var(--gv-tree-guides, 0) * var(--gv-folder-tree-indent)
+  ) !important;
+  padding-inline-end: var(--gv-folder-tree-header-end);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__conv {
+  position: relative;
+  gap: var(--gv-folder-tree-conv-gap);
+  padding-inline-end: 6px;
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__tree-row[data-guides]
+  > .gv-floating-folder-panel__conv {
+  padding-inline-start: calc(
+    var(--gv-folder-tree-conv-start) + (var(--gv-tree-guides, 1) - 1) * var(--gv-folder-tree-indent)
+  ) !important;
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__tree-row:not([data-guides])
+  > .gv-floating-folder-panel__conv {
+  padding-inline-start: var(--gv-folder-tree-root-conv-start) !important;
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__folder-header:hover,
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__conv:hover {
+  background: var(--gv-folder-tree-hover);
+}
+
+/* A row taking a drop ("into"). */
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__drop-target {
+  background: var(--gv-folder-tree-drop-bg) !important;
+  box-shadow: var(--gv-folder-tree-drop-ring);
+}
+
+/* A starred chat's wash. Only the image: a selected row keeps its fill. */
+:host([data-gv-tree-inline]) .gv-floating-folder-panel__conv--starred {
+  background-image: var(--gv-folder-tree-starred-wash);
+}
+
+/* The starred and open-chat edges, where the skin turns `marks` on. */
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__conv--starred::before,
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__conv--active::before {
+  content: var(--gv-folder-tree-marks, none);
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  border-radius: 0 2px 2px 0;
+  background: var(--gv-folder-tree-starred-mark);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* The open chat, over a star's wash. */
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__conv--active,
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__conv--active:hover {
+  background: var(--gv-folder-tree-active-bg);
+  color: var(--gv-folder-tree-text);
+  border-radius: var(--gv-folder-tree-active-radius);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__conv--active::before {
+  height: 60%;
+  background: var(--gv-folder-tree-active-mark);
+}
+
+:host([data-gv-tree-inline][data-gv-rtl]) .gv-floating-folder-panel__conv--starred::before,
+:host([data-gv-tree-inline][data-gv-rtl]) .gv-floating-folder-panel__conv--active::before {
+  border-radius: 2px 0 0 2px;
+}
+
+/* ─── Names ────────────────────────────────────────────────────────────── */
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__folder-name,
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__conv-title {
+  font-size: var(--gv-folder-item-font-size, var(--gv-folder-tree-font-size));
+  line-height: var(--gv-folder-item-line-height, var(--gv-folder-tree-line-height));
+  font-weight: var(--gv-folder-tree-name-weight);
+  color: var(--gv-folder-tree-text);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__folder-name {
+  user-select: none;
+}
+
+/* A title is centred in a row taller than its line. */
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__conv-title {
+  margin-inline-start: var(--gv-folder-tree-title-inset);
+  padding-block: max(
+    0px,
+    calc(
+      (var(--gv-folder-tree-row-height) -
+          var(--gv-folder-item-line-height, var(--gv-folder-tree-line-height))) /
+        2
+    )
+  );
+  padding-inline: 0;
+}
+
+/* A chat's leading glyph (`conversationIcon`). No block margin: in this
+ * centred row a top margin shifts the glyph onto the text baseline. */
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__conv-icon {
+  width: 16px;
+  height: 16px;
+  margin: 0 -2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--gv-folder-tree-icon);
+  font-size: 12px;
+  opacity: 1;
+}
+
+/* ─── Controls ─────────────────────────────────────────────────────────── */
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__caret {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  padding: 0;
+  border-radius: var(--gv-folder-tree-caret-radius);
+  color: var(--gv-folder-tree-caret-color);
+  opacity: 1;
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__caret:hover {
+  background: var(--gv-folder-tree-caret-hover-bg);
+  color: var(--gv-folder-tree-caret-hover-color);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__caret svg {
+  width: var(--gv-folder-tree-caret-icon);
+  height: var(--gv-folder-tree-caret-icon);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__folder-icon {
+  width: var(--gv-folder-tree-folder-icon-box);
+  height: var(--gv-folder-tree-folder-icon-box);
+  color: var(--gv-folder-tree-folder-icon-color);
+  transition: color 0.2s ease;
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__pin:empty {
+  display: none;
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__folder-header
+  .gv-floating-folder-panel__icon-button,
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__conv
+  .gv-floating-folder-panel__icon-button {
+  width: var(--gv-folder-tree-button-size);
+  height: var(--gv-folder-tree-button-size);
+  min-width: var(--gv-folder-tree-button-size);
+  padding: 0;
+  border-radius: var(--gv-folder-tree-button-radius);
+  color: var(--gv-folder-tree-button-color);
+  transition: var(--gv-folder-tree-button-transition);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__tree
+  .gv-floating-folder-panel__icon-button
+  svg {
+  width: var(--gv-folder-tree-button-icon);
+  height: var(--gv-folder-tree-button-icon);
+}
+
+/* Trailing buttons wait for the row to be in use (hover, focus, or a removal
+ * confirm asking about it); a set star stays. */
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__folder-header
+  :is(
+    .gv-floating-folder-panel__icon-button--add-child,
+    .gv-floating-folder-panel__icon-button--menu,
+    .gv-floating-folder-panel__icon-button--pin
+  ),
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__conv
+  :is(.gv-floating-folder-panel__icon-button--star, .gv-floating-folder-panel__icon-button--remove),
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__icon-button--placeholder {
+  display: var(--gv-folder-tree-reveal-display);
+  opacity: var(--gv-folder-tree-reveal-opacity);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__folder-header:is(:hover, :focus-within, [data-gv-confirm-anchor])
+  :is(
+    .gv-floating-folder-panel__icon-button--add-child,
+    .gv-floating-folder-panel__icon-button--menu,
+    .gv-floating-folder-panel__icon-button--pin
+  ),
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__conv:is(:hover, :focus-within, [data-gv-confirm-anchor])
+  :is(.gv-floating-folder-panel__icon-button--star, .gv-floating-folder-panel__icon-button--remove),
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__conv
+  .gv-floating-folder-panel__icon-button--active {
+  display: inline-flex;
+  opacity: 1;
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__icon-button--pin {
+  margin-inline-start: auto;
+  margin-inline-end: 4px;
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__folder-header
+  .gv-floating-folder-panel__icon-button:is(:hover, :focus-visible) {
+  background: var(--gv-folder-tree-button-hover-bg);
+  color: var(--gv-folder-tree-button-hover-color);
+}
+
+/* A chat's star and remove buttons; a set star keeps its colour. */
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__conv
+  .gv-floating-folder-panel__icon-button {
+  border-radius: var(--gv-folder-tree-conv-button-radius);
+  color: var(--gv-folder-tree-conv-button-color);
+  transition: var(--gv-folder-tree-conv-button-transition);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__conv
+  .gv-floating-folder-panel__icon-button--star.gv-floating-folder-panel__icon-button--active {
+  color: var(--gv-folder-tree-star);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__conv
+  .gv-floating-folder-panel__icon-button--star:is(:hover, :focus-visible) {
+  background: var(--gv-folder-tree-star-hover-bg);
+  color: var(--gv-folder-tree-star);
+  transform: var(--gv-folder-tree-button-hover-transform);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__conv
+  .gv-floating-folder-panel__icon-button--star.gv-floating-folder-panel__icon-button--active:hover {
+  background: var(--gv-folder-tree-star-active-hover-bg);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__conv
+  .gv-floating-folder-panel__icon-button--remove:is(:hover, :focus-visible) {
+  background: var(--gv-folder-tree-remove-hover-bg);
+  color: var(--gv-folder-tree-remove-hover-color);
+  transform: var(--gv-folder-tree-button-hover-transform);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__conv
+  .gv-floating-folder-panel__icon-button
+  svg {
+  transition: var(--gv-folder-tree-button-icon-transition);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__conv
+  .gv-floating-folder-panel__icon-button:active
+  svg {
+  transform: var(--gv-folder-tree-button-press);
+}
+
+/* ─── Name fields ──────────────────────────────────────────────────────── */
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__inline-form {
+  min-height: var(--gv-folder-tree-form-height);
+  gap: 6px;
+  padding-block: var(--gv-folder-tree-form-padding-block);
+  padding-inline-end: var(--gv-folder-tree-form-end);
+  border-radius: var(--gv-folder-tree-row-radius);
+}
+
+/* A new subfolder's field, where the subfolder's row will be. */
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__tree-row
+  > .gv-floating-folder-panel__inline-form:not(.gv-floating-folder-panel__inline-form--root) {
+  width: var(--gv-folder-tree-row-width);
+  margin-inline-start: calc(var(--gv-tree-guides, 0) * var(--gv-folder-tree-row-offset));
+  padding-inline-start: calc(
+    var(--gv-folder-tree-form-start) + (var(--gv-tree-guides, 1) - 1) * var(--gv-folder-tree-indent)
+  ) !important;
+}
+
+/* A rename, inside the folder's row. */
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__folder-header
+  .gv-floating-folder-panel__inline-form {
+  min-height: var(--gv-folder-tree-rename-height);
+  gap: var(--gv-folder-tree-rename-gap);
+  padding: 0 var(--gv-folder-tree-rename-end) 0 var(--gv-folder-tree-rename-start);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__inline-input {
+  height: var(--gv-folder-tree-input-height);
+  padding: var(--gv-folder-tree-input-padding);
+  border: 1px solid var(--gv-folder-tree-input-border);
+  border-radius: var(--gv-folder-tree-input-radius);
+  background: var(--gv-folder-tree-input-bg);
+  color: var(--gv-folder-tree-input-color);
+  font-size: 14px;
+  line-height: var(--gv-folder-tree-input-line-height);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__inline-input:focus {
+  background: var(--gv-folder-tree-input-focus-bg);
+  border-color: var(--gv-folder-tree-input-focus-border);
+  box-shadow: 0 0 0 2px var(--gv-folder-tree-input-focus-ring);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__inline-form
+  .gv-floating-folder-panel__icon-button {
+  width: var(--gv-folder-tree-form-button-size);
+  height: var(--gv-folder-tree-form-button-size);
+  min-width: var(--gv-folder-tree-form-button-size);
+  padding: 0;
+  border-radius: var(--gv-folder-tree-form-button-radius);
+  color: var(--gv-folder-tree-form-button-color);
+  opacity: var(--gv-folder-tree-form-button-opacity);
+  transition: var(--gv-folder-tree-button-transition);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__inline-form
+  .gv-floating-folder-panel__icon-button--save:hover {
+  background: var(--gv-folder-tree-save-hover-bg);
+  color: var(--gv-folder-tree-save-hover-color);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme])
+  .gv-floating-folder-panel__inline-form
+  .gv-floating-folder-panel__icon-button--cancel:hover {
+  background: var(--gv-folder-tree-cancel-hover-bg);
+  color: var(--gv-folder-tree-cancel-hover-color);
+}
+
+/* ─── Root ─────────────────────────────────────────────────────────────
+ * A site that files chats at the root (`rootSection`) keeps a drop strip under
+ * its folders: blank at rest, lit like a row taking a drop. */
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__root-drop {
+  min-height: var(--gv-folder-tree-root-drop-height);
+  margin: 0;
+  border: 0;
+  border-radius: var(--gv-folder-tree-row-radius);
+}
+
+/* ─── Empty ────────────────────────────────────────────────────────────── */
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__empty {
+  min-height: var(--gv-folder-tree-empty-height);
+  flex-direction: var(--gv-folder-tree-empty-direction);
+  justify-content: var(--gv-folder-tree-empty-justify);
+  gap: var(--gv-folder-tree-empty-gap);
+  padding: var(--gv-folder-tree-empty-padding);
+  color: var(--gv-folder-tree-empty-color);
+  text-align: var(--gv-folder-tree-empty-align);
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__empty-icon {
+  display: none;
+}
+
+:host([data-gv-tree-inline][data-gv-scheme]) .gv-floating-folder-panel__empty-label {
+  font-size: var(--gv-folder-tree-empty-label-size);
+  line-height: var(--gv-folder-tree-empty-label-line);
+}
