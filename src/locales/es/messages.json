@@ -2701,6 +2701,10 @@
     "message": "Las carpetas ahora están aquí, en la barra lateral de Claude. Usa + para crear una o elige «Mover a carpeta» en el menú de un chat para guardarlo.",
     "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
   },
+  "deepseekFoldersCoachmarkBody": {
+    "message": "Las carpetas ahora están aquí, en la barra lateral de DeepSeek. Usa + para crear una y arrastra un chat de la lista a una carpeta para guardarlo.",
+    "description": "Body of the one-time guide pointing at the folder section in the DeepSeek sidebar"
+  },
   "folder_new_chat_in_folder": {
     "message": "Nuevo chat en esta carpeta",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"

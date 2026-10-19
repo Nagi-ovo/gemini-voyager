@@ -2701,6 +2701,10 @@
     "message": "Папки теперь здесь, в боковой панели Claude. Нажмите +, чтобы создать папку, или выберите «Переместить в папку» в меню чата.",
     "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
   },
+  "deepseekFoldersCoachmarkBody": {
+    "message": "Папки теперь здесь, в боковой панели DeepSeek. Нажмите +, чтобы создать папку, а затем перетащите чат из списка в папку.",
+    "description": "Body of the one-time guide pointing at the folder section in the DeepSeek sidebar"
+  },
   "folder_new_chat_in_folder": {
     "message": "Новый чат в этой папке",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"

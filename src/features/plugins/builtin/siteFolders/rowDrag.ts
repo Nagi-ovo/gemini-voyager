@@ -8,9 +8,15 @@
  * only listens, never cancels or stops an event, and never touches the site's
  * nodes. Past a small move, the folder under the pointer lights up; releasing
  * over it files the conversation.
+ *
+ * Rows that are plain links (DeepSeek's) start the browser's own link drag
+ * instead, which ends the pointer gesture with `pointercancel`. That drag gets
+ * the conversation as Voyager's drag data on `dragstart`, so the section's
+ * drop targets file it; the link drag itself goes on as before.
  */
 import type { ConversationReference } from '@/core/types/folder';
 import type { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { VOYAGER_DRAG_MIME } from '@/pages/content/folder/dragPayload';
 import {
   type FolderDropTarget,
   showDropTarget,
@@ -90,6 +96,15 @@ export function bindSidebarRowDrag(scope: PluginScope, options: RowDragOptions):
     if (target) options.onDrop(target.folderId, conversation);
   };
 
+  // A row's own drag (another extension's or the site's) keeps the data it already carries.
+  const nativeDrag = (event: DragEvent): void => {
+    const transfer = event.dataTransfer;
+    if (!transfer || transfer.types.includes(VOYAGER_DRAG_MIME)) return;
+    const conversation = options.conversationAt(event.target);
+    if (!conversation) return;
+    transfer.setData(VOYAGER_DRAG_MIME, JSON.stringify({ type: 'conversation', ...conversation }));
+  };
+
   const escape = (event: KeyboardEvent): void => {
     if (event.key === 'Escape') abort();
   };
@@ -98,6 +113,7 @@ export function bindSidebarRowDrag(scope: PluginScope, options: RowDragOptions):
   scope.on(window, 'pointermove', move, { capture: true });
   scope.on(window, 'pointerup', release, { capture: true });
   scope.on(window, 'pointercancel', abort, { capture: true });
+  scope.on(window, 'dragstart', nativeDrag, { capture: true });
   scope.on(window, 'keydown', escape, { capture: true });
   scope.on(window, 'blur', abort);
   scope.effect(() => abort, `${options.label}:row-drag`);

@@ -1,0 +1,50 @@
+/* DeepSeek's tokens for the shared section sheets (`siteFolders/sectionChrome.css`),
+ * which come first. DeepSeek's design system sets its `--dsw-*` colours for its
+ * own light and dark theme (`body.light` / `body.dark`); the fallbacks are its
+ * values for each. Rows are DeepSeek's: 40px, 14px text, a 12px radius. */
+:host(.gv-deepseek-folder-section),
+:host(.gv-folder-tree-popover-layer) {
+  --gv-deepseek-folder-section__row-height: 40px;
+  --gv-deepseek-folder-section__row-radius: 12px;
+}
+
+:host(.gv-deepseek-folder-section[data-gv-scheme]),
+:host(.gv-folder-tree-popover-layer[data-gv-scheme]) {
+  --gv-deepseek-folder-section__heading: var(--dsw-alias-label-tertiary, #81858c);
+  --gv-floating-folder-panel__text: var(--dsw-alias-label-primary, #0f1115);
+  --gv-floating-folder-panel__text-muted: var(--dsw-alias-label-secondary, #545b66);
+  --gv-floating-folder-panel__surface: var(--dsw-alias-bg-layer-2, #ffffff);
+  --gv-floating-folder-panel__surface-container: var(--dsw-alias-bg-layer-1, #ffffff);
+  --gv-floating-folder-panel__surface-hover: var(
+    --dsw-alias-interactive-bg-hover,
+    rgba(0, 0, 0, 0.04)
+  );
+  --gv-floating-folder-panel__surface-active: var(
+    --dsw-alias-interactive-bg-active,
+    rgba(0, 0, 0, 0.08)
+  );
+  --gv-floating-folder-panel__outline: var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.12));
+  --gv-deepseek-folder-section__danger: var(--dsw-alias-state-error-primary, #ef4444);
+  --gv-deepseek-folder-section__danger-soft: var(
+    --dsw-alias-interactive-bg-hover-danger,
+    color-mix(in oklab, #ef4444 8%, transparent)
+  );
+}
+
+:host(.gv-deepseek-folder-section[data-gv-scheme='dark']),
+:host(.gv-folder-tree-popover-layer[data-gv-scheme='dark']) {
+  --gv-deepseek-folder-section__heading: var(--dsw-alias-label-tertiary, #adb2b8);
+  --gv-floating-folder-panel__text: var(--dsw-alias-label-primary, #f9fafb);
+  --gv-floating-folder-panel__text-muted: var(--dsw-alias-label-secondary, #cfd3d6);
+  --gv-floating-folder-panel__surface: var(--dsw-alias-bg-layer-2, #2c2c2e);
+  --gv-floating-folder-panel__surface-container: var(--dsw-alias-bg-layer-1, #232324);
+  --gv-floating-folder-panel__surface-hover: var(
+    --dsw-alias-interactive-bg-hover,
+    rgba(255, 255, 255, 0.08)
+  );
+  --gv-floating-folder-panel__surface-active: var(
+    --dsw-alias-interactive-bg-active,
+    rgba(255, 255, 255, 0.12)
+  );
+  --gv-floating-folder-panel__outline: var(--dsw-alias-border-l2, rgba(255, 255, 255, 0.12));
+}

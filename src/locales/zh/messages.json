@@ -2705,6 +2705,10 @@
     "message": "文件夹现在就在 Claude 侧边栏的这里。点 + 新建文件夹，或在对话菜单里选择“移动到文件夹”进行归档。",
     "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
   },
+  "deepseekFoldersCoachmarkBody": {
+    "message": "文件夹现在就在 DeepSeek 侧边栏的这里。点 + 新建文件夹，再把列表里的对话拖到文件夹上进行归档。",
+    "description": "Body of the one-time guide pointing at the folder section in the DeepSeek sidebar"
+  },
   "responseCompleteNotification": {
     "message": "Gemini 思考完成通知",
     "description": "Gemini 回答完成系统通知开关"

@@ -2701,6 +2701,10 @@
     "message": "Les dossiers se trouvent désormais ici, dans la barre latérale de Claude. Utilisez + pour en créer un, ou choisissez « Déplacer vers un dossier » dans le menu d’une conversation pour la classer.",
     "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
   },
+  "deepseekFoldersCoachmarkBody": {
+    "message": "Les dossiers se trouvent désormais ici, dans la barre latérale de DeepSeek. Utilisez + pour en créer un, puis faites glisser une conversation de la liste sur un dossier pour la classer.",
+    "description": "Body of the one-time guide pointing at the folder section in the DeepSeek sidebar"
+  },
   "folder_new_chat_in_folder": {
     "message": "Nouvelle conversation dans ce dossier",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"

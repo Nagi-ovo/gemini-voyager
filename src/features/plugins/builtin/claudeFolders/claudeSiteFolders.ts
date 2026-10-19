@@ -84,6 +84,7 @@ export const CLAUDE_SITE_FOLDERS: SiteFoldersAdapter = {
       store,
       policy: FOLDER_SITE_POLICIES.claude,
       importInto: CLAUDE_TRANSFER.importInto,
+      readConversation: CLAUDE_IDENTITY.read,
     });
     return { store, commands };
   },

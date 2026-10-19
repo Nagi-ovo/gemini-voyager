@@ -2701,6 +2701,10 @@
     "message": "이제 폴더는 Claude 사이드바의 이곳에 있습니다. +로 폴더를 만들거나, 채팅 메뉴에서 ‘폴더로 이동’을 선택해 정리하세요.",
     "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
   },
+  "deepseekFoldersCoachmarkBody": {
+    "message": "이제 폴더는 DeepSeek 사이드바의 이곳에 있습니다. +로 폴더를 만든 뒤, 목록의 채팅을 폴더로 끌어다 정리하세요.",
+    "description": "Body of the one-time guide pointing at the folder section in the DeepSeek sidebar"
+  },
   "folder_new_chat_in_folder": {
     "message": "이 폴더에서 새 채팅",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"

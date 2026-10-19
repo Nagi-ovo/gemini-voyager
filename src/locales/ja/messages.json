@@ -2701,6 +2701,10 @@
     "message": "フォルダは Claude のサイドバーのここに表示されます。+ で作成でき、チャットのメニューの「フォルダへ移動」で整理できます。",
     "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
   },
+  "deepseekFoldersCoachmarkBody": {
+    "message": "フォルダは DeepSeek のサイドバーのここに表示されます。+ で作成し、一覧のチャットをフォルダへドラッグして整理できます。",
+    "description": "Body of the one-time guide pointing at the folder section in the DeepSeek sidebar"
+  },
   "folder_new_chat_in_folder": {
     "message": "このフォルダで新規チャット",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"

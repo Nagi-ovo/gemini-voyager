@@ -79,6 +79,8 @@ export interface PluginSiteCommandsOptions {
   /** The site's file import (`SiteTransfer.importInto`). */
   importInto: (raw: unknown, current: FolderData) => Promise<SiteImportOutcome>;
   overrides?: SiteFolderCommandsOptions['overrides'];
+  /** The site's conversation a dropped link names, to file a row dragged from its sidebar. */
+  readConversation?: (url: string) => { conversationId: string; url: string } | null;
 }
 
 /** The shared site commands, with a merge-only import of the site's own folder file. */
@@ -87,6 +89,7 @@ export function createPluginSiteCommands({
   policy,
   importInto,
   overrides,
+  readConversation,
 }: PluginSiteCommandsOptions): FolderCommands {
   async function importFile(payload: unknown): Promise<EditOutcome> {
     if (!store.ready) return failed('not_loaded');
@@ -108,6 +111,15 @@ export function createPluginSiteCommands({
     policy,
     newFolderId: newSiteFolderId,
     overrides,
+    outsideDrop: readConversation
+      ? (payload) => {
+          const own = payload.url ? readConversation(payload.url) : null;
+          // Any page can drag JSON: only a link to this site's conversation, keyed as it is stored.
+          return own && own.conversationId === payload.conversationId
+            ? { conversationId: own.conversationId, title: payload.title, url: own.url }
+            : null;
+        }
+      : undefined,
     // Merge only, as the panel's import does; these sites have no backups or Drive merge here.
     runBulk: (body) =>
       body.kind === 'importFile' && body.strategy === 'merge'

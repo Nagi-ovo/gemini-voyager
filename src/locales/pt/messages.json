@@ -2701,6 +2701,10 @@
     "message": "As pastas agora ficam aqui, na barra lateral do Claude. Use + para criar uma ou escolha “Mover para pasta” no menu de uma conversa para arquivá-la.",
     "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
   },
+  "deepseekFoldersCoachmarkBody": {
+    "message": "As pastas agora ficam aqui, na barra lateral do DeepSeek. Use + para criar uma e arraste uma conversa da lista para uma pasta para arquivá-la.",
+    "description": "Body of the one-time guide pointing at the folder section in the DeepSeek sidebar"
+  },
   "folder_new_chat_in_folder": {
     "message": "Novo chat nesta pasta",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"

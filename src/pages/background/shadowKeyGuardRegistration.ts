@@ -30,6 +30,7 @@ export const SHADOW_KEY_GUARD_SCRIPT_ID = 'gv-shadow-key-guard';
 export const SHADOW_KEY_GUARD_PLUGIN_IDS: ReadonlySet<string> = new Set([
   'voyager.chatgpt-folders',
   'voyager.claude-folders',
+  'voyager.deepseek-folders',
 ]);
 
 /** The emitted file name keeps the entry's name; see `selfContainedContentScripts`. */

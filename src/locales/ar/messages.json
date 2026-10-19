@@ -2701,6 +2701,10 @@
     "message": "أصبحت المجلدات هنا في الشريط الجانبي لـ Claude. استخدم + لإنشاء مجلد، أو اختر «نقل إلى مجلد» من قائمة المحادثة لحفظها فيه.",
     "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
   },
+  "deepseekFoldersCoachmarkBody": {
+    "message": "أصبحت المجلدات هنا في الشريط الجانبي لـ DeepSeek. استخدم + لإنشاء مجلد، ثم اسحب محادثة من القائمة إلى مجلد لحفظها فيه.",
+    "description": "Body of the one-time guide pointing at the folder section in the DeepSeek sidebar"
+  },
   "folder_new_chat_in_folder": {
     "message": "محادثة جديدة في هذا المجلد",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"

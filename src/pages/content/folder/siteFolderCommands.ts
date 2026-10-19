@@ -5,6 +5,7 @@
  * for are refused, as is every bulk operation the site does not supply.
  */
 import {
+  type ConversationDrop,
   type EditOutcome,
   type FailReason,
   type FolderCommands,
@@ -17,7 +18,7 @@ import {
 } from '@/features/folder/commands/folderCommands';
 import { ownBucket } from '@/features/folder/model/folderData';
 import { applyFolderOp } from '@/features/folder/owner/applyFolderOp';
-import { rejected } from '@/features/folder/owner/folderOps';
+import { type ConversationSeed, rejected } from '@/features/folder/owner/folderOps';
 import type { FolderSitePolicy } from '@/features/folder/owner/folderOwnerPolicy';
 
 import type { SiteFolderChange, SiteFolderStore } from './SiteFolderStore';
@@ -47,6 +48,11 @@ export type SiteFolderCommandsOptions = {
   /** The site's own handling of an edit, given the shared op runner. */
   overrides?: (applyOp: SiteFolderApply) => Partial<SiteFolderHandlers>;
   runBulk?: FolderCommands['runBulk'];
+  /**
+   * A drop that left no folder (the site's own row, dragged as a link): the
+   * conversation to file, or `null` for data that is not this site's.
+   */
+  outsideDrop?: (payload: ConversationDrop) => ConversationSeed | null;
 };
 
 export function createSiteFolderCommands({
@@ -55,6 +61,7 @@ export function createSiteFolderCommands({
   newFolderId,
   overrides,
   runBulk = () => Promise.resolve(unsupported()),
+  outsideDrop,
 }: SiteFolderCommandsOptions): FolderCommands {
   const recordIn = (bucket: string, id: string) =>
     ownBucket(store.data.folderContents, bucket)?.find((c) => c.conversationId === id);
@@ -85,9 +92,16 @@ export function createSiteFolderCommands({
     addConversations: (body) => applyOp(body, { notReady: 'not_loaded' }),
     moveConversations: ({ ids, from, target }) => moveConversations(ids, from, target),
     moveFolder: (body) => applyOp(body),
-    // Only the tree's own rows drag here, so a drop always names the folder it left.
+    // The tree's own rows name the folder they left; only the site's rows, if it takes them, do not.
     dropConversations: ({ target, payload, index }) => {
       const from = payload.sourceFolderId;
+      const seed = from ? null : (outsideDrop?.(payload) ?? null);
+      if (seed) {
+        return applyOp(
+          { kind: 'addConversations', target, seeds: [seed], via: 'outside-drop' },
+          { notReady: 'not_loaded' },
+        );
+      }
       const ids = payload.conversations?.length
         ? payload.conversations.map((record) => record.conversationId)
         : payload.conversationId

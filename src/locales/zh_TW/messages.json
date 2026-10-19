@@ -2701,6 +2701,10 @@
     "message": "資料夾現在就在 Claude 側邊欄的這裡。點 + 建立資料夾，或在對話選單中選擇「移動到資料夾」進行歸檔。",
     "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
   },
+  "deepseekFoldersCoachmarkBody": {
+    "message": "資料夾現在就在 DeepSeek 側邊欄的這裡。點 + 建立資料夾，再把列表中的對話拖到資料夾上進行歸檔。",
+    "description": "Body of the one-time guide pointing at the folder section in the DeepSeek sidebar"
+  },
   "folder_new_chat_in_folder": {
     "message": "在此資料夾新增對話",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"
