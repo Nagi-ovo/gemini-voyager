@@ -69,11 +69,14 @@ export interface PromptItem {
   pinnedAt?: number | null;
 }
 
+/** Plugin sites whose folder files name the site they came from. */
+export type FolderExportPlatform = 'chatgpt' | 'claude' | 'deepseek';
+
 /**
  * Folder export payload format (matches existing export format)
  */
 export interface FolderExportPayload {
-  platform?: 'chatgpt';
+  platform?: FolderExportPlatform;
   format: 'gemini-voyager.folders.v1';
   exportedAt: string;
   version: string;

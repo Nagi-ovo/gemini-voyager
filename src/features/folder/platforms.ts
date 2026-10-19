@@ -1,4 +1,5 @@
 import { StorageKeys } from '@/core/types/common';
+import type { FolderExportPlatform } from '@/core/types/sync';
 import type { FolderExportPayload, ImportStrategy } from '@/features/folder/types/import-export';
 import { readChatGptFolderExport } from '@/features/plugins/builtin/chatgptFolders/transfer';
 
@@ -21,7 +22,7 @@ export interface FolderPlatformDefinition {
   syncsSharedData: boolean;
   /** Tagged files use their site's reader; legacy files retain their unmarked envelope. */
   folderExport: {
-    platform: 'chatgpt';
+    platform: FolderExportPlatform;
     read: (
       value: unknown,
       strategy?: ImportStrategy,

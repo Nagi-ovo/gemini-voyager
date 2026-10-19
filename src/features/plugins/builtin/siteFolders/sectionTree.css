@@ -1,5 +1,5 @@
 /* ─── Tree ─────────────────────────────────────────────────────────────── */
-:host(.gv-chatgpt-folder-section) .gv-floating-folder-panel__body {
+:host(.gv-site-folder-section) .gv-floating-folder-panel__body {
   flex: none;
   overflow: visible;
   overscroll-behavior: auto;
@@ -9,45 +9,45 @@
 /* Rows: 8px start padding (plus 24px per level) puts the 16px chevron on
  * ChatGPT's 16px icon column; the 18px folder icon and the name follow at 6px
  * gaps, so the name starts 58px into the row. */
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__folder-header,
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv,
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__inline-form {
-  min-height: var(--gv-chatgpt-folder-section__row-height);
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__folder-header,
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv,
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__inline-form {
+  min-height: var(--gv-site-folder-section__row-height);
   gap: 6px;
   padding-block: 0;
   padding-inline-end: 6px;
-  border-radius: var(--gv-chatgpt-folder-section__row-radius);
+  border-radius: var(--gv-site-folder-section__row-radius);
   color: var(--gv-floating-folder-panel__text);
 }
 
 /* Drops: "into" lights the whole row in the pressed-row token, as ChatGPT
  * shows a row it is acting on; "beside" is a line in the row text colour, as
  * ChatGPT has no accent. */
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) {
+:host(.gv-site-folder-section[data-gv-scheme]) {
   --gv-floating-folder-panel__drop-line: var(--gv-floating-folder-panel__text);
 }
 
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__drop-target {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__drop-target {
   background: var(--gv-floating-folder-panel__surface-active) !important;
   box-shadow: none;
 }
 
 /* The open conversation: ChatGPT marks its own row with a fill, not a colour. */
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv--active,
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv--active:hover {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv--active,
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv--active:hover {
   background: var(--gv-floating-folder-panel__surface-active);
   color: var(--gv-floating-folder-panel__text);
 }
 
 /* ChatGPT's 14px rows, until the folder font size setting picks another. */
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__folder-name,
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv-title {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__folder-name,
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv-title {
   font-size: var(--gv-folder-item-font-size, 14px);
   font-weight: 400;
   line-height: var(--gv-folder-item-line-height, 20px);
 }
 
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__caret {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__caret {
   width: 20px;
   height: 20px;
   min-width: 20px;
@@ -55,29 +55,28 @@
   opacity: 1;
 }
 
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__pin:empty {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__pin:empty {
   display: none;
 }
 
 /* The count is quiet trailing text; on hover or focus, or while a removal
  * confirm asks about the row, the folder's actions take its place, as
  * ChatGPT's own row actions do. */
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__count {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__count {
   min-width: 0;
   padding: 0 4px;
   background: none;
-  color: var(--gv-chatgpt-folder-section__heading);
+  color: var(--gv-site-folder-section__heading);
   font-size: 12px;
   line-height: 16px;
   font-variant-numeric: tabular-nums;
 }
 
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--add-child,
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--menu,
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--star,
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--remove,
-:host(.gv-chatgpt-folder-section[data-gv-scheme])
-  .gv-floating-folder-panel__icon-button--placeholder {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--add-child,
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--menu,
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--star,
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--remove,
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--placeholder {
   display: none;
   width: 28px;
   height: 28px;
@@ -86,75 +85,73 @@
   opacity: 1;
 }
 
-:host(.gv-chatgpt-folder-section[data-gv-scheme])
+:host(.gv-site-folder-section[data-gv-scheme])
   .gv-floating-folder-panel__folder-header:is(:hover, :focus-within, [data-gv-confirm-anchor])
   :is(
     .gv-floating-folder-panel__icon-button--add-child,
     .gv-floating-folder-panel__icon-button--menu
   ),
-:host(.gv-chatgpt-folder-section[data-gv-scheme])
+:host(.gv-site-folder-section[data-gv-scheme])
   .gv-floating-folder-panel__conv:is(:hover, :focus-within, [data-gv-confirm-anchor])
   :is(.gv-floating-folder-panel__icon-button--star, .gv-floating-folder-panel__icon-button--remove),
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--active {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__icon-button--active {
   display: inline-flex;
 }
 
-:host(.gv-chatgpt-folder-section[data-gv-scheme])
+:host(.gv-site-folder-section[data-gv-scheme])
   .gv-floating-folder-panel__folder-header:is(:hover, :focus-within, [data-gv-confirm-anchor])
   .gv-floating-folder-panel__count {
   display: none;
 }
 
 /* A conversation's title lines up with its folder's name. */
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv-title {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__conv-title {
   margin-inline-start: 34px;
   padding-block: max(
     0px,
-    calc(
-      (var(--gv-chatgpt-folder-section__row-height) - var(--gv-folder-item-line-height, 20px)) / 2
-    )
+    calc((var(--gv-site-folder-section__row-height) - var(--gv-folder-item-line-height, 20px)) / 2)
   );
 }
 
 /* Tree guides run under each enclosing folder's chevron (row start + 18px). */
-:host(.gv-chatgpt-folder-section[data-gv-scheme])
+:host(.gv-site-folder-section[data-gv-scheme])
   .gv-floating-folder-panel__tree-row[data-guides]::before {
   left: 18px;
 }
 
-:host(.gv-chatgpt-folder-section[data-gv-scheme][data-gv-rtl])
+:host(.gv-site-folder-section[data-gv-scheme][data-gv-rtl])
   .gv-floating-folder-panel__tree-row[data-guides]::before {
   left: auto;
   right: 18px;
 }
 
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__inline-input {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__inline-input {
   height: 28px;
   border-color: var(--gv-floating-folder-panel__outline);
   border-radius: 8px;
   font-size: 14px;
 }
 
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__inline-input:focus {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__inline-input:focus {
   border-color: var(--gv-floating-folder-panel__accent);
 }
 
 /* ChatGPT's "No projects": muted text on the row's column, no illustration. */
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__empty {
-  min-height: var(--gv-chatgpt-folder-section__row-height);
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__empty {
+  min-height: var(--gv-site-folder-section__row-height);
   flex-direction: row;
   justify-content: flex-start;
   gap: 0;
   padding: 0 10px;
-  color: var(--gv-chatgpt-folder-section__heading);
+  color: var(--gv-site-folder-section__heading);
   text-align: start;
 }
 
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__empty-icon {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__empty-icon {
   display: none;
 }
 
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__empty-label {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__empty-label {
   font-size: 14px;
   line-height: 20px;
 }
@@ -162,15 +159,15 @@
 /* ─── Activity: the shared list on the rows' column, in ChatGPT's colours ─ */
 /* Titles start 16px into the section, under the header's; two-line rows keep
  * the list's own height, in the page's font and row weight. */
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-folder-activity-list {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-folder-activity-list {
   --gv-folder-activity-text: var(--gv-floating-folder-panel__text);
-  --gv-folder-activity-muted: var(--gv-chatgpt-folder-section__heading);
+  --gv-folder-activity-muted: var(--gv-site-folder-section__heading);
   --gv-folder-activity-hover: var(--gv-floating-folder-panel__surface-hover);
   --gv-folder-list-edge: 6px;
   --gv-folder-activity-row-inset: 10px;
 }
 
-:host(.gv-chatgpt-folder-section)
+:host(.gv-site-folder-section)
   :is(
     .gv-folder-activity-heading,
     .gv-folder-activity-text .gv-conversation-title,
@@ -182,17 +179,17 @@
 }
 
 /* Activity titles follow the font size setting too, as on Gemini. */
-:host(.gv-chatgpt-folder-section) .gv-folder-activity-text .gv-conversation-title {
+:host(.gv-site-folder-section) .gv-folder-activity-text .gv-conversation-title {
   font-size: var(--gv-folder-item-font-size, 14px);
   font-weight: 400;
   line-height: var(--gv-folder-item-line-height, 20px);
 }
 
-:host(.gv-chatgpt-folder-section) .gv-folder-activity-item {
-  border-radius: var(--gv-chatgpt-folder-section__row-radius);
+:host(.gv-site-folder-section) .gv-folder-activity-item {
+  border-radius: var(--gv-site-folder-section__row-radius);
 }
 
-:host(.gv-chatgpt-folder-section) .gv-folder-activity-empty {
+:host(.gv-site-folder-section) .gv-folder-activity-empty {
   padding-inline: 10px;
   font-size: 14px;
   line-height: 20px;
@@ -205,21 +202,21 @@
   font-family: inherit !important;
 }
 
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__context-menu,
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__context-menu,
 :host(.gv-folder-tree-popover-layer[data-gv-scheme]) .gv-floating-folder-panel__context-menu {
   border-radius: 16px;
   font-family: inherit;
 }
 
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__menu-item,
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__menu-item,
 :host(.gv-folder-tree-popover-layer[data-gv-scheme]) .gv-floating-folder-panel__menu-item {
   min-height: 36px;
-  border-radius: var(--gv-chatgpt-folder-section__row-radius);
+  border-radius: var(--gv-site-folder-section__row-radius);
   font-size: 14px;
   line-height: 20px;
 }
 
 /* ─── RTL ──────────────────────────────────────────────────────────────── */
-:host(.gv-chatgpt-folder-section[data-gv-rtl]) .gv-chatgpt-folder-section__header {
+:host(.gv-site-folder-section[data-gv-rtl]) .gv-site-folder-section__header {
   direction: rtl;
 }

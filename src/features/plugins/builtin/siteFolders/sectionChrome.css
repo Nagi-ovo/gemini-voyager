@@ -1,10 +1,12 @@
-/* The folder section inside ChatGPT's sidebar. It reuses the floating panel's
- * shadow sheet and tree, and turns them into one of ChatGPT's own sidebar
- * sections: the panel's colour tokens point at ChatGPT's (inherited from the
- * page, with fallbacks), and rows take ChatGPT's metrics: 14px/20px text, its
- * row height and radius tokens, 6px outer and 10px inner inset.
+/* The folder section inside a site's sidebar (`sectionCss.ts` puts the site's
+ * class in place of `gv-site-folder-section`). It reuses the floating panel's
+ * shadow sheet and tree, and turns them into one of the site's own sidebar
+ * sections: the panel's colour tokens point at the site's (inherited from the
+ * page, with fallbacks), and rows take its metrics. The defaults are ChatGPT's:
+ * 14px/20px text, its row height and radius tokens, 6px outer and 10px inner
+ * inset. Another site redefines the tokens in a sheet of its own, after this one.
  *
- * `:host(.gv-chatgpt-folder-section[data-gv-scheme])` outranks the panel's
+ * `:host(.gv-site-folder-section[data-gv-scheme])` outranks the panel's
  * `:host([data-gv-scheme=...])` rules, and this sheet comes after them; host
  * rules stay `!important` (see floatingPanel.css).
  *
@@ -12,8 +14,8 @@
  * (`gv-folder-tree-popover-layer`), which takes this sheet too: the tokens and
  * the menu rules name that host as well. The section's own host rules must
  * never match it, or the 0×0 fixed layer would become a block in the page. */
-:host(.gv-chatgpt-folder-section),
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) {
+:host(.gv-site-folder-section),
+:host(.gv-site-folder-section[data-gv-scheme]) {
   position: relative !important;
   z-index: auto !important;
   display: block !important;
@@ -48,9 +50,9 @@
  * Its unprefixed `--text-primary` family belongs to another theme layer and must
  * not be used here. Outlines are mixed from the row text, so they follow the
  * theme as well. The fallbacks are ChatGPT's own values. */
-:host(.gv-chatgpt-folder-section[data-gv-scheme]),
+:host(.gv-site-folder-section[data-gv-scheme]),
 :host(.gv-folder-tree-popover-layer[data-gv-scheme]) {
-  --gv-chatgpt-folder-section__heading: var(--color-text-tertiary, #8f8f8f);
+  --gv-site-folder-section__heading: var(--color-text-tertiary, #8f8f8f);
   --gv-floating-folder-panel__text: var(--color-text, #0d0d0d);
   --gv-floating-folder-panel__text-muted: var(--color-text-secondary, #5d5d5d);
   --gv-floating-folder-panel__surface: #ffffff;
@@ -75,16 +77,16 @@
   );
   /* ChatGPT's own destructive text and its hover wash; the app sets one value
      for both themes. */
-  --gv-chatgpt-folder-section__danger: var(--color-text-danger, #e02e2a);
-  --gv-chatgpt-folder-section__danger-soft: var(
+  --gv-site-folder-section__danger: var(--color-text-danger, #e02e2a);
+  --gv-site-folder-section__danger-soft: var(
     --color-background-danger-outline-hover,
     color-mix(in oklab, #fa423e 8%, transparent)
   );
 }
 
-:host(.gv-chatgpt-folder-section[data-gv-scheme='dark']),
+:host(.gv-site-folder-section[data-gv-scheme='dark']),
 :host(.gv-folder-tree-popover-layer[data-gv-scheme='dark']) {
-  --gv-chatgpt-folder-section__heading: var(--color-text-tertiary, rgba(255, 255, 255, 0.5));
+  --gv-site-folder-section__heading: var(--color-text-tertiary, rgba(255, 255, 255, 0.5));
   --gv-floating-folder-panel__text: var(--color-text, #ffffff);
   --gv-floating-folder-panel__text-muted: var(--color-text-secondary, rgba(255, 255, 255, 0.7));
   --gv-floating-folder-panel__surface: #303030;
@@ -98,16 +100,16 @@
 /* Rows take ChatGPT's row height and radius tokens. One nesting step is the
  * chevron and its gap, so a child's chevron sits under its parent's folder icon;
  * the folder indent setting (-8px by default) widens it, as on Gemini. */
-:host(.gv-chatgpt-folder-section),
+:host(.gv-site-folder-section),
 :host(.gv-folder-tree-popover-layer) {
-  --gv-chatgpt-folder-section__row-height: var(--height-token-row, 36px);
-  --gv-chatgpt-folder-section__row-radius: var(--radius-lg, 10px);
+  --gv-site-folder-section__row-height: var(--height-token-row, 36px);
+  --gv-site-folder-section__row-radius: var(--radius-lg, 10px);
   --gv-tree-step: calc(32px + var(--gv-folder-indent, -8px));
 }
 
 /* The folder spacing setting, as a gap below each row; none until it is set.
  * Inside the row shell, so the virtualizer measures it. */
-:host(.gv-chatgpt-folder-section[data-gv-scheme]) .gv-floating-folder-panel__tree-row {
+:host(.gv-site-folder-section[data-gv-scheme]) .gv-floating-folder-panel__tree-row {
   padding-block-end: var(--gv-folder-row-gap, 0px);
 }
 
@@ -115,7 +117,7 @@
 /* The shared folder header (folderHeader.css), in ChatGPT's sizes and colours:
  * muted at rest, the row text colour on hover, a pressed toggle on the row's
  * pressed fill. */
-.gv-chatgpt-folder-section__header {
+.gv-site-folder-section__header {
   --gv-folder-header-gap: 2px;
   --gv-folder-header-button-size: 28px;
   --gv-folder-header-button-radius: 8px;
@@ -133,39 +135,39 @@
   margin-inline: 6px;
   padding-inline: 10px 4px;
   /* It takes drops for the root, lit like a row. */
-  border-radius: var(--gv-chatgpt-folder-section__row-radius);
+  border-radius: var(--gv-site-folder-section__row-radius);
   user-select: none;
 }
 
-.gv-chatgpt-folder-section__title {
+.gv-site-folder-section__title {
   flex: 1;
   min-width: 0;
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--gv-chatgpt-folder-section__heading);
+  color: var(--gv-site-folder-section__heading);
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
 }
 
-.gv-chatgpt-folder-section__header .gv-folder-header-actions {
+.gv-site-folder-section__header .gv-folder-header-actions {
   flex: 0 0 auto;
 }
 
-.gv-chatgpt-folder-section__header :is(.gv-folder-action-btn, .gv-folder-add-btn) {
+.gv-site-folder-section__header :is(.gv-folder-action-btn, .gv-folder-add-btn) {
   flex: 0 0 auto;
 }
 
-.gv-chatgpt-folder-section__header .gv-folder-action-btn:focus-visible,
-.gv-chatgpt-folder-section__header .gv-folder-add-btn:focus-visible {
+.gv-site-folder-section__header .gv-folder-action-btn:focus-visible,
+.gv-site-folder-section__header .gv-folder-add-btn:focus-visible {
   background: var(--gv-floating-folder-panel__surface-hover);
   color: var(--gv-floating-folder-panel__text);
   outline: none;
 }
 
-.gv-chatgpt-folder-section__header :is(.gv-folder-action-btn, .gv-folder-add-btn):disabled {
+.gv-site-folder-section__header :is(.gv-folder-action-btn, .gv-folder-add-btn):disabled {
   cursor: default;
   opacity: 0.4;
 }
@@ -183,7 +185,7 @@
   margin: 0;
   padding: 0 10px;
   border: 1px solid var(--gv-floating-folder-panel__outline);
-  border-radius: var(--gv-chatgpt-folder-section__row-radius);
+  border-radius: var(--gv-site-folder-section__row-radius);
   background: transparent;
   color: var(--gv-floating-folder-panel__text);
   font: inherit;
@@ -193,7 +195,7 @@
 }
 
 .gv-folder-search-input::placeholder {
-  color: var(--gv-chatgpt-folder-section__heading);
+  color: var(--gv-site-folder-section__heading);
   opacity: 1;
 }
 
@@ -232,7 +234,7 @@
 /* Shown only while selecting. It sticks to the top of the sidebar's scroll
  * area while the section is in view, so the count and actions stay in reach
  * of a long selection. */
-.gv-chatgpt-folder-section__selection {
+.gv-site-folder-section__selection {
   position: sticky;
   top: 0;
   z-index: 2;
@@ -240,40 +242,40 @@
   padding: 0 6px 4px;
 }
 
-.gv-chatgpt-folder-section__selection.gv-multi-select-mode {
+.gv-site-folder-section__selection.gv-multi-select-mode {
   display: block;
 }
 
-.gv-chatgpt-folder-section__selection .gv-multi-select-indicator {
+.gv-site-folder-section__selection .gv-multi-select-indicator {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: var(--gv-chatgpt-folder-section__row-height);
+  min-height: var(--gv-site-folder-section__row-height);
   box-sizing: border-box;
   padding-inline: 10px 4px;
   border: 1px solid var(--gv-floating-folder-panel__outline);
-  border-radius: var(--gv-chatgpt-folder-section__row-radius);
+  border-radius: var(--gv-site-folder-section__row-radius);
   background: var(--gv-floating-folder-panel__surface);
   color: var(--gv-floating-folder-panel__text);
   box-shadow: var(--shadow-lg, 0 4px 8px -2px rgba(0, 0, 0, 0.1));
 }
 
-.gv-chatgpt-folder-section__selection .gv-multi-select-indicator-content {
+.gv-site-folder-section__selection .gv-multi-select-indicator-content {
   display: flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
 }
 
-.gv-chatgpt-folder-section__selection .gv-multi-select-indicator-content svg {
+.gv-site-folder-section__selection .gv-multi-select-indicator-content svg {
   flex: none;
   width: 18px;
   height: 18px;
   color: var(--gv-floating-folder-panel__text-muted);
 }
 
-.gv-chatgpt-folder-section__selection .gv-multi-select-indicator-text {
+.gv-site-folder-section__selection .gv-multi-select-indicator-text {
   overflow: hidden;
   font-size: 14px;
   font-variant-numeric: tabular-nums;
@@ -282,14 +284,14 @@
   white-space: nowrap;
 }
 
-.gv-chatgpt-folder-section__selection .gv-multi-select-actions {
+.gv-site-folder-section__selection .gv-multi-select-actions {
   display: inline-flex;
   flex: none;
   align-items: center;
   gap: 2px;
 }
 
-.gv-chatgpt-folder-section__selection .gv-multi-select-action-btn {
+.gv-site-folder-section__selection .gv-multi-select-action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -304,25 +306,25 @@
   cursor: pointer;
 }
 
-.gv-chatgpt-folder-section__selection .gv-multi-select-action-btn svg {
+.gv-site-folder-section__selection .gv-multi-select-action-btn svg {
   width: 18px;
   height: 18px;
 }
 
-.gv-chatgpt-folder-section__selection .gv-multi-select-exit-btn:is(:hover, :focus-visible) {
+.gv-site-folder-section__selection .gv-multi-select-exit-btn:is(:hover, :focus-visible) {
   background: var(--gv-floating-folder-panel__surface-hover);
   color: var(--gv-floating-folder-panel__text);
 }
 
-.gv-chatgpt-folder-section__selection .gv-multi-select-delete-btn {
-  color: var(--gv-chatgpt-folder-section__danger);
+.gv-site-folder-section__selection .gv-multi-select-delete-btn {
+  color: var(--gv-site-folder-section__danger);
 }
 
-.gv-chatgpt-folder-section__selection .gv-multi-select-delete-btn:is(:hover, :focus-visible) {
-  background: var(--gv-chatgpt-folder-section__danger-soft);
+.gv-site-folder-section__selection .gv-multi-select-delete-btn:is(:hover, :focus-visible) {
+  background: var(--gv-site-folder-section__danger-soft);
 }
 
-.gv-chatgpt-folder-section__selection .gv-multi-select-action-btn:focus-visible {
+.gv-site-folder-section__selection .gv-multi-select-action-btn:focus-visible {
   outline: 2px solid var(--gv-floating-folder-panel__outline);
   outline-offset: 1px;
 }

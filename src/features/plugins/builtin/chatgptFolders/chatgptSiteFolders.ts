@@ -8,6 +8,7 @@ import type { ConversationReference } from '@/core/types/folder';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
 
 import { isTemporaryChat } from '../chatgptTemporaryHandoff/handoff';
+import { siteSectionCss } from '../siteFolders/sectionCss';
 import type { SectionSite, SiteFoldersAdapter } from '../siteFolders/types';
 import { ChatGptFolderStore } from './ChatGptFolderStore';
 import { CHATGPT_HIDE_FILED, FILED_ROW_ATTRIBUTE } from './chatgptHideFiled';
@@ -23,8 +24,6 @@ import {
   openChatGptConversation,
   readCurrentConversation,
 } from './chatgptPage';
-import chromeCss from './chatgptSectionChrome.css?raw';
-import treeCss from './chatgptSectionTree.css?raw';
 import {
   findChatGptSidebar,
   findHistoryAnchor,
@@ -45,11 +44,13 @@ function conversationHref(conversation: ConversationReference): string {
   return readChatGptConversation(conversation.url)?.url ?? '';
 }
 
+const SECTION_CLASS = 'gv-chatgpt-folder-section';
+
 /** The section just above Recents, in ChatGPT's own sidebar style. */
 export const CHATGPT_SECTION_SITE: SectionSite = {
-  className: 'gv-chatgpt-folder-section',
-  // One sheet in two files (host, header, search and selection; then the tree).
-  css: `${chromeCss}\n${treeCss}`,
+  className: SECTION_CLASS,
+  // The shared sheets' defaults are ChatGPT's own tokens.
+  css: siteSectionCss(SECTION_CLASS),
   anchor: findHistoryAnchor,
   conversationHref,
   policy: FOLDER_SITE_POLICIES.chatgpt,
