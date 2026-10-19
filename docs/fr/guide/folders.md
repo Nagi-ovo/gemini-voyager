@@ -22,7 +22,6 @@ La section des dossiers se trouve au-dessus de la liste des conversations, dans 
 
 - **Glisser** : faites glisser une conversation de la barre latérale sur un dossier.
 - **Menu de la conversation** : sur les sites qui le permettent, ouvrez le menu de la conversation et choisissez **Déplacer vers un dossier**.
-- **Conversation actuelle** : faites un clic droit sur un dossier et choisissez **Ajouter la conversation actuelle ici**.
 - **Sélection multiple** : appuyez longuement sur une conversation d’un dossier pour en sélectionner plusieurs, puis déplacez-les d’un coup. La barre latérale d’AI Studio ne gère pas encore la sélection multiple.
 
 ## Imbriquer, renommer et colorer
@@ -42,7 +41,7 @@ La roue dentée de l’en-tête des dossiers change l’ordre des conversations 
 Une fois une conversation dans un dossier, vous pouvez la retirer de la liste principale pour n’y garder que les conversations en cours.
 
 - Sur Gemini et AI Studio, ouvrez la fenêtre → **Options des dossiers** → **Masquer les discussions archivées**. Chaque site garde son propre réglage ; sur AI Studio, ce sont les lignes du tableau Library qui sont masquées.
-- La première fois que vous classez une conversation, une carte dans la section des dossiers propose de l’activer en un clic. Choisissez **Pas maintenant** et elle ne reviendra pas.
+- Sur Gemini et AI Studio, la première fois que vous classez une conversation, une carte dans la section des dossiers propose de l’activer en un clic. Choisissez **Pas maintenant** et elle ne reviendra pas.
 - Sur les autres sites, l’interrupteur se trouve dans les réglages du plugin des dossiers, zone **Extensions** de la fenêtre ; il est désactivé par défaut.
 - Rien n’est supprimé : les conversations classées restent dans leurs dossiers, et vous pouvez désactiver l’option à tout moment.
 

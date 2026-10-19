@@ -22,7 +22,6 @@ A secção de pastas fica por cima da lista de conversas, na barra lateral. Com 
 
 - **Arrastar**: arraste uma conversa da barra lateral para cima de uma pasta.
 - **Menu da conversa**: nos sites que o permitem, abra o menu da conversa e escolha **Mover para pasta**.
-- **Conversa atual**: clique com o botão direito numa pasta e escolha **Adicionar a conversa atual aqui**.
 - **Seleção múltipla**: prima longamente uma conversa dentro de uma pasta para selecionar várias e movê-las de uma vez. A barra lateral do AI Studio ainda não suporta seleção múltipla.
 
 ## Encaixar, mudar o nome e a cor
@@ -42,7 +41,7 @@ A roda dentada do cabeçalho das pastas muda a ordem das conversas (ordem manual
 Depois de pôr uma conversa numa pasta, pode tirá-la da lista principal para lá ficarem só as conversas em curso.
 
 - No Gemini e no AI Studio, abra a janela → **Opções de Pasta** → **Ocultar conversas arquivadas**. Cada site guarda a sua própria definição; no AI Studio, ficam ocultas as linhas da tabela da Library.
-- Na primeira vez que arquiva uma conversa, um cartão na secção de pastas oferece ativá-lo com um clique. Escolha **Agora não** e não volta a perguntar.
+- No Gemini e no AI Studio, na primeira vez que arquiva uma conversa, um cartão na secção de pastas oferece ativá-lo com um clique. Escolha **Agora não** e não volta a perguntar.
 - Nos outros sites, o interruptor está nas definições do plugin de pastas, na área **Plugins** da janela, e vem desativado.
 - Nada é eliminado: as conversas arquivadas continuam nas suas pastas, e pode desativar isto quando quiser.
 

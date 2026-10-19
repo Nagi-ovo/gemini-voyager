@@ -22,7 +22,6 @@ The folder section sits above the chat list in the sidebar. When the sidebar is 
 
 - **Drag**: drag a chat from the sidebar onto a folder.
 - **Chat menu**: on sites that support it, open the chat's own menu and choose **Move to folder**.
-- **Current chat**: right-click a folder and choose **Add current conversation here**.
 - **Multi-select**: long-press a chat inside a folder to start selecting, then move them all at once. AI Studio's sidebar doesn't support multi-select yet.
 
 ## Nest, rename and color
@@ -42,7 +41,7 @@ The gear in the folder header switches the chat order (manual or recently opened
 Once a chat is in a folder, you can take it out of the main list so only active chats stay there.
 
 - On Gemini and AI Studio, open the popup → **Folder Options** → **Hide archived conversations**. Each site keeps its own setting; on AI Studio it hides the rows of the Library table.
-- The first time you file a chat, a card in the folder section offers to turn it on in one click. Choose **Not now** and it won't ask again.
+- On Gemini and AI Studio, the first time you file a chat, a card in the folder section offers to turn it on in one click. Choose **Not now** and it won't ask again.
 - On the other sites, the switch is in the folders plugin's settings in the popup's **Plugins** area, off by default.
 - Nothing is deleted: filed chats are always in their folders, and you can turn this off at any time.
 

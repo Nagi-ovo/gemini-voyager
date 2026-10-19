@@ -22,7 +22,6 @@ La sección de carpetas está encima de la lista de conversaciones, en la barra 
 
 - **Arrastrar**: arrastra una conversación de la barra lateral sobre una carpeta.
 - **Menú de la conversación**: en los sitios que lo admiten, abre el menú de la conversación y elige **Mover a carpeta**.
-- **Conversación actual**: haz clic derecho en una carpeta y elige **Añadir la conversación actual aquí**.
 - **Selección múltiple**: mantén pulsada una conversación dentro de una carpeta para seleccionar varias y moverlas a la vez. La barra lateral de AI Studio todavía no admite selección múltiple.
 
 ## Anidar, renombrar y colorear
@@ -42,7 +41,7 @@ El engranaje del encabezado de carpetas cambia el orden de las conversaciones (o
 Cuando una conversación ya está en una carpeta, puedes sacarla de la lista principal para que solo queden las conversaciones en curso.
 
 - En Gemini y AI Studio, abre la ventana → **Opciones de Carpetas** → **Ocultar conversaciones archivadas**. Cada sitio guarda su propio ajuste; en AI Studio se ocultan las filas de la tabla de Library.
-- La primera vez que archivas una conversación, una tarjeta en la sección de carpetas te ofrece activarlo con un clic. Si eliges **Ahora no**, no vuelve a preguntar.
+- En Gemini y AI Studio, la primera vez que archivas una conversación, una tarjeta en la sección de carpetas te ofrece activarlo con un clic. Si eliges **Ahora no**, no vuelve a preguntar.
 - En los demás sitios, el interruptor está en los ajustes del plugin de carpetas, en la zona **Complementos** de la ventana, y viene desactivado.
 - No se borra nada: las conversaciones archivadas siguen en sus carpetas y puedes desactivarlo cuando quieras.
 
