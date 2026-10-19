@@ -1,6 +1,7 @@
 /**
- * The folder section's header, shared by Gemini's sidebar and ChatGPT's sidebar
- * section: a title with its collapse control, then an ordered row of buttons.
+ * The folder section's header, shared by Gemini's sidebar, AI Studio's nav panel
+ * and the plugin sites' sidebar sections: a title with its collapse control (where
+ * the site collapses the section), then an ordered row of buttons.
  * A button runs its action or opens a menu; it may be a toggle (`aria-pressed`),
  * appear only while the header is in use (`reveal`), or be the header's primary
  * "create" button. Gemini styles it with the page sheet `ensureFolderHeaderStyle`
@@ -74,9 +75,10 @@ export type FolderHeaderOptions = {
   title: { tag: 'h1' | 'h2'; labelKey: string; className?: string };
   /**
    * `byTitle`: the title itself is the collapse button (ChatGPT's own section
-   * headings work so); otherwise a chevron beside the title collapses.
+   * headings work so); otherwise a chevron beside the title collapses. Left out
+   * where the section does not collapse (AI Studio): the title stands alone.
    */
-  collapse: { onToggle: () => void; byTitle?: boolean };
+  collapse?: { onToggle: () => void; byTitle?: boolean };
   actions: readonly FolderHeaderAction[];
   openMenu?: FolderHeaderMenuOpener;
   /** Keep header clicks from reaching the host's own handlers (a link row, a drop zone). */
@@ -137,15 +139,22 @@ function createTitle(options: FolderHeaderOptions): HTMLElement {
   container.className = 'title-container';
   const title = document.createElement(options.title.tag);
   title.className = ['title', options.title.className].filter(Boolean).join(' ');
+  title.setAttribute(LABEL_KEY_ATTR, options.title.labelKey);
+  const collapse = options.collapse;
+  if (!collapse) {
+    title.textContent = t(options.title.labelKey);
+    container.append(title);
+    return container;
+  }
   const toggle = document.createElement('button');
   toggle.type = 'button';
   toggle.className = TOGGLE_CLASS;
   toggle.addEventListener('click', (event) => {
     event.stopPropagation();
     event.preventDefault();
-    options.collapse.onToggle();
+    collapse.onToggle();
   });
-  if (options.collapse.byTitle) {
+  if (collapse.byTitle) {
     toggle.classList.add(TITLE_TOGGLE_CLASS);
     const label = document.createElement('span');
     label.textContent = t(options.title.labelKey);
@@ -157,7 +166,6 @@ function createTitle(options: FolderHeaderOptions): HTMLElement {
     toggle.replaceChildren(createChevronDownIcon(16));
     container.append(title, toggle);
   }
-  title.setAttribute(LABEL_KEY_ATTR, options.title.labelKey);
   return container;
 }
 

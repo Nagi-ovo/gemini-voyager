@@ -1,6 +1,7 @@
 /* The folder section header (title, collapse toggle, action buttons) shared by
- * Gemini's sidebar, where it is a page stylesheet (`installFolderHeaderStyle`),
- * and ChatGPT's sidebar section, where it is part of the section's shadow sheet.
+ * Gemini's sidebar and AI Studio's nav panel, where it is a page stylesheet
+ * (`ensureFolderHeaderStyle`), and the plugin sites' sidebar sections, where it
+ * is part of the section's shadow sheet.
  *
  * Values default to Gemini's, read from its `--folder-*` palette. A site
  * re-points the `--gv-folder-header-*` tokens to its own colours and sizes. A
@@ -221,4 +222,10 @@ html[data-gv-scheme='dark'] .gv-folder-activity-toggle.is-active {
 
 html[data-gv-scheme='dark'] .gv-folder-action-btn.gv-filter-active {
   background-color: rgba(138, 180, 248, 0.2);
+}
+
+/* A button a site hides for now (`hidden`), which the `display` above would
+ * otherwise keep on screen. */
+.gv-folder-header-actions > button[hidden] {
+  display: none;
 }

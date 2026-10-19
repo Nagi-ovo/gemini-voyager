@@ -1,7 +1,9 @@
 /**
  * The folder header's standard buttons, in one order on every site:
  * import/export, cloud, settings, Activity, create. A site supplies what each
- * does and may add its own buttons first (Gemini's current-user filter).
+ * does, leaves out what it does not offer (AI Studio has no import/export or
+ * settings yet), and may add its own buttons first (Gemini's current-user
+ * filter, AI Studio's Library shortcut).
  */
 import { createBellIcon } from '@/core/icons/bellIcon';
 import { createFolderIcon, createPlusIcon, createSettingsIcon } from '@/core/icons/folderIcons';
@@ -20,10 +22,10 @@ export type FolderHeaderActionsOptions = {
   activity?: { className?: string; pressed?: boolean; onClick: (event: MouseEvent) => void };
   /** Site buttons, placed before import/export. */
   extra?: readonly FolderHeaderAction[];
-  transfer: { import: () => void; export: () => void };
+  transfer?: { import: () => void; export: () => void };
   /** `tooltip`: the cloud button's title with the site's last upload and sync times. */
   cloud: { upload: () => void; sync: () => void; tooltip?: () => Promise<string> };
-  settings: (event: MouseEvent) => void;
+  settings?: (event: MouseEvent) => void;
   create: {
     className?: string;
     labelKey: string;
@@ -41,7 +43,7 @@ export type FolderHeaderActionsOptions = {
 };
 
 function transferItems(
-  transfer: FolderHeaderActionsOptions['transfer'],
+  transfer: NonNullable<FolderHeaderActionsOptions['transfer']>,
   symbolFont: boolean,
 ): FolderHeaderMenuItem[] {
   const icon = (ligature: string, path: string) =>
@@ -53,25 +55,33 @@ function transferItems(
 }
 
 export function folderHeaderActions(options: FolderHeaderActionsOptions): FolderHeaderAction[] {
-  const { activity, reveal, symbolFont = false } = options;
+  const { activity, reveal, symbolFont = false, transfer, settings } = options;
   const size = options.iconSize ?? 18;
   return [
     ...(options.extra ?? []),
-    {
-      className: 'gv-folder-import-export-btn',
-      icon: () => createFolderIcon(size),
-      labelKey: 'folder_import_export',
-      reveal,
-      menu: () => transferItems(options.transfer, symbolFont),
-    },
+    ...(transfer
+      ? [
+          {
+            className: 'gv-folder-import-export-btn',
+            icon: () => createFolderIcon(size),
+            labelKey: 'folder_import_export',
+            reveal,
+            menu: () => transferItems(transfer, symbolFont),
+          },
+        ]
+      : []),
     cloudMenuAction(options.cloud, { reveal }),
-    {
-      className: 'gv-folder-settings-btn',
-      icon: () => createSettingsIcon(size),
-      labelKey: 'folder_settings',
-      reveal,
-      onClick: options.settings,
-    },
+    ...(settings
+      ? [
+          {
+            className: 'gv-folder-settings-btn',
+            icon: () => createSettingsIcon(size),
+            labelKey: 'folder_settings',
+            reveal,
+            onClick: settings,
+          },
+        ]
+      : []),
     // A pressed bell stays visible while the reveal buttons fade but keep their
     // space, so it sits next to "create" with all of them on its left.
     ...(activity
