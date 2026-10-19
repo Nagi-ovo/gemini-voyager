@@ -17,9 +17,7 @@ import { createToaster } from '@/core/ui/toast/toaster';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { getTranslationSync } from '@/utils/i18n';
 
-import { findChatInput, insertTextIntoChatInput } from '../chatInput/index';
 import { stripInstructionBlockPreservingWhitespace } from '../folderProject/instructionBlock';
-import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
 import { followGeminiSendKey } from '../sendBehavior/followSendKey';
 import {
   findClosestSendActionButton,
@@ -28,9 +26,16 @@ import {
   isUpdateActionButton,
 } from '../sendBehavior/sendButton';
 import { watchRouteChanges } from '../utils/routeWatcher';
+import { createEl, renderHistoryItems } from './historyList';
+import {
+  findFormPromptInput,
+  inputFromTarget,
+  isPromptInput,
+  promptTypeForInput,
+  readInputText,
+} from './promptInput';
 import {
   type PromptHistoryItem,
-  type PromptHistoryType,
   addPromptHistory,
   clearPromptHistory,
   getPromptHistory,
@@ -43,11 +48,6 @@ const ROOT_ID = 'gv-ph-root';
 const PANEL_ID = 'gv-ph-panel';
 const TITLE_ID = 'gv-ph-title';
 const CAPTURE_DEDUPLICATION_WINDOW_MS = 10_000;
-const PROMPT_INPUT_SELECTOR = '[contenteditable="true"], textarea';
-const EDIT_CONTAINER_SELECTOR = 'chat-message, .query-content.edit-mode, .edit-container';
-const MAIN_COMPOSER_SELECTOR =
-  '.text-input-field, .input-area, ms-prompt-input-wrapper, ms-prompt-input, ms-chat-turn-input';
-const VOYAGER_UI_SELECTOR = '.gv-ph-panel, .gv-pm-panel, [role="dialog"]';
 
 type StorageListener = (
   changes: Record<string, chrome.storage.StorageChange>,
@@ -108,57 +108,6 @@ async function resolveCurrentAccountScope(): Promise<ResolvedPromptHistoryScope>
     email: context.email,
   });
   return { accountScope: scope.accountKey, identity: context.identity };
-}
-
-function createEl<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  className?: string,
-): HTMLElementTagNameMap[K] {
-  const element = document.createElement(tag);
-  if (className) element.className = className;
-  return element;
-}
-
-function readInputText(input: HTMLElement): string {
-  if (input instanceof HTMLTextAreaElement) return input.value;
-  return input.innerText ?? input.textContent ?? '';
-}
-
-function isVoyagerInput(input: HTMLElement): boolean {
-  return Boolean(input.closest(VOYAGER_UI_SELECTOR));
-}
-
-function isPromptInput(input: HTMLElement): boolean {
-  if (isVoyagerInput(input)) return false;
-  if (input.closest(EDIT_CONTAINER_SELECTOR)) return true;
-  if (input.closest(MAIN_COMPOSER_SELECTOR)) return true;
-  return findChatInput({ requireVisible: false }) === input;
-}
-
-function promptTypeForInput(input: HTMLElement): PromptHistoryType {
-  return input.closest(EDIT_CONTAINER_SELECTOR) ? 'edited' : 'sent';
-}
-
-function inputFromTarget(target: EventTarget | null): HTMLElement | null {
-  if (!(target instanceof Element)) return null;
-  const input = target.closest<HTMLElement>(PROMPT_INPUT_SELECTOR);
-  return input && isPromptInput(input) ? input : null;
-}
-
-function findFormPromptInput(form: HTMLFormElement): HTMLElement | null {
-  const active = document.activeElement;
-  if (
-    active instanceof HTMLElement &&
-    form.contains(active) &&
-    active.matches(PROMPT_INPUT_SELECTOR) &&
-    isPromptInput(active)
-  ) {
-    return active;
-  }
-  return (
-    Array.from(form.querySelectorAll<HTMLElement>(PROMPT_INPUT_SELECTOR)).find(isPromptInput) ??
-    null
-  );
 }
 
 function showGlobalStorageError(): void {
@@ -255,35 +204,6 @@ function stopCaptureListeners(): void {
   keydownListener = null;
 }
 
-async function copyText(text: string): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return;
-  } catch {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.left = '-9999px';
-    document.body.appendChild(textarea);
-    textarea.select();
-    try {
-      if (!document.execCommand('copy')) throw new Error('Clipboard copy was rejected');
-    } finally {
-      textarea.remove();
-    }
-  }
-}
-
-function formatTime(timestamp: number): string {
-  const locale = document.documentElement.lang || chrome.i18n?.getUILanguage?.() || undefined;
-  return new Intl.DateTimeFormat(locale, {
-    month: 'numeric',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(timestamp));
-}
-
 function setNotice(message: string, kind: 'ok' | 'error'): void {
   if (!panel) return;
   let notice = panel.querySelector<HTMLDivElement>('.gv-ph-notice');
@@ -301,73 +221,17 @@ function setNotice(message: string, kind: 'ok' | 'error'): void {
   }, 2000);
 }
 
-function renderHistoryItems(items: PromptHistoryItem[]): void {
-  const list = listEl;
-  if (!list) return;
-  list.replaceChildren();
-  if (items.length === 0) {
-    const empty = createEl('div', 'gv-ph-empty');
-    empty.textContent = getTranslationSync('promptHistoryEmpty');
-    list.appendChild(empty);
-    return;
-  }
-
-  const fragment = document.createDocumentFragment();
-  items.forEach((item) => {
-    const row = createEl('article', 'gv-ph-item');
-    const meta = createEl('div', 'gv-ph-item-meta');
-    const badge = createEl('span', `gv-ph-badge gv-ph-badge-${item.type}`);
-    badge.textContent = getTranslationSync(
-      item.type === 'sent' ? 'promptHistorySent' : 'promptHistoryEdited',
-    );
-    const time = createEl('time', 'gv-ph-time');
-    time.dateTime = new Date(item.timestamp).toISOString();
-    time.textContent = formatTime(item.timestamp);
-    meta.append(badge, time);
-
-    const text = createEl('div', 'gv-ph-item-text');
-    text.textContent = item.content;
-
-    const actions = createEl('div', 'gv-ph-item-actions');
-    const copyButton = createEl('button', 'gv-ph-action');
-    copyButton.type = 'button';
-    copyButton.textContent = getTranslationSync('promptHistoryCopy');
-    copyButton.addEventListener('click', (event) => {
-      event.stopPropagation();
-      void copyText(item.content)
-        .then(() => setNotice(getTranslationSync('promptHistoryCopied'), 'ok'))
-        .catch(() => setNotice(getTranslationSync('promptHistoryCopyFailed'), 'error'));
-    });
-
-    const insertButton = createEl('button', 'gv-ph-action gv-ph-action-primary');
-    insertButton.type = 'button';
-    insertButton.textContent = getTranslationSync('promptHistoryInsert');
-    insertButton.addEventListener('click', (event) => {
-      event.stopPropagation();
-      expandInputCollapseIfNeeded();
-      if (insertTextIntoChatInput(item.content)) {
-        setNotice(getTranslationSync('promptHistoryInserted'), 'ok');
-        closePanel(false);
-      } else {
-        setNotice(getTranslationSync('promptHistoryInsertFailed'), 'error');
-      }
-    });
-
-    const deleteButton = createEl('button', 'gv-ph-action gv-ph-action-danger');
-    deleteButton.type = 'button';
-    deleteButton.textContent = getTranslationSync('promptHistoryDelete');
-    deleteButton.addEventListener('click', (event) => {
-      event.stopPropagation();
+function showHistoryItems(items: PromptHistoryItem[]): void {
+  if (!listEl) return;
+  renderHistoryItems(listEl, items, {
+    notify: setNotice,
+    onInserted: () => closePanel(false),
+    remove: (item) => {
       void removePromptHistoryItem(item.id, item.accountScope)
         .then(() => renderHistoryList())
         .catch(reportStorageError);
-    });
-
-    actions.append(copyButton, insertButton, deleteButton);
-    row.append(meta, text, actions);
-    fragment.appendChild(row);
+    },
   });
-  list.appendChild(fragment);
 }
 
 function renderHistoryList(): void {
@@ -387,7 +251,7 @@ function renderHistoryList(): void {
         if (panelOpen) renderHistoryList();
         return;
       }
-      renderHistoryItems(items);
+      showHistoryItems(items);
     })
     .catch(reportStorageError)
     .finally(() => {
