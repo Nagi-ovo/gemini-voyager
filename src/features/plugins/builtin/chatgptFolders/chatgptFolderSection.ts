@@ -58,10 +58,14 @@ import { FOLDER_ONLY_SEARCH_HINT_ID } from '@/pages/content/folder/sidebarPrefs'
 import { type FolderSearchBox, createFolderSearch } from '@/pages/content/folder/sidebarSearch';
 import { getTranslationSyncUnsafe as t } from '@/utils/i18n';
 
-import sectionCss from './chatgptFolderSection.css?raw';
 import { readChatGptConversation } from './chatgptIdentity';
+import chromeCss from './chatgptSectionChrome.css?raw';
+import treeCss from './chatgptSectionTree.css?raw';
 import { findHistoryAnchor } from './chatgptSidebarDom';
 import type { ChatGptFolderSectionPrefs } from './sectionPrefs';
+
+/** One sheet in two files (host, header, search and selection; then the tree). */
+const sectionCss = `${chromeCss}\n${treeCss}`;
 
 export const FOLDER_SECTION_CLASS = 'gv-chatgpt-folder-section';
 const ACTIVITY_TOGGLE_CLASS = `${FOLDER_SECTION_CLASS}__activity`;
