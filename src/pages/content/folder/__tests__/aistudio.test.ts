@@ -442,7 +442,7 @@ describe('AIStudio theme compatibility', () => {
     expect(headerCss).toContain("html[data-gv-scheme='dark'] .gv-folder-action-btn:hover");
   });
 
-  it('renders cloud action icons with currentColor in AI Studio', () => {
+  it('paints every header action icon in currentColor in AI Studio', () => {
     const { container } = buildFolderPanel(
       {
         t: (key) => key,
@@ -454,9 +454,14 @@ describe('AIStudio theme compatibility', () => {
       },
       true,
     );
-    const fills = [...container.querySelectorAll('svg')].map((svg) => svg.getAttribute('fill'));
+    // Upload, sync and create; the filled cloud glyphs and the stroked plus.
+    const paints = [...container.querySelectorAll('svg')].map((svg) =>
+      svg.getAttribute('fill') === 'none' ? svg.getAttribute('stroke') : svg.getAttribute('fill'),
+    );
 
-    expect(fills).toEqual(['currentColor', 'currentColor']);
+    expect(paints).toEqual(['currentColor', 'currentColor', 'currentColor']);
+    // No ligature text for a font AI Studio may not load.
+    expect(container.querySelector('.google-symbols')).toBeNull();
   });
 });
 

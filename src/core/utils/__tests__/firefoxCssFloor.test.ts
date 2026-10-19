@@ -27,6 +27,7 @@ const STATIC_CONTENT_STYLESHEETS = [
   'src/pages/content/folder/floatingPanelSiteOptions.css',
   'src/pages/content/folder/floatingTree/inlineTree.css',
   'src/pages/content/folder/sidebarTreeTokens.css',
+  'src/pages/content/folder/aistudioTreeTokens.css',
   'src/pages/content/folder/folderHeader/folderHeader.css',
   'src/pages/content/folder/folderHeader/folderHeaderMenu.css',
 ] as const;

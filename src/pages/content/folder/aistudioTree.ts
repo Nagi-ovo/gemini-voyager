@@ -6,14 +6,18 @@ import { canCreateFolderUnder } from '@/features/folder/model/folderDepth';
 import { placeConversations } from '@/features/folder/model/placeConversations';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
 
+import aistudioTokensCss from './aistudioTreeTokens.css?raw';
 import { FLOATING_PANEL_CSS as panelCss } from './floatingPanelCss';
+import inlineTreeCss from './floatingTree/inlineTree.css?raw';
 import {
   FLOATING_PANEL_CLASS,
   type TreeActions,
   type TreeSiteOptions,
 } from './floatingTree/shared';
 import { mountFolderTree } from './floatingTree/treeController';
+import { INLINE_TREE_ATTR } from './floatingTree/treeStyle';
 import { attachShadowSurface } from './shadowHost';
+import sidebarTokensCss from './sidebarTreeTokens.css?raw';
 import type { ConversationReference, DragData, Folder, FolderData } from './types';
 
 /**
@@ -39,6 +43,9 @@ export const AISTUDIO_PROMPT_DRAG_TYPES: readonly string[] = [
 ];
 
 const SITE: TreeSiteOptions = {
+  // The folder icon and chevron of the other sidebar trees, and no per-folder count.
+  lineIcons: true,
+  hideFolderCount: true,
   folderOrder: 'created',
   conversationOrder: 'stored',
   rootSection: { labelKey: 'folder_uncategorized' },
@@ -48,49 +55,11 @@ const SITE: TreeSiteOptions = {
 };
 
 /**
- * Turns the floating panel into a block in the nav. Host rules must be
- * `!important` to beat page rules that match the host; this sheet comes after
- * the panel's, and `:host([data-gv-scheme])` matches the specificity of the
- * panel's scheme blocks, so these win over both.
+ * The shared inline tree sheet in Gemini's sidebar tokens, with AI Studio's
+ * denser metrics on top. It follows the panel sheet; the host carries
+ * `INLINE_TREE_ATTR`.
  */
-export const AISTUDIO_TREE_CSS = `
-:host,
-:host([data-gv-scheme]) {
-  position: relative !important;
-  z-index: auto !important;
-  display: block !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
-  max-width: none !important;
-  max-height: none !important;
-  resize: none !important;
-  background: transparent !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  overflow: visible !important;
-  font-size: 13px !important;
-}
-
-.${FLOATING_PANEL_CLASS}__body {
-  overflow: visible;
-  padding: 0 0 4px;
-}
-
-/* AI Studio's nav is denser than Gemini's: names keep its 12px. */
-.${FLOATING_PANEL_CLASS}__folder-name,
-.${FLOATING_PANEL_CLASS}__conv-title {
-  font-size: 12px;
-}
-
-.${FLOATING_PANEL_CLASS}__empty {
-  padding: 8px 12px;
-}
-
-.${FLOATING_PANEL_CLASS}__empty-icon {
-  display: none;
-}
-`;
+export const AISTUDIO_TREE_CSS = `${inlineTreeCss}\n${sidebarTokensCss}\n${aistudioTokensCss}`;
 
 export type AIStudioTree = {
   /** Insert into the sidebar; `destroy` removes it. */
@@ -112,6 +81,7 @@ export function mountAIStudioTree(options: {
 }): AIStudioTree {
   const host = document.createElement('div');
   host.className = AISTUDIO_TREE_HOST_CLASS;
+  host.setAttribute(INLINE_TREE_ATTR, '');
   const surface = attachShadowSurface(host, `${panelCss}\n${AISTUDIO_TREE_CSS}`);
   const body = document.createElement('div');
   body.className = `${FLOATING_PANEL_CLASS}__body`;

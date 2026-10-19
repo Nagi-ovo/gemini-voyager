@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { AISTUDIO_TREE_CSS } from '../aistudioTree';
 import { POPOVER_LAYER_HOST_CSS } from '../floatingTree/popoverLayer';
 
 // The vitest config swallows `?raw` CSS outside the plugin catalog, so read the file.
@@ -54,25 +53,16 @@ describe('inline folder tree host stylesheet', () => {
     expect(declarations.length).toBeGreaterThan(0);
     expect(declarations.filter((text) => !text.endsWith('!important'))).toEqual([]);
   });
-});
 
-describe('AI Studio sidebar tree host stylesheet', () => {
-  it('marks every host declaration important, so the nav cannot restyle the tree host', () => {
-    const declarations = hostOnlyDeclarations(AISTUDIO_TREE_CSS);
-
-    expect(declarations.length).toBeGreaterThan(0);
-    expect(declarations.filter((text) => !text.endsWith('!important'))).toEqual([]);
-  });
-
-  // The panel's `:host([data-gv-scheme='light'])` paints a background and shadow
-  // with the same specificity as a bare attribute host selector; the sidebar
-  // sheet comes after it, so it must reset those under that selector too.
-  it('resets the floating geometry under the scheme host selector as well', () => {
-    const withoutComments = AISTUDIO_TREE_CSS.replace(/\/\*[\s\S]*?\*\//g, '');
-    const block = withoutComments.match(/([^{}]*:host\(\[data-gv-scheme\]\)[^{}]*)\{([^{}]*)\}/);
-    expect(block?.[2]).toMatch(/position:\s*relative !important/);
-    expect(block?.[2]).toMatch(/background:\s*transparent !important/);
-    expect(block?.[2]).toMatch(/box-shadow:\s*none !important/);
+  // The panel's `:host([data-gv-scheme='light'])` paints a card's background
+  // and shadow at the same specificity as the inline host selector; this sheet
+  // comes after it, so that one host block must reset them.
+  it('resets the floating geometry in the inline host block', () => {
+    const withoutComments = inlineTreeCss.replace(/\/\*[\s\S]*?\*\//g, '');
+    const block = withoutComments.match(/:host\(\[data-gv-tree-inline\]\)\s*\{([^{}]*)\}/);
+    expect(block?.[1]).toMatch(/position:\s*relative !important/);
+    expect(block?.[1]).toMatch(/background:\s*transparent !important/);
+    expect(block?.[1]).toMatch(/box-shadow:\s*none !important/);
   });
 });
 

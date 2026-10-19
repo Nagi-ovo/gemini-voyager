@@ -1,3 +1,8 @@
+import type { IconNode } from 'lucide-react';
+
+import { createPlusIcon } from '@/core/icons/folderIcons';
+import { createLucideIcon } from '@/core/icons/lucideIcon';
+
 import { isLibraryPath } from './aistudioLibraryTable';
 import { openLibraryInApp } from './aistudioNavigation';
 /**
@@ -34,13 +39,13 @@ export type FolderPanelFrame = {
   libraryButton: HTMLButtonElement | null;
 };
 
-function createIcon(name: string): HTMLSpanElement {
-  const span = document.createElement('span');
-  span.className = 'google-symbols';
-  span.dataset.icon = name;
-  span.textContent = name;
-  return span;
-}
+/** Lucide's `library` geometry (lucide-react v0.553.0), for the /library shortcut. */
+const LIBRARY_ICON_NODE = [
+  ['path', { d: 'm16 6 4 14', key: 'ji33uf' }],
+  ['path', { d: 'M12 6v14', key: '1n7gus' }],
+  ['path', { d: 'M8 8v12', key: '1gg7y9' }],
+  ['path', { d: 'M4 4v16', key: '6qkkli' }],
+] satisfies IconNode;
 
 function cloudButton(
   icon: string,
@@ -90,7 +95,7 @@ export function buildFolderPanel(actions: PanelActions, legacyNav: boolean): Fol
   const addButton = document.createElement('button');
   addButton.className = 'gv-folder-add-btn';
   addButton.title = t('folder_create');
-  addButton.appendChild(createIcon('add'));
+  addButton.appendChild(createPlusIcon(18));
   addButton.addEventListener('click', actions.onCreateFolder);
   buttons.appendChild(addButton);
 
@@ -99,7 +104,7 @@ export function buildFolderPanel(actions: PanelActions, legacyNav: boolean): Fol
     libraryButton = document.createElement('button');
     libraryButton.className = 'gv-folder-action-btn gv-folder-library-btn';
     libraryButton.title = t('folder_manage_in_library');
-    libraryButton.appendChild(createIcon('library_books'));
+    libraryButton.appendChild(createLucideIcon('library', LIBRARY_ICON_NODE, 18));
     libraryButton.addEventListener('click', openLibraryInApp);
     buttons.appendChild(libraryButton);
   }

@@ -1,0 +1,20 @@
+/* AI Studio's skin for the inline folder tree, over Gemini's sidebar skin
+ * (sidebarTreeTokens.css), whose `--folder-*` palette AI Studio's page root
+ * sets too. AI Studio's nav is narrower and denser than Gemini's: 12px names on
+ * shorter rows, a shallower nest, 18px icons and 22px buttons. A chat's title
+ * lines up with its folder's name (row start 8px + 20px chevron + 8px + 18px
+ * icon + 8px = 62px, less the 16px nest the chat row already carries). */
+:host(.gv-aistudio-folder-tree[data-gv-tree-inline]) {
+  --gv-folder-tree-font-size: 12px;
+  --gv-folder-tree-line-height: 18px;
+  --gv-folder-tree-row-padding-block: var(--gv-folder-row-padding, 4px);
+  --gv-folder-tree-nest: calc(16px + (var(--gv-folder-indent, -8px) + 8px) * 0.8);
+  --gv-folder-tree-conv-start: 46px;
+  --gv-folder-tree-root-conv-start: 12px;
+  --gv-folder-tree-caret-icon: 16px;
+  --gv-folder-tree-folder-icon-box: 18px;
+  --gv-folder-tree-button-size: 22px;
+  --gv-folder-tree-button-icon: 16px;
+  --gv-folder-tree-form-height: 30px;
+  --gv-folder-tree-form-button-size: 22px;
+}

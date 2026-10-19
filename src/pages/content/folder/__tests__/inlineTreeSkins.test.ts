@@ -22,6 +22,7 @@ const FULL_SKINS = [
 
 /** Site sheets layered over a full skin: tokens, plus listed exceptions. */
 const SITE_SKINS = [
+  'src/pages/content/folder/aistudioTreeTokens.css',
   'src/features/plugins/builtin/claudeFolders/claudeSectionTokens.css',
   'src/features/plugins/builtin/deepseekFolders/deepseekSectionTokens.css',
 ] as const;

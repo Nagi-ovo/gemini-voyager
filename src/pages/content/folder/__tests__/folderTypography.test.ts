@@ -2,8 +2,6 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { AISTUDIO_TREE_CSS } from '../aistudioTree';
-
 describe('folder sidebar typography', () => {
   it('locks Gemini folder text to native sidebar sizing without affecting AI Studio', () => {
     const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
@@ -15,18 +13,18 @@ describe('folder sidebar typography', () => {
       css.match(
         /\.gv-folder-container:not\(\.gv-aistudio\) \.gv-conversation-title\s*{([\s\S]*?)}/,
       )?.[1] ?? '';
-    // AI Studio's tree is the shared tree in a shadow root, sized by its own sheet.
-    const aiStudioTextBlock =
-      AISTUDIO_TREE_CSS.match(
-        /\.gv-floating-folder-panel__folder-name,\s*\.gv-floating-folder-panel__conv-title\s*{([\s\S]*?)}/,
-      )?.[1] ?? '';
+    // AI Studio's tree is the shared inline tree, sized by its own tokens.
+    const aiStudioTokens = readFileSync(
+      resolve(process.cwd(), 'src/pages/content/folder/aistudioTreeTokens.css'),
+      'utf8',
+    );
 
     // Section title matches Gemini's native expandable-section title (gds-body-s).
     expect(titleBlock).toContain('font-size: 13px;');
     expect(titleBlock).toContain('line-height: 17px;');
     expect(itemTextBlock).toContain('font-size: 14px;');
     expect(itemTextBlock).toContain('line-height: 20px;');
-    expect(aiStudioTextBlock).toContain('font-size: 12px;');
+    expect(aiStudioTokens).toContain('--gv-folder-tree-font-size: 12px;');
   });
 
   it('keeps Activity headings and rows on the shared native section axis', () => {
