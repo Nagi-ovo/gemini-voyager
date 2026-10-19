@@ -154,14 +154,16 @@ describe('Local Bridge turns.waitReply', () => {
     expect(bridge.outcome()).toMatchObject({ ok: true, data: { assistantTurnKey: 'r-1' } });
   });
 
-  it('fails as reply-stalled once the reply shows no activity for 20 minutes', async () => {
-    bridge.start('turns.waitReply', WAIT);
+  // Two minutes, not the default 20: each 15 s beat is a full look, and 21 minutes of them
+  // timed out on CI.
+  it('fails as reply-stalled once the reply shows no activity for its stall window', async () => {
+    bridge.start('turns.waitReply', { ...WAIT, stallMs: 2 * 60_000 });
     page.setReply('turn-1', { text: 'Half an answer', replyId: 'r-1' });
     // A quiet page is looked at only on its beat and at its stall, so the clock runs for real.
-    await vi.advanceTimersByTimeAsync(19 * 60_000);
+    await vi.advanceTimersByTimeAsync(110_000);
     expect(bridge.outcome()).toBeUndefined();
 
-    await vi.advanceTimersByTimeAsync(2 * 60_000);
+    await vi.advanceTimersByTimeAsync(20_000);
     const outcome = bridge.outcome();
     expect(errorCode(outcome)).toBe('reply-stalled');
     expect(outcome?.ok === false && outcome.error.details).toMatchObject({
