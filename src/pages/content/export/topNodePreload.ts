@@ -56,6 +56,10 @@ export type WaitForConversationChangeOptions = {
   minWaitMs: number;
   pollIntervalMs: number;
   maxSamples: number;
+  /** The host is still fetching or rendering more history: an unchanged page is not final yet. */
+  isLoading?: () => boolean;
+  /** Upper bound while `isLoading` holds, so a lost signal cannot stall the export. */
+  loadTimeoutMs?: number;
 };
 
 export type WaitForConversationChangeResult = {
@@ -115,9 +119,17 @@ export async function waitForConversationFingerprintChangeOrTimeout(
       setTimeout(resolve, ms);
     });
 
+  const isLoading = () => opt.isLoading?.() === true;
+  const hardDeadline = start + Math.max(opt.timeoutMs, opt.loadTimeoutMs ?? opt.timeoutMs);
+  let deadline = start + opt.timeoutMs;
+
   try {
-    while (Date.now() - start < opt.timeoutMs) {
+    while (Date.now() < deadline) {
       await sleep(opt.pollIntervalMs);
+      // The timeout counts from the last load seen, so a page that took long still gets time to render.
+      if (isLoading()) {
+        deadline = Math.min(hardDeadline, Math.max(deadline, Date.now() + opt.timeoutMs));
+      }
 
       const fp = computeConversationFingerprint(root, selectors, opt.maxSamples);
       const changed = fp.signature !== before.signature || fp.count !== before.count;
@@ -133,8 +145,9 @@ export async function waitForConversationFingerprintChangeOrTimeout(
       const stableEnough = stableSince !== null && Date.now() - stableSince >= opt.idleMs;
 
       // No change vs "before": once the fingerprint stays stable for an idle window, proceed quickly.
+      // A page still in flight is not "no change": on a slow link it lands seconds later.
       if (!changed) {
-        if (metMinWait && stableEnough) {
+        if (metMinWait && stableEnough && !isLoading()) {
           cleanup();
           return { changed: false, fingerprint: fp };
         }

@@ -35,7 +35,7 @@ import {
 
 // Bridge to the MAIN-world conversation-history-observer (document_start).
 // Must match the `source` strings in public/conversation-history-observer.js.
-const OBS_SRC = 'gv-history-observer';
+export const OBS_SRC = 'gv-history-observer';
 const OBS_CMD = 'gv-history-observer-cmd';
 
 // Epoch-seconds sanity window for a turn timestamp: 2015..2096.

@@ -137,6 +137,34 @@ describe('conversation history observer', () => {
     });
   });
 
+  it('announces a history request until its body has arrived', async () => {
+    let deliverBody: (body: string) => void = () => {};
+    const text = vi.fn(
+      () =>
+        new Promise<string>((resolve) => {
+          deliverBody = resolve;
+        }),
+    );
+    fetchMock.mockReturnValue(Promise.resolve(responseWithBody('', text)));
+    installObserver();
+    dispatchCommand('configure', { enabled: true });
+    const phases = () =>
+      postMessageSpy.mock.calls
+        .filter(([message]) => message?.type === 'request')
+        .map(([message]) => message.payload.phase);
+
+    window.fetch(HISTORY_URL);
+    window.fetch('https://gemini.google.com/_/BardChatUi/data/batchexecute?rpcids=aPya6c');
+    expect(phases()).toEqual(['start']);
+
+    await flushPromises();
+    expect(phases()).toEqual(['start']);
+
+    deliverBody('older-page');
+    await flushPromises();
+    expect(phases()).toEqual(['start', 'end']);
+  });
+
   it('does not clone a response when disabled before it resolves', async () => {
     let resolveResponse: ((response: ReturnType<typeof responseWithBody>) => void) | null = null;
     const responsePromise = new Promise<ReturnType<typeof responseWithBody>>((resolvePromise) => {
@@ -262,7 +290,9 @@ describe('conversation history observer', () => {
     fetchMock.mockReturnValueOnce(Promise.resolve(responseWithBody('x'.repeat(41))));
     window.fetch(HISTORY_URL);
     await flushPromises();
-    expect(postMessageSpy).not.toHaveBeenCalled();
+    expect(postMessageSpy.mock.calls.filter(([message]) => message?.type === 'capture')).toEqual(
+      [],
+    );
   });
 
   it('clears buffered bodies when disabled and captures again after re-enable', async () => {

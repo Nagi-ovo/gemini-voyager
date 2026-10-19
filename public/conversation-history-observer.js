@@ -17,6 +17,10 @@
  * The fetch wrapper deliberately returns the original promise. Making it an
  * async wrapper breaks Angular's zone.js change detection (see
  * public/fetchInterceptor.js).
+ *
+ * Every history request also posts a small `request` start/end message, whatever
+ * the capture state: export preloading waits on it instead of guessing from time
+ * whether an older page is still on its way.
  */
 (function () {
   if (window.__gvHistoryObserverInstalled) return;
@@ -148,25 +152,36 @@
       var url = typeof input === 'string' ? input : (input && (input.url || input.href)) || '';
       var p = origFetch.apply(this, arguments);
       if (isHistoryRequest(url)) {
-        p.then(
-          function (r) {
-            if (!r || typeof r.clone !== 'function') return r;
-            var generation = claimResponseRead();
-            if (generation === null) return r;
-            try {
-              r.clone()
-                .text()
-                .then(
-                  function (t) {
-                    capture(url, t, generation);
-                  },
-                  function () {},
-                );
-            } catch (e) {}
+        post('request', { phase: 'start' });
+        var ended = false;
+        var end = function () {
+          if (ended) return;
+          ended = true;
+          post('request', { phase: 'end' });
+        };
+        p.then(function (r) {
+          if (!r || typeof r.clone !== 'function') {
+            end();
             return r;
-          },
-          function () {},
-        );
+          }
+          var generation = claimResponseRead();
+          if (generation === null) {
+            end();
+            return r;
+          }
+          try {
+            // End only once the body has arrived: on a slow link it trails the headers by seconds.
+            r.clone()
+              .text()
+              .then(function (t) {
+                end();
+                capture(url, t, generation);
+              }, end);
+          } catch (e) {
+            end();
+          }
+          return r;
+        }, end);
       }
       return p;
     };
@@ -188,6 +203,14 @@
       var origSend = xhr.send;
       xhr.send = function () {
         if (isHistoryRequest(reqUrl)) {
+          post('request', { phase: 'start' });
+          xhr.addEventListener(
+            'loadend',
+            function () {
+              post('request', { phase: 'end' });
+            },
+            { once: true },
+          );
           xhr.addEventListener(
             'load',
             function () {

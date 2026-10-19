@@ -139,4 +139,72 @@ describe('topNodePreload', () => {
     expect(result.changed).toBe(false);
     expect(result.fingerprint.signature).toBe(before.signature);
   });
+
+  function stableRoot(): { root: HTMLElement; selectors: string[] } {
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    const node = document.createElement('div');
+    node.className = 'msg';
+    node.textContent = 'newest page';
+    root.appendChild(node);
+    return { root, selectors: ['.msg'] };
+  }
+
+  it('keeps waiting for an older page that a slow network delivers after seconds', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+    const { root, selectors } = stableRoot();
+    const before = computeConversationFingerprint(root, selectors, 5);
+
+    let loading = true;
+    setTimeout(() => {
+      loading = false;
+      const older = document.createElement('div');
+      older.className = 'msg';
+      older.textContent = 'older page';
+      root.insertBefore(older, root.firstChild);
+    }, 5000);
+
+    const promise = waitForConversationFingerprintChangeOrTimeout(root, selectors, before, {
+      timeoutMs: 3000,
+      minWaitMs: 700,
+      idleMs: 320,
+      pollIntervalMs: 90,
+      maxSamples: 5,
+      isLoading: () => loading,
+      loadTimeoutMs: 60000,
+    });
+
+    await vi.advanceTimersByTimeAsync(6000);
+    const result = await promise;
+    expect(result.changed).toBe(true);
+    expect(result.fingerprint.count).toBe(2);
+  });
+
+  it('gives up on a load that never finishes at the load timeout', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+    const { root, selectors } = stableRoot();
+    const before = computeConversationFingerprint(root, selectors, 5);
+
+    let resolved = false;
+    const promise = waitForConversationFingerprintChangeOrTimeout(root, selectors, before, {
+      timeoutMs: 3000,
+      minWaitMs: 700,
+      idleMs: 320,
+      pollIntervalMs: 90,
+      maxSamples: 5,
+      isLoading: () => true,
+      loadTimeoutMs: 10000,
+    }).then((result) => {
+      resolved = true;
+      return result;
+    });
+
+    await vi.advanceTimersByTimeAsync(9000);
+    expect(resolved).toBe(false);
+    await vi.advanceTimersByTimeAsync(1500);
+    const result = await promise;
+    expect(result.changed).toBe(false);
+  });
 });

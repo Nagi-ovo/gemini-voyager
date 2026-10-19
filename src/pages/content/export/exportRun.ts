@@ -49,6 +49,7 @@ import {
   ensureGeneratedUiScreenshotPermission,
   removeGeneratedUiScreenshotSections,
 } from './generatedUiScreenshots';
+import { watchHistoryRequests } from './historyRequestWatch';
 import {
   type PendingExportState,
   advancePendingExportState,
@@ -70,6 +71,7 @@ const EXPORT_PRELOAD_WAIT_OPTIONS = {
   idleMs: 320,
   pollIntervalMs: 90,
   maxSamples: 10,
+  loadTimeoutMs: 60000,
 } as const;
 const FINAL_EXPORT_PREPARE_DELAY_MS = 120;
 
@@ -239,6 +241,9 @@ export function createExportRunner(deps: ExportRunnerDeps): ExportRunner {
     // Update state before action to persist across potential reload
     persistPendingExportState(sessionStorage, state, Date.now());
 
+    // Listen before the click: Gemini starts the older page's request right away.
+    const historyRequests = watchHistoryRequests();
+
     // Dispatch click logic
     try {
       topNode.scrollIntoView({ behavior: 'auto', block: 'center' });
@@ -252,12 +257,17 @@ export function createExportRunner(deps: ExportRunnerDeps): ExportRunner {
 
     // 2. Wait for either hard refresh (page unload) OR a "soft refresh" that loads more history.
     // If the page unloads, the script stops and `checkPendingExport()` resumes on next load via sessionStorage.
-    const { changed } = await waitForConversationFingerprintChangeOrTimeout(
-      document.body,
-      fingerprintSelectors,
-      beforeFingerprint,
-      EXPORT_PRELOAD_WAIT_OPTIONS,
-    );
+    let changed: boolean;
+    try {
+      ({ changed } = await waitForConversationFingerprintChangeOrTimeout(
+        document.body,
+        fingerprintSelectors,
+        beforeFingerprint,
+        { ...EXPORT_PRELOAD_WAIT_OPTIONS, isLoading: historyRequests.isLoading },
+      ));
+    } finally {
+      historyRequests.stop();
+    }
     throwIfExportCancelled(signal);
 
     if (changed) {
