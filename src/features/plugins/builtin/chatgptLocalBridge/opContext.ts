@@ -107,6 +107,8 @@ export interface OpContext {
   click(element: HTMLElement): void;
   /** Focus the composer and insert text through the editor's own editing command. */
   insertText(field: HTMLElement, text: string): boolean;
+  /** Empty the composer through the editor's own editing command. */
+  clearText(field: HTMLElement): boolean;
   /** No more page events from here on; the route may change (a sent new chat gets its id). */
   endPageEvents(): void;
   /** The op is about to move the page to `pathname` itself; the guard accepts it from now on. */
@@ -241,6 +243,10 @@ export function createOpContext(options: OpContextOptions): OpContext {
     insertText(field, text) {
       guard();
       return insertIntoComposer(field, text, 'append');
+    },
+    clearText(field) {
+      guard();
+      return insertIntoComposer(field, '', 'replace');
     },
     endPageEvents() {
       pageEventsEnded = true;

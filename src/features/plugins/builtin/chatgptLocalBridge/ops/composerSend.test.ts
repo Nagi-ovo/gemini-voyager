@@ -181,6 +181,29 @@ describe('composer.send mode', () => {
     expect(page.events().clicks).toBe(0);
   });
 
+  it('takes its prompt back out of the composer when the send fails before the click', async () => {
+    const release = holdSend();
+    bridge.start('composer.send', { text: 'hi' });
+    await vi.advanceTimersByTimeAsync(500);
+    expect(page.composer.textContent).toBe('hi');
+    page.composer.setAttribute('aria-label', '使用 ChatGPT Work');
+    release();
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(errorCode(bridge.outcome())).toBe('mode-unavailable');
+    expect(page.composer.textContent).toBe('');
+  });
+
+  it('leaves the composer as it is when it no longer holds just the prompt', async () => {
+    const release = holdSend();
+    bridge.start('composer.send', { text: 'hi' });
+    await vi.advanceTimersByTimeAsync(500);
+    page.composer.querySelector('p')!.append(' and more');
+    release();
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(errorCode(bridge.outcome())).toBe('composer-busy');
+    expect(page.composer.textContent).toBe('hi and more');
+  });
+
   it('sends a prompt on a page in English', async () => {
     page = mountChatGptPage({ language: 'en' });
     bridge.start('composer.send', { text: 'hi' });

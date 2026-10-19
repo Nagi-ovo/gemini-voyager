@@ -4,7 +4,9 @@
  *
  * The composer belongs to the person first: any draft, attachment we were not
  * told about, or input from them in the last {@link RECENT_INPUT_MS} makes this
- * `composer-busy`, and their draft is never cleared.
+ * `composer-busy`, and their draft is never cleared. A failure before the click
+ * takes our own prompt back out while the composer still holds exactly it, so it
+ * does not linger as ChatGPT's saved draft.
  *
  * Confirmation needs both halves the result reports, read together from the page
  * as it is: our new prompt, still the newest in the visible thread, and the route
@@ -137,34 +139,51 @@ export async function runComposerSend(
   const startId = settledConversationId();
   const startRoute = readConversationId();
   ctx.insertText(field, params.text);
-  // The editor may commit its transaction a frame later than the command returns.
-  const filled = await ctx.waitFor(() => normalizeForCompare(readComposer(field)) === wanted, {
-    timeoutMs: FILL_CONFIRM_MS,
-  });
-  if (!filled) {
-    ctx.fail('unverified', 'The composer did not take the prompt as written.', { stage: 'fill' });
-  }
+  // A failed send left the prompt behind as a draft that reappeared on the next visit.
+  const takeBackPrompt = (): void => {
+    if (activity.hadRecentUserInput(RECENT_INPUT_MS)) return;
+    if (normalizeForCompare(readComposer(field)) !== wanted) return;
+    try {
+      ctx.clearText(field);
+    } catch {
+      // A terminated op may no longer touch the page; the prompt then stays.
+    }
+  };
+  let button: HTMLElement;
+  try {
+    // The editor may commit its transaction a frame later than the command returns.
+    const filled = await ctx.waitFor(() => normalizeForCompare(readComposer(field)) === wanted, {
+      timeoutMs: FILL_CONFIRM_MS,
+    });
+    if (!filled) {
+      ctx.fail('unverified', 'The composer did not take the prompt as written.', { stage: 'fill' });
+    }
 
-  const button = await ctx.waitFor(
-    () => {
-      const candidate = findSendButton(field, adapter);
-      return candidate && isEnabledButton(candidate) ? candidate : null;
-    },
-    { timeoutMs: SEND_ENABLED_TIMEOUT_MS },
-  );
-  if (!button) ctx.fail('selector-missing', 'The send control did not become available.');
-  // The person may have started typing while the control enabled: their words must not go out.
-  if (
-    activity.hadRecentUserInput(RECENT_INPUT_MS) ||
-    normalizeForCompare(readComposer(field)) !== wanted
-  ) {
-    ctx.fail('composer-busy', 'The person is using the composer.', { reason: 'recent-input' });
+    const candidateButton = await ctx.waitFor(
+      () => {
+        const candidate = findSendButton(field, adapter);
+        return candidate && isEnabledButton(candidate) ? candidate : null;
+      },
+      { timeoutMs: SEND_ENABLED_TIMEOUT_MS },
+    );
+    if (!candidateButton)
+      ctx.fail('selector-missing', 'The send control did not become available.');
+    button = candidateButton;
+    // The person may have started typing while the control enabled: their words must not go out.
+    if (
+      activity.hadRecentUserInput(RECENT_INPUT_MS) ||
+      normalizeForCompare(readComposer(field)) !== wanted
+    ) {
+      ctx.fail('composer-busy', 'The person is using the composer.', { reason: 'recent-input' });
+    }
+    // Files can be added while the control enables; only the expected set may go out.
+    checkAttachments();
+    // The mode switch is outside the composer, so a switch to Work meanwhile is no recent input.
+    checkChatMode();
+  } catch (error) {
+    takeBackPrompt();
+    throw error;
   }
-  // Files can be added while the control enables; only the expected set may go out.
-  checkAttachments();
-  // The mode switch is outside the composer, so a switch to Work meanwhile is no recent input.
-  checkChatMode();
-
   ctx.click(button);
   ctx.endPageEvents();
   const prefix = wanted.slice(0, PROMPT_PREFIX_CHARS);

@@ -238,6 +238,12 @@ export function mountChatGptPage(options: PageOptions = {}): ChatGptPageFixture 
     configurable: true,
     value: vi.fn((command: string, _ui?: boolean, value?: string) => {
       counts.execCommand += 1;
+      // `delete` runs over a selection of the whole composer (`insertIntoComposer` replace).
+      if (command === 'delete') {
+        paragraph().textContent = '';
+        syncButton();
+        return true;
+      }
       if (command !== 'insertText' || value === undefined) return false;
       paragraph().textContent = `${paragraph().textContent ?? ''}${value}`;
       syncButton();
