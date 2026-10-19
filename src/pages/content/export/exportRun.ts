@@ -74,6 +74,9 @@ const EXPORT_PRELOAD_WAIT_OPTIONS = {
   loadTimeoutMs: 60000,
 } as const;
 const FINAL_EXPORT_PREPARE_DELAY_MS = 120;
+/** Gemini loads ten turns per page, so this stops near 3000 turns. */
+const MAX_PRELOAD_PAGES = 300;
+const MAX_PRELOAD_RELOADS = 25;
 
 export interface ExportRunRequest {
   format: ExportFormat;
@@ -198,11 +201,13 @@ export function createExportRunner(deps: ExportRunnerDeps): ExportRunner {
       );
     }
 
-    if (state.attempt > 25) {
-      console.warn('[Gemini Voyager] Export aborted: too many attempts.');
+    // A safety net, not a stop: past it the run offers the turns already loaded.
+    if (state.attempt > MAX_PRELOAD_PAGES || (state.reloads ?? 0) > MAX_PRELOAD_RELOADS) {
+      console.warn('[Gemini Voyager] History preload limit reached; exporting the loaded part.');
       clearPendingExportState(sessionStorage);
       const t = createExportTranslator(dict, lang);
-      showExportAlert(t('export_error_too_many_attempts'), t);
+      showExportAlert(t('export_history_partial'), t, 'warning');
+      await performFinalExport(state, dict, lang, site.turns);
       return;
     }
 
@@ -464,7 +469,10 @@ export function createExportRunner(deps: ExportRunnerDeps): ExportRunner {
       const dict = await loadExportDictionaries();
       const lang = await readExportLanguage();
 
-      await executeExportSequenceWithProgress(state, { dict, lang });
+      await executeExportSequenceWithProgress(
+        { ...state, reloads: (state.reloads ?? 0) + 1 },
+        { dict, lang },
+      );
     } catch (e) {
       console.error('[Gemini Voyager] Failed to resume pending export:', e);
       clearPendingExportState(sessionStorage);

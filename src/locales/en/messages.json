@@ -2229,9 +2229,9 @@
     "message": "Leave out",
     "description": "Confirm choice that leaves the source links of web search images out of the Markdown export"
   },
-  "export_error_too_many_attempts": {
-    "message": "Export stopped: too many attempts.",
-    "description": "Export error toast when the export restarted too many times while loading the full conversation"
+  "export_history_partial": {
+    "message": "This conversation is very long, so only its most recent part was loaded for export.",
+    "description": "Export warning toast when a very long conversation hit the history loading limit and only its most recent part is offered for export"
   },
   "export_error_conversation_not_found": {
     "message": "Couldn't find the selected conversation. Open it first, then export.",

@@ -2229,9 +2229,9 @@
     "message": "Omitir",
     "description": "Confirm choice that leaves the source links of web search images out of the Markdown export"
   },
-  "export_error_too_many_attempts": {
-    "message": "Exportação interrompida: tentativas demais.",
-    "description": "Export error toast when the export restarted too many times while loading the full conversation"
+  "export_history_partial": {
+    "message": "Esta conversa é muito longa, então só a parte mais recente foi carregada para exportar.",
+    "description": "Export warning toast when a very long conversation hit the history loading limit and only its most recent part is offered for export"
   },
   "export_error_conversation_not_found": {
     "message": "Não foi possível encontrar a conversa selecionada. Abra-a primeiro e depois exporte.",

@@ -2229,9 +2229,9 @@
     "message": "Не включать",
     "description": "Confirm choice that leaves the source links of web search images out of the Markdown export"
   },
-  "export_error_too_many_attempts": {
-    "message": "Экспорт остановлен: слишком много попыток.",
-    "description": "Export error toast when the export restarted too many times while loading the full conversation"
+  "export_history_partial": {
+    "message": "Диалог очень длинный, поэтому для экспорта загружена только его последняя часть.",
+    "description": "Export warning toast when a very long conversation hit the history loading limit and only its most recent part is offered for export"
   },
   "export_error_conversation_not_found": {
     "message": "Не удалось найти выбранный чат. Сначала откройте его, затем экспортируйте.",

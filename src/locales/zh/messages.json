@@ -2229,9 +2229,9 @@
     "message": "不包含",
     "description": "Confirm choice that leaves the source links of web search images out of the Markdown export"
   },
-  "export_error_too_many_attempts": {
-    "message": "尝试次数过多，已停止导出。",
-    "description": "Export error toast when the export restarted too many times while loading the full conversation"
+  "export_history_partial": {
+    "message": "这段对话太长了，只加载了最近的部分用于导出。",
+    "description": "Export warning toast when a very long conversation hit the history loading limit and only its most recent part is offered for export"
   },
   "export_error_conversation_not_found": {
     "message": "找不到所选对话。请先打开该对话，再导出。",

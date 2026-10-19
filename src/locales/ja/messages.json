@@ -2229,9 +2229,9 @@
     "message": "含めない",
     "description": "Confirm choice that leaves the source links of web search images out of the Markdown export"
   },
-  "export_error_too_many_attempts": {
-    "message": "試行回数が多すぎるため、エクスポートを中止しました。",
-    "description": "Export error toast when the export restarted too many times while loading the full conversation"
+  "export_history_partial": {
+    "message": "この会話はとても長いため、エクスポート用に読み込んだのは最近の部分だけです。",
+    "description": "Export warning toast when a very long conversation hit the history loading limit and only its most recent part is offered for export"
   },
   "export_error_conversation_not_found": {
     "message": "選択した会話が見つかりません。先に会話を開いてからエクスポートしてください。",

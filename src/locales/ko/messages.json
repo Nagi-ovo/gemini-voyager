@@ -2229,9 +2229,9 @@
     "message": "포함 안 함",
     "description": "Confirm choice that leaves the source links of web search images out of the Markdown export"
   },
-  "export_error_too_many_attempts": {
-    "message": "시도 횟수가 너무 많아 내보내기를 중단했습니다.",
-    "description": "Export error toast when the export restarted too many times while loading the full conversation"
+  "export_history_partial": {
+    "message": "대화가 너무 길어서 최근 부분만 불러와 내보냅니다.",
+    "description": "Export warning toast when a very long conversation hit the history loading limit and only its most recent part is offered for export"
   },
   "export_error_conversation_not_found": {
     "message": "선택한 대화를 찾을 수 없습니다. 먼저 대화를 연 다음 내보내세요.",

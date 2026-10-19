@@ -8,6 +8,7 @@ import { nativeHealthReporter } from '../../nativeHealth';
 import type { ChatTurn, ConversationCollector, ExportMessage } from '../conversationCollector';
 import type { ExportDictionaries } from '../exportLocale';
 import type { ExportSite, ExportTurnReader, ExportTurnSession } from '../exportSite';
+import { PENDING_EXPORT_SESSION_KEY, createPendingExportState } from '../pendingExportState';
 
 const mocks = vi.hoisted(() => ({
   exportPendingConversation: vi.fn(),
@@ -430,6 +431,31 @@ describe('createExportRunner', () => {
     expect(mocks.exportPendingConversation.mock.calls[0][0]).toMatchObject({
       format: ExportFormat.MARKDOWN,
     });
+  });
+
+  it('offers the loaded turns of a very long conversation instead of stopping the export', async () => {
+    const runner = createExportRunner({
+      site: {
+        ...fakeSite(fakeCollector(renderMessages())),
+        history: { userSelectors: () => ['.u'], assistantSelectors: () => ['.a'] },
+      },
+    });
+    sessionStorage.setItem(
+      PENDING_EXPORT_SESSION_KEY,
+      JSON.stringify({
+        ...createPendingExportState(ExportFormat.JSON, location.href, Date.now()),
+        attempt: 400,
+      }),
+    );
+
+    const resuming = runner.resumePending();
+    await until(() => selectionBar() !== null);
+
+    expect(toastDriver.all()).toMatchObject([
+      { message: expect.stringContaining('only its most recent part'), tone: 'warning' },
+    ]);
+    runner.cancel();
+    await settle(resuming);
   });
 
   it('stays silent when preparation is cancelled', async () => {

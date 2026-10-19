@@ -16,6 +16,8 @@ export interface PendingExportState {
   speakerLabels?: ExportSpeakerLabels;
   initialSelectedMessageId?: string;
   attempt: number;
+  /** Page reloads during this run; counted apart from pages so a reload loop still ends early. */
+  reloads?: number;
   url: string;
   status: 'clicking';
   timestamp: number;
@@ -114,6 +116,7 @@ export function parsePendingExportState(raw: string): PendingExportState | null 
           ? parsed.initialSelectedMessageId
           : undefined,
       attempt: parsed.attempt,
+      reloads: typeof parsed.reloads === 'number' ? parsed.reloads : undefined,
       url: parsed.url,
       status: parsed.status,
       timestamp: parsed.timestamp,
