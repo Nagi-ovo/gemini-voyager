@@ -199,7 +199,19 @@ html[data-gv-scheme='dark'] .gv-folder-width-slider {
   cursor: default;
 }
 
+/* "Sort conversations" plus both options overflows the 252px menu in English;
+ * the options drop to their own line instead of squeezing the label to a word per line. */
+.gv-folder-sort-settings-row {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.gv-folder-sort-settings-row .gv-folder-settings-label {
+  white-space: nowrap;
+}
+
 .gv-folder-sort-options {
+  margin-inline-start: auto;
   display: flex;
   align-items: center;
   gap: 2px;
