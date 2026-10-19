@@ -2693,6 +2693,14 @@
     "message": "無題の会話",
     "description": "Title used for a filed ChatGPT conversation whose title could not be read"
   },
+  "siteFoldersNoConversation": {
+    "message": "先に保存済みの会話を開いてください。",
+    "description": "Folder panel status on Claude or DeepSeek when no saved conversation is open to add"
+  },
+  "claudeFoldersCoachmarkBody": {
+    "message": "フォルダは Claude のサイドバーのここに表示されます。+ で作成でき、チャットのメニューの「フォルダへ移動」で整理できます。",
+    "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
+  },
   "folder_new_chat_in_folder": {
     "message": "このフォルダで新規チャット",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"

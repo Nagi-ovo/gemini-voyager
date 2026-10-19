@@ -2693,6 +2693,14 @@
     "message": "제목 없는 대화",
     "description": "Title used for a filed ChatGPT conversation whose title could not be read"
   },
+  "siteFoldersNoConversation": {
+    "message": "먼저 저장된 대화를 여세요.",
+    "description": "Folder panel status on Claude or DeepSeek when no saved conversation is open to add"
+  },
+  "claudeFoldersCoachmarkBody": {
+    "message": "이제 폴더는 Claude 사이드바의 이곳에 있습니다. +로 폴더를 만들거나, 채팅 메뉴에서 ‘폴더로 이동’을 선택해 정리하세요.",
+    "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
+  },
   "folder_new_chat_in_folder": {
     "message": "이 폴더에서 새 채팅",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"

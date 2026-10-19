@@ -1,0 +1,43 @@
+/* Claude's tokens for the shared section sheets (`siteFolders/sectionChrome.css`),
+ * which come first. Claude's design system sets its `--cds-*` colours on the
+ * root for its own light and dark mode, so the section follows the page's
+ * theme whatever Voyager's scheme reads; the fallbacks are Claude's light and
+ * dark values. Rows are Claude's: 32px, 14px text, its pill radius. */
+:host(.gv-claude-folder-section),
+:host(.gv-folder-tree-popover-layer) {
+  --gv-claude-folder-section__row-height: 32px;
+  --gv-claude-folder-section__row-radius: var(--df-radius-pill, 8px);
+}
+
+:host(.gv-claude-folder-section[data-gv-scheme]),
+:host(.gv-folder-tree-popover-layer[data-gv-scheme]) {
+  --gv-claude-folder-section__heading: var(--cds-text-muted, #829181);
+  --gv-floating-folder-panel__text: var(--cds-text-primary, #5c6a72);
+  --gv-floating-folder-panel__text-muted: var(--cds-text-secondary, #708089);
+  --gv-floating-folder-panel__surface: var(--cds-surface-popover, #fffbef);
+  --gv-floating-folder-panel__surface-container: var(--cds-surface-popover, #fffbef);
+  --gv-floating-folder-panel__surface-hover: var(--cds-fill-ghost-hover, rgba(11, 11, 11, 0.05));
+  --gv-floating-folder-panel__surface-active: var(--cds-fill-ghost-selected, rgba(11, 11, 11, 0.1));
+  --gv-floating-folder-panel__outline: var(--cds-border, rgba(92, 106, 114, 0.18));
+  --gv-claude-folder-section__danger: var(--cds-text-danger, #8e2626);
+  --gv-claude-folder-section__danger-soft: color-mix(
+    in oklab,
+    var(--cds-fill-danger, #d03b3b) 10%,
+    transparent
+  );
+}
+
+:host(.gv-claude-folder-section[data-gv-scheme='dark']),
+:host(.gv-folder-tree-popover-layer[data-gv-scheme='dark']) {
+  --gv-claude-folder-section__heading: var(--cds-text-muted, rgba(255, 255, 255, 0.5));
+  --gv-floating-folder-panel__text: var(--cds-text-primary, #f5f4ef);
+  --gv-floating-folder-panel__text-muted: var(--cds-text-secondary, rgba(255, 255, 255, 0.7));
+  --gv-floating-folder-panel__surface: var(--cds-surface-popover, #30302e);
+  --gv-floating-folder-panel__surface-container: var(--cds-surface-popover, #30302e);
+  --gv-floating-folder-panel__surface-hover: var(--cds-fill-ghost-hover, rgba(255, 255, 255, 0.06));
+  --gv-floating-folder-panel__surface-active: var(
+    --cds-fill-ghost-selected,
+    rgba(255, 255, 255, 0.1)
+  );
+  --gv-floating-folder-panel__outline: var(--cds-border, rgba(255, 255, 255, 0.12));
+}

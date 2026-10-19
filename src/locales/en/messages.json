@@ -2697,6 +2697,14 @@
     "message": "Untitled conversation",
     "description": "Title used for a filed ChatGPT conversation whose title could not be read"
   },
+  "siteFoldersNoConversation": {
+    "message": "Open a saved conversation first.",
+    "description": "Folder panel status on Claude or DeepSeek when no saved conversation is open to add"
+  },
+  "claudeFoldersCoachmarkBody": {
+    "message": "Folders now sit right here in Claude’s sidebar. Use + to create one, or choose “Move to folder” in a chat’s menu to file it.",
+    "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
+  },
   "responseCompleteNotification": {
     "message": "Response completion notifications",
     "description": "Toggle label for response completion system notifications"

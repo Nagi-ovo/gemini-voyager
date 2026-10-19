@@ -2697,6 +2697,14 @@
     "message": "未命名对话",
     "description": "Title used for a filed ChatGPT conversation whose title could not be read"
   },
+  "siteFoldersNoConversation": {
+    "message": "请先打开一个已保存的对话。",
+    "description": "Folder panel status on Claude or DeepSeek when no saved conversation is open to add"
+  },
+  "claudeFoldersCoachmarkBody": {
+    "message": "文件夹现在就在 Claude 侧边栏的这里。点 + 新建文件夹，或在对话菜单里选择“移动到文件夹”进行归档。",
+    "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
+  },
   "responseCompleteNotification": {
     "message": "Gemini 思考完成通知",
     "description": "Gemini 回答完成系统通知开关"

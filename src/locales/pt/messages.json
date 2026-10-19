@@ -2693,6 +2693,14 @@
     "message": "Conversa sem título",
     "description": "Title used for a filed ChatGPT conversation whose title could not be read"
   },
+  "siteFoldersNoConversation": {
+    "message": "Abra primeiro uma conversa salva.",
+    "description": "Folder panel status on Claude or DeepSeek when no saved conversation is open to add"
+  },
+  "claudeFoldersCoachmarkBody": {
+    "message": "As pastas agora ficam aqui, na barra lateral do Claude. Use + para criar uma ou escolha “Mover para pasta” no menu de uma conversa para arquivá-la.",
+    "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
+  },
   "folder_new_chat_in_folder": {
     "message": "Novo chat nesta pasta",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"

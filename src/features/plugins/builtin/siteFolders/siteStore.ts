@@ -6,7 +6,8 @@
 import type { FolderData } from '@/core/types/folder';
 import type { EditOutcome, FolderCommands } from '@/features/folder/commands/folderCommands';
 import { failed } from '@/features/folder/commands/folderCommands';
-import { cloneFolderData } from '@/features/folder/model/folderData';
+import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
+import { cloneFolderData, normalizeFolderData } from '@/features/folder/model/folderData';
 import { rejected } from '@/features/folder/owner/folderOps';
 import type { FolderSitePolicy } from '@/features/folder/owner/folderOwnerPolicy';
 import { SiteFolderStore, type SiteFolderNotify } from '@/pages/content/folder/SiteFolderStore';
@@ -20,6 +21,32 @@ import type { IFolderStorageAdapter } from '@/pages/content/folder/storage/Folde
 import { filedIdsOf, filingsOf } from './filings';
 import type { SiteImportOutcome } from './siteTransfer';
 import type { FiledConversations } from './types';
+
+/**
+ * A plugin site's bucket config, as ChatGPT's (`chatgptFolders/config.ts`):
+ * `platform: null` keeps account isolation off, so the bucket stays the plain
+ * key, and there is no legacy global bucket to inherit from. The key, the
+ * backup namespace and the root bucket id are serialized user data.
+ */
+export function pluginSiteFolderConfig(options: {
+  storageKey: string;
+  backupNamespace: string;
+  logPrefix: string;
+  debugFlag: string;
+}): PlatformFolderConfig {
+  return {
+    platform: null,
+    ...options,
+    rootBucketId: ROOT_CONVERSATIONS_ID,
+    isolationSettingKeys: [],
+    migrateLegacyData: () => ({ folders: [], folderContents: {} }),
+    normalize: normalizeFolderData,
+    pruneOrphanBuckets: true,
+    recoverMissingData: false,
+    retryFailedSave: true,
+    checkEmptyOverwrite: true,
+  };
+}
 
 export class PluginSiteFolderStore extends SiteFolderStore implements FiledConversations {
   constructor(

@@ -29,6 +29,7 @@ export const SHADOW_KEY_GUARD_SCRIPT_ID = 'gv-shadow-key-guard';
 /** Plugins whose pages host a shadow-root panel with text fields. */
 export const SHADOW_KEY_GUARD_PLUGIN_IDS: ReadonlySet<string> = new Set([
   'voyager.chatgpt-folders',
+  'voyager.claude-folders',
 ]);
 
 /** The emitted file name keeps the entry's name; see `selfContainedContentScripts`. */

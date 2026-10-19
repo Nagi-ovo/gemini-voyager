@@ -2693,6 +2693,14 @@
     "message": "Conversation sans titre",
     "description": "Title used for a filed ChatGPT conversation whose title could not be read"
   },
+  "siteFoldersNoConversation": {
+    "message": "Ouvrez d'abord une conversation enregistrée.",
+    "description": "Folder panel status on Claude or DeepSeek when no saved conversation is open to add"
+  },
+  "claudeFoldersCoachmarkBody": {
+    "message": "Les dossiers se trouvent désormais ici, dans la barre latérale de Claude. Utilisez + pour en créer un, ou choisissez « Déplacer vers un dossier » dans le menu d’une conversation pour la classer.",
+    "description": "Body of the one-time guide pointing at the folder section in the Claude sidebar; quotes the Move to folder menu label"
+  },
   "folder_new_chat_in_folder": {
     "message": "Nouvelle conversation dans ce dossier",
     "description": "Folder context menu item to create a new chat and auto-assign it to this folder"
