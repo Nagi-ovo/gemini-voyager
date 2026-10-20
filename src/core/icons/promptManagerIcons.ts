@@ -45,6 +45,16 @@ const FILE_TEXT_ICON_NODE = [
   ['path', { d: 'M16 17H8', key: 'z1uh3a' }],
 ] satisfies IconNode;
 
+const HEART_ICON_NODE = [
+  [
+    'path',
+    {
+      d: 'M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5',
+      key: 'mvr1a0',
+    },
+  ],
+] satisfies IconNode;
+
 const LAYOUT_GRID_ICON_NODE = [
   ['rect', { width: '7', height: '7', x: '3', y: '3', rx: '1', key: '1g98yp' }],
   ['rect', { width: '7', height: '7', x: '14', y: '3', rx: '1', key: '6d4xhi' }],
@@ -124,6 +134,11 @@ export function createDownloadIcon(size = 16): SVGSVGElement {
 
 export function createFileTextIcon(size = 16): SVGSVGElement {
   return createLucideIcon('file-text', FILE_TEXT_ICON_NODE, size);
+}
+
+/** The sponsor heart, drawn as a line icon like the panel's other controls. */
+export function createHeartIcon(size = 16): SVGSVGElement {
+  return createLucideIcon('heart', HEART_ICON_NODE, size);
 }
 
 export function createLayoutGridIcon(size = 16): SVGSVGElement {
