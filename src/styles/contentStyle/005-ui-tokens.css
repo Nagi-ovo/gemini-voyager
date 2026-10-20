@@ -1,7 +1,7 @@
 /* Page-level twins of the shadow-layer tokens in src/core/ui/tokens.css, so a
  * component injected into the page (dialog, menu, panel, button) paints from the
  * same neutral inks, surface and font as toasts and confirms. Values follow
- * `html[data-gv-scheme]`; the accent stays `--gv-pm-brand`. The font is the
+ * the root's `data-gv-scheme`; the accent stays `--gv-pm-brand`. The font is the
  * system stack on every site: a floating layer that borrowed 'Google Sans'
  * would fall back to Arial wherever the host does not ship it. */
 :root {
@@ -21,7 +21,7 @@
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-html[data-gv-scheme='dark'] {
+:root[data-gv-scheme='dark'] {
   --gv-ui-surface: oklch(0.29 0.006 285);
   --gv-ui-surface-hover: oklch(0.33 0.006 285);
   --gv-ui-hover: oklch(0.92 0.004 250 / 0.08);
