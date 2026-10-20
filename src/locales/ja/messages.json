@@ -4041,6 +4041,10 @@
     "message": "ここにリサーチパックを入力できませんでした。Gemini に戻ってコピーしてください。",
     "description": "Research pack: toast on ChatGPT/Claude when the pack could not be put in the message box"
   },
+  "chatgptHandoffPoweredBy": {
+    "message": "{name} で動作",
+    "description": "Footer credit in the ChatGPT temporary-chat handoff dialog; {name} is replaced in code with the service's name"
+  },
   "researchPackTemplates": {
     "message": "テンプレート",
     "description": "Research pack: templates section toggle"

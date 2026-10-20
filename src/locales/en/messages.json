@@ -4041,6 +4041,10 @@
     "message": "Couldn't add the research pack here. Go back to Gemini and copy it.",
     "description": "Research pack: toast on ChatGPT/Claude when the pack could not be put in the message box"
   },
+  "chatgptHandoffPoweredBy": {
+    "message": "Powered by {name}",
+    "description": "Footer credit in the ChatGPT temporary-chat handoff dialog; {name} is replaced in code with the service's name"
+  },
   "researchPackTemplates": {
     "message": "Templates",
     "description": "Research pack: templates section toggle"
