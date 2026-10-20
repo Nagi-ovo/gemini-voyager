@@ -1,5 +1,6 @@
 /* ============================================================
- * Gems inline list — hangs off Gemini's native Gems nav entry
+ * Gems inline list — hangs off Gemini's native Gems nav entry, or sits in
+ * Voyager's own Gems section when the sidebar has no such entry
  *
  * Sits as a sibling immediately after `gem-nav-list-item[gems-side-nav-
  * entry-button]` inside the top mat-nav-list. The chevron toggle (see
@@ -141,6 +142,70 @@ gem-nav-list-item.gv-gems-toggle-host {
   transform: rotate(90deg);
 }
 
+/* Section header — Gemini's redesign moved its Gems entry into the More
+ * popover, so the list gets its own header below the top nav, matching the
+ * native Notebooks header (32px row, 13px label, chevron after the label). */
+.gv-gems-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.gv-gems-section-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: 32px;
+  padding-block: 1px;
+  padding-inline: 16px 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Google Sans Flex', 'Google Sans', Roboto, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 17px;
+  text-align: start;
+  color: rgba(255, 255, 255, 0.55);
+  transition: color 0.15s ease;
+}
+
+.gv-gems-section-header:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+html[data-gv-scheme='light'] .gv-gems-section-header {
+  color: rgba(31, 31, 31, 0.6);
+}
+
+html[data-gv-scheme='light'] .gv-gems-section-header:hover {
+  color: rgba(31, 31, 31, 0.85);
+}
+
+.gv-gems-section-header svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-gems-section-header.gv-expanded svg {
+  transform: rotate(90deg);
+}
+
+body.gv-rtl .gv-gems-section-header:not(.gv-expanded) svg {
+  transform: scaleX(-1);
+}
+
+/* In the section the items line up with the header label, not a nav icon. */
+.gv-gems-section .gv-gems-inline-list {
+  padding-block: 0 4px;
+  padding-inline: 16px 6px;
+}
+
+.gv-gems-section .gv-gems-inline-list.gv-collapsed {
+  padding-block: 0;
+}
+
 /* ---------------------------------------------------------------------------
  * Collapsed-sidebar leak fix
  *
@@ -154,8 +219,10 @@ gem-nav-list-item.gv-gems-toggle-host {
 bard-sidenav.collapsed .gv-folder-container,
 bard-sidenav.collapsed .gv-gems-inline-list,
 bard-sidenav.collapsed .gv-gems-expand-toggle,
+bard-sidenav.collapsed .gv-gems-section,
 side-navigation-content > div.collapsed .gv-folder-container,
 side-navigation-content > div.collapsed .gv-gems-inline-list,
-side-navigation-content > div.collapsed .gv-gems-expand-toggle {
+side-navigation-content > div.collapsed .gv-gems-expand-toggle,
+side-navigation-content > div.collapsed .gv-gems-section {
   display: none !important;
 }

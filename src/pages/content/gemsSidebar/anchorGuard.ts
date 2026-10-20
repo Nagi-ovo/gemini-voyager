@@ -61,15 +61,16 @@ export function gemsAnchorMayBeDisturbed(
  * Watch the sidebar for changes that can displace the gems list: child and
  * visibility-attribute changes under the overflow container, visibility
  * attributes on its ancestors (sidebar mode classes), and viewport resizes
- * (breakpoints that swap layouts through CSS alone). Returns the teardown.
+ * (breakpoints that swap layouts through CSS alone). `mayBeDisturbed` filters
+ * each mutation batch for the current placement. Returns the teardown.
  */
 export function watchGemsAnchor(
   overflow: Element,
-  getAnchor: () => GemsAnchor,
+  mayBeDisturbed: (mutations: readonly MutationRecord[]) => boolean,
   onMaybeDisturbed: () => void,
 ): () => void {
   const observer = new MutationObserver((mutations) => {
-    if (gemsAnchorMayBeDisturbed(mutations, getAnchor())) onMaybeDisturbed();
+    if (mayBeDisturbed(mutations)) onMaybeDisturbed();
   });
   observer.observe(overflow, {
     childList: true,

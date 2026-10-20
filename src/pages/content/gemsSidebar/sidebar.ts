@@ -1,5 +1,12 @@
-import { GEMS_NAV_ENTRY_SELECTOR, watchGemsAnchor } from './anchorGuard';
+import { GEMS_NAV_ENTRY_SELECTOR, gemsAnchorMayBeDisturbed, watchGemsAnchor } from './anchorGuard';
 import { resolveGemHref, type GemMetadata } from './catalog';
+import {
+  CHEVRON_SVG,
+  createGemsSection,
+  findGemsSectionNav,
+  gemsSectionMayBeDisturbed,
+  setGemsSectionExpanded,
+} from './section';
 
 const LIST_CLASS = 'gv-gems-inline-list';
 const TOGGLE_CLASS = 'gv-gems-expand-toggle';
@@ -19,6 +26,13 @@ export function createGemsSidebarView(
   let injectedList: HTMLElement | null = null;
   let injectedToggle: HTMLElement | null = null;
   let anchoredEntry: HTMLElement | null = null;
+  // Without a native Gems entry the list lives in Voyager's own section after the top nav.
+  let injectedSection: HTMLElement | null = null;
+  let sectionNav: HTMLElement | null = null;
+
+  function findOverflow(): Element | null {
+    return document.querySelector('[data-test-id="overflow-container"]');
+  }
 
   /**
    * Locate the visible Gemini-native Gems nav entry inside the sidebar overflow
@@ -27,7 +41,7 @@ export function createGemsSidebarView(
    * we want the one with non-zero geometry.
    */
   function findGemsNavEntry(): HTMLElement | null {
-    const overflow = document.querySelector('[data-test-id="overflow-container"]');
+    const overflow = findOverflow();
     if (!overflow) return null;
     const entries = Array.from(overflow.querySelectorAll(GEMS_NAV_ENTRY_SELECTOR));
     for (const el of entries) {
@@ -69,9 +83,7 @@ export function createGemsSidebarView(
     btn.setAttribute('aria-expanded', getExpanded() ? 'true' : 'false');
     // Inline SVG (no font dependency). Path matches Material Symbols
     // `keyboard_arrow_right`; we rotate it to `down` when expanded via CSS.
-    btn.innerHTML = `<svg viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true">
-    <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
-  </svg>`;
+    btn.innerHTML = CHEVRON_SVG;
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       e.preventDefault();
@@ -93,6 +105,7 @@ export function createGemsSidebarView(
     if (injectedList) {
       injectedList.classList.toggle('gv-collapsed', !getExpanded());
     }
+    if (injectedSection) setGemsSectionExpanded(injectedSection, getExpanded());
   }
 
   /** Mount / re-mount the chevron on the current Gems nav entry. */
@@ -151,7 +164,9 @@ export function createGemsSidebarView(
       return;
     }
 
-    if (!gemsEntry || !gemsEntry.parentElement) {
+    const overflow = gemsEntry?.parentElement ? null : findOverflow();
+    const nav = overflow ? findGemsSectionNav(overflow) : null;
+    if (!gemsEntry?.parentElement && !nav) {
       // No anchor yet — try again on the next mutation.
       return;
     }
@@ -162,16 +177,38 @@ export function createGemsSidebarView(
       return;
     }
 
-    if (injectedList && injectedList.isConnected) {
-      injectedList.replaceWith(fresh);
-    } else {
-      // Insert immediately after the Gems nav entry so it reads as the entry's
-      // own expansion.
-      gemsEntry.insertAdjacentElement('afterend', fresh);
-    }
+    // Also when detached: a section Gemini removed still holds the old list, and is reused.
+    injectedList?.replaceWith(fresh);
     injectedList = fresh;
+    if (gemsEntry?.parentElement) placeAfterEntry(gemsEntry, fresh);
+    else if (nav) placeInSection(nav, fresh);
+  }
+
+  /** Legacy layout: the list reads as the native Gems entry's own expansion. */
+  function placeAfterEntry(gemsEntry: HTMLElement, list: HTMLElement): void {
+    if (gemsEntry.nextElementSibling !== list) gemsEntry.insertAdjacentElement('afterend', list);
+    removeSectionShell();
     anchoredEntry = gemsEntry;
     ensureExpandToggle(gemsEntry);
+  }
+
+  /** Redesigned layout: Gems sit in the More popover, so Voyager adds its own section. */
+  function placeInSection(nav: HTMLElement, list: HTMLElement): void {
+    anchoredEntry = null;
+    removeExpandToggle();
+    injectedSection ??= createGemsSection(() => void toggleExpanded());
+    if (list.parentElement !== injectedSection) injectedSection.appendChild(list);
+    if (nav.nextElementSibling !== injectedSection) {
+      nav.insertAdjacentElement('afterend', injectedSection);
+    }
+    sectionNav = nav;
+    setGemsSectionExpanded(injectedSection, getExpanded());
+  }
+
+  function removeSectionShell(): void {
+    injectedSection?.remove();
+    injectedSection = null;
+    sectionNav = null;
   }
 
   function cleanupSection(): void {
@@ -179,6 +216,7 @@ export function createGemsSidebarView(
       injectedList.remove();
       injectedList = null;
     }
+    removeSectionShell();
     anchoredEntry = null;
     removeExpandToggle();
   }
@@ -192,35 +230,42 @@ export function createGemsSidebarView(
   }
 
   /**
-   * Make sure our list sits immediately after the *current* Gems nav entry,
-   * and that the chevron is mounted on that entry. Reads layout to pick the
-   * visible entry, so the observer calls it only when the anchor may have moved.
+   * Make sure our list sits immediately after the *current* Gems nav entry
+   * (with the chevron on it), or else in its section after the top nav. Reads
+   * layout to pick the visible entry, so the observer calls it only when the
+   * anchor may have moved.
    */
   function enforcePosition(): void {
     if (stopped || getCount() <= 0) return;
     const gemsEntry = findGemsNavEntry();
-    if (!gemsEntry || !gemsEntry.parentElement) return;
+    const overflow = gemsEntry?.parentElement ? null : findOverflow();
+    const nav = overflow ? findGemsSectionNav(overflow) : null;
+    if (!gemsEntry?.parentElement && !nav) return;
 
     if (!injectedList || !injectedList.isConnected) {
       renderSection(gemsEntry);
       return;
     }
+    if (gemsEntry?.parentElement) placeAfterEntry(gemsEntry, injectedList);
+    else if (nav) placeInSection(nav, injectedList);
+  }
 
-    const inRightParent = injectedList.parentElement === gemsEntry.parentElement;
-    const immediatelyAfter = gemsEntry.nextElementSibling === injectedList;
-    if (!inRightParent || !immediatelyAfter) {
-      gemsEntry.insertAdjacentElement('afterend', injectedList);
+  /** Whether a mutation batch can have moved the list from where it was placed. */
+  function anchorMayBeDisturbed(mutations: readonly MutationRecord[]): boolean {
+    if (injectedSection) {
+      return gemsSectionMayBeDisturbed(mutations, { nav: sectionNav, section: injectedSection });
     }
-    anchoredEntry = gemsEntry;
-
-    // Always re-check the chevron — entry might have been swapped under us.
-    ensureExpandToggle(gemsEntry);
+    return gemsAnchorMayBeDisturbed(mutations, {
+      entry: anchoredEntry,
+      list: injectedList,
+      toggle: injectedToggle,
+    });
   }
 
   function setupPositionEnforcer(): void {
     if (stopped || getCount() <= 0) return;
 
-    const overflow = document.querySelector('[data-test-id="overflow-container"]');
+    const overflow = findOverflow();
     if (!overflow) {
       if (positionRetryTimer === null) {
         positionRetryTimer = window.setTimeout(() => {
@@ -237,14 +282,10 @@ export function createGemsSidebarView(
     stopAnchorWatch?.();
     // Gemini streams conversation rows into this subtree; only re-run the
     // layout-reading lookup when the anchor may have moved or swapped (#1040).
-    stopAnchorWatch = watchGemsAnchor(
-      overflow,
-      () => ({ entry: anchoredEntry, list: injectedList, toggle: injectedToggle }),
-      () => {
-        if (!injectedList && visibleGems().length === 0) return;
-        scheduleEnforce();
-      },
-    );
+    stopAnchorWatch = watchGemsAnchor(overflow, anchorMayBeDisturbed, () => {
+      if (!injectedList && visibleGems().length === 0) return;
+      scheduleEnforce();
+    });
     scheduleEnforce();
   }
 

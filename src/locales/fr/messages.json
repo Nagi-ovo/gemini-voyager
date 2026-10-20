@@ -2129,6 +2129,10 @@
     "message": "Dans la nouvelle barre latérale de Gemini, les Gems sont dans le menu « Plus ». Cette fonctionnalité est donc sans effet pour le moment.",
     "description": "Why the Recent Gems popup row is disabled on Gemini’s redesigned sidebar."
   },
+  "gemsSidebarSectionTitle": {
+    "message": "Gems",
+    "description": "Header of the Recent Gems section Voyager adds below the Gemini sidebar's top nav, now that Gemini keeps Gems in its More menu. Use the name Gemini shows for Gems in this language."
+  },
   "gemsSidebarCount": {
     "message": "Gems récents dans la barre latérale",
     "description": "Popup slider label — how many recent gems to show in the sidebar above Notebooks. 0 hides the section entirely."

@@ -2129,6 +2129,10 @@
     "message": "Gemini 新版侧栏把 Gems 收进了「更多」菜单，这个功能暂时不起作用。",
     "description": "Why the Recent Gems popup row is disabled on Gemini’s redesigned sidebar."
   },
+  "gemsSidebarSectionTitle": {
+    "message": "Gems",
+    "description": "Header of the Recent Gems section Voyager adds below the Gemini sidebar's top nav, now that Gemini keeps Gems in its More menu. Use the name Gemini shows for Gems in this language."
+  },
   "gemsSidebarCount": {
     "message": "侧栏中显示的最近 Gems",
     "description": "Popup slider label — how many recent gems to show in the sidebar above Notebooks. 0 hides the section entirely."
