@@ -14,19 +14,26 @@ export type QuoteReplyParams = Readonly<Record<string, never>>;
 const BUTTON_CLASS = 'gv-quote-reply-button';
 const EDGE = 10;
 const GAP = 8;
+// Page tokens from contentStyle.css (005-ui-tokens.css) follow `data-gv-scheme`; the literals
+// keep the button painted if the sheet has not landed yet.
 const CSS = `
 .${BUTTON_CLASS} {
   position: fixed; z-index: 9999; box-sizing: border-box;
-  min-height: 32px; min-width: 44px; padding: 6px 12px;
-  border: 1px solid #d1d5db; border-radius: 8px;
-  background: #fff; color: #1f2937; cursor: pointer;
-  font: 500 13px/1.4 system-ui, sans-serif;
-  box-shadow: 0 3px 12px #0002;
+  min-height: 32px; min-width: 44px; margin: 0; padding: 6px 12px;
+  border: 1px solid var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7)); border-radius: 8px;
+  background: var(--gv-ui-surface, oklch(0.995 0.002 250));
+  color: var(--gv-ui-text, oklch(0.14 0.004 285)); cursor: pointer;
+  font: 500 13px/1.4 var(--gv-ui-font, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif);
+  letter-spacing: normal;
+  box-shadow: var(--gv-ui-shadow, 0 6px 20px oklch(0 0 0 / 0.16));
 }
-html[data-gv-scheme='light'] .${BUTTON_CLASS} { background: #fff; color: #1f2937; }
-html[data-gv-scheme='dark'] .${BUTTON_CLASS} { background: #202124; color: #f3f4f6; border-color: #5f6368; }
-.${BUTTON_CLASS}:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
-@media (hover: hover) { .${BUTTON_CLASS}:hover { filter: brightness(0.95); } }
+.${BUTTON_CLASS}:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring, var(--gv-pm-brand, var(--gv-pm-brand-default)));
+  outline-offset: 2px;
+}
+@media (hover: hover) {
+  .${BUTTON_CLASS}:hover { background: var(--gv-ui-surface-hover, oklch(0.97 0.003 250)); }
+}
 body.gv-rtl .${BUTTON_CLASS} { direction: rtl; }
 @media (pointer: coarse) { .${BUTTON_CLASS} { min-height: 44px; } }
 `;
