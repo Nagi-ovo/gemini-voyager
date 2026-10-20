@@ -1,12 +1,19 @@
-/* The ChatGPT "Move to folder" picker, inside its own shadow root. Host rules
- * are `!important` so no page rule on the host element can reach in. */
+/* The "Move to folder" picker (ChatGPT, Claude), inside its own shadow root.
+ * Host rules are `!important` so no page rule on the host element can reach in.
+ * Colours come from the page's shared tokens (005-ui-tokens.css), which reach
+ * the shadow tree by inheritance (`all: initial` leaves custom properties
+ * alone); the literals below are only fallbacks for a page without them. */
 :host {
-  --gv-picker-surface: #ffffff;
-  --gv-picker-text: #1f1f1f;
-  --gv-picker-muted: #5f6368;
-  --gv-picker-outline: rgba(60, 64, 67, 0.16);
-  --gv-picker-hover: rgba(60, 64, 67, 0.08);
-  --gv-picker-accent: #1a73e8;
+  --gv-picker-surface: var(--gv-ui-surface, oklch(0.995 0.002 250));
+  --gv-picker-text: var(--gv-ui-text, oklch(0.14 0.004 285));
+  --gv-picker-muted: var(--gv-ui-text-muted, oklch(0.45 0.01 270));
+  --gv-picker-outline: var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7));
+  --gv-picker-hover: var(--gv-ui-hover, oklch(0.14 0.004 285 / 0.06));
+  --gv-picker-button-hover: var(--gv-ui-surface-hover, oklch(0.97 0.003 250));
+  --gv-picker-accent: var(
+    --gv-ui-focus-ring,
+    var(--gv-pm-brand, var(--gv-pm-brand-default, oklch(0.601 0.1 140)))
+  );
   all: initial !important;
   position: fixed !important;
   inset: 0 !important;
@@ -16,12 +23,12 @@
 }
 
 :host([data-gv-scheme='dark']) {
-  --gv-picker-surface: #262626;
-  --gv-picker-text: #ececec;
-  --gv-picker-muted: #b4b4b4;
-  --gv-picker-outline: rgba(255, 255, 255, 0.14);
-  --gv-picker-hover: rgba(255, 255, 255, 0.08);
-  --gv-picker-accent: #8ab4f8;
+  --gv-picker-surface: var(--gv-ui-surface, oklch(0.29 0.006 285));
+  --gv-picker-text: var(--gv-ui-text, oklch(0.92 0.004 250));
+  --gv-picker-muted: var(--gv-ui-text-muted, oklch(0.72 0.01 270));
+  --gv-picker-outline: var(--gv-ui-border, oklch(0.38 0.008 285 / 0.7));
+  --gv-picker-hover: var(--gv-ui-hover, oklch(0.92 0.004 250 / 0.08));
+  --gv-picker-button-hover: var(--gv-ui-surface-hover, oklch(0.33 0.006 285));
 }
 
 * {
@@ -34,15 +41,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.35);
-  font-family:
+  background: oklch(0 0 0 / 0.32);
+  font-family: var(
+    --gv-ui-font,
     ui-sans-serif,
     system-ui,
     -apple-system,
     'Segoe UI',
     Roboto,
-    sans-serif;
-  font-size: 14px;
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .dialog {
@@ -53,22 +65,24 @@
   background: var(--gv-picker-surface);
   color: var(--gv-picker-text);
   border: 1px solid var(--gv-picker-outline);
-  border-radius: 16px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.24);
+  border-radius: 12px;
+  box-shadow: var(--gv-ui-shadow, 0 6px 20px oklch(0 0 0 / 0.16));
   overflow: hidden;
 }
 
 .title {
-  padding: 16px 18px 10px;
-  font-size: 16px;
+  padding: 14px 16px 10px;
+  font-size: 15px;
   font-weight: 600;
+  line-height: 20px;
 }
 
 .search {
   margin: 0 12px 6px;
-  padding: 8px 10px;
+  min-height: 32px;
+  padding: 6px 10px;
   border: 1px solid var(--gv-picker-outline);
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -77,6 +91,11 @@
 
 .search:focus {
   border-color: var(--gv-picker-accent);
+  box-shadow: 0 0 0 1px var(--gv-picker-accent);
+}
+
+.search::placeholder {
+  color: var(--gv-picker-muted);
 }
 
 .list {
@@ -92,10 +111,10 @@
   align-items: flex-start;
   gap: 2px;
   width: 100%;
-  padding-block: 8px;
+  padding-block: 7px;
   padding-inline-end: 12px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -130,19 +149,25 @@
 .cancel {
   margin: 6px 12px 12px;
   align-self: flex-end;
-  padding: 8px 14px;
+  min-height: 28px;
+  padding: 4px 12px;
   border: 1px solid var(--gv-picker-outline);
-  border-radius: 999px;
+  border-radius: 8px;
   background: transparent;
   color: inherit;
   font: inherit;
+  font-weight: 500;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.cancel:hover,
+.cancel:hover {
+  background: var(--gv-picker-button-hover);
+}
+
 .cancel:focus-visible {
-  background: var(--gv-picker-hover);
-  outline: none;
+  outline: 2px solid var(--gv-picker-accent);
+  outline-offset: 2px;
 }
 
 :host([data-gv-rtl]) .dialog {

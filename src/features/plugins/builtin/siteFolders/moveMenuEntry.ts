@@ -6,9 +6,26 @@
  * out of the entry, and `MenuCloseWait` runs the move once the closed menu has
  * handed focus back to its trigger.
  */
+import type { IconNode } from 'lucide-react';
 
-const FOLDER_ICON_PATH =
-  'M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H447l-80-80H160v480Zm0 0v-480 480Z';
+import { createLucideIcon } from '@/core/icons/lucideIcon';
+
+/**
+ * Lucide `folder-input` (lucide-react v0.553.0): a folder with an arrow going
+ * in, so the entry reads as a move and not as the pencil of the Rename item it
+ * is cloned from.
+ */
+const MOVE_ICON_NODE = [
+  [
+    'path',
+    {
+      d: 'M2 9V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1',
+      key: 'fm4g5t',
+    },
+  ],
+  ['path', { d: 'M2 13h10', key: 'pgb2dq' }],
+  ['path', { d: 'm9 16 3-3-3-3', key: '6m91ic' }],
+] satisfies IconNode;
 
 /** Attributes that tie a native item to the menu library's state; never copied. */
 const LIBRARY_ATTRIBUTES = [
@@ -23,15 +40,11 @@ const LIBRARY_ATTRIBUTES = [
 ];
 
 function folderIcon(): SVGSVGElement {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 -960 960 960');
-  svg.setAttribute('width', '20');
-  svg.setAttribute('height', '20');
-  svg.setAttribute('fill', 'currentColor');
-  svg.setAttribute('aria-hidden', 'true');
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  path.setAttribute('d', FOLDER_ICON_PATH);
-  svg.append(path);
+  const svg = createLucideIcon('folder-input', MOVE_ICON_NODE, 20);
+  // The menus' own icons are drawn at about 1.5px; Lucide's 2px reads heavier beside them.
+  svg.setAttribute('stroke-width', '1.75');
+  // The sizing class copied from a native icon may also fill it; a filled line icon is a blob.
+  svg.style.setProperty('fill', 'none');
   return svg;
 }
 
