@@ -126,7 +126,7 @@ describe('pending folder selection', () => {
     await picker.show();
     await vi.advanceTimersByTimeAsync(0);
 
-    expect(chip().textContent).toBe('📁 Work');
+    expect(chip().textContent).toBe('Work');
     expect(chip().dataset.selected).toBe('folder-1');
     expect(chrome.storage.local.remove).toHaveBeenCalledWith([
       StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID,

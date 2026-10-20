@@ -1,3 +1,4 @@
+import { createFolderIcon } from '@/core/icons/folderIcons';
 import { StorageKeys } from '@/core/types/common';
 import type { Folder } from '@/core/types/folder';
 import { getTranslationSyncUnsafe } from '@/utils/i18n';
@@ -12,6 +13,17 @@ interface FolderProjectPickerOptions {
 
 function t(key: string): string {
   return getTranslationSyncUnsafe(key);
+}
+
+/** Shows the selected folder on the chip: a line folder icon and its name. */
+function showSelectedFolder(chip: HTMLButtonElement, folder: Folder): void {
+  const icon = createFolderIcon(16);
+  icon.classList.add('gv-fp-chip-icon');
+  const label = document.createElement('span');
+  label.className = 'gv-fp-chip-label';
+  label.textContent = folder.name;
+  chip.replaceChildren(icon, label);
+  chip.dataset.selected = folder.id;
 }
 
 /**
@@ -74,8 +86,7 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
 
     // Handler for selecting a folder
     const selectFolder = (folder: (typeof allFolders)[number]) => {
-      chip.textContent = `📁 ${folder.name}`;
-      chip.dataset.selected = folder.id;
+      showSelectedFolder(chip, folder);
       dropdown.hidden = true;
       chip.setAttribute('aria-expanded', 'false');
       options.onSelect(folder, 'user');
@@ -248,8 +259,7 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
 
     options.onSelect(folder, 'pending');
 
-    chip.textContent = `📁 ${folder.name}`;
-    chip.dataset.selected = folder.id;
+    showSelectedFolder(chip, folder);
   }
 
   // ============================================================================
