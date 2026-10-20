@@ -1,3 +1,6 @@
+// Retired on purpose (d5242232): nothing registers this plugin, so the usage pill
+// never shows and Claude's usage endpoint is never read. The source is kept so the
+// pill can come back; leave it in place rather than deleting it as dead code.
 import { StorageKeys } from '@/core/types/common';
 import { getVoyagerBuildTarget } from '@/core/utils/browser';
 
