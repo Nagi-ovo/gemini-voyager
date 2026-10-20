@@ -29,7 +29,7 @@ describe('watermark preview surface download indicators', () => {
     vi.useRealTimers();
   });
 
-  const indicator = (root: ParentNode) => root.querySelector('.nanobanana-indicator');
+  const indicator = (root: ParentNode) => root.querySelector('.gv-watermark-indicator');
 
   it('cancels queued indicator decoration and stops observing on stop', async () => {
     vi.useFakeTimers();
@@ -65,6 +65,26 @@ describe('watermark preview surface download indicators', () => {
 
     const button = document.querySelector('button')!;
     expect(indicator(button)?.textContent).toBe('🍌');
+  });
+
+  it('replaces the emoji badge an orphaned older script left on the button', () => {
+    document.body.innerHTML = `
+      <generated-image>
+        <img class="image" src="blob:https://gemini.google.com/abc" />
+        <download-generated-image-button>
+          <button aria-label="Download full size image">
+            <mat-icon fonticon="download"></mat-icon>
+            <span class="nanobanana-indicator">old</span>
+          </button>
+        </download-generated-image-button>
+      </generated-image>
+    `;
+
+    previews.watchIndicators();
+
+    const button = document.querySelector('button')!;
+    expect(button.querySelector('.nanobanana-indicator')).toBeNull();
+    expect(button.querySelectorAll('.gv-watermark-indicator')).toHaveLength(1);
   });
 
   it('adds the indicator to the lightbox button even when it is outside any generated-image container', () => {
@@ -137,7 +157,7 @@ describe('watermark preview surface download indicators', () => {
 
     previews.watchIndicators();
 
-    expect(document.querySelector('.nanobanana-indicator')).toBeNull();
+    expect(document.querySelector('.gv-watermark-indicator')).toBeNull();
   });
 
   it('is idempotent — running twice does not duplicate the indicator', () => {
@@ -154,7 +174,7 @@ describe('watermark preview surface download indicators', () => {
     previews.watchIndicators();
     previews.watchIndicators();
 
-    expect(document.querySelectorAll('.nanobanana-indicator')).toHaveLength(1);
+    expect(document.querySelectorAll('.gv-watermark-indicator')).toHaveLength(1);
   });
 
   it('places the indicator INSIDE the button (not in a clipped ancestor)', () => {
@@ -175,6 +195,6 @@ describe('watermark preview surface download indicators', () => {
     const button = document.querySelector('.target')!;
     expect(indicator(button)).not.toBeNull();
     // Must not have been appended to the overflow:hidden wrapper.
-    expect(document.querySelector('gem-icon-button > .nanobanana-indicator')).toBeNull();
+    expect(document.querySelector('gem-icon-button > .gv-watermark-indicator')).toBeNull();
   });
 });

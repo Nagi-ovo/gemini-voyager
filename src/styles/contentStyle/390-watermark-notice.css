@@ -3,20 +3,20 @@
    Colors run through tokens so the dark override below only restates the
    palette, not the layout. */
 .gv-wm-notice {
-  --gv-wmn-surface: #ffffff;
-  --gv-wmn-border: #dfe4ee;
-  --gv-wmn-divider: #eef2f7;
-  --gv-wmn-title: #172033;
-  --gv-wmn-text: #344054;
-  --gv-wmn-muted: #6b7280;
-  --gv-wmn-subtle-bg: #f8fafc;
+  --gv-wmn-surface: var(--gv-ui-surface);
+  --gv-wmn-border: var(--gv-ui-border);
+  --gv-wmn-divider: var(--gv-ui-border);
+  --gv-wmn-title: var(--gv-ui-text);
+  --gv-wmn-text: var(--gv-ui-text);
+  --gv-wmn-muted: var(--gv-ui-text-muted);
+  --gv-wmn-subtle-bg: var(--gv-ui-hover);
   /* Matches the screenshot's own cream background so the hero reads as one
-     surface instead of a pasted-in rectangle. */
+     surface instead of a pasted-in rectangle, in dark mode too: a dark frame
+     around a light screenshot reads as a pasted rectangle. */
   --gv-wmn-hero-bg: #fbf6e6;
-  --gv-wmn-accent: #5f8f55;
-  --gv-wmn-accent-hover: #527c49;
-  --gv-wmn-on-accent: #ffffff;
-  --gv-wmn-error: #b42318;
+  --gv-wmn-accent: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  --gv-wmn-on-accent: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
+  --gv-wmn-error: var(--gv-ui-danger);
 
   position: fixed;
   inset: 0;
@@ -28,7 +28,7 @@
   /* The layer only positions the helper card. Everything outside the card
      stays interactive so the user can follow the guide in Gemini. */
   pointer-events: none;
-  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  font-family: var(--gv-ui-font);
   animation: gv-fade-in 0.2s ease-out;
 }
 
@@ -44,9 +44,8 @@
   border: 1px solid var(--gv-wmn-border);
   border-radius: 12px;
   background: var(--gv-wmn-surface);
-  box-shadow:
-    0 16px 40px rgba(15, 23, 42, 0.14),
-    0 2px 8px rgba(15, 23, 42, 0.06);
+  color: var(--gv-wmn-text);
+  box-shadow: var(--gv-ui-shadow);
   animation: gv-slide-up 0.3s ease-out;
 }
 
@@ -103,7 +102,7 @@
   height: 28px;
   flex: 0 0 28px;
   border: 0;
-  border-radius: 50%;
+  border-radius: 8px;
   background: transparent;
   color: var(--gv-wmn-muted);
   cursor: pointer;
@@ -132,8 +131,11 @@
   height: auto;
 }
 
+/* The caption sits on the card, not the cream: in dark its light ink would
+   vanish on the screenshot's ground. */
 .gv-wm-notice__hero-caption {
   padding: 8px 16px 10px;
+  background: var(--gv-wmn-surface);
 }
 
 /* Breadcrumb replaces the old numbered list — the markers drawn on the
@@ -173,7 +175,7 @@
 .gv-wm-notice__body {
   padding: 12px 16px 0;
   color: var(--gv-wmn-text);
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -206,18 +208,28 @@
   gap: 4px;
 }
 
+/* The shared confirm's buttons: 28px / 8px / 500, one size for both. */
 .gv-wm-notice__btn {
-  min-height: 38px;
+  box-sizing: border-box;
+  min-height: 28px;
+  padding: 4px 12px;
   border: 1px solid transparent;
-  border-radius: 10px;
-  padding: 8px 14px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-family: inherit;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 18px;
   white-space: normal;
   transition:
-    background-color 0.2s,
-    opacity 0.2s;
+    background-color 0.15s,
+    opacity 0.15s;
+}
+
+.gv-wm-notice__btn:focus-visible,
+.gv-wm-notice__close:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring);
+  outline-offset: 2px;
 }
 
 .gv-wm-notice__btn:disabled {
@@ -226,31 +238,28 @@
 }
 
 .gv-wm-notice__btn--secondary {
-  min-height: 32px;
-  border: 0;
   background: transparent;
   color: var(--gv-wmn-muted);
-  font-size: 12.5px;
 }
 
 .gv-wm-notice__btn--secondary:hover:not(:disabled) {
   background: var(--gv-wmn-subtle-bg);
+  color: var(--gv-wmn-text);
 }
 
 .gv-wm-notice__btn--primary {
-  min-height: 42px;
   background: var(--gv-wmn-accent);
   color: var(--gv-wmn-on-accent);
 }
 
 .gv-wm-notice__btn--primary:hover:not(:disabled) {
-  background: var(--gv-wmn-accent-hover);
+  background: var(--gv-pm-brand-hover);
 }
 
 .gv-wm-notice__done {
   margin: 0;
   color: var(--gv-wmn-accent);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 500;
   text-align: end;
 }
@@ -261,28 +270,6 @@
   font-size: 12.5px;
   font-weight: 500;
   text-align: end;
-}
-
-html[data-gv-scheme='dark'] .gv-wm-notice {
-  --gv-wmn-surface: #202124;
-  --gv-wmn-border: #3c4043;
-  --gv-wmn-divider: #3c4043;
-  --gv-wmn-title: #e8eaed;
-  --gv-wmn-text: #cbd5e1;
-  --gv-wmn-muted: #9aa0a6;
-  --gv-wmn-subtle-bg: #303134;
-  /* Hero keeps the screenshot's cream in dark mode too — a dark frame around a
-     light screenshot reads as a pasted rectangle, while matching it lets the
-     shot sit there like a photograph. */
-  --gv-wmn-accent: #a7c080;
-  --gv-wmn-accent-hover: #b6cc93;
-  /* Sage on dark is light enough that white label text loses contrast. */
-  --gv-wmn-on-accent: #1b2418;
-  --gv-wmn-error: #ffb4ab;
-}
-
-html[data-gv-scheme='dark'] .gv-wm-notice__dialog {
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
 }
 
 /* Narrow viewports keep the helper at the top, where it does not cover
@@ -305,4 +292,18 @@ body.gv-rtl .gv-wm-notice {
 
 body.gv-rtl .gv-wm-notice__trail-sep {
   transform: scaleX(-1);
+}
+
+/* Watermark remover's download indicator (previewRuntime.ts): the 🍌 badge,
+   named for Nano Banana, marks a download button that saves the image without
+   its watermark. Clicks pass through to the native button. */
+.gv-watermark-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 10;
+  font-size: 11px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+  pointer-events: none;
 }

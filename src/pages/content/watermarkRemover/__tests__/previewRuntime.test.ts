@@ -145,14 +145,14 @@ describe('watermark preview lifetime', () => {
 
       const duringPreview = createDownloadButton();
       await settleMutations();
-      expect(duringPreview.querySelectorAll('.nanobanana-indicator')).toHaveLength(1);
+      expect(duringPreview.querySelectorAll('.gv-watermark-indicator')).toHaveLength(1);
 
       state.previewEnabled = false;
       previews.stopPreviews();
       expect(bodyObservers.size).toBe(1);
       const afterPreview = createDownloadButton();
       await settleMutations();
-      expect(afterPreview.querySelectorAll('.nanobanana-indicator')).toHaveLength(1);
+      expect(afterPreview.querySelectorAll('.gv-watermark-indicator')).toHaveLength(1);
 
       state.downloadEnabled = false;
       previews.stopIndicators();

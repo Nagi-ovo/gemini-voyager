@@ -189,7 +189,7 @@ describe('watermark runtime owners', () => {
     expect(bridge.dataset.enabled).toBe('true');
     expect(bridge.dataset.downloadIntentToken).toBe(intentToken);
     expect(bridge.dataset.downloadIntentExpiresAt).toBeDefined();
-    expect(host.querySelector('.nanobanana-indicator')).not.toBeNull();
+    expect(host.querySelector('.gv-watermark-indicator')).not.toBeNull();
 
     // The MAIN-world interceptor hands the download over and gets it back clean.
     bridge.dataset.request = JSON.stringify({
@@ -283,7 +283,7 @@ describe('watermark runtime owners', () => {
     await settleAsyncWork();
 
     expect(getBridge().dataset.enabled).toBe('false');
-    expect(host.querySelector('.nanobanana-indicator')).toBeNull();
+    expect(host.querySelector('.gv-watermark-indicator')).toBeNull();
   });
 
   it('a released download owner cannot stop its successor or duplicate listeners', async () => {
@@ -298,7 +298,7 @@ describe('watermark runtime owners', () => {
     await settleAsyncWork();
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(getBridge().dataset.enabled).toBe('true');
-    expect(host.querySelectorAll('.nanobanana-indicator')).toHaveLength(1);
+    expect(host.querySelectorAll('.gv-watermark-indicator')).toHaveLength(1);
     expect(getBridge().dataset.downloadIntentToken).toMatch(/_1$/);
   });
 

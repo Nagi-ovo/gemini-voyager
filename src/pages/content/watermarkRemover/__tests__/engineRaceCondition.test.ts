@@ -58,7 +58,7 @@ describe('watermarkRemover engine-init race', () => {
       void startWatermarkRemover();
       await flushMutationObservers();
 
-      expect(existingHost.querySelector('.nanobanana-indicator')).not.toBeNull();
+      expect(existingHost.querySelector('.gv-watermark-indicator')).not.toBeNull();
 
       const lateHost = document.createElement('download-generated-image-button');
       lateHost.appendChild(document.createElement('button'));
@@ -66,7 +66,7 @@ describe('watermarkRemover engine-init race', () => {
       await flushMutationObservers();
       await vi.advanceTimersByTimeAsync(100);
 
-      expect(lateHost.querySelector('.nanobanana-indicator')).not.toBeNull();
+      expect(lateHost.querySelector('.gv-watermark-indicator')).not.toBeNull();
 
       resolveEngine({
         removeWatermarkFromImage: vi.fn(async () => document.createElement('canvas')),

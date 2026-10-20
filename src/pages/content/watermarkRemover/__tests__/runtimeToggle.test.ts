@@ -121,7 +121,7 @@ describe('watermarkRemover runtime toggle', () => {
 
     const bridge = document.getElementById('gv-watermark-bridge') as HTMLElement | null;
     expect(bridge?.dataset.enabled).toBe('false');
-    expect(host.querySelector('.nanobanana-indicator')).toBeNull();
+    expect(host.querySelector('.gv-watermark-indicator')).toBeNull();
     expect(engineCreate).toHaveBeenCalledTimes(1);
 
     settings.gvWatermarkPreviewEnabled = false;
@@ -131,7 +131,7 @@ describe('watermarkRemover runtime toggle', () => {
     await runtime.restartWatermarkRemover();
 
     expect(bridge?.dataset.enabled).toBe('true');
-    expect(host.querySelector('.nanobanana-indicator')).not.toBeNull();
+    expect(host.querySelector('.gv-watermark-indicator')).not.toBeNull();
     expect(engineCreate).toHaveBeenCalledTimes(1);
 
     if (bridge) {
@@ -142,13 +142,13 @@ describe('watermarkRemover runtime toggle', () => {
 
     expect(bridge?.dataset.enabled).toBe('false');
     expect(bridge?.dataset.downloadIntentExpiresAt).toBeDefined();
-    expect(host.querySelector('.nanobanana-indicator')).toBeNull();
+    expect(host.querySelector('.gv-watermark-indicator')).toBeNull();
 
     settings.gvWatermarkDownloadEnabled = true;
     await runtime.restartWatermarkRemover();
 
     expect(bridge?.dataset.enabled).toBe('true');
-    expect(host.querySelector('.nanobanana-indicator')).not.toBeNull();
+    expect(host.querySelector('.gv-watermark-indicator')).not.toBeNull();
     expect(engineCreate).toHaveBeenCalledTimes(1);
   });
 
@@ -250,7 +250,7 @@ describe('watermarkRemover runtime toggle', () => {
 
     const bridge = document.getElementById('gv-watermark-bridge') as HTMLElement | null;
     expect(bridge?.dataset.enabled).toBe('false');
-    expect(host.querySelector('.nanobanana-indicator')).toBeNull();
+    expect(host.querySelector('.gv-watermark-indicator')).toBeNull();
   });
 
   it('does not write an in-flight preview result after preview removal is disabled', async () => {

@@ -4,6 +4,11 @@ import { recordWatermarkPresence } from '../watermarkNativeNotice/cleanStreak';
 import { DOWNLOAD_ICON_SELECTOR } from './downloadButton';
 import type { WatermarkEngine } from './watermarkEngine';
 
+/** The 🍌 badge on a download button that saves the unwatermarked image. */
+const INDICATOR_CLASS = 'gv-watermark-indicator';
+/** The class earlier versions gave the badge; replaced wherever a new one goes. */
+const LEGACY_INDICATOR_SELECTOR = '.nanobanana-indicator';
+
 /**
  * Preview writes and indicators share the preview observer while it runs. The caller
  * invalidates the generation/preview flag before stop; pending images then release
@@ -125,30 +130,22 @@ export function createWatermarkPreviews({
   };
 
   /**
-   * Attach the 🍌 badge to a download button. The badge lives INSIDE the button
-   * because Gemini wraps it in `<gem-icon-button>` which has `overflow: hidden`,
-   * so any negative offset overhanging the wrapper would be clipped.
+   * Attach the 🍌 badge (`.gv-watermark-indicator`, styled in contentStyle)
+   * to a download button. The badge lives INSIDE the button because Gemini wraps
+   * it in `<gem-icon-button>` which has `overflow: hidden`, so any negative
+   * offset overhanging the wrapper would be clipped.
    */
   function attachIndicatorToButton(nativeButton: HTMLButtonElement): void {
     // Idempotency: don't add a second indicator to the same button.
-    if (nativeButton.querySelector('.nanobanana-indicator')) return;
+    if (nativeButton.querySelector(`.${INDICATOR_CLASS}`)) return;
+    // A script orphaned by an extension update leaves its old badge behind.
+    nativeButton.querySelector(LEGACY_INDICATOR_SELECTOR)?.remove();
 
     const indicator = document.createElement('span');
-    indicator.className = 'nanobanana-indicator';
+    indicator.className = INDICATOR_CLASS;
     indicator.textContent = '🍌';
     indicator.title =
       chrome.i18n.getMessage('nanobananaDownloadTooltip') || 'Download unwatermarked image';
-
-    Object.assign(indicator.style, {
-      position: 'absolute',
-      top: '2px',
-      right: '2px',
-      fontSize: '11px',
-      lineHeight: '1',
-      pointerEvents: 'none', // Let clicks pass through to the native button
-      zIndex: '10',
-      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.45))',
-    });
 
     // mdc-icon-button is `position: relative` by default; guard against future
     // Gemini changes that might flip it to static.
@@ -159,7 +156,7 @@ export function createWatermarkPreviews({
   }
 
   /**
-   * Add a visual indicator (🍌) to the native download button via the
+   * Add the 🍌 indicator to the native download button via the
    * preview-image path. Looks up the button through the generated-image
    * container; for the lightbox/expansion-dialog path, see
    * decorateDownloadButtons() which walks every `<download-generated-image-button>`
@@ -362,7 +359,9 @@ export function createWatermarkPreviews({
 
   const stopIndicators = (): void => {
     stopIndicatorObserver();
-    document.querySelectorAll('.nanobanana-indicator').forEach((indicator) => indicator.remove());
+    document
+      .querySelectorAll(`.${INDICATOR_CLASS}, ${LEGACY_INDICATOR_SELECTOR}`)
+      .forEach((indicator) => indicator.remove());
   };
 
   return { watchIndicators, start, stopPreviews, stopIndicators };

@@ -108,6 +108,6 @@ describe('NanoBanana engine load through the real builtin host', () => {
     expect(removeWatermark).toHaveBeenCalledOnce();
     expect(createEngine).toHaveBeenCalledOnce();
     expect(bridge.dataset.enabled).toBe('false');
-    expect(document.querySelector('.nanobanana-indicator')).toBeNull();
+    expect(document.querySelector('.gv-watermark-indicator')).toBeNull();
   });
 });

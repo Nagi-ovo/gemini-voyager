@@ -37,7 +37,8 @@ export function shouldSkipElement(element: Element): boolean {
     element.classList.contains('thoughts-header') ||
     // Gemini inline source/citation container
     element.classList.contains('source-inline-chip-container') ||
-    // NanoBanana watermark remover indicator (🍌 emoji)
+    // Watermark remover's download indicator, and the badge older versions drew
+    element.classList.contains('gv-watermark-indicator') ||
     element.classList.contains('nanobanana-indicator') ||
     // Generated image overlay controls (share/copy/download buttons)
     element.classList.contains('generated-image-controls') ||
@@ -79,6 +80,7 @@ export function stripExportArtifacts(root: HTMLElement): void {
     '.export-sheets-button',
     '.thoughts-header',
     '.source-inline-chip-container',
+    '.gv-watermark-indicator',
     '.nanobanana-indicator',
     '.generated-image-controls',
     '.hide-from-message-actions',

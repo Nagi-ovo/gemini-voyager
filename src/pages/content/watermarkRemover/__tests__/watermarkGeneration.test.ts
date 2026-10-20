@@ -154,7 +154,7 @@ describe('watermarkRemover lifecycle generation', () => {
     await Promise.all([oldStart, newStart]);
 
     expect(getBridge().dataset.enabled).toBe('true');
-    expect(host.querySelector('.nanobanana-indicator')).not.toBeNull();
+    expect(host.querySelector('.gv-watermark-indicator')).not.toBeNull();
     await downloadThroughBridge(host, 'after-late-init');
     expect(getBridge().dataset.downloadIntentToken).toBeDefined();
     await vi.waitFor(() =>
@@ -224,6 +224,6 @@ describe('watermarkRemover lifecycle generation', () => {
     );
     expect(getBridge().dataset.enabled).toBe('true');
     expect(getBridge().dataset.downloadIntentToken).toBe(intentToken);
-    expect(host.querySelector('.nanobanana-indicator')).not.toBeNull();
+    expect(host.querySelector('.gv-watermark-indicator')).not.toBeNull();
   });
 });

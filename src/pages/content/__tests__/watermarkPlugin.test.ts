@@ -73,7 +73,7 @@ function expectModes(download: boolean, inPreview: boolean): void {
   expect(mounted(DOWNLOAD_ID)).toBe(download);
   expect(mounted(PREVIEW_ID)).toBe(inPreview);
   expect(bridge()?.dataset.enabled === 'true').toBe(download);
-  expect(document.querySelectorAll('.nanobanana-indicator')).toHaveLength(download ? 1 : 0);
+  expect(document.querySelectorAll('.gv-watermark-indicator')).toHaveLength(download ? 1 : 0);
   expect(preview.src).toBe(inPreview ? 'blob:processed-preview' : ORIGINAL);
 }
 
@@ -278,7 +278,7 @@ describe('Gemini NanoBanana through its registered official plugins', () => {
     expect(removeWatermark).toHaveBeenCalledOnce();
     await setSwitch(DOWNLOAD, false);
     expect(channel.dataset.enabled).toBe('false');
-    expect(document.querySelector('.nanobanana-indicator')).toBeNull();
+    expect(document.querySelector('.gv-watermark-indicator')).toBeNull();
     finish(canvas());
     await flush();
     expect(JSON.parse(channel.dataset.response ?? '{}')).toMatchObject({
