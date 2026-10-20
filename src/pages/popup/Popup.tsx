@@ -1,8 +1,6 @@
 import { type ReactNode, useMemo, useState } from 'react';
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Card } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { StorageKeys } from '@/core/types/common';
 import {
@@ -16,6 +14,7 @@ import { CHATGPT_EXPORT_PLUGIN_ID } from '@/features/plugins/builtin/chatgptExpo
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
 
+import { AiStudioEnableCard } from './components/AiStudioEnableCard';
 import { CatalogTimelineOptions } from './components/CatalogTimelineOptions';
 import { CloudSyncSettings } from './components/CloudSyncSettings';
 import { DiagnosticsExportCard } from './components/DiagnosticsExportCard';
@@ -286,34 +285,15 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         )}
         {/* AI Studio master toggle - only shown when on AI Studio */}
         {isAIStudio && (
-          <Card
+          <AiStudioEnableCard
             style={{ order: -1 }}
-            className="border-primary/20 p-4 transition-all hover:shadow-md"
-          >
-            <CardContent className="p-0">
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="aistudio-enabled"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('enableOnAIStudio')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">{t('enableOnAIStudioHint')}</p>
-                </div>
-                <Switch
-                  id="aistudio-enabled"
-                  checked={aiStudioEnabled}
-                  onChange={(e) => {
-                    setAiStudioEnabled(e.target.checked);
-                    void writePopupSyncStorage({
-                      [StorageKeys.GV_AISTUDIO_ENABLED]: e.target.checked,
-                    });
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
+            checked={aiStudioEnabled}
+            onChange={(checked) => {
+              setAiStudioEnabled(checked);
+              void writePopupSyncStorage({ [StorageKeys.GV_AISTUDIO_ENABLED]: checked });
+            }}
+            t={t}
+          />
         )}
         {/* Cloud Sync */}
         {wrapSection('cloudSync', <CloudSyncSettings sourceTabId={sourceTabId} />, {
