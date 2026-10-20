@@ -25,8 +25,10 @@ export function createGemsPinControls(signal: AbortSignal) {
   const isStopped = () => stopped || signal.aborted;
 
   /**
-   * Inject a small style sheet that sizes and colours the pin toggle
-   * to match Gemini's native action buttons (Share, Edit, More).
+   * Inject a small style sheet that sizes the pin toggle like Gemini's native
+   * action buttons (Share, Edit, More). Inks follow `html[data-gv-scheme]`, light
+   * first: the row sits on Gemini's light card too, where the old dark-only
+   * white wash and pale blue were invisible. Pinned takes the Voyager accent.
    */
   function injectStyle(): void {
     if (styledInjected) return;
@@ -34,6 +36,9 @@ export function createGemsPinControls(signal: AbortSignal) {
     style.id = PIN_STYLE_ID;
     style.textContent = `
     .${PIN_BTN_CLASS} {
+      --gv-gem-pin-ink: oklch(0.14 0.004 285 / 0.62);
+      --gv-gem-pin-ink-hover: oklch(0.14 0.004 285 / 0.9);
+      --gv-gem-pin-hover: oklch(0.14 0.004 285 / 0.08);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -42,20 +47,27 @@ export function createGemsPinControls(signal: AbortSignal) {
       border: none;
       border-radius: 50%;
       background: transparent;
-      color: #8e918f;
+      color: var(--gv-gem-pin-ink);
       cursor: pointer;
-      transition: background 0.15s, color 0.15s;
+      transition: background-color 0.15s, color 0.15s;
       flex-shrink: 0;
     }
+    html[data-gv-scheme='dark'] .${PIN_BTN_CLASS} {
+      --gv-gem-pin-ink: oklch(0.92 0.004 250 / 0.66);
+      --gv-gem-pin-ink-hover: oklch(0.92 0.004 250 / 0.95);
+      --gv-gem-pin-hover: oklch(0.92 0.004 250 / 0.1);
+    }
     .${PIN_BTN_CLASS}:hover {
-      background: rgba(255,255,255,0.08);
-      color: #e8eaed;
+      background: var(--gv-gem-pin-hover);
+      color: var(--gv-gem-pin-ink-hover);
     }
-    .${PIN_BTN_CLASS}.gv-pinned {
-      color: #a8c7fa;
+    .${PIN_BTN_CLASS}:focus-visible {
+      outline: 2px solid var(--gv-pm-brand, var(--gv-pm-brand-default));
+      outline-offset: 1px;
     }
+    .${PIN_BTN_CLASS}.gv-pinned,
     .${PIN_BTN_CLASS}.gv-pinned:hover {
-      color: #d2e3fc;
+      color: var(--gv-pm-brand, var(--gv-pm-brand-default));
     }
   `;
     document.head.appendChild(style);
