@@ -26,11 +26,12 @@
   border-radius: 7px;
   background: var(--timeline-tooltip-bg);
   color: var(--timeline-tooltip-text);
-  font:
-    600 11px/1 Google Sans,
-    Roboto,
-    Arial,
-    sans-serif;
+  /* Voyager's own floating type: an unquoted Google Sans fell to Arial on
+     every site that does not ship it. */
+  font-family: var(--gv-ui-font, ui-sans-serif, system-ui, sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
   letter-spacing: 0;
   vertical-align: middle;
   box-shadow: 0 1px 2px oklch(0 0 0 / 0.18);
@@ -125,7 +126,13 @@
    with whatever brand the next site brings — DeepSeek's blue already sat on
    top of the old INSERT blue. */
 .gv-input-vim-hud[data-mode='normal'] .gv-input-vim-hud-mode {
-  color: oklch(0.5 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  /* Pulled a step toward the HUD's ink (dark on light, light on dark) so the
+     11px label keeps its contrast with any accent. */
+  color: color-mix(
+    in srgb,
+    var(--gv-pm-brand, var(--gv-pm-brand-default)) 78%,
+    var(--timeline-tooltip-text)
+  );
 }
 
 .gv-input-vim-hud[data-mode='insert'] .gv-input-vim-hud-mode {
@@ -158,7 +165,7 @@
   z-index: 2147483647;
   pointer-events: none;
   border-radius: 2px;
-  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.72);
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 72%, transparent);
   opacity: 0.94;
   box-shadow: 0 0 0 transparent;
   mix-blend-mode: multiply;
@@ -171,7 +178,8 @@
 
 .gv-input-vim-cursor-moving {
   animation: gv-input-vim-cursor-flash 70ms ease-out;
-  box-shadow: 0 0 8px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.24);
+  box-shadow: 0 0 8px
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 24%, transparent);
 }
 
 .gv-input-vim-cursor[data-mode='visual'] {
@@ -192,16 +200,11 @@
   }
 }
 
-html[data-gv-scheme='dark'] .gv-input-vim-hud[data-mode='normal'] .gv-input-vim-hud-mode {
-  color: oklch(0.82 0.13 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-}
-
 html[data-gv-scheme='dark'] .gv-input-vim-hud[data-mode='visual'] .gv-input-vim-hud-mode {
   color: #fdd663;
 }
 
 html[data-gv-scheme='dark'] .gv-input-vim-cursor {
-  background: oklch(0.77 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.72);
   mix-blend-mode: screen;
 }
 
@@ -213,7 +216,8 @@ html[data-gv-scheme='dark'] .gv-input-vim-cursor[data-mode='visual'] {
 }
 
 html[data-gv-scheme='dark'] .gv-input-vim-cursor-moving {
-  box-shadow: 0 0 16px oklch(0.77 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.36);
+  box-shadow: 0 0 16px
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 36%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
