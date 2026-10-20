@@ -1,13 +1,14 @@
 /* ============================================================================
  * Reusable feature coachmark (src/pages/content/coachmark)
- * Scrim + anchored bubble + optional inline switch. Light by default, dark via
- * body.dark-theme. Entrance via the `--show` class (added on rAF).
+ * Scrim + anchored bubble + optional inline switch. Colours come from the page
+ * ui tokens (005-ui-tokens.css), which follow `html[data-gv-scheme]`, so one
+ * rule set serves every site. Entrance via the `--show` class (added on rAF).
  * ========================================================================== */
 .gv-coach-scrim {
   position: fixed;
   inset: 0;
   z-index: 2147483640;
-  background: rgba(8, 12, 20, 0.2);
+  background: oklch(0.14 0.004 285 / 0.2);
   opacity: 0;
   pointer-events: none;
   transition: opacity 180ms ease;
@@ -31,58 +32,37 @@
 .gv-coach-reveal.--show {
   opacity: 1;
 }
-/* Soft attention halo on the previewed usage pill. */
+/* A quiet accent ring on the previewed usage pill, held still: the bubble
+   already points at it, so it needs no pulse. */
 .gv-usage-pill.gv-usage-preview.gv-coach-reveal.--show {
-  animation: gv-coach-halo 1.8s ease-in-out 0.25s infinite;
-}
-@keyframes gv-coach-halo {
-  0%,
-  100% {
-    box-shadow:
-      0 6px 22px rgba(0, 0, 0, 0.28),
-      0 0 0 0 oklch(0.64 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.42);
-  }
-  50% {
-    box-shadow:
-      0 6px 22px rgba(0, 0, 0, 0.28),
-      0 0 0 6px oklch(0.64 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0);
-  }
+  box-shadow:
+    0 6px 22px oklch(0 0 0 / 0.28),
+    0 0 0 2px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent);
 }
 
 .gv-coach {
-  --gv-coach-bg: rgba(255, 255, 255, 0.98);
-  --gv-coach-border: rgba(60, 64, 67, 0.16);
-  --gv-coach-text: #202124;
-  --gv-coach-muted: #5f6368;
-  --gv-coach-accent: oklch(0.56 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  /* Same colour as --gv-coach-accent above, at 0.12 alpha, written from the hue
-     variable. Do NOT rewrite this as CSS relative-colour syntax: that needs
-     Firefox 128 and the floor is 115. platformTheme sets --gv-pm-brand-h from
-     the very colour --gv-pm-brand carries, so the two forms are equivalent.
-     Guarded by platformTheme.test.ts and firefoxCssFloor.test.ts. */
-  --gv-coach-accent-soft: oklch(
-    0.56 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.12
-  );
-  --gv-coach-track: rgba(60, 64, 67, 0.12);
+  --gv-coach-bg: var(--gv-ui-surface);
+  --gv-coach-border: var(--gv-ui-border);
+  --gv-coach-text: var(--gv-ui-text);
+  --gv-coach-muted: var(--gv-ui-text-muted);
+  --gv-coach-accent: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  --gv-coach-accent-soft: color-mix(in srgb, var(--gv-coach-accent) 14%, transparent);
+  --gv-coach-track: var(--gv-ui-hover);
+  --gv-coach-field: oklch(0.14 0.004 285 / 0.04);
+  --gv-coach-switch: oklch(0.76 0.006 250 / 0.65);
+  --gv-coach-switch-border: oklch(0.62 0.008 285 / 0.5);
   position: fixed;
   z-index: 2147483647;
   box-sizing: border-box;
   width: 312px;
   max-width: calc(100vw - 24px);
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--gv-coach-bg);
   border: 1px solid var(--gv-coach-border);
   color: var(--gv-coach-text);
-  box-shadow:
-    0 8px 24px rgba(60, 64, 67, 0.16),
-    0 1px 3px rgba(60, 64, 67, 0.12);
-  font-family:
-    'Google Sans',
-    'Roboto',
-    system-ui,
-    -apple-system,
-    sans-serif;
+  box-shadow: var(--gv-ui-shadow);
+  font-family: var(--gv-ui-font);
   opacity: 0;
   transform: translateY(8px);
   transform-origin: center bottom;
@@ -99,23 +79,9 @@
   transform-origin: center top;
 }
 html[data-gv-scheme='dark'] .gv-coach {
-  --gv-coach-bg: rgba(32, 33, 36, 0.98);
-  --gv-coach-border: rgba(232, 234, 237, 0.12);
-  --gv-coach-text: #e8eaed;
-  --gv-coach-muted: #bdc1c6;
-  --gv-coach-accent: oklch(0.74 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  /* Same colour as --gv-coach-accent above, at 0.16 alpha, written from the hue
-     variable. Do NOT rewrite this as CSS relative-colour syntax: that needs
-     Firefox 128 and the floor is 115. platformTheme sets --gv-pm-brand-h from
-     the very colour --gv-pm-brand carries, so the two forms are equivalent.
-     Guarded by platformTheme.test.ts and firefoxCssFloor.test.ts. */
-  --gv-coach-accent-soft: oklch(
-    0.74 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.16
-  );
-  --gv-coach-track: rgba(232, 234, 237, 0.1);
-  box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.28),
-    0 1px 3px rgba(0, 0, 0, 0.2);
+  --gv-coach-field: oklch(0.92 0.004 250 / 0.05);
+  --gv-coach-switch: oklch(0.38 0.008 285);
+  --gv-coach-switch-border: oklch(0.54 0.008 285 / 0.6);
 }
 
 .gv-coach-arrow {
@@ -148,11 +114,13 @@ html[data-gv-scheme='dark'] .gv-coach {
   height: 24px;
   padding: 0;
   border: none;
-  border-radius: 50%;
+  border-radius: 8px;
   background: transparent;
   color: var(--gv-coach-muted);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 .gv-coach-close svg {
   width: 16px;
@@ -160,6 +128,14 @@ html[data-gv-scheme='dark'] .gv-coach {
 }
 .gv-coach-close:hover {
   background: var(--gv-coach-track);
+  color: var(--gv-coach-text);
+}
+
+.gv-coach-close:focus-visible,
+.gv-coach-switch:focus-visible,
+.gv-coach-dismiss:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring);
+  outline-offset: 2px;
 }
 
 .gv-coach-head {
@@ -204,57 +180,48 @@ html[data-gv-scheme='dark'] .gv-coach {
   margin-top: 10px;
   padding: 8px 8px 8px 10px;
   border: 1px solid var(--gv-coach-border);
-  border-radius: 8px;
-  background: rgba(60, 64, 67, 0.055);
+  border-radius: 9px;
+  background: var(--gv-coach-field);
   cursor: pointer;
 }
 .gv-coach-toggle-label {
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--gv-coach-text);
 }
-html[data-gv-scheme='dark'] .gv-coach-toggle {
-  background: rgba(232, 234, 237, 0.055);
-}
+/* The folder settings switch (.gv-folder-width-switch): 32×18, neutral track,
+   accent when on. */
 .gv-coach-switch {
   position: relative;
   flex: 0 0 auto;
-  width: 40px;
-  height: 22px;
+  width: 32px;
+  height: 18px;
   padding: 0;
-  border: 1px solid rgba(60, 64, 67, 0.28);
+  border: 1px solid var(--gv-coach-switch-border);
   border-radius: 999px;
-  background: rgba(60, 64, 67, 0.26);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+  background: var(--gv-coach-switch);
   cursor: pointer;
   transition:
-    background 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease;
-}
-html[data-gv-scheme='dark'] .gv-coach-switch {
-  border-color: rgba(232, 234, 237, 0.24);
-  background: rgba(232, 234, 237, 0.18);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.24);
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 .gv-coach .gv-coach-switch[aria-checked='true'] {
-  background: var(--gv-pm-brand, var(--gv-pm-brand-default));
-  border-color: var(--gv-pm-brand, var(--gv-pm-brand-default));
-  box-shadow: none;
+  background: var(--gv-coach-accent);
+  border-color: var(--gv-coach-accent);
 }
 .gv-coach-knob {
   position: absolute;
-  top: 1px;
-  left: 1px;
-  width: 18px;
-  height: 18px;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  background: oklch(0.995 0.002 250);
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.28);
+  transition: transform 0.15s ease;
 }
 .gv-coach-switch[aria-checked='true'] .gv-coach-knob {
-  transform: translateX(18px);
+  transform: translateX(14px);
 }
 
 .gv-coach-footer {
@@ -272,23 +239,26 @@ html[data-gv-scheme='dark'] .gv-coach-switch {
   line-height: 1;
 }
 
+/* The shared confirm's primary button: 28px / 8px / 500, accent fill. */
 .gv-coach-dismiss {
   display: block;
+  box-sizing: border-box;
+  min-height: 28px;
   margin: 0 0 0 auto;
-  padding: 6px 12px;
-  border: 1px solid var(--gv-pm-brand, var(--gv-pm-brand-default));
-  border-radius: 999px;
-  background: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  padding: 4px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--gv-coach-accent);
   color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
   font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 600;
-  line-height: 1;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
   cursor: pointer;
 }
 .gv-coach-dismiss:hover {
   background: var(--gv-pm-brand-hover);
-  border-color: var(--gv-pm-brand-hover);
 }
 
 /* Brief confirmation accent once the switch is flipped on. */
@@ -315,8 +285,5 @@ body.gv-rtl .gv-coach-dismiss,
   .gv-coach-scrim,
   .gv-coach-reveal {
     transition: none;
-  }
-  .gv-usage-pill.gv-usage-preview.gv-coach-reveal.--show {
-    animation: none;
   }
 }
