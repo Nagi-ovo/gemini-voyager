@@ -24,6 +24,8 @@ const STATIC_CONTENT_STYLESHEETS = [
   'src/features/timeline/timelineContextMenu.css',
   'src/features/timeline/timelineSlider.css',
   'src/features/timeline/timelinePreview.css',
+  'src/pages/content/selectionToolbar/selectionToolbar.css',
+  'src/pages/content/highlight/highlight.css',
   'src/pages/content/defaultModel/styles.css',
   'src/pages/content/folder/floatingPanel.css',
   'src/pages/content/folder/floatingPanelPolish.css',
