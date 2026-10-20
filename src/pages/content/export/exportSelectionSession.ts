@@ -90,6 +90,9 @@ interface MessageBinding {
 const SELECTOR_INSET_PX = 8;
 /** Width of `.gv-export-msg-checkbox`. */
 const CHECKBOX_SIZE_PX = 20;
+/** Room the checkbox column takes with a gap on each side; `.gv-export-msg-room` pads by it. */
+const COLUMN_ROOM_PX = CHECKBOX_SIZE_PX + 2 * SELECTOR_INSET_PX;
+const ROOM_CLASS = 'gv-export-msg-room';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 function createCloseIcon(): SVGSVGElement {
@@ -272,7 +275,7 @@ function createSelectionView(
       checkbox,
       cleanup: () => {
         host.removeEventListener('click', toggle);
-        host.classList.remove('gv-export-msg-host', 'gv-export-msg-selected');
+        host.classList.remove('gv-export-msg-host', 'gv-export-msg-selected', ROOM_CLASS);
         selector.remove();
       },
     };
@@ -286,7 +289,8 @@ function createSelectionView(
   // A user bubble and a response start at different x (Gemini right-aligns the bubble), so each
   // checkbox is moved onto the leftmost message edge to keep them in one column. A ChatGPT reply's
   // text starts at that edge, so a checkbox inside it covered the reply: when the conversation
-  // leaves a gutter left of the edge, the column goes there instead.
+  // leaves a gutter left of the edge, the column goes there instead. Otherwise the column stays
+  // inside the messages, and a message starting under it gets room so its first characters show.
   const alignSelectors = () => {
     const placed = Array.from(bindings.values()).flatMap((binding) => {
       const rect = binding.host.getBoundingClientRect();
@@ -297,17 +301,22 @@ function createSelectionView(
     const root = anchors.conversationRoot();
     const gutter = edge - root.getBoundingClientRect().left;
     const gutterOffset = -(CHECKBOX_SIZE_PX + SELECTOR_INSET_PX);
-    const offset =
-      gutter >= CHECKBOX_SIZE_PX + 2 * SELECTOR_INSET_PX &&
+    const inGutter =
+      gutter >= COLUMN_ROOM_PX &&
       !clipsGutterColumn(
         placed.map(({ binding }) => binding.host),
         root,
         edge + gutterOffset,
-      )
-        ? gutterOffset
-        : SELECTOR_INSET_PX;
+      );
+    const offset = inGutter ? gutterOffset : SELECTOR_INSET_PX;
     placed.forEach(({ binding, left }) => {
       binding.selector.style.left = `${Math.round(edge - left) + offset}px`;
+      // A Gemini reply's text starts at the turn's left edge, which clips paint, so the checkbox
+      // inside covered the reply's first characters. Padding only during selection keeps both.
+      const needsRoom = !inGutter && Math.round(left - edge) < COLUMN_ROOM_PX;
+      if (binding.host.classList.contains(ROOM_CLASS) !== needsRoom) {
+        binding.host.classList.toggle(ROOM_CLASS, needsRoom);
+      }
     });
   };
   window.addEventListener('resize', alignSelectors);

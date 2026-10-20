@@ -156,8 +156,16 @@ html[data-gv-scheme='dark'] .gv-export-width-btn.active {
   cursor: pointer;
 }
 
-/* Top-anchored next to the first line; `left` is written by
-   exportSelectionSession.ts, in the gutter beside the messages when there is room. */
+/* A message that starts under an in-message checkbox column (Gemini, whose turns clip paint
+   to their box) moves its content clear of the 20px box while selecting: 8px inset, the box,
+   8px gap (COLUMN_ROOM_PX). Border-box keeps hosts held at width: 100% inside the turn. */
+.gv-export-select-mode .gv-export-msg-host.gv-export-msg-room {
+  box-sizing: border-box;
+  padding-left: 36px;
+}
+
+/* Top-anchored next to the first line; `left` is written by exportSelectionSession.ts, in the
+   gutter beside the messages when there is room, otherwise inside them. */
 .gv-export-msg-selector {
   display: none;
   position: absolute;

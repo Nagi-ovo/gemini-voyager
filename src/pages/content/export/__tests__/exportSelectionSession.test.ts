@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { toastDriver } from '@/tests/toastDriver';
@@ -50,6 +52,7 @@ function expectSelectionUiRemoved(): void {
   expect(document.querySelector('[data-gv-export-select-bar="true"]')).toBeNull();
   expect(document.querySelector('.gv-export-msg-selector')).toBeNull();
   expect(document.querySelector('.gv-export-msg-host')).toBeNull();
+  expect(document.querySelector('.gv-export-msg-room')).toBeNull();
   expect(document.body.classList.contains('gv-export-select-mode')).toBe(false);
 }
 
@@ -166,7 +169,8 @@ describe('startExportSelectionSession', () => {
     session.cancel();
   });
 
-  it('keeps the checkbox inside the turn when the turn clips its paint', () => {
+  /** Gemini: each turn is `content-visibility: auto` and its reply starts at the turn's edge. */
+  const startInClippingTurns = () => {
     const root = document.createElement('div');
     place(root, 0, 1368);
     const turn = (msg: ExportMessage) => {
@@ -187,10 +191,43 @@ describe('startExportSelectionSession', () => {
       readMessages: () => [user, assistant],
       anchors: { topUserElement: () => null, conversationRoot: () => root },
     });
+    return { session, user: user.hostElement, assistant: assistant.hostElement };
+  };
 
-    expect(checkboxX(user.hostElement)).toBe(checkboxX(assistant.hostElement));
-    expect(checkboxX(assistant.hostElement)).toBe(308);
+  it('keeps the checkbox inside the turn when the turn clips its paint', () => {
+    const { session, user, assistant } = startInClippingTurns();
+
+    expect(checkboxX(user)).toBe(checkboxX(assistant));
+    expect(checkboxX(assistant)).toBe(308);
     session.cancel();
+  });
+
+  it("does not cover the reply's first characters when the turn clips its paint", async () => {
+    const style = document.createElement('style');
+    style.textContent = readFileSync(
+      resolve(
+        __dirname,
+        '../../../../styles/contentStyle/210-export-dialog-options-and-selection.css',
+      ),
+      'utf8',
+    );
+    document.head.appendChild(style);
+    const textStart = (host: HTMLElement) =>
+      host.getBoundingClientRect().left + (parseFloat(getComputedStyle(host).paddingLeft) || 0);
+    try {
+      const { session, user, assistant } = startInClippingTurns();
+
+      expect(textStart(assistant)).toBeGreaterThan(checkboxX(assistant) + 20);
+      // The right-aligned user bubble already clears the column and keeps its layout.
+      expect(textStart(user)).toBe(731);
+
+      session.cancel();
+      await session.done;
+      // Nothing moves outside selection mode.
+      expect(textStart(assistant)).toBe(300);
+    } finally {
+      style.remove();
+    }
   });
 
   it('still uses the gutter when a clipping wrapper spans it', () => {
@@ -210,6 +247,7 @@ describe('startExportSelectionSession', () => {
     });
 
     expect(checkboxX(assistant.hostElement)).toBe(272);
+    expect(assistant.hostElement.classList.contains('gv-export-msg-room')).toBe(false);
     session.cancel();
   });
 
