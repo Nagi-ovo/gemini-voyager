@@ -1,395 +1,141 @@
-/* Import dialog */
-/* ── Folder Import Dialog ── */
+/* ── Folder Import Dialog ──
+   The page-level ui tokens (005) carry the surface, inks and font through
+   `html[data-gv-scheme]`, so one rule set covers light and dark. The Voyager
+   accent is the full token: a hue rebuilt at higher chroma painted a louder
+   green than the brand itself and lost any custom accent. One brand fill per
+   dialog (Import); choosing a file and pasting are quiet secondary actions. */
 .gv-folder-import-dialog {
-  background: oklch(0.995 0.002 250);
-  border: 1px solid oklch(0.92 0.004 250 / 0.7);
-  border-radius: 18px;
-  padding: 24px;
+  --gv-import-accent: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  --gv-import-accent-fg: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
+  --gv-import-accent-soft: color-mix(in srgb, var(--gv-import-accent) 12%, transparent);
+  --gv-import-field: oklch(0.14 0.004 285 / 0.04);
+  box-sizing: border-box;
   min-width: 400px;
   max-width: 500px;
-  box-shadow:
-    0 16px 48px oklch(0 0 0 / 0.12),
-    0 6px 20px oklch(0 0 0 / 0.06);
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    Helvetica,
-    Arial,
-    'Apple Color Emoji',
-    'Segoe UI Emoji';
+  padding: 20px;
+  border: 1px solid var(--gv-ui-border);
+  border-radius: 12px;
+  background: var(--gv-ui-surface);
+  color: var(--gv-ui-text);
+  box-shadow: var(--gv-ui-shadow);
+  font-family: var(--gv-ui-font);
+  font-size: 13px;
+  line-height: 1.4;
   animation: gv-folder-fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  .gv-folder-import-dialog {
-    background: oklch(0.2 0.008 285);
-    border-color: oklch(0.3 0.008 285 / 0.7);
-    box-shadow:
-      0 16px 48px oklch(0 0 0 / 0.4),
-      0 6px 20px oklch(0 0 0 / 0.25);
-  }
-}
-
 html[data-gv-scheme='dark'] .gv-folder-import-dialog {
-  background: oklch(0.2 0.008 285);
-  border-color: oklch(0.3 0.008 285 / 0.7);
-  box-shadow:
-    0 16px 48px oklch(0 0 0 / 0.4),
-    0 6px 20px oklch(0 0 0 / 0.25);
-}
-
-html[data-gv-scheme='light'] .gv-folder-import-dialog {
-  background: oklch(0.995 0.002 250);
-  border-color: oklch(0.92 0.004 250 / 0.7);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-dialog {
-  background: oklch(0.2 0.008 285);
-  border-color: oklch(0.3 0.008 285 / 0.7);
-  box-shadow:
-    0 16px 48px oklch(0 0 0 / 0.4),
-    0 6px 20px oklch(0 0 0 / 0.25);
+  --gv-import-field: oklch(0.92 0.004 250 / 0.05);
 }
 
 .gv-folder-import-dialog .gv-folder-dialog-title {
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   padding: 0;
   border-bottom: none;
-  color: oklch(0.14 0.004 285);
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-folder-import-dialog .gv-folder-dialog-title {
-    color: oklch(0.92 0.004 250);
-  }
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-dialog .gv-folder-dialog-title {
-  color: oklch(0.92 0.004 250);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-dialog .gv-folder-dialog-title {
-  color: oklch(0.92 0.004 250);
-}
-
-html[data-gv-scheme='light'] .gv-folder-import-dialog .gv-folder-dialog-title {
-  color: oklch(0.14 0.004 285);
+  color: var(--gv-ui-text);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 /* Strategy selection */
 .gv-folder-import-strategy {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .gv-folder-import-strategy-label {
+  margin-bottom: 8px;
+  color: var(--gv-ui-text-muted);
   font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 12px;
-  color: oklch(0.14 0.004 285 / 0.5);
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-folder-import-strategy-label {
-    color: oklch(0.92 0.004 250 / 0.5);
-  }
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-strategy-label {
-  color: oklch(0.92 0.004 250 / 0.5);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-strategy-label {
-  color: oklch(0.92 0.004 250 / 0.5);
-}
-
-html[data-gv-scheme='light'] .gv-folder-import-strategy-label {
-  color: oklch(0.14 0.004 285 / 0.5);
+  font-weight: 500;
 }
 
 .gv-folder-import-strategy-options {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .gv-folder-import-radio-option {
   display: flex;
   align-items: center;
-  padding: 12px 14px;
-  border: 1.5px solid oklch(0.92 0.004 250 / 0.7);
-  border-radius: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--gv-ui-border);
+  border-radius: 9px;
   cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.15s ease;
 }
 
 .gv-folder-import-radio-option:hover {
-  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.06);
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-folder-import-radio-option {
-    border-color: oklch(0.3 0.008 285 / 0.7);
-  }
-  .gv-folder-import-radio-option:hover {
-    background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.08);
-    border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-  }
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-radio-option {
-  border-color: oklch(0.3 0.008 285 / 0.7);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-radio-option:hover {
-  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.08);
-  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-radio-option {
-  border-color: oklch(0.3 0.008 285 / 0.7);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-radio-option:hover {
-  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.08);
-  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-}
-
-html[data-gv-scheme='light'] .gv-folder-import-radio-option {
-  border-color: oklch(0.92 0.004 250 / 0.7);
-}
-
-html[data-gv-scheme='light'] .gv-folder-import-radio-option:hover {
-  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.06);
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
+  background: var(--gv-ui-hover);
 }
 
 .gv-folder-import-radio-option input[type='radio'] {
-  margin-right: 12px;
+  margin: 0 10px 0 0;
   cursor: pointer;
-  accent-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  accent-color: var(--gv-import-accent);
 }
 
 .gv-folder-import-radio-option span {
+  color: var(--gv-ui-text);
   font-size: 13px;
   font-weight: 500;
-  color: oklch(0.14 0.004 285);
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-folder-import-radio-option span {
-    color: oklch(0.92 0.004 250);
-  }
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-radio-option span {
-  color: oklch(0.92 0.004 250);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-radio-option span {
-  color: oklch(0.92 0.004 250);
-}
-
-html[data-gv-scheme='light'] .gv-folder-import-radio-option span {
-  color: oklch(0.14 0.004 285);
 }
 
 /* File input */
 .gv-folder-import-file-input {
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 
-.gv-folder-import-file-button {
-  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  color: oklch(0.99 0.01 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  border: none;
-  padding: 10px 20px;
-  border-radius: 9px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 700;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+/* Shared shape of the dialog's full-width secondary actions. */
+.gv-folder-import-file-button,
+.gv-folder-import-paste-toggle {
+  box-sizing: border-box;
   width: 100%;
-  box-shadow: 0 2px 8px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 1px solid var(--gv-ui-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gv-ui-text);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
-.gv-folder-import-file-button:hover {
-  background: oklch(0.6 0.2 158);
-  box-shadow: 0 4px 14px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-  transform: translateY(-1px);
+.gv-folder-import-file-button:hover,
+.gv-folder-import-paste-toggle:hover {
+  background: var(--gv-ui-hover);
 }
 
-@media (prefers-color-scheme: dark) {
-  .gv-folder-import-file-button {
-    background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-    color: oklch(0.15 0.025 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-    box-shadow: 0 2px 8px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
-  }
-  .gv-folder-import-file-button:hover {
-    background: oklch(0.7 0.2 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-    box-shadow: 0 4px 14px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-  }
-}
-
-html[data-gv-scheme='light'] .gv-folder-import-file-button {
-  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  color: oklch(0.99 0.01 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  box-shadow: 0 2px 8px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-file-button {
-  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  color: oklch(0.15 0.025 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  box-shadow: 0 2px 8px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
+.gv-folder-import-file-button:focus-visible,
+.gv-folder-import-paste-toggle:focus-visible,
+.gv-folder-dialog-btn:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring);
+  outline-offset: 2px;
 }
 
 .gv-folder-import-file-name {
-  margin-top: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  color: oklch(0.14 0.004 285 / 0.5);
-  padding: 9px 12px;
-  background: oklch(0.14 0.004 285 / 0.04);
-  border-radius: 10px;
-  text-align: center;
-  min-height: 32px;
   display: none;
   align-items: center;
   justify-content: center;
+  min-height: 28px;
+  margin-top: 8px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: var(--gv-import-field);
+  color: var(--gv-ui-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .gv-folder-import-file-name:not(:empty) {
   display: flex;
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-folder-import-file-name {
-    background: oklch(0.92 0.004 250 / 0.06);
-    color: oklch(0.92 0.004 250 / 0.5);
-  }
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-file-name {
-  background: oklch(0.92 0.004 250 / 0.06);
-  color: oklch(0.92 0.004 250 / 0.5);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-file-name {
-  background: oklch(0.92 0.004 250 / 0.06);
-  color: oklch(0.92 0.004 250 / 0.5);
-}
-
-html[data-gv-scheme='light'] .gv-folder-import-file-name {
-  background: oklch(0.14 0.004 285 / 0.04);
-  color: oklch(0.14 0.004 285 / 0.5);
-}
-
-/* Dialog buttons */
-.gv-folder-dialog-buttons {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.gv-folder-dialog-btn {
-  padding: 8px 18px;
-  border-radius: 9px;
-  border: none;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.gv-folder-dialog-btn-primary {
-  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  color: oklch(0.99 0.01 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  box-shadow: 0 2px 8px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
-}
-
-.gv-folder-dialog-btn-primary:hover {
-  background: oklch(0.6 0.2 158);
-  box-shadow: 0 4px 14px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-  transform: translateY(-1px);
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-folder-dialog-btn-primary {
-    background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-    color: oklch(0.15 0.025 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-    box-shadow: 0 2px 8px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
-  }
-  .gv-folder-dialog-btn-primary:hover {
-    background: oklch(0.7 0.2 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-    box-shadow: 0 4px 14px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-  }
-}
-
-html[data-gv-scheme='light'] .gv-folder-dialog-btn-primary {
-  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  color: oklch(0.99 0.01 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  box-shadow: 0 2px 8px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-dialog-btn-primary {
-  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  color: oklch(0.15 0.025 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  box-shadow: 0 2px 8px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
-}
-
-.gv-folder-dialog-btn-secondary {
-  background: transparent;
-  color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  border: 1px solid oklch(0.14 0.004 285 / 0.12);
-}
-
-.gv-folder-dialog-btn-secondary:hover {
-  background: oklch(0.14 0.004 285 / 0.06);
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-folder-dialog-btn-secondary {
-    color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-    border-color: oklch(0.92 0.004 250 / 0.12);
-  }
-  .gv-folder-dialog-btn-secondary:hover {
-    background: oklch(0.92 0.004 250 / 0.06);
-  }
-}
-
-html[data-gv-scheme='dark'] .gv-folder-dialog-btn-secondary {
-  color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  border-color: oklch(0.92 0.004 250 / 0.12);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-dialog-btn-secondary:hover {
-  background: oklch(0.92 0.004 250 / 0.06);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-dialog-btn-secondary {
-  color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  border-color: oklch(0.92 0.004 250 / 0.12);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-dialog-btn-secondary:hover {
-  background: oklch(0.92 0.004 250 / 0.06);
-}
-
-html[data-gv-scheme='light'] .gv-folder-dialog-btn-secondary {
-  color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  border-color: oklch(0.14 0.004 285 / 0.12);
-}
-
-html[data-gv-scheme='light'] .gv-folder-dialog-btn-secondary:hover {
-  background: oklch(0.14 0.004 285 / 0.06);
 }
 
 /* Paste JSON toggle & textarea */
@@ -398,104 +144,86 @@ html[data-gv-scheme='light'] .gv-folder-dialog-btn-secondary:hover {
 }
 
 .gv-folder-import-paste-toggle {
-  background: transparent;
-  color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  border: 1px dashed oklch(0.92 0.004 250 / 0.7);
-  padding: 9px 16px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  width: 100%;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.gv-folder-import-paste-toggle:hover {
-  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.06);
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
+  border-style: dashed;
+  color: var(--gv-ui-text-muted);
 }
 
 .gv-folder-import-paste-toggle-active {
-  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
   border-style: solid;
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-folder-import-paste-toggle {
-    color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-    border-color: oklch(0.3 0.008 285 / 0.7);
-  }
-  .gv-folder-import-paste-toggle:hover {
-    background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.08);
-    border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-  }
-  .gv-folder-import-paste-toggle-active {
-    background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.12);
-    border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
-  }
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-paste-toggle {
-  color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  border-color: oklch(0.3 0.008 285 / 0.7);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-paste-toggle:hover {
-  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.08);
-  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-}
-
-html[data-gv-scheme='dark'] .gv-folder-import-paste-toggle-active {
-  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.12);
-  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
+  color: var(--gv-ui-text);
 }
 
 .gv-folder-import-paste-area {
+  box-sizing: border-box;
   width: 100%;
   min-height: 120px;
   max-height: 300px;
-  margin-top: 10px;
-  padding: 9px 12px;
-  border: 1.5px solid oklch(0.92 0.004 250 / 0.7);
-  border-radius: 10px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--gv-ui-border);
+  border-radius: 8px;
+  background: var(--gv-import-field);
+  color: var(--gv-ui-text);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 12px;
   line-height: 1.5;
   resize: vertical;
-  background: oklch(0.14 0.004 285 / 0.04);
-  color: oklch(0.14 0.004 285);
-  box-sizing: border-box;
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.gv-folder-import-paste-area::placeholder {
+  color: var(--gv-ui-text-muted);
 }
 
 .gv-folder-import-paste-area:focus {
   outline: none;
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
-  box-shadow: 0 0 0 3px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
+  border-color: var(--gv-import-accent);
+  box-shadow: 0 0 0 3px var(--gv-import-accent-soft);
 }
 
-@media (prefers-color-scheme: dark) {
-  .gv-folder-import-paste-area {
-    background: oklch(0.92 0.004 250 / 0.06);
-    color: oklch(0.92 0.004 250);
-    border-color: oklch(0.3 0.008 285 / 0.7);
-  }
-  .gv-folder-import-paste-area:focus {
-    border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
-    box-shadow: 0 0 0 3px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
-  }
+/* Dialog buttons — the shared confirm's 28px / 8px / 500 controls. */
+.gv-folder-dialog-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
-html[data-gv-scheme='dark'] .gv-folder-import-paste-area {
-  background: oklch(0.92 0.004 250 / 0.06);
-  color: oklch(0.92 0.004 250);
-  border-color: oklch(0.3 0.008 285 / 0.7);
+.gv-folder-dialog-btn {
+  box-sizing: border-box;
+  min-height: 28px;
+  padding: 4px 12px;
+  border: 1px solid var(--gv-ui-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gv-ui-text);
+  font-family: var(--gv-ui-font);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    filter 0.15s ease;
 }
 
-html[data-gv-scheme='dark'] .gv-folder-import-paste-area:focus {
-  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
-  box-shadow: 0 0 0 3px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
+.gv-folder-dialog-btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.gv-folder-dialog-btn-primary {
+  border-color: transparent;
+  background: var(--gv-import-accent, var(--gv-pm-brand, var(--gv-pm-brand-default)));
+  color: var(--gv-import-accent-fg, var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default)));
+}
+
+.gv-folder-dialog-btn-primary:hover:not(:disabled) {
+  background: var(--gv-pm-brand-hover);
+}
+
+.gv-folder-dialog-btn-secondary:hover:not(:disabled) {
+  background: var(--gv-ui-hover);
 }
