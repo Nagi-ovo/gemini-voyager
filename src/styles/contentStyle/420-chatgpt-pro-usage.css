@@ -1,4 +1,5 @@
-/* ChatGPT · Pro usage this week: an 18px ring just before the model picker, and its hover card. */
+/* ChatGPT · Pro usage this week: an 18px ring just before the model picker, and its hover card.
+   The ring keeps ChatGPT's own black / white ink; the card is the shared ui surface. */
 .gv-chatgpt-pro-usage {
   display: inline-flex;
   flex: 0 0 auto;
@@ -42,16 +43,17 @@ html[data-gv-scheme='dark'] .gv-chatgpt-pro-usage {
   box-sizing: border-box;
   max-width: min(320px, calc(100vw - 16px));
   padding: 8px 12px;
-  border: 1px solid #e6e6e6;
+  border: 1px solid var(--gv-ui-border);
   border-radius: 10px;
-  background: #ffffff;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-  font-family: inherit;
+  background: var(--gv-ui-surface);
+  color: var(--gv-ui-text);
+  box-shadow: var(--gv-ui-shadow);
+  font-family: var(--gv-ui-font);
   pointer-events: none;
 }
 
 .gv-chatgpt-pro-usage-card-title {
-  color: #0d0d0d;
+  color: var(--gv-ui-text);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
@@ -61,22 +63,8 @@ html[data-gv-scheme='dark'] .gv-chatgpt-pro-usage {
 
 .gv-chatgpt-pro-usage-card-detail {
   margin-top: 2px;
-  color: #6e6e6e;
+  color: var(--gv-ui-text-muted);
   font-size: 12px;
   line-height: 16px;
   white-space: nowrap;
-}
-
-html[data-gv-scheme='dark'] .gv-chatgpt-pro-usage-card {
-  border-color: #454545;
-  background: #353535;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
-}
-
-html[data-gv-scheme='dark'] .gv-chatgpt-pro-usage-card-title {
-  color: #ececec;
-}
-
-html[data-gv-scheme='dark'] .gv-chatgpt-pro-usage-card-detail {
-  color: #afafaf;
 }
