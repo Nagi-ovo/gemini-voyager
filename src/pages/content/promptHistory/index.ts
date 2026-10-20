@@ -26,7 +26,7 @@ import {
   isUpdateActionButton,
 } from '../sendBehavior/sendButton';
 import { watchRouteChanges } from '../utils/routeWatcher';
-import { createEl, renderHistoryItems } from './historyList';
+import { createEl, createHistoryIcon, renderHistoryItems } from './historyList';
 import {
   findFormPromptInput,
   inputFromTarget,
@@ -313,10 +313,7 @@ function setupPanel(): void {
   trigger.setAttribute('aria-label', getTranslationSync('promptHistoryTitle'));
   trigger.setAttribute('aria-controls', PANEL_ID);
   trigger.setAttribute('aria-expanded', 'false');
-  const icon = createEl('span', 'gv-ph-trigger-icon');
-  icon.setAttribute('aria-hidden', 'true');
-  icon.textContent = '🕘';
-  trigger.appendChild(icon);
+  trigger.appendChild(createHistoryIcon());
 
   panel = createEl('div', 'gv-ph-panel gv-hidden');
   panel.id = PANEL_ID;

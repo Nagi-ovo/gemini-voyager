@@ -1,51 +1,55 @@
 /* ============================================================================
    Prompt History (#923)
    ========================================================================== */
+/* A neutral secondary ball, so the prompt manager keeps the only accent one
+   on the page. Page tokens are right here: this follows data-gv-scheme. */
 .gv-ph-trigger {
   position: fixed;
   right: 58px;
   top: 80px;
   width: 46px;
   height: 46px;
+  padding: 0;
   border-radius: 9999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(
-    135deg,
-    var(--gv-pm-brand, var(--gv-pm-brand-default)),
-    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 85%, white)
-  );
-  border: 1.5px solid var(--gv-pm-brand, var(--gv-pm-brand-default));
+  background: var(--gv-ui-surface);
+  border: 1px solid var(--gv-ui-border);
   box-shadow:
-    0 6px 24px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 35%, transparent),
-    0 2px 8px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 20%, transparent),
-    inset 0 1px 0 oklch(1 0 0 / 0.15);
-  color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
+    0 4px 14px oklch(0 0 0 / 0.12),
+    0 1px 2px oklch(0 0 0 / 0.08);
+  color: var(--gv-ui-text-muted);
   z-index: 2147483150;
   cursor: pointer;
   transition:
-    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+html[data-gv-scheme='dark'] .gv-ph-trigger {
+  box-shadow:
+    0 4px 14px oklch(0 0 0 / 0.36),
+    0 1px 2px oklch(0 0 0 / 0.24);
 }
 
 .gv-ph-trigger:focus-visible,
 .gv-ph-action:focus-visible {
-  outline: 2px solid var(--gv-pm-brand, var(--gv-pm-brand-default));
+  outline: 2px solid var(--gv-ui-focus-ring);
   outline-offset: 2px;
 }
 
-.gv-ph-trigger:hover {
-  transform: scale(1.08) translateY(-1px);
-}
-
-.gv-ph-trigger:active {
-  transform: scale(0.94);
+.gv-ph-trigger:hover,
+.gv-ph-trigger[aria-expanded='true'] {
+  background: var(--gv-ui-surface-hover);
+  color: var(--gv-ui-text);
 }
 
 .gv-ph-trigger-icon {
-  font-size: 20px;
-  line-height: 1;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
 }
 
 .gv-ph-panel {
@@ -60,45 +64,21 @@
   font-size: 14px;
   --gv-pm-surface: oklch(0.995 0.002 250);
   border-radius: 18px;
-  background: oklch(0.995 0.002 250);
-  border: 1px solid oklch(0.92 0.004 250 / 0.7);
+  background: var(--gv-pm-surface);
+  border: 1px solid var(--gv-ui-border);
+  box-shadow: var(--gv-ui-shadow);
   z-index: 2147483200;
-  color: oklch(0.14 0.004 285);
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    Helvetica,
-    Arial,
-    'Apple Color Emoji',
-    'Segoe UI Emoji';
-}
-
-.gv-ph-panel:focus-visible {
-  outline: 2px solid var(--gv-pm-brand, var(--gv-pm-brand-default));
-  outline-offset: 2px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-ph-panel {
-    background: oklch(0.2 0.008 285);
-    color: oklch(0.92 0.004 250);
-    border-color: oklch(0.3 0.008 285 / 0.7);
-  }
+  color: var(--gv-ui-text);
+  font-family: var(--gv-ui-font);
 }
 
 html[data-gv-scheme='dark'] .gv-ph-panel {
-  background: oklch(0.2 0.008 285);
-  color: oklch(0.92 0.004 250);
-  border-color: oklch(0.3 0.008 285 / 0.7);
+  --gv-pm-surface: oklch(0.2 0.008 285);
 }
 
-html[data-gv-scheme='light'] .gv-ph-panel {
-  background: oklch(0.995 0.002 250);
-  color: oklch(0.14 0.004 285);
-  border-color: oklch(0.92 0.004 250 / 0.7);
+.gv-ph-panel:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring);
+  outline-offset: 2px;
 }
 
 .gv-ph-header {
@@ -107,7 +87,7 @@ html[data-gv-scheme='light'] .gv-ph-panel {
   justify-content: space-between;
   padding: 14px 16px;
   gap: 6px;
-  border-bottom: 1px solid oklch(0.92 0.004 250 / 0.5);
+  border-bottom: 1px solid var(--gv-ui-border);
 }
 
 .gv-ph-title {
@@ -132,7 +112,7 @@ html[data-gv-scheme='light'] .gv-ph-panel {
 }
 
 .gv-ph-item {
-  border: 1px solid oklch(0.92 0.004 250 / 0.6);
+  border: 1px solid var(--gv-ui-border);
   border-radius: 12px;
   padding: 10px 12px;
   display: flex;
@@ -161,8 +141,8 @@ html[data-gv-scheme='light'] .gv-ph-panel {
 }
 
 .gv-ph-badge-edited {
-  background: oklch(0.6 0.13 45 / 0.15);
-  color: oklch(0.55 0.13 45);
+  background: color-mix(in srgb, var(--gv-ui-warning) 18%, transparent);
+  color: color-mix(in srgb, var(--gv-ui-warning) 62%, var(--gv-ui-text));
 }
 
 .gv-ph-time {
@@ -187,25 +167,22 @@ html[data-gv-scheme='light'] .gv-ph-panel {
 }
 
 .gv-ph-action {
+  box-sizing: border-box;
+  height: 28px;
+  font: inherit;
   font-size: 12px;
   font-weight: 500;
-  padding: 4px 10px;
+  padding: 0 10px;
   border-radius: 8px;
-  border: 1px solid oklch(0.92 0.004 250 / 0.6);
+  border: 1px solid var(--gv-ui-border);
   background: transparent;
   color: inherit;
   cursor: pointer;
-  transition:
-    background-color 160ms ease,
-    transform 100ms ease;
+  transition: background-color 160ms ease;
 }
 
 .gv-ph-action:hover {
-  background: oklch(0.5 0 0 / 0.08);
-}
-
-.gv-ph-action:active {
-  transform: scale(0.97);
+  background: var(--gv-ui-hover);
 }
 
 .gv-ph-action-primary {
@@ -218,12 +195,12 @@ html[data-gv-scheme='light'] .gv-ph-panel {
 }
 
 .gv-ph-action-danger {
-  color: oklch(0.55 0.16 25);
-  border-color: oklch(0.6 0.15 25 / 0.4);
+  color: var(--gv-ui-danger);
+  border-color: color-mix(in srgb, var(--gv-ui-danger) 40%, transparent);
 }
 
 .gv-ph-action-danger:hover {
-  background: oklch(0.55 0.16 25 / 0.1);
+  background: color-mix(in srgb, var(--gv-ui-danger) 10%, transparent);
 }
 
 .gv-ph-notice {
@@ -240,12 +217,12 @@ html[data-gv-scheme='light'] .gv-ph-panel {
 }
 
 .gv-ph-notice-ok {
-  background: oklch(0.5 0.13 155 / 0.9);
-  color: oklch(1 0 0);
+  background: var(--gv-ui-primary);
+  color: var(--gv-ui-primary-fg);
 }
 
 .gv-ph-notice-error {
-  background: oklch(0.55 0.16 25 / 0.9);
+  background: var(--gv-ui-danger);
   color: oklch(1 0 0);
 }
 
@@ -350,14 +327,21 @@ body.gv-rtl .gv-ph-panel {
 }
 
 .gv-pm-sent-chip::after {
-  content: '\25B8';
-  margin-left: 6px;
-  font-size: 0.8em;
+  content: '';
+  flex: none;
+  width: 10px;
+  height: 10px;
+  background: currentColor;
+  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>')
+    center / contain no-repeat;
+  mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>')
+    center / contain no-repeat;
   opacity: 0.75;
+  transition: rotate 150ms ease;
 }
 
 .gv-pm-sent-open .gv-pm-sent-chip::after {
-  content: '\25BE';
+  rotate: 90deg;
 }
 
 .gv-pm-sent-chip:hover {
