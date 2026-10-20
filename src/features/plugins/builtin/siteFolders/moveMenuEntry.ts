@@ -39,6 +39,11 @@ const LIBRARY_ATTRIBUTES = [
   'data-state',
 ];
 
+/** Tailwind's `bg-current`: fills a mask-painted icon holder with the text colour. */
+const MASK_FILL_CLASS = 'bg-current';
+/** An icon holder that paints the native icon itself, through a CSS mask. */
+const MASK_PAINTED_ICON = `[style*="mask"], .${MASK_FILL_CLASS}`;
+
 function folderIcon(): SVGSVGElement {
   const svg = createLucideIcon('folder-input', MOVE_ICON_NODE, 20);
   // The menus' own icons are drawn at about 1.5px; Lucide's 2px reads heavier beside them.
@@ -70,8 +75,17 @@ export function buildMenuEntry(
     icon.setAttribute('class', nativeIcon.getAttribute('class') ?? '');
     nativeIcon.replaceWith(icon);
   } else {
-    const holder = entry.querySelector('[aria-hidden="true"]');
-    if (holder) holder.replaceChildren(icon);
+    const holder = entry.querySelector(`[aria-hidden="true"], ${MASK_PAINTED_ICON}`);
+    if (holder?.matches(MASK_PAINTED_ICON)) {
+      // ChatGPT paints the Rename pencil as the holder's own mask; an icon placed inside it is
+      // clipped to that pencil, so the holder is replaced and only its sizing classes are kept.
+      holder.classList.remove(MASK_FILL_CLASS);
+      icon.setAttribute(
+        'class',
+        `${holder.getAttribute('class') ?? ''} ${icon.getAttribute('class')}`.trim(),
+      );
+      holder.replaceWith(icon);
+    } else if (holder) holder.replaceChildren(icon);
     else entry.prepend(icon);
   }
   const texts: Text[] = [];
