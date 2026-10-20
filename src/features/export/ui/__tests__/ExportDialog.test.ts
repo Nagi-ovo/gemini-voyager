@@ -1,7 +1,38 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { IMAGE_EXPORT_WIDTH_WIDE } from '../../types/export';
-import { ExportDialog } from '../ExportDialog';
+import { ExportDialog, type ExportDialogOptions } from '../ExportDialog';
+
+const BASE_TRANSLATIONS: ExportDialogOptions['translations'] = {
+  title: 'Export',
+  selectFormat: 'Select format',
+  warning: '',
+  safariCmdpHint: 'Safari tip',
+  safariMarkdownHint: 'Safari markdown tip',
+  cancel: 'Cancel',
+  export: 'Export',
+  fontSizeLabel: 'Font Size',
+  fontSizePreview: 'The quick brown fox jumps over the lazy dog.',
+  imageWidthLabel: 'Image Width',
+  imageWidthNarrow: 'Narrow',
+  imageWidthMedium: 'Medium',
+  imageWidthWide: 'Wide',
+  promptHeadingLabel: 'Use prompts as turn headings',
+  promptHeadingHint: 'Put each prompt in its turn heading.',
+  formatRecommended: 'Recommended',
+  formatDescriptions: {
+    json: 'JSON format',
+    markdown: 'Markdown format',
+    pdf: 'PDF format',
+    image: 'Image format',
+  },
+};
+
+function translations(
+  overrides: Partial<ExportDialogOptions['translations']> = {},
+): ExportDialogOptions['translations'] {
+  return { ...BASE_TRANSLATIONS, ...overrides };
+}
 
 describe('ExportDialog', () => {
   afterEach(() => {
@@ -16,29 +47,7 @@ describe('ExportDialog', () => {
     dialog.show({
       onExport: () => {},
       onCancel: () => {},
-      translations: {
-        title: 'Export Chat',
-        selectFormat: 'Select format',
-        warning: 'Warning',
-        safariCmdpHint: 'Safari tip',
-        safariMarkdownHint: 'Safari markdown tip',
-        cancel: 'Cancel',
-        export: 'Export',
-        fontSizeLabel: 'Font Size',
-        fontSizePreview: 'The quick brown fox jumps over the lazy dog.',
-        imageWidthLabel: 'Image Width',
-        imageWidthNarrow: 'Narrow',
-        imageWidthMedium: 'Medium',
-        imageWidthWide: 'Wide',
-        promptHeadingLabel: 'Use prompts as turn headings',
-        promptHeadingHint: 'Put each prompt in its turn heading.',
-        formatDescriptions: {
-          json: 'JSON format',
-          markdown: 'Markdown format',
-          pdf: 'PDF format',
-          image: 'Image format',
-        },
-      },
+      translations: translations({ title: 'Export Chat', warning: 'Warning' }),
     });
 
     const firstRadio = document.querySelector(
@@ -63,33 +72,23 @@ describe('ExportDialog', () => {
     dialog.show({
       onExport: () => {},
       onCancel: () => {},
-      translations: {
-        title: 'Export',
-        selectFormat: 'Select format',
-        warning: '',
-        safariCmdpHint: 'Safari tip',
-        safariMarkdownHint: 'Safari markdown tip',
-        cancel: 'Cancel',
-        export: 'Export',
-        fontSizeLabel: 'Font Size',
-        fontSizePreview: 'The quick brown fox jumps over the lazy dog.',
-        imageWidthLabel: 'Image Width',
-        imageWidthNarrow: 'Narrow',
-        imageWidthMedium: 'Medium',
-        imageWidthWide: 'Wide',
-        promptHeadingLabel: 'Use prompts as turn headings',
-        promptHeadingHint: 'Put each prompt in its turn heading.',
-        formatDescriptions: {
-          json: 'JSON format',
-          markdown: 'Markdown format',
-          pdf: 'PDF format',
-          image: 'Image format',
-        },
-      },
+      translations: translations(),
     });
 
     const warning = document.querySelector('.gv-export-dialog-warning') as HTMLElement | null;
     expect(warning).toBeNull();
+  });
+
+  it('labels the recommended format with the translated badge', () => {
+    new ExportDialog().show({
+      onExport: () => {},
+      onCancel: () => {},
+      translations: translations({ formatRecommended: '推荐' }),
+    });
+
+    const badges = Array.from(document.querySelectorAll('.gv-export-format-badge'));
+    expect(badges.map((badge) => badge.textContent)).toEqual(['推荐']);
+    expect(badges[0].closest('label')?.querySelector('input')?.value).toBe('markdown');
   });
 
   it('uses the provided initial image width when exporting an image', () => {
@@ -99,29 +98,7 @@ describe('ExportDialog', () => {
       onExport,
       onCancel: () => {},
       initialImageWidth: IMAGE_EXPORT_WIDTH_WIDE,
-      translations: {
-        title: 'Export',
-        selectFormat: 'Select format',
-        warning: '',
-        safariCmdpHint: 'Safari tip',
-        safariMarkdownHint: 'Safari markdown tip',
-        cancel: 'Cancel',
-        export: 'Export',
-        fontSizeLabel: 'Font Size',
-        fontSizePreview: 'The quick brown fox jumps over the lazy dog.',
-        imageWidthLabel: 'Image Width',
-        imageWidthNarrow: 'Narrow',
-        imageWidthMedium: 'Medium',
-        imageWidthWide: 'Wide',
-        promptHeadingLabel: 'Use prompts as turn headings',
-        promptHeadingHint: 'Put each prompt in its turn heading.',
-        formatDescriptions: {
-          json: 'JSON format',
-          markdown: 'Markdown format',
-          pdf: 'PDF format',
-          image: 'Image format',
-        },
-      },
+      translations: translations(),
     });
 
     const imageRadio = document.querySelector(
@@ -152,29 +129,7 @@ describe('ExportDialog', () => {
       onExport,
       onCancel: () => {},
       showPromptHeadingOption: true,
-      translations: {
-        title: 'Export',
-        selectFormat: 'Select format',
-        warning: '',
-        safariCmdpHint: 'Safari tip',
-        safariMarkdownHint: 'Safari markdown tip',
-        cancel: 'Cancel',
-        export: 'Export',
-        fontSizeLabel: 'Font Size',
-        fontSizePreview: 'The quick brown fox jumps over the lazy dog.',
-        imageWidthLabel: 'Image Width',
-        imageWidthNarrow: 'Narrow',
-        imageWidthMedium: 'Medium',
-        imageWidthWide: 'Wide',
-        promptHeadingLabel: 'Use prompts as turn headings',
-        promptHeadingHint: 'Put each prompt in its turn heading.',
-        formatDescriptions: {
-          json: 'JSON format',
-          markdown: 'Markdown format',
-          pdf: 'PDF format',
-          image: 'Image format',
-        },
-      },
+      translations: translations(),
     });
 
     const section = document.querySelector(
@@ -201,29 +156,7 @@ describe('ExportDialog', () => {
       onExport: () => {},
       onCancel: () => {},
       showPromptHeadingOption: true,
-      translations: {
-        title: 'Export',
-        selectFormat: 'Select format',
-        warning: '',
-        safariCmdpHint: 'Safari tip',
-        safariMarkdownHint: 'Safari markdown tip',
-        cancel: 'Cancel',
-        export: 'Export',
-        fontSizeLabel: 'Font Size',
-        fontSizePreview: 'The quick brown fox jumps over the lazy dog.',
-        imageWidthLabel: 'Image Width',
-        imageWidthNarrow: 'Narrow',
-        imageWidthMedium: 'Medium',
-        imageWidthWide: 'Wide',
-        promptHeadingLabel: 'Use prompts as turn headings',
-        promptHeadingHint: 'Put each prompt in its turn heading.',
-        formatDescriptions: {
-          json: 'JSON format',
-          markdown: 'Markdown format',
-          pdf: 'PDF format',
-          image: 'Image format',
-        },
-      },
+      translations: translations(),
     });
 
     const jsonRadio = document.querySelector(
@@ -251,29 +184,7 @@ describe('ExportDialog', () => {
         userDefault: 'User',
         assistantDefault: 'Assistant',
       },
-      translations: {
-        title: 'Export',
-        selectFormat: 'Select format',
-        warning: '',
-        safariCmdpHint: 'Safari tip',
-        safariMarkdownHint: 'Safari markdown tip',
-        cancel: 'Cancel',
-        export: 'Export',
-        fontSizeLabel: 'Font Size',
-        fontSizePreview: 'The quick brown fox jumps over the lazy dog.',
-        imageWidthLabel: 'Image Width',
-        imageWidthNarrow: 'Narrow',
-        imageWidthMedium: 'Medium',
-        imageWidthWide: 'Wide',
-        promptHeadingLabel: 'Use prompts as turn headings',
-        promptHeadingHint: 'Put each prompt in its turn heading.',
-        formatDescriptions: {
-          json: 'JSON format',
-          markdown: 'Markdown format',
-          pdf: 'PDF format',
-          image: 'Image format',
-        },
-      },
+      translations: translations(),
     });
 
     const userInput = document.querySelector('#gv-export-speaker-user') as HTMLInputElement | null;
@@ -304,29 +215,7 @@ describe('ExportDialog', () => {
         userDefault: 'Utilisateur',
         assistantDefault: 'Utilisateur',
       },
-      translations: {
-        title: 'Export',
-        selectFormat: 'Select format',
-        warning: '',
-        safariCmdpHint: 'Safari tip',
-        safariMarkdownHint: 'Safari markdown tip',
-        cancel: 'Cancel',
-        export: 'Export',
-        fontSizeLabel: 'Font Size',
-        fontSizePreview: 'Preview',
-        imageWidthLabel: 'Image Width',
-        imageWidthNarrow: 'Narrow',
-        imageWidthMedium: 'Medium',
-        imageWidthWide: 'Wide',
-        promptHeadingLabel: 'Use prompts as turn headings',
-        promptHeadingHint: 'Put each prompt in its turn heading.',
-        formatDescriptions: {
-          json: 'JSON format',
-          markdown: 'Markdown format',
-          pdf: 'PDF format',
-          image: 'Image format',
-        },
-      },
+      translations: translations({ fontSizePreview: 'Preview' }),
     });
 
     (document.querySelector('.gv-export-dialog-btn-primary') as HTMLButtonElement | null)?.click();
@@ -358,29 +247,7 @@ describe('ExportDialog', () => {
         userDefault: 'User',
         assistantDefault: 'Assistant',
       },
-      translations: {
-        title: 'Export',
-        selectFormat: 'Select format',
-        warning: '',
-        safariCmdpHint: 'Safari tip',
-        safariMarkdownHint: 'Safari markdown tip',
-        cancel: 'Cancel',
-        export: 'Export',
-        fontSizeLabel: 'Font Size',
-        fontSizePreview: 'Preview',
-        imageWidthLabel: 'Image Width',
-        imageWidthNarrow: 'Narrow',
-        imageWidthMedium: 'Medium',
-        imageWidthWide: 'Wide',
-        promptHeadingLabel: 'Use prompts as turn headings',
-        promptHeadingHint: 'Put each prompt in its turn heading.',
-        formatDescriptions: {
-          json: 'JSON format',
-          markdown: 'Markdown format',
-          pdf: 'PDF format',
-          image: 'Image format',
-        },
-      },
+      translations: translations({ fontSizePreview: 'Preview' }),
     });
 
     const userInput = document.querySelector('#gv-export-speaker-user') as HTMLInputElement | null;
@@ -417,29 +284,7 @@ describe('ExportDialog', () => {
         userDefault: 'User',
         assistantDefault: 'Assistant',
       },
-      translations: {
-        title: 'Export',
-        selectFormat: 'Select format',
-        warning: '',
-        safariCmdpHint: 'Safari tip',
-        safariMarkdownHint: 'Safari markdown tip',
-        cancel: 'Cancel',
-        export: 'Export',
-        fontSizeLabel: 'Font Size',
-        fontSizePreview: 'Preview',
-        imageWidthLabel: 'Image Width',
-        imageWidthNarrow: 'Narrow',
-        imageWidthMedium: 'Medium',
-        imageWidthWide: 'Wide',
-        promptHeadingLabel: 'Use prompts as turn headings',
-        promptHeadingHint: 'Put each prompt in its turn heading.',
-        formatDescriptions: {
-          json: 'JSON format',
-          markdown: 'Markdown format',
-          pdf: 'PDF format',
-          image: 'Image format',
-        },
-      },
+      translations: translations({ fontSizePreview: 'Preview' }),
     });
 
     const userInput = document.querySelector('#gv-export-speaker-user') as HTMLInputElement | null;
@@ -472,29 +317,7 @@ describe('ExportDialog', () => {
         userDefault: 'User',
         assistantDefault: 'Assistant',
       },
-      translations: {
-        title: 'Export',
-        selectFormat: 'Select format',
-        warning: '',
-        safariCmdpHint: 'Safari tip',
-        safariMarkdownHint: 'Safari markdown tip',
-        cancel: 'Cancel',
-        export: 'Export',
-        fontSizeLabel: 'Font Size',
-        fontSizePreview: 'The quick brown fox jumps over the lazy dog.',
-        imageWidthLabel: 'Image Width',
-        imageWidthNarrow: 'Narrow',
-        imageWidthMedium: 'Medium',
-        imageWidthWide: 'Wide',
-        promptHeadingLabel: 'Use prompts as turn headings',
-        promptHeadingHint: 'Put each prompt in its turn heading.',
-        formatDescriptions: {
-          json: 'JSON format',
-          markdown: 'Markdown format',
-          pdf: 'PDF format',
-          image: 'Image format',
-        },
-      },
+      translations: translations(),
     });
 
     const section = document.querySelector('.gv-export-speakers-section') as HTMLElement | null;
@@ -558,29 +381,7 @@ describe('ExportDialog', () => {
         userDefault: 'Utilisateur',
         assistantDefault: 'Assistant IA',
       },
-      translations: {
-        title: 'Export',
-        selectFormat: 'Select format',
-        warning: '',
-        safariCmdpHint: 'Safari tip',
-        safariMarkdownHint: 'Safari markdown tip',
-        cancel: 'Cancel',
-        export: 'Export',
-        fontSizeLabel: 'Font Size',
-        fontSizePreview: 'Preview',
-        imageWidthLabel: 'Image Width',
-        imageWidthNarrow: 'Narrow',
-        imageWidthMedium: 'Medium',
-        imageWidthWide: 'Wide',
-        promptHeadingLabel: 'Use prompts as turn headings',
-        promptHeadingHint: 'Put each prompt in its turn heading.',
-        formatDescriptions: {
-          json: 'JSON format',
-          markdown: 'Markdown format',
-          pdf: 'PDF format',
-          image: 'Image format',
-        },
-      },
+      translations: translations({ fontSizePreview: 'Preview' }),
     });
 
     const userInput = document.querySelector('#gv-export-speaker-user') as HTMLInputElement | null;
@@ -619,29 +420,7 @@ describe('ExportDialog', () => {
         userDefault: 'User',
         assistantDefault: 'Assistant',
       },
-      translations: {
-        title: 'Save Report',
-        selectFormat: 'Select format',
-        warning: '',
-        safariCmdpHint: 'Safari tip',
-        safariMarkdownHint: 'Safari markdown tip',
-        cancel: 'Cancel',
-        export: 'Export',
-        fontSizeLabel: 'Font Size',
-        fontSizePreview: 'Preview',
-        imageWidthLabel: 'Image Width',
-        imageWidthNarrow: 'Narrow',
-        imageWidthMedium: 'Medium',
-        imageWidthWide: 'Wide',
-        promptHeadingLabel: 'Use prompts as turn headings',
-        promptHeadingHint: 'Put each prompt in its turn heading.',
-        formatDescriptions: {
-          json: 'JSON format',
-          markdown: 'Markdown format',
-          pdf: 'PDF format',
-          image: 'Image format',
-        },
-      },
+      translations: translations({ title: 'Save Report', fontSizePreview: 'Preview' }),
     });
 
     expect(document.querySelector('.gv-export-speakers-section')).toBeNull();

@@ -172,7 +172,8 @@ export const CHATGPT_TEMPORARY_HANDOFF_CSS = `
     .gv-chatgpt-handoff-dialog-body { padding: 0 14px 14px; }
     .gv-chatgpt-handoff-dialog-footer { flex-wrap: wrap; padding: 12px 14px; }
     .gv-chatgpt-handoff-dialog-attribution { font-size: 10px; }
-    .gv-chatgpt-handoff-dialog-attribution-prefix { display: none; }
+    .gv-chatgpt-handoff-dialog-attribution-prefix,
+    .gv-chatgpt-handoff-dialog-attribution-suffix { display: none; }
   }
   @media (max-width: 400px) {
     .gv-chatgpt-handoff-dialog-attribution {

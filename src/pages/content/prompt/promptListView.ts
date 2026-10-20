@@ -384,7 +384,7 @@ export function createPromptListView({
     if (nameConflict) {
       row.classList.add('gv-pm-item-name-conflict');
       const conflict = createEl('span', 'gv-pm-chip gv-pm-name-conflict');
-      conflict.textContent = t('pm_name_conflict_badge') || 'Duplicate name — rename to use /';
+      conflict.textContent = t('pm_name_conflict_badge') || 'Duplicate name. Rename to use /';
       meta.appendChild(conflict);
     }
     for (const tag of it.tags) {

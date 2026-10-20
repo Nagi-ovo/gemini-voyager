@@ -2,6 +2,7 @@ import type { IconNode } from 'lucide-react';
 
 import { createLucideIcon } from '@/core/icons/lucideIcon';
 import { DIAGRAM_TOOLBAR_BUTTON_CSS } from '@/core/ui/diagramToolbar';
+import { getTranslationSync } from '@/utils/i18n';
 
 /**
  * Create styles for mermaid components and fullscreen viewer
@@ -153,7 +154,7 @@ export function createMermaidErrorCard(errorMessage: string): HTMLElement {
 
   const title = document.createElement('div');
   title.style.cssText = 'font-weight: 600; margin-bottom: 6px; color: var(--gv-ui-text, inherit);';
-  title.textContent = 'Mermaid Syntax Error';
+  title.textContent = getTranslationSync('mermaidSyntaxError');
 
   const details = document.createElement('div');
   details.style.cssText =
@@ -162,13 +163,24 @@ export function createMermaidErrorCard(errorMessage: string): HTMLElement {
 
   const hint = document.createElement('div');
   hint.style.cssText = 'margin-top: 12px; font-size: 13px;';
-  hint.append('Click ');
-  const codeLabel = document.createElement('b');
-  codeLabel.textContent = '"Code"';
-  hint.append(codeLabel, ' to view source');
+  appendHint(hint);
 
   card.append(createErrorIcon(), title, details, hint);
   return card;
+}
+
+/** The hint names the toolbar's Code button; that label stays bold inside the sentence. */
+function appendHint(hint: HTMLElement): void {
+  const text = getTranslationSync('mermaidErrorHint');
+  const label = getTranslationSync('diagramCodeButton');
+  const at = text.indexOf(label);
+  if (at < 0) {
+    hint.textContent = text;
+    return;
+  }
+  const codeLabel = document.createElement('b');
+  codeLabel.textContent = label;
+  hint.append(text.slice(0, at), codeLabel, text.slice(at + label.length));
 }
 
 /** Lucide `triangle-alert` from lucide-react, in place of the old emoji. */

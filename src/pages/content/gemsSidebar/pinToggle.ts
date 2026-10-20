@@ -12,6 +12,7 @@
  * cycle is triggered after each scrape.
  */
 import { StorageKeys } from '@/core/types/common';
+import { getTranslationSync } from '@/utils/i18n';
 
 const PIN_BTN_CLASS = 'gv-gem-pin-toggle';
 const PIN_STYLE_ID = 'gv-gem-pin-style';
@@ -113,8 +114,8 @@ export function createGemsPinControls(signal: AbortSignal) {
 
   function toggleBtn(btn: HTMLElement, pinned: boolean): void {
     btn.classList.toggle('gv-pinned', pinned);
-    btn.title = pinned ? 'Unpin from sidebar' : 'Pin to sidebar';
-    btn.setAttribute('aria-label', pinned ? 'Unpin gem' : 'Pin gem');
+    btn.title = getTranslationSync(pinned ? 'gemsUnpinFromSidebar' : 'gemsPinToSidebar');
+    btn.setAttribute('aria-label', getTranslationSync(pinned ? 'gemsUnpin' : 'gemsPin'));
     btn.innerHTML = SVG_WRAP(pinned ? SVG_FILLED : SVG_OUTLINE);
   }
 

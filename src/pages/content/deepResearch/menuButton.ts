@@ -266,6 +266,7 @@ function handleSaveReport(dict: ExportDictionaries, lang: AppLanguage): void {
         imageWidthWide: t('export_image_width_wide'),
         promptHeadingLabel: t('export_markdown_prompt_heading'),
         promptHeadingHint: t('export_markdown_prompt_heading_hint'),
+        formatRecommended: t('export_format_recommended'),
         formatDescriptions: {
           json: t('export_format_json_description'),
           markdown: t('export_format_markdown_description'),

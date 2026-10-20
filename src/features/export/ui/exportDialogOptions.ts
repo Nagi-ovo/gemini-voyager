@@ -44,6 +44,7 @@ export interface ExportDialogOptions {
     imageWidthWide: string;
     promptHeadingLabel: string;
     promptHeadingHint: string;
+    formatRecommended: string;
     formatDescriptions: Record<ExportFormat, string>;
   };
 }

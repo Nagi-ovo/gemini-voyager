@@ -101,7 +101,7 @@ export function createChangelogModal(
   const closeBtn = document.createElement('button');
   closeBtn.className = 'gv-changelog-close';
   closeBtn.appendChild(createXIcon(16));
-  closeBtn.setAttribute('aria-label', 'Close');
+  closeBtn.setAttribute('aria-label', t('commonClose', lang));
 
   header.appendChild(title);
   header.appendChild(version);

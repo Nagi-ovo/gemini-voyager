@@ -1,4 +1,5 @@
 import { type Dispose, PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { getTranslationSync } from '@/utils/i18n';
 
 import type { TemporaryHandoffCopy } from './i18n';
 
@@ -13,6 +14,7 @@ export interface ProgressHandle {
 
 let dialogSequence = 0;
 const CHATGPT_VOYAGER_URL = 'https://github.com/TanChuping/chatgpt-voyager';
+const CHATGPT_VOYAGER_NAME = 'ChatGPT Voyager';
 
 function ownScope(parent: PluginScope, label: string): OwnedScope {
   const scope = new PluginScope();
@@ -121,6 +123,22 @@ function mountDialog(
   (initialFocus || focusables(dialog)[0] || dialog).focus();
 }
 
+/**
+ * The credit's words around the project name, each in a span narrow dialogs
+ * hide, so only the name is left; ja and ko put the name first.
+ */
+function attributionParts(): Array<string | HTMLElement> {
+  const [before, after = ''] = getTranslationSync('chatgptHandoffPoweredBy').split('{name}');
+  const words = (text: string, edge: 'prefix' | 'suffix'): HTMLElement[] => {
+    if (!text) return [];
+    const span = document.createElement('span');
+    span.className = `gv-chatgpt-handoff-dialog-attribution-${edge}`;
+    span.textContent = text;
+    return [span];
+  };
+  return [...words(before, 'prefix'), CHATGPT_VOYAGER_NAME, ...words(after, 'suffix')];
+}
+
 export function showHandoffConfirmation(
   parent: PluginScope,
   copy: TemporaryHandoffCopy,
@@ -141,10 +159,7 @@ export function showHandoffConfirmation(
     attribution.href = CHATGPT_VOYAGER_URL;
     attribution.target = '_blank';
     attribution.rel = 'noopener noreferrer';
-    const attributionPrefix = document.createElement('span');
-    attributionPrefix.className = 'gv-chatgpt-handoff-dialog-attribution-prefix';
-    attributionPrefix.textContent = 'Powered by ';
-    attribution.append(attributionPrefix, 'ChatGPT Voyager');
+    attribution.append(...attributionParts());
     const cancel = createButton(copy.cancel);
     const confirm = createButton(copy.confirm, true);
     owned.scope.on(cancel, 'click', () => finish(false));

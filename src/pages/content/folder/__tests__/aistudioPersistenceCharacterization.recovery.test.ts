@@ -57,12 +57,12 @@ describe('AI Studio persistence characterization', () => {
       {
         language: 'en',
         message:
-          '⚠️ Warning: Failed to load folder data. Your folders may have been corrupted. Please check the browser console for details and try restoring from backup if available.',
+          'Warning: Failed to load folder data. Your folders may have been corrupted. Please check the browser console for details and try restoring from backup if available.',
       },
       {
         language: 'zh',
         message:
-          '⚠️ 警告：无法加载文件夹数据。您的文件夹可能已损坏。请检查浏览器控制台以获取详细信息，并在可用时尝试从备份恢复。',
+          '警告：无法加载文件夹数据。您的文件夹可能已损坏。请检查浏览器控制台以获取详细信息，并在可用时尝试从备份恢复。',
       },
     ])(
       'starts empty with a translated warning in $language when corrupt storage has no backup',
