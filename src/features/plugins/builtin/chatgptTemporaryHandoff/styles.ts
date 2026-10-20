@@ -135,14 +135,15 @@ export const CHATGPT_TEMPORARY_HANDOFF_CSS = `
     outline: 2px solid var(--gv-ui-focus-ring, var(--gv-pm-brand, var(--gv-pm-brand-default)));
     outline-offset: 2px;
   }
+  /* ChatGPT's own primary buttons are ink on paper, so this one is too rather than the brand fill. */
   .gv-chatgpt-handoff-dialog-button--primary {
     border-color: transparent;
-    color: var(--gv-ui-primary-fg, var(--gv-pm-brand-fg, #fff));
-    background: var(--gv-ui-primary, var(--gv-pm-brand, var(--gv-pm-brand-default)));
+    color: var(--gv-ui-surface);
+    background: var(--gv-ui-text);
   }
   .gv-chatgpt-handoff-dialog-button--primary:hover {
-    background: var(--gv-ui-primary, var(--gv-pm-brand, var(--gv-pm-brand-default)));
-    filter: brightness(1.06);
+    background: var(--gv-ui-text);
+    filter: brightness(1.12);
   }
   .gv-chatgpt-handoff-spinner {
     box-sizing: border-box;

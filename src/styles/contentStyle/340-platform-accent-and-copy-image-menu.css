@@ -18,16 +18,18 @@
    surface repaints below so themed sites win over per-theme panel variants. */
 
 /* Solid accent surfaces (filled Add/Save buttons + floating trigger): brand
-   background, WHITE text/icon, neutral shadow so no green glow leaks through. */
+   background and foreground; only the floating trigger keeps a soft neutral
+   shadow, the buttons sit flat like every other control. */
 :root.gv-platform-themed .gv-pm-add,
 :root.gv-platform-themed .gv-pm-save,
 :root.gv-platform-themed .gv-pm-trigger {
   background: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
   border-color: var(--gv-pm-brand, var(--gv-pm-brand-default)) !important;
   color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default)) !important;
-  box-shadow:
-    0 4px 16px rgb(0 0 0 / 0.18),
-    inset 0 1px 0 rgb(255 255 255 / 0.15) !important;
+  box-shadow: none !important;
+}
+:root.gv-platform-themed .gv-pm-trigger {
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.18) !important;
 }
 :root.gv-platform-themed .gv-pm-add:hover,
 :root.gv-platform-themed .gv-pm-save:hover,
