@@ -17,9 +17,11 @@ export function findSidebar(): HTMLElement | null {
 }
 
 export function findNotebooks(sidebar: HTMLElement | null): HTMLElement | null {
+  // Gemini's redesigned sidebar dropped the section's data-test-id and keys it only by
+  // storagekey, so "above Notebooks" and its corner toggle silently fell back to Recents.
   return (
     sidebar?.querySelector<HTMLElement>(
-      'expandable-section[data-test-id="notebooks-expandable-section"]',
+      'expandable-section[storagekey="notebooks"], expandable-section[data-test-id="notebooks-expandable-section"]',
     ) ?? null
   );
 }

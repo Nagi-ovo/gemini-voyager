@@ -33,8 +33,10 @@ export function mountSidebar() {
   sidebar.setAttribute('data-test-id', 'overflow-container');
   const sectionParent = document.createElement('div');
   const notebooksSection = document.createElement('expandable-section');
-  notebooksSection.setAttribute('data-test-id', 'notebooks-expandable-section');
+  // As live Gemini marks them: Notebooks has only a storagekey, Recents keeps its test id too.
+  notebooksSection.setAttribute('storagekey', 'notebooks');
   const recentsSection = document.createElement('expandable-section');
+  recentsSection.setAttribute('storagekey', 'chats');
   recentsSection.setAttribute('data-test-id', 'chats-expandable-section');
   sectionParent.append(notebooksSection, recentsSection);
   sidebar.appendChild(sectionParent);
