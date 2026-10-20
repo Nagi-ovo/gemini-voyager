@@ -1,4 +1,8 @@
-/* ===== Changelog Modal ===== */
+/* ===== Changelog Modal and Edge final-version notice =====
+ * Both are Voyager dialogs: the page ui tokens (005) for surface, ink, border
+ * and font, so light and dark come from html[data-gv-scheme] alone; the brand
+ * only on the one primary action, version tag, links and quote rule; buttons
+ * in the confirm card's shape (28px, 8px radius, 500). */
 
 .gv-edge-final-version-notice {
   position: fixed;
@@ -8,9 +12,9 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(15, 23, 42, 0.5);
+  background: oklch(0 0 0 / 0.45);
   backdrop-filter: blur(4px);
-  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  font-family: var(--gv-ui-font, ui-sans-serif, system-ui, sans-serif);
   animation: gv-fade-in 0.2s ease-out;
 }
 
@@ -18,10 +22,11 @@
   width: min(92vw, 460px);
   max-height: min(80vh, 520px);
   overflow: auto;
-  border: 1px solid #dfe4ee;
+  border: 1px solid var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7));
   border-radius: 16px;
-  background: #ffffff;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  background: var(--gv-ui-surface, oklch(0.995 0.002 250));
+  color: var(--gv-ui-text, oklch(0.14 0.004 285));
+  box-shadow: var(--gv-ui-shadow, 0 6px 20px oklch(0 0 0 / 0.16));
   animation: gv-slide-up 0.3s ease-out;
 }
 
@@ -30,40 +35,45 @@
   align-items: flex-start;
   gap: 12px;
   padding: 20px 20px 12px;
-  border-bottom: 1px solid #eef2f7;
+  border-bottom: 1px solid var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7));
 }
 
 .gv-edge-final-version-notice__title {
   flex: 1;
   margin: 0;
-  color: #172033;
-  font-size: 18px;
+  color: inherit;
+  font-size: 17px;
   font-weight: 600;
   line-height: 1.35;
 }
 
 .gv-edge-final-version-notice__close {
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: 8px;
   background: transparent;
-  color: #5f6b7a;
+  color: var(--gv-ui-text-muted, oklch(0.45 0.01 270));
   cursor: pointer;
-  font-size: 18px;
-  line-height: 1;
-  transition: background-color 0.2s;
+  font: 500 15px/1 var(--gv-ui-font, ui-sans-serif, system-ui, sans-serif);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .gv-edge-final-version-notice__close:hover {
-  background: #f1f5f9;
-  color: #172033;
+  background: var(--gv-ui-hover, oklch(0.14 0.004 285 / 0.06));
+  color: var(--gv-ui-text, oklch(0.14 0.004 285));
 }
 
 .gv-edge-final-version-notice__body {
   padding: 16px 20px 8px;
-  color: #344054;
+  color: var(--gv-ui-text-muted, oklch(0.45 0.01 270));
   font-size: 14px;
   line-height: 1.6;
 }
@@ -75,78 +85,44 @@
 .gv-edge-final-version-notice__actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px;
   padding: 12px 20px 20px;
 }
 
 .gv-edge-final-version-notice__btn {
-  min-height: 36px;
-  border: 1px solid transparent;
-  border-radius: 20px;
-  padding: 0 14px;
+  box-sizing: border-box;
+  min-height: 28px;
+  padding: 4px 12px;
+  border: 1px solid var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7));
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  font: 500 13px/18px var(--gv-ui-font, ui-sans-serif, system-ui, sans-serif);
   white-space: normal;
-  transition: background-color 0.2s;
-}
-
-.gv-edge-final-version-notice__btn--secondary {
-  border-color: #d0d7e2;
-  background: #ffffff;
-  color: #344054;
-  padding: 0 18px;
+  transition:
+    background-color 0.15s ease,
+    filter 0.15s ease;
 }
 
 .gv-edge-final-version-notice__btn--secondary:hover {
-  background: #f8fafc;
+  background: var(--gv-ui-surface-hover, oklch(0.97 0.003 250));
 }
 
 .gv-edge-final-version-notice__btn--primary {
-  background: #1a73e8;
-  color: #ffffff;
-  padding: 0 18px;
+  border-color: transparent;
+  background: var(--gv-ui-primary, oklch(0.601 0.1 140));
+  color: var(--gv-ui-primary-fg, #ffffff);
 }
 
 .gv-edge-final-version-notice__btn--primary:hover {
-  background: #1557b0;
+  filter: brightness(1.06);
 }
 
-html[data-gv-scheme='dark'] .gv-edge-final-version-notice__dialog {
-  border-color: #3c4043;
-  background: #202124;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
-}
-
-html[data-gv-scheme='dark'] .gv-edge-final-version-notice__header {
-  border-bottom-color: #3c4043;
-}
-
-html[data-gv-scheme='dark'] .gv-edge-final-version-notice__title {
-  color: #e8eaed;
-}
-
-html[data-gv-scheme='dark'] .gv-edge-final-version-notice__body {
-  color: #cbd5e1;
-}
-
-html[data-gv-scheme='dark'] .gv-edge-final-version-notice__close {
-  color: #cbd5e1;
-}
-
-html[data-gv-scheme='dark'] .gv-edge-final-version-notice__close:hover {
-  background: #303134;
-  color: #e8eaed;
-}
-
-html[data-gv-scheme='dark'] .gv-edge-final-version-notice__btn--secondary {
-  border-color: #4b5563;
-  background: #202124;
-  color: #e8eaed;
-}
-
-html[data-gv-scheme='dark'] .gv-edge-final-version-notice__btn--secondary:hover {
-  background: #303134;
+.gv-edge-final-version-notice__btn:focus-visible,
+.gv-edge-final-version-notice__close:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring, oklch(0.601 0.1 140));
+  outline-offset: 2px;
 }
 
 @media (max-width: 520px) {
@@ -170,7 +146,7 @@ html[data-gv-scheme='dark'] .gv-edge-final-version-notice__btn--secondary:hover 
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: oklch(0 0 0 / 0.45);
   backdrop-filter: blur(4px);
   z-index: 2147483647;
   display: flex;
@@ -180,83 +156,71 @@ html[data-gv-scheme='dark'] .gv-edge-final-version-notice__btn--secondary:hover 
 }
 
 .gv-changelog-dialog {
-  background: white;
-  border-radius: 16px;
   min-width: 360px;
   max-width: 520px;
   width: 90vw;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  border: 1px solid var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7));
+  border-radius: 16px;
+  background: var(--gv-ui-surface, oklch(0.995 0.002 250));
+  color: var(--gv-ui-text, oklch(0.14 0.004 285));
+  box-shadow: var(--gv-ui-shadow, 0 6px 20px oklch(0 0 0 / 0.16));
+  font-family: var(--gv-ui-font, ui-sans-serif, system-ui, sans-serif);
   animation: gv-slide-up 0.3s ease-out;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-dialog {
-  background: #1e1e1e;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .gv-changelog-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-header {
-  border-bottom-color: #3c4043;
+  padding: 18px 20px 14px 24px;
+  border-bottom: 1px solid var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7));
 }
 
 .gv-changelog-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
-  color: #202124;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-title {
-  color: #e8eaed;
+  color: inherit;
 }
 
 .gv-changelog-version {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gv-ui-primary, oklch(0.601 0.1 140)) 12%, transparent);
+  color: var(--gv-ui-primary, oklch(0.601 0.1 140));
   font-size: 12px;
   font-weight: 500;
-  color: #1a73e8;
-  background: #e8f0fe;
-  padding: 2px 8px;
-  border-radius: 12px;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-version {
-  color: #8ab4f8;
-  background: rgba(138, 180, 248, 0.15);
+  font-variant-numeric: tabular-nums;
 }
 
 .gv-changelog-close {
-  margin-left: auto;
-  background: none;
-  border: none;
-  font-size: 18px;
-  color: #5f6368;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-inline-start: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gv-ui-text-muted, oklch(0.45 0.01 270));
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 50%;
-  line-height: 1;
-  transition: background-color 0.2s;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .gv-changelog-close:hover {
-  background-color: rgba(0, 0, 0, 0.08);
+  background: var(--gv-ui-hover, oklch(0.14 0.004 285 / 0.06));
+  color: var(--gv-ui-text, oklch(0.14 0.004 285));
 }
 
-html[data-gv-scheme='dark'] .gv-changelog-close {
-  color: #9aa0a6;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-close:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+.gv-changelog-close:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring, oklch(0.601 0.1 140));
+  outline-offset: 2px;
 }
 
 .gv-changelog-body {
@@ -265,35 +229,32 @@ html[data-gv-scheme='dark'] .gv-changelog-close:hover {
   padding: 16px 24px;
   font-size: 14px;
   line-height: 1.6;
-  color: #3c4043;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-body {
-  color: #bdc1c6;
+  color: color-mix(
+    in srgb,
+    var(--gv-ui-text, oklch(0.14 0.004 285)) 84%,
+    var(--gv-ui-surface, oklch(0.995 0.002 250))
+  );
 }
 
 .gv-changelog-body h3 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  margin: 0 0 12px;
-  color: #202124;
+  margin: 0 0 10px;
+  color: var(--gv-ui-text, oklch(0.14 0.004 285));
 }
 
-html[data-gv-scheme='dark'] .gv-changelog-body h3 {
-  color: #e8eaed;
+.gv-changelog-body strong {
+  color: var(--gv-ui-text, oklch(0.14 0.004 285));
+  font-weight: 600;
 }
 
 /* Highlights lead-in — the bold sentence opening the first paragraph
  * of the changelog body (e.g. "**Important update — please skim…**"
  * / "**重要更新，建议花一分钟浏览。**"). The markdown source has no
  * separate "### Highlights" heading; the bold strong tag IS the heading,
- * tinted in the project's theme green so it reads as the primary pointer. */
+ * in the accent so it reads as the primary pointer. */
 .gv-changelog-body > p:first-child strong:first-child {
-  color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-body > p:first-child strong:first-child {
-  color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  color: var(--gv-ui-primary, oklch(0.601 0.1 140));
 }
 
 .gv-changelog-body ul {
@@ -307,37 +268,28 @@ html[data-gv-scheme='dark'] .gv-changelog-body > p:first-child strong:first-chil
 
 .gv-changelog-body code {
   font-size: 13px;
-  background: #f1f3f4;
+  background: color-mix(in srgb, var(--gv-ui-text, oklch(0.14 0.004 285)) 7%, transparent);
   padding: 1px 6px;
   border-radius: 4px;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-body code {
-  background: #3c4043;
 }
 
 .gv-changelog-body p {
   margin: 0 0 12px;
 }
 
+/* The opening quote: a brand rule and tint, so a custom accent reaches it. */
 .gv-changelog-body > .gv-changelog-quote {
   display: block;
   margin: 0 0 16px;
   padding: 10px 14px;
-  border-left: 3px solid #5f8f5c;
+  border-left: 3px solid var(--gv-ui-primary, oklch(0.601 0.1 140));
   border-radius: 0 8px 8px 0;
-  background: rgba(95, 143, 92, 0.1);
-  color: #3c4043;
+  background: color-mix(in srgb, var(--gv-ui-primary, oklch(0.601 0.1 140)) 10%, transparent);
+  color: var(--gv-ui-text, oklch(0.14 0.004 285));
 }
 
 .gv-changelog-body > .gv-changelog-quote p {
   margin: 0;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-body > .gv-changelog-quote {
-  border-left-color: #81c784;
-  background: rgba(129, 199, 132, 0.12);
-  color: #e8eaed;
 }
 
 /* A platform's own mark, set into the sentence that names it: text-sized, on
@@ -370,48 +322,40 @@ html[data-gv-scheme='dark'] .gv-changelog-body > .gv-changelog-quote {
   width: 300px;
   max-width: 100%;
   margin: 8px 0 2px;
-  border: 1px solid rgba(60, 64, 67, 0.16);
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-body li img {
-  border-color: rgba(232, 234, 237, 0.18);
+  border: 1px solid var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7));
 }
 
 .gv-changelog-body a {
-  color: #1a73e8;
-  text-decoration: none;
+  color: var(--gv-ui-primary, oklch(0.601 0.1 140));
+  text-decoration: underline;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--gv-ui-primary, oklch(0.601 0.1 140)) 40%,
+    transparent
+  );
+  text-underline-offset: 2px;
 }
 
 .gv-changelog-body a:hover {
-  text-decoration: underline;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-body a {
-  color: #8ab4f8;
+  text-decoration-color: currentColor;
 }
 
 .gv-changelog-footer {
   display: flex;
   flex-direction: column;
-  padding: 16px 24px;
-  border-top: 1px solid #e0e0e0;
+  padding: 14px 20px 16px 24px;
+  border-top: 1px solid var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7));
   gap: 12px;
 }
 
-html[data-gv-scheme='dark'] .gv-changelog-footer {
-  border-top-color: #3c4043;
-}
-
-/* Follow-me area — gradient-tinted block holding the CTA copy and the
- * social chips together. The gradient is the visual cue that "this is the
- * follow-me block"; the inner text + chip row are direct children, no
- * extra cards. */
+/* Follow-me area — the gradient ribbon is the cue that "this is the follow-me
+ * block" and is kept on purpose; the CTA copy and social chips sit on it. */
 .gv-changelog-follow-area {
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: linear-gradient(
     135deg,
     oklch(0.96 0.05 195) 0%,
@@ -433,19 +377,13 @@ html[data-gv-scheme='dark'] .gv-changelog-follow-area {
   margin: 0;
   font-size: 13px;
   line-height: 1.5;
-  color: #1f2937;
+  color: var(--gv-ui-text, oklch(0.14 0.004 285));
 }
 
-html[data-gv-scheme='dark'] .gv-changelog-follow-text {
-  color: #e8eaed;
-}
-
-/* Chip row inside the follow-me area — plain flex layout; gradient lives
- * on the parent .gv-changelog-follow-area. */
 .gv-changelog-social-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   margin: 0;
   font-size: 12px;
   line-height: 1.4;

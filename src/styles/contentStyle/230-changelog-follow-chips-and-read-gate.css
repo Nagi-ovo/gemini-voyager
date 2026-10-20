@@ -1,54 +1,36 @@
-/* Chips — clean white pills sitting on the gradient ribbon. Spring lift
- * + icon micro-scale on hover keeps them feeling alive without competing
- * with the background gradient. */
+/* Social chips: quiet secondary controls on the follow card. Each keeps its
+ * platform's colour on the logo only. */
 .gv-changelog-social-item {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  color: #1f2937;
+  box-sizing: border-box;
+  min-height: 28px;
+  padding: 4px 10px;
+  border: 1px solid var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7));
+  border-radius: 8px;
+  background: var(--gv-ui-surface, oklch(0.995 0.002 250));
+  color: var(--gv-ui-text, oklch(0.14 0.004 285));
   text-decoration: none;
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
-  transition:
-    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: background-color 0.15s ease;
 }
 
 a.gv-changelog-social-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+  background: var(--gv-ui-surface-hover, oklch(0.97 0.003 250));
 }
 
-a.gv-changelog-social-item:hover .gv-changelog-social-icon {
-  transform: scale(1.1);
-}
-
-a.gv-changelog-social-item:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+a.gv-changelog-social-item:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring, oklch(0.601 0.1 140));
+  outline-offset: 2px;
 }
 
 .gv-changelog-social-icon {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-social-item {
-  background: #2d2e30;
-  border-color: rgba(255, 255, 255, 0.08);
-  color: #e8eaed;
-}
-
-html[data-gv-scheme='dark'] a.gv-changelog-social-item:hover {
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
 }
 
 .gv-changelog-action-row {
@@ -60,65 +42,31 @@ html[data-gv-scheme='dark'] a.gv-changelog-social-item:hover {
 .gv-changelog-icon-group {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .gv-changelog-icon-link {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  color: #5f6368;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  color: var(--gv-ui-text-muted, oklch(0.45 0.01 270));
   transition:
-    background-color 0.2s,
-    color 0.2s;
+    background-color 0.15s ease,
+    color 0.15s ease;
   text-decoration: none;
 }
 
 .gv-changelog-icon-link:hover {
-  background-color: rgba(0, 0, 0, 0.06);
+  background-color: var(--gv-ui-hover, oklch(0.14 0.004 285 / 0.06));
+  color: var(--gv-ui-text, oklch(0.14 0.004 285));
 }
 
-.gv-changelog-icon-sponsor:hover {
-  color: #db61a2;
-}
-
-.gv-changelog-icon-github:hover {
-  color: #24292f;
-}
-
-.gv-changelog-icon-docs:hover {
-  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
-}
-
-.gv-changelog-icon-x:hover {
-  color: #000000;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-icon-link {
-  color: #9aa0a6;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-icon-link:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-icon-sponsor:hover {
-  color: #f778ba;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-icon-github:hover {
-  color: #e8eaed;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-icon-docs:hover {
-  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-icon-x:hover {
-  color: #e8eaed;
+.gv-changelog-icon-link:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring, oklch(0.601 0.1 140));
+  outline-offset: 2px;
 }
 
 .gv-changelog-docs-wrapper {
@@ -132,90 +80,76 @@ html[data-gv-scheme='dark'] .gv-changelog-icon-x:hover {
   left: calc(100% + 6px);
   white-space: nowrap;
   font-size: 11px;
-  color: #80868b;
+  color: var(--gv-ui-text-muted, oklch(0.45 0.01 270));
   pointer-events: none;
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
 }
 
+/* Lucide arrow-left as a mask: a line icon pointing at the docs link, not a
+ * text arrow. */
 .gv-changelog-docs-annotation::before {
-  content: '\2190';
-  font-size: 12px;
+  width: 12px;
+  height: 12px;
+  flex: none;
+  background: currentColor;
+  content: '';
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 19-7-7 7-7'/%3E%3Cpath d='M19 12H5'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 19-7-7 7-7'/%3E%3Cpath d='M19 12H5'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 
-html[data-gv-scheme='dark'] .gv-changelog-docs-annotation {
-  color: #80868b;
-}
-
+/* The confirm card's primary button. */
 .gv-changelog-got-it {
+  box-sizing: border-box;
+  min-height: 28px;
+  padding: 4px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   background: var(--gv-pm-brand, var(--gv-pm-brand-default));
-  color: var(--gv-pm-brand-fg-default);
-  border: none;
-  border-radius: 999px;
-  padding: 9px 26px;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
   cursor: pointer;
-  transition:
-    background-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.1s ease;
+  font: 500 13px/18px var(--gv-ui-font, ui-sans-serif, system-ui, sans-serif);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  box-shadow: 0 1px 2px
-    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent);
+  transition:
+    background-color 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .gv-changelog-got-it:hover {
   background: var(--gv-pm-brand-hover);
-  box-shadow: 0 3px 12px
-    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 40%, transparent);
 }
 
-.gv-changelog-got-it:active {
-  transform: translateY(0.5px);
-  box-shadow: 0 1px 2px
-    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent);
+.gv-changelog-got-it:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring, oklch(0.601 0.1 140));
+  outline-offset: 2px;
 }
 
-/* Read-gate disabled state — used during the force-popup countdown.
- * Mute color, kill hover/pointer feedback, but keep a monospace-ish tabular
- * feel so the " (5)" → " (1)" countdown digits don't reflow the button. */
+/* Read-gate disabled state — used during the force-popup countdown. The
+ * button keeps its colours and fades, so the countdown reads as "not yet"
+ * in either scheme. */
 .gv-changelog-got-it--gated,
 .gv-changelog-got-it--gated:hover {
-  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 32%, #cbcfc6);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  opacity: 0.5;
   cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
-  font-variant-numeric: tabular-nums;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-got-it--gated,
-html[data-gv-scheme='dark'] .gv-changelog-got-it--gated:hover {
-  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 26%, #363d2e);
-  color: rgba(255, 255, 255, 0.6);
 }
 
 .gv-changelog-close--gated,
 .gv-changelog-close--gated:hover {
-  color: rgba(95, 99, 104, 0.35);
   background-color: transparent;
+  opacity: 0.35;
   cursor: not-allowed;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-close--gated,
-html[data-gv-scheme='dark'] .gv-changelog-close--gated:hover {
-  color: rgba(154, 160, 166, 0.35);
-  background-color: transparent;
 }
 
 .gv-changelog-chrome-rating {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 15px;
+  padding: 10px 12px;
   margin-bottom: 12px;
   border-radius: 12px;
   background: var(--gv-pm-brand-soft);
@@ -226,7 +160,7 @@ html[data-gv-scheme='dark'] .gv-changelog-close--gated:hover {
 .gv-changelog-chrome-rating-text {
   flex: 1;
   font-size: 12.5px;
-  color: #374151;
+  color: var(--gv-ui-text, oklch(0.14 0.004 285));
   line-height: 1.4;
 }
 
@@ -234,20 +168,18 @@ html[data-gv-scheme='dark'] .gv-changelog-close--gated:hover {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 6px 15px;
+  min-height: 28px;
+  box-sizing: border-box;
+  padding: 4px 12px;
   background: var(--gv-pm-brand, var(--gv-pm-brand-default));
-  color: var(--gv-pm-brand-fg-default) !important;
-  border-radius: 999px;
+  color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default)) !important;
+  border-radius: 8px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   text-decoration: none !important;
   white-space: nowrap;
   flex-shrink: 0;
-  box-shadow: 0 1px 2px
-    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent);
-  transition:
-    background-color 0.18s ease,
-    box-shadow 0.18s ease;
+  transition: background-color 0.15s ease;
 }
 
 .gv-changelog-chrome-rating-star {
@@ -258,20 +190,14 @@ html[data-gv-scheme='dark'] .gv-changelog-close--gated:hover {
 
 .gv-changelog-chrome-rating-link:hover {
   background: var(--gv-pm-brand-hover);
-  box-shadow: 0 3px 12px
-    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 40%, transparent);
   text-decoration: none !important;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-chrome-rating-text {
-  color: #c3cabd;
 }
 
 .gv-changelog-lightbox {
   position: fixed;
   inset: 0;
   z-index: 2147483647;
-  background: rgba(0, 0, 0, 0.88);
+  background: oklch(0 0 0 / 0.88);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -292,49 +218,17 @@ html[data-gv-scheme='dark'] .gv-changelog-chrome-rating-text {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .gv-changelog-lightbox {
+    animation: none;
+  }
+}
+
 .gv-changelog-lightbox-img {
   max-width: 90vw;
   max-height: 88vh;
   border-radius: 10px;
   object-fit: contain;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 24px 80px oklch(0 0 0 / 0.6);
   pointer-events: none;
-}
-
-/* Changelog notification mode toggle */
-.gv-changelog-notify-toggle {
-  margin-bottom: 12px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.gv-changelog-notify-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 12.5px;
-  color: #555;
-  line-height: 1.4;
-  user-select: none;
-}
-
-.gv-changelog-notify-checkbox {
-  width: 15px;
-  height: 15px;
-  margin: 0;
-  cursor: pointer;
-  accent-color: #1a73e8;
-  flex-shrink: 0;
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-notify-toggle {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-html[data-gv-scheme='dark'] .gv-changelog-notify-label {
-  color: #9aa0a6;
 }

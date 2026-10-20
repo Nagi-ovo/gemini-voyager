@@ -1,3 +1,4 @@
+import { createXIcon } from '@/core/icons/folderIcons';
 import { getWebStoreRatingChannel } from '@/core/utils/browser';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 import type { AppLanguage } from '@/utils/language';
@@ -99,7 +100,7 @@ export function createChangelogModal(
 
   const closeBtn = document.createElement('button');
   closeBtn.className = 'gv-changelog-close';
-  closeBtn.textContent = '✕';
+  closeBtn.appendChild(createXIcon(16));
   closeBtn.setAttribute('aria-label', 'Close');
 
   header.appendChild(title);
@@ -125,9 +126,7 @@ export function createChangelogModal(
   const footer = document.createElement('div');
   footer.className = 'gv-changelog-footer';
 
-  // Follow-me area — one gradient-tinted block that contains the CTA text
-  // and the social chips together. The gradient lives on the wrapper; the
-  // text and the chip row sit inside as siblings.
+  // Follow-me area — one quiet card holding the CTA text and the social chips.
   const followArea = document.createElement('div');
   followArea.className = 'gv-changelog-follow-area';
 
@@ -168,9 +167,7 @@ export function createChangelogModal(
     const iconSpan = document.createElement('span');
     iconSpan.className = 'gv-changelog-social-icon';
     iconSpan.innerHTML = account.icon;
-    // Keep the platform brand color on the SVG icon so chips still read as
-    // each platform's own; the chip border/glow uses a unified teal-blue-
-    // green gradient (see .gv-changelog-social-item in contentStyle.css).
+    // The platform's colour stays on its logo only; the chip itself is neutral.
     if (account.color) {
       iconSpan.style.color = account.color;
     }
