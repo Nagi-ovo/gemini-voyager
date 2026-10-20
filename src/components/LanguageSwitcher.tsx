@@ -7,8 +7,12 @@ import { APP_LANGUAGE_LABELS, getNextLanguage } from '../utils/language';
 import { Button } from './ui/button';
 
 export const LanguageSwitcher: React.FC = () => {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const nextLanguage = getNextLanguage(language);
+  const label = t('languageSwitchTo').replace(
+    '{language}',
+    () => APP_LANGUAGE_LABELS[nextLanguage],
+  );
 
   const toggleLanguage = () => {
     setLanguage(nextLanguage);
@@ -19,11 +23,11 @@ export const LanguageSwitcher: React.FC = () => {
       variant="ghost"
       size="icon"
       onClick={toggleLanguage}
-      title={`Switch to ${APP_LANGUAGE_LABELS[nextLanguage]}`}
+      title={label}
+      aria-label={label}
       className="h-9 w-9"
     >
       <Globe className="h-4 w-4" />
-      <span className="sr-only">Toggle language</span>
     </Button>
   );
 };

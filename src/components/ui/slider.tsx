@@ -49,9 +49,9 @@ const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
         ref={ref}
         type="range"
         className={cn(
-          'bg-secondary h-2 w-full cursor-pointer appearance-none rounded-full',
-          '[&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:h-4.5 [&::-webkit-slider-thumb]:w-4.5 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:duration-200 hover:[&::-webkit-slider-thumb]:scale-110',
-          '[&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:h-4.5 [&::-moz-range-thumb]:w-4.5 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md',
+          'bg-foreground/15 h-1.5 w-full cursor-pointer appearance-none rounded-full focus-visible:outline-none disabled:cursor-not-allowed',
+          '[&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-card [&::-webkit-slider-thumb]:shadow-[0_1px_2px_oklch(0_0_0/0.3)] focus-visible:[&::-webkit-slider-thumb]:ring-ring/50 focus-visible:[&::-webkit-slider-thumb]:ring-2',
+          '[&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-card [&::-moz-range-thumb]:shadow-[0_1px_2px_oklch(0_0_0/0.3)]',
           className,
         )}
         onInput={handleInput}
