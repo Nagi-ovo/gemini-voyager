@@ -278,17 +278,21 @@ export function activateCodeBlockDiagram(
     const toolbar = doc.createElement('div');
     toolbar.className = 'toolbar';
     toolbar.setAttribute('role', 'group');
-    const button = (icon: DiagramToolbarIcon) => {
+    const button = (icon: DiagramToolbarIcon, parent: HTMLElement = toolbar) => {
       const element = doc.createElement('button');
       element.type = 'button';
       setDiagramToolbarButton(element, icon);
-      toolbar.append(element);
+      parent.append(element);
       return element;
     };
     // First, where Gemini's diagram views put the block's own copy button.
     if (params.copyButton === true) copySource(block, button('copy'));
-    const diagramButton = button(diagram.kind);
-    const codeButton = button('code');
+    // Diagram and Code are one choice, drawn as a segmented control.
+    const segments = doc.createElement('div');
+    segments.className = 'segments';
+    toolbar.append(segments);
+    const diagramButton = button(diagram.kind, segments);
+    const codeButton = button('code', segments);
     const fullscreenButton = diagram.fullscreenButton ? button('fullscreen') : null;
     const target = doc.createElement('div');
     target.className = 'diagram';

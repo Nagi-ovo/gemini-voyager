@@ -77,38 +77,53 @@ export function createEChartsView(
       position: relative;
     }
 
+    /* A segmented control like the folder settings' sort: a neutral selected face, never a brand fill. */
     .gv-echarts-toggle {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 2px;
       width: fit-content;
       margin: 8px 8px 4px auto;
-      background: var(--gemini-surface-container, rgba(0,0,0,0.05));
-      border-radius: 8px;
       padding: 2px;
-      border: 1px solid var(--gemini-outline-variant, rgba(0,0,0,0.1));
+      border-radius: 9px;
+      background: color-mix(in srgb, var(--gv-ui-text, #1f1f1f) 6%, transparent);
     }
 
     .gv-echarts-toggle button {
       ${DIAGRAM_TOOLBAR_BUTTON_CSS}
-      padding: 5px 7px;
+      min-width: 28px;
+      height: 24px;
+      padding: 0 6px;
       border: none;
-      border-radius: 6px;
+      border-radius: 7px;
       cursor: pointer;
-      font-size: 12px;
-      font-family: 'Google Sans', sans-serif;
-      transition: all 0.2s ease;
+      font: 500 12px/1 var(--gv-ui-font, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif);
+      transition: background-color 160ms ease, color 160ms ease;
       background: transparent;
-      color: var(--gemini-on-surface-variant, #666);
+      color: var(--gv-ui-text-muted, #5f6368);
     }
 
-    .gv-echarts-toggle button:hover {
-      background: var(--gemini-surface-container-high, rgba(0,0,0,0.08));
+    .gv-echarts-toggle button:hover:not(.active):not(:disabled) {
+      background: var(--gv-ui-hover, rgba(0, 0, 0, 0.06));
+    }
+
+    .gv-echarts-toggle button:focus-visible {
+      outline: 2px solid var(--gv-ui-focus-ring, var(--gv-pm-brand, var(--gv-pm-brand-default)));
+      outline-offset: 1px;
     }
 
     .gv-echarts-toggle button.active {
-      background: var(--gemini-primary, #1a73e8);
-      color: white;
+      background: var(--gv-ui-surface, #fff);
+      color: var(--gv-ui-text, #1f1f1f);
+      box-shadow: 0 1px 3px oklch(0 0 0 / 0.12);
+    }
+
+    html[data-gv-scheme='dark'] .gv-echarts-toggle button.active {
+      background: oklch(0.38 0.01 285);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .gv-echarts-toggle button { transition: none; }
     }
 
     .gv-echarts-diagram {
@@ -162,7 +177,7 @@ export function createEChartsView(
       color: white;
       font-size: 18px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: background-color 160ms ease;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -170,7 +185,11 @@ export function createEChartsView(
 
     .gv-echarts-modal-toolbar button:hover {
       background: rgba(255, 255, 255, 0.3);
-      transform: scale(1.1);
+    }
+
+    .gv-echarts-modal-toolbar button:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.8);
+      outline-offset: 2px;
     }
 
     .gv-echarts-modal-card {
@@ -197,8 +216,7 @@ export function createEChartsView(
       left: 50%;
       transform: translateX(-50%);
       color: rgba(255, 255, 255, 0.6);
-      font-size: 14px;
-      font-family: 'Google Sans', sans-serif;
+      font: 14px/1.4 var(--gv-ui-font, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif);
       pointer-events: none;
     }
   `;

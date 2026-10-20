@@ -3,48 +3,57 @@
  * rules that hide a block and theme the panel host, and the panel's shadow
  * stylesheet (toolbar and drawn diagram).
  */
-import { DIAGRAM_TOOLBAR_BUTTON_CSS } from '@/core/ui/diagramToolbar';
+import { iconButtonCss } from './iconButton';
 
 export const HIDDEN_ATTR = 'data-gv-diagram-hidden';
 export const PANEL_CLASS = 'gv-diagram-panel';
 
+/**
+ * The panel speaks the shared vocabulary: neutral page tokens (005-ui-tokens.css)
+ * for ink and lines, a wash of the host's text colour for the drawing's ground so
+ * it sits on any code-block background, the plugin icon-button look, and the
+ * folder settings' segmented control for Diagram / Code, whose selected face is
+ * neutral. The accent is only the focus ring.
+ */
 export const PAGE_CSS = `
 [${HIDDEN_ATTR}] { display: none !important; }
 .${PANEL_CLASS} {
   display: block;
   margin: 8px 0;
-  --gv-diagram-surface: #f8f9fa;
-  --gv-diagram-border: rgba(0, 0, 0, 0.12);
-  --gv-diagram-fg: #444746;
-  --gv-diagram-hover: rgba(0, 0, 0, 0.06);
+  --gv-diagram-surface: color-mix(in srgb, currentColor 3%, transparent);
+  --gv-diagram-border: var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7));
+  --gv-diagram-fg: var(--gv-ui-text, oklch(0.14 0.004 285));
+  --gv-diagram-segments: color-mix(in srgb, currentColor 6%, transparent);
+  --gv-diagram-selected: var(--gv-ui-surface, oklch(0.995 0.002 250));
 }
 html[data-gv-scheme='dark'] .${PANEL_CLASS} {
-  --gv-diagram-surface: #1e1f20;
-  --gv-diagram-border: rgba(255, 255, 255, 0.14);
-  --gv-diagram-fg: #c4c7c5;
-  --gv-diagram-hover: rgba(255, 255, 255, 0.08);
+  --gv-diagram-surface: color-mix(in srgb, currentColor 4%, transparent);
+  --gv-diagram-selected: oklch(0.38 0.01 285);
 }`;
 
 export const SHADOW_CSS = `
 :host { display: block; }
-.toolbar { display: flex; justify-content: flex-end; gap: 4px; margin-bottom: 4px; }
-button {
-  ${DIAGRAM_TOOLBAR_BUTTON_CSS}
-  padding: 5px 7px;
-  border: 1px solid var(--gv-diagram-border);
-  border-radius: 6px;
-  background: transparent;
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-bottom: 4px;
   color: var(--gv-diagram-fg);
-  font: 12px/1.4 system-ui, sans-serif;
-  cursor: pointer;
 }
-button:hover { background: var(--gv-diagram-hover); }
-button:disabled { cursor: not-allowed; opacity: 0.45; }
-button:focus-visible { outline: 2px solid var(--gv-pm-brand, #1a73e8); outline-offset: 2px; }
-button[aria-pressed='true'] {
-  border-color: transparent;
-  background: var(--gv-pm-brand, #1a73e8);
-  color: var(--gv-pm-brand-fg, #fff);
+${iconButtonCss('button')}
+.segments {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--gv-diagram-segments);
+}
+.segments button { width: 28px; height: 24px; border-radius: 7px; }
+.segments button[aria-pressed='true'] {
+  opacity: 1;
+  background: var(--gv-diagram-selected);
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.12);
 }
 .diagram {
   min-height: 100px;
