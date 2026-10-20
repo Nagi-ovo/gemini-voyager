@@ -4,11 +4,16 @@
    The panel's switch stamps `data-gv-theme` on it, and the preview card, the
    fill card and the slash menu copy it. That can differ from the page's
    `data-gv-scheme`, so the accent defaults and the shared inks are scoped to
-   the attribute here. Without it a dark panel on a light page painted the
+   those surfaces (not the bare attribute: Gemini message bubbles and composer
+   tokens carry it too). Without it a dark panel on a light page painted the
    light-page sage (and light-page ink) inside a dark surface.
    Only the *-default and derived vars are redeclared: --gv-pm-brand itself is
    the inline custom accent and must never be shadowed (see 010). */
-[data-gv-theme='dark'] {
+.gv-pm-panel[data-gv-theme='dark'],
+.gv-pm-tooltip[data-gv-theme='dark'],
+.gv-pm-fill[data-gv-theme='dark'],
+.gv-pm-slash-root[data-gv-theme='dark'],
+.gv-pm-slash-tooltip[data-gv-theme='dark'] {
   --gv-pm-brand-default: oklch(0.773 0.091 126);
   --gv-pm-brand-fg-default: #1f2a24;
   --gv-pm-brand-h-default: 126;
@@ -40,7 +45,11 @@
   --gv-pm-segment-selected: oklch(0.34 0.01 285);
 }
 
-[data-gv-theme='light'] {
+.gv-pm-panel[data-gv-theme='light'],
+.gv-pm-tooltip[data-gv-theme='light'],
+.gv-pm-fill[data-gv-theme='light'],
+.gv-pm-slash-root[data-gv-theme='light'],
+.gv-pm-slash-tooltip[data-gv-theme='light'] {
   --gv-pm-brand-default: oklch(0.601 0.1 140);
   --gv-pm-brand-fg-default: #ffffff;
   --gv-pm-brand-h-default: 140;

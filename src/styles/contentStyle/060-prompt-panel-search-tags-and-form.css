@@ -293,27 +293,11 @@ html[data-gv-scheme='light'] .gv-pm-input-name {
 
 .gv-pm-cancel {
   background: transparent;
-  /* Inherit the panel foreground instead of restating it per theme. */
+  /* Inherit the surface foreground instead of restating it per theme. */
   color: inherit;
-  border: 1px solid oklch(0.92 0.004 250 / 0.9);
+  border: 1px solid var(--gv-ui-border);
 }
 
 .gv-pm-cancel:hover {
-  background: oklch(0.14 0.004 285 / 0.05);
-}
-
-html[data-gv-scheme='dark'] .gv-pm-cancel {
-  border-color: oklch(0.3 0.008 285 / 0.9);
-}
-
-html[data-gv-scheme='dark'] .gv-pm-cancel:hover {
-  background: oklch(0.92 0.004 250 / 0.06);
-}
-
-html[data-gv-scheme='light'] .gv-pm-cancel {
-  border-color: oklch(0.92 0.004 250 / 0.9);
-}
-
-html[data-gv-scheme='light'] .gv-pm-cancel:hover {
-  background: oklch(0.14 0.004 285 / 0.05);
+  background: var(--gv-ui-hover);
 }
