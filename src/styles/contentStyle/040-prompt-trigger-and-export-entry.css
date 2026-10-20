@@ -10,13 +10,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* A flat accent fill lifted by a neutral shadow. A brand-tinted glow made
-     the ball the loudest thing on every page, and a hover scale made it jump. */
+  /* A flat accent fill with a soft brand glow; the glow is the ball's signature,
+     so it stays. No hover scale: it made the ball jump. */
   background: var(--gv-pm-brand, var(--gv-pm-brand-default));
   border: none;
   box-shadow:
-    0 4px 14px oklch(0 0 0 / 0.16),
-    0 1px 3px oklch(0 0 0 / 0.1);
+    0 6px 24px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 35%, transparent),
+    0 2px 8px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 20%, transparent);
   color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
   /* Keep every prompt-manager surface above the floating usage bar
      (2147483000), including when the two are dragged into the same area. */
@@ -30,19 +30,13 @@
 .gv-pm-trigger:hover {
   background: var(--gv-pm-brand-hover);
   box-shadow:
-    0 6px 18px oklch(0 0 0 / 0.2),
-    0 1px 3px oklch(0 0 0 / 0.12);
+    0 10px 32px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent),
+    0 4px 12px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 30%, transparent);
 }
 
 .gv-pm-trigger:focus-visible {
   outline: 2px solid var(--gv-ui-focus-ring);
   outline-offset: 3px;
-}
-
-html[data-gv-scheme='dark'] .gv-pm-trigger {
-  box-shadow:
-    0 4px 14px oklch(0 0 0 / 0.4),
-    0 1px 3px oklch(0 0 0 / 0.3);
 }
 
 .gv-pm-trigger img {
