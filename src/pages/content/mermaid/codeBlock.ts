@@ -1,3 +1,6 @@
+import type { IconNode } from 'lucide-react';
+
+import { createLucideIcon } from '@/core/icons/lucideIcon';
 import { DIAGRAM_TOOLBAR_BUTTON_CSS } from '@/core/ui/diagramToolbar';
 
 /**
@@ -146,19 +149,15 @@ export const createStyles = () => {
 export function createMermaidErrorCard(errorMessage: string): HTMLElement {
   const card = document.createElement('div');
   card.style.cssText =
-    'padding: 24px; text-align: center; color: var(--gemini-on-surface-variant, #666);';
-
-  const icon = document.createElement('div');
-  icon.style.cssText = 'font-size: 32px; margin-bottom: 12px;';
-  icon.textContent = '⚠️';
+    'padding: 24px; text-align: center; color: var(--gv-ui-text-muted, var(--gemini-on-surface-variant, #666)); font-family: var(--gv-ui-font, system-ui, sans-serif); font-size: 14px; line-height: 1.45;';
 
   const title = document.createElement('div');
-  title.style.cssText = 'font-weight: 500; margin-bottom: 8px;';
+  title.style.cssText = 'font-weight: 600; margin-bottom: 6px; color: var(--gv-ui-text, inherit);';
   title.textContent = 'Mermaid Syntax Error';
 
   const details = document.createElement('div');
   details.style.cssText =
-    'font-size: 12px; opacity: 0.7; font-family: monospace; max-width: 400px; margin: 0 auto; word-break: break-word;';
+    'font-size: 12px; opacity: 0.8; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; max-width: 400px; margin: 0 auto; word-break: break-word;';
   details.textContent = errorMessage;
 
   const hint = document.createElement('div');
@@ -168,6 +167,27 @@ export function createMermaidErrorCard(errorMessage: string): HTMLElement {
   codeLabel.textContent = '"Code"';
   hint.append(codeLabel, ' to view source');
 
-  card.append(icon, title, details, hint);
+  card.append(createErrorIcon(), title, details, hint);
   return card;
+}
+
+/** Lucide `triangle-alert` from lucide-react, in place of the old emoji. */
+const TRIANGLE_ALERT_ICON_NODE = [
+  [
+    'path',
+    {
+      d: 'm21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3',
+      key: 'wmoenq',
+    },
+  ],
+  ['path', { d: 'M12 9v4', key: 'juzpu7' }],
+  ['path', { d: 'M12 17h.01', key: 'p32p05' }],
+] satisfies IconNode;
+
+function createErrorIcon(): SVGSVGElement {
+  const svg = createLucideIcon('triangle-alert', TRIANGLE_ALERT_ICON_NODE, 22);
+  svg.setAttribute('stroke-width', '1.75');
+  svg.style.cssText =
+    'display: block; margin: 0 auto 10px; color: var(--gv-ui-warning, oklch(0.7 0.14 70));';
+  return svg;
 }
