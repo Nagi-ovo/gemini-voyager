@@ -96,7 +96,7 @@ describe('persistentExportToolbar', () => {
       /\.gv-persistent-export-toolbar\[data-gv-platform='chatgpt'\]\s*\{([^}]*)\}/,
     )?.[1];
 
-    expect(platformRule).toContain('top: 12px');
+    expect(platformRule).toContain('top: 8px');
     expect(platformRule).not.toContain('right:');
     // A ghost button like the host's own Share: its ink and hover wash follow
     // data-gv-scheme through the shared tokens instead of per-theme literals,

@@ -2,6 +2,7 @@
 // Mounted as a fallback when Gemini's logo (the usual injection point for the
 // inline export dropdown) is absent — e.g. after the lr26 UI refresh removed
 // [data-test-id="logo"]. Calls back into showExportDialog when clicked.
+import { createDownloadIcon } from '@/core/icons/promptManagerIcons';
 
 export type PersistentExportToolbarOptions = {
   label: string;
@@ -336,9 +337,9 @@ function buildToolbarDom(options: PersistentExportToolbarOptions): {
   button.title = options.tooltip;
   button.setAttribute('aria-label', options.tooltip);
 
-  const icon = document.createElement('span');
-  icon.className = ICON_CLASS;
-  icon.setAttribute('aria-hidden', 'true');
+  // A line icon, like the host header's own Share.
+  const icon = createDownloadIcon(18);
+  icon.classList.add(ICON_CLASS);
 
   const labelEl = document.createElement('span');
   labelEl.className = LABEL_CLASS;

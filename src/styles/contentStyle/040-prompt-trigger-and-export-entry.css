@@ -229,8 +229,9 @@ html[data-gv-scheme='dark'] .gv-pm-trigger {
 
 .gv-persistent-export-toolbar[data-gv-platform='chatgpt'] {
   /* Same row as ChatGPT's header actions. Horizontal offset is computed so
-   * the button sits to the left of Share / more instead of over the title. */
-  top: 12px;
+   * the button sits to the left of Share / more instead of over the title.
+   * Its header buttons are 36px tall at top 8px. */
+  top: 8px;
 }
 
 /* A ghost button, like the host header's own Share: no surface or border of
@@ -243,12 +244,12 @@ html[data-gv-scheme='dark'] .gv-pm-trigger {
   height: 36px;
   padding: 0 12px;
   border: 0;
-  border-radius: 9999px;
+  border-radius: 8px;
   cursor: pointer;
   background: transparent;
   color: var(--gv-ui-text);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   font-family: inherit;
   line-height: 1;
   transition: background-color 0.15s ease;
@@ -269,11 +270,6 @@ html[data-gv-scheme='dark'] .gv-pm-trigger {
   height: 18px;
   display: block;
   flex-shrink: 0;
-  background: currentColor;
-  -webkit-mask: url('data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3e%3cpath fill=%22%23000%22 d=%22M12 3a1 1 0 011 1v8.586l2.293-2.293a1 1 0 111.414 1.414l-4.007 4.007a1 1 0 01-1.414 0L7.279 11.707a1 1 0 011.414-1.414L11 12.586V4a1 1 0 011-1zm-7 14a1 1 0 011-1h12a1 1 0 011 1v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z%22/%3e%3c/svg%3e')
-    center / contain no-repeat;
-  mask: url('data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3e%3cpath fill=%22%23000%22 d=%22M12 3a1 1 0 011 1v8.586l2.293-2.293a1 1 0 111.414 1.414l-4.007 4.007a1 1 0 01-1.414 0L7.279 11.707a1 1 0 011.414-1.414L11 12.586V4a1 1 0 011-1zm-7 14a1 1 0 011-1h12a1 1 0 011 1v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z%22/%3e%3c/svg%3e')
-    center / contain no-repeat;
 }
 
 .gv-persistent-export-label {
