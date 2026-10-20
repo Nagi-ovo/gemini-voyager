@@ -15,13 +15,13 @@
 
 ---
 
-This file lives at `src/pages/content/changelog/notes/{VERSION}.md` and is **shown to end users in-product** and on the site's changelog pages. It is separate from the GitHub release body (see `release-body.md`).
+The note is the folder `src/pages/content/changelog/notes/{VERSION}/`, one file per locale (`en.md`, `zh.md`, …), and is **shown to end users in-product** and on the site's changelog pages. It is separate from the GitHub release body (see `release-body.md`).
 
 ## Locale order (must be exactly these 10)
 
 `en` → `zh` → `zh_TW` → `ja` → `fr` → `es` → `pt` → `ar` → `ko` → `ru`
 
-This order matches the project's i18n convention. Use `<!-- lang:xx -->` as the delimiter for each section — the in-product viewer parses these tags.
+This order matches the project's i18n convention. Each locale is its own file, `{VERSION}/{lang}.md`, holding only that locale's body; the in-product viewer and the site pick the file for the reader's language and fall back to `en.md`. One file per locale keeps every file under the commit size gate however long a release gets.
 
 ## Section headers per locale
 
@@ -100,11 +100,9 @@ Reject a candidate that:
 - was chosen mainly because previous releases have not used it
 - feels more clever than useful
 
-Open every locale's body with one blockquoted, italic line, right under its `<!-- lang:xx -->` marker and above the first section:
+Open every locale's file with one blockquoted, italic line, above the first section:
 
 ```markdown
-<!-- lang:en -->
-
 > _"{the quote}" — {Character}, 《{Work Title}》_
 
 ### Highlights
@@ -121,8 +119,10 @@ Before saving it:
 
 ## Template skeleton
 
+`{VERSION}/en.md`:
+
 ```markdown
-<!-- lang:en -->
+> _"{the quote}" — {Character}, 《{Work Title}》_
 
 ### Highlights
 
@@ -136,8 +136,12 @@ Before saving it:
 ### Fixes
 
 - **{Title}**: {Description.}
+```
 
-<!-- lang:zh -->
+`{VERSION}/zh.md`:
+
+```markdown
+> _「{引语}」——{角色}，《{作品名}》_
 
 ### 亮点
 
@@ -151,87 +155,9 @@ Before saving it:
 ### 修复
 
 - **{中文标题}**：{中文描述。}
-
-<!-- lang:zh_TW -->
-
-### 亮點
-
-- ...
-
-### 新增
-
-- ...
-
-<!-- lang:ja -->
-
-### ハイライト
-
-- ...
-
-### 新機能
-
-- ...
-
-<!-- lang:fr -->
-
-### Points forts
-
-- ...
-
-### Nouveautés
-
-- ...
-
-<!-- lang:es -->
-
-### Destacados
-
-- ...
-
-### Novedades
-
-- ...
-
-<!-- lang:pt -->
-
-### Destaques
-
-- ...
-
-### Novidades
-
-- ...
-
-<!-- lang:ar -->
-
-### أبرز التحديثات
-
-- ...
-
-### الجديد
-
-- ...
-
-<!-- lang:ko -->
-
-### 주요 변경사항
-
-- ...
-
-### 새 기능
-
-- ...
-
-<!-- lang:ru -->
-
-### Основные изменения
-
-- ...
-
-### Новое
-
-- ...
 ```
+
+`zh_TW.md`, `ja.md`, `fr.md`, `es.md`, `pt.md`, `ar.md`, `ko.md` and `ru.md` take the same shape with the headers from the table above.
 
 Fill every locale — all 10 are non-negotiable. Write **Chinese first**, render English from it, then the other 8 from English (see _Authoring order_ below).
 
@@ -245,12 +171,12 @@ Fill every locale — all 10 are non-negotiable. Write **Chinese first**, render
 - Arabic: RTL is handled by the viewer — write natural RTL text, don't reorder for LTR display; use Arabic-style punctuation.
 - Read the prior release in the same locale before writing — there's an established voice per language.
 
-**Do not reorder the file.** The `<!-- lang:xx -->` section order stays `en → zh → zh_TW → …` (the viewer parses in that order and `en` is the fallback). Only the _writing_ order is zh-first — the sections on disk keep en first.
+`en.md` is the fallback for any locale the viewer cannot find, so it must exist and be complete.
 
 ## Reality check before saving
 
 - Every locale has the same number of bullets in the same order.
-- Every `<!-- lang:xx -->` tag is present.
+- All 10 locale files are present in `{VERSION}/`.
 - Platform markers (`:gemini:` …) are spelled as `PLATFORM_LOGOS` ids and match across locales.
 - No locale is missing a section that another locale has.
 - Optional-feature markers are present in all 10 where they appear in English.

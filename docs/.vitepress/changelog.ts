@@ -1,7 +1,8 @@
 /**
  * The site's changelog pages, one per locale, built from the release notes the
- * extension shows after an update (`src/pages/content/changelog/notes/`). The
- * notes stay the single source: a version appears here once `package.json`
+ * extension shows after an update (`src/pages/content/changelog/notes/`). Each
+ * release is a folder of one file per language, `notes/{version}/{lang}.md`.
+ * The notes stay the single source: a version appears here once `package.json`
  * reaches it, so a note written ahead of its release stays off the site.
  */
 import { execFileSync } from 'node:child_process';
@@ -10,7 +11,12 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { PLATFORM_LOGOS, type PlatformLogo } from '../../src/core/icons/platformLogos';
-import { extractLocalizedContent } from '../../src/pages/content/changelog/noteSections';
+import {
+  NOTE_LOCALES,
+  noteBody,
+  notePath,
+  pickNoteLocale,
+} from '../../src/pages/content/changelog/noteSections';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const DOCS_ROOT = join(REPO_ROOT, 'docs');
@@ -23,7 +29,7 @@ const DOC_LINK = /\]\((\/guide\/[^\s)#]+)(#[^\s)]*)?\)/g;
 const LOGO_MARKER = new RegExp(`:(${Object.keys(PLATFORM_LOGOS).join('|')}): ?`, 'g');
 
 interface ChangelogLocale {
-  /** The note's `<!-- lang:xx -->` code. */
+  /** Language file under `notes/{version}/`, such as `en`. */
   note: string;
   /** Path prefix of the site locale; the root locale is Simplified Chinese. */
   prefix: string;
@@ -118,7 +124,8 @@ export const CHANGELOG_LOCALES: readonly ChangelogLocale[] = [
 
 export interface ReleaseNote {
   version: string;
-  raw: string;
+  /** One language file's text, keyed by its code. */
+  bodies: Partial<Record<string, string>>;
   /** `YYYY-MM-DD` of the version's tag, when the checkout has it. */
   date?: string;
 }
@@ -170,8 +177,9 @@ export function renderChangelog(
   pageExists: (path: string) => boolean,
 ): string {
   const sections = notes.map((note) => {
+    const chosen = pickNoteLocale(locale.note, (lang) => noteBody(note.bodies[lang] ?? '') !== '');
     const body = localizeDocLinks(
-      extractLocalizedContent(note.raw, locale.note)
+      noteBody(chosen ? (note.bodies[chosen] ?? '') : '')
         .replace(PROMOTION_IMAGE, '$1')
         .replace(LOGO_MARKER, (_marker, id: keyof typeof PLATFORM_LOGOS) =>
           platformMarkSvg(PLATFORM_LOGOS[id]),
@@ -219,14 +227,18 @@ function tagDates(): Map<string, string> {
 function readNotes(): ReleaseNote[] {
   const dates = tagDates();
   const { version } = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8'));
-  const notes = readdirSync(NOTES_DIR)
-    .filter((file) => file.endsWith('.md'))
-    .map((file) => {
-      const noteVersion = file.slice(0, -'.md'.length);
+  const notes = readdirSync(NOTES_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => {
+      const bodies: Partial<Record<string, string>> = {};
+      for (const lang of NOTE_LOCALES) {
+        const file = join(NOTES_DIR, notePath(entry.name, lang));
+        if (existsSync(file)) bodies[lang] = readFileSync(file, 'utf8');
+      }
       return {
-        version: noteVersion,
-        raw: readFileSync(join(NOTES_DIR, file), 'utf8'),
-        date: dates.get(noteVersion),
+        version: entry.name,
+        bodies,
+        date: dates.get(entry.name),
       };
     });
   return releasedNotes(notes, version);

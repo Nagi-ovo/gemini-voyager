@@ -4,15 +4,13 @@ import { getCurrentLanguage } from '@/utils/i18n';
 import type { AppLanguage } from '@/utils/language';
 
 import { createChangelogModal } from './modal';
-import { extractLocalizedContent } from './noteSections';
-
-export { extractLocalizedContent };
+import { noteBody, notePath, pickNoteLocale } from './noteSections';
 
 /**
- * Dynamically import all markdown changelog files.
- * Keyed by relative path, e.g. './notes/1.2.8.md'
+ * One loader per language file, e.g. './notes/2.2.0/en.md'.
+ * Lazy so a release loads only the language it shows.
  */
-const changelogModules = import.meta.glob('./notes/*.md', {
+const changelogModules = import.meta.glob('./notes/*/*.md', {
   query: '?raw',
   import: 'default',
   eager: false,
@@ -174,16 +172,21 @@ async function showChangelogModal(
     }
   }
 
-  // 2. Try to load the changelog for the target version
-  const modulePath = `./notes/${version}.md`;
-  const loader = changelogModules[modulePath];
+  // 2. Load this version's note in the current language. English is the
+  //    fallback; no file for the version, or an empty body, means nothing to show.
+  const lang = await getCurrentLanguage();
+  const locale = pickNoteLocale(lang, (language) =>
+    Boolean(changelogModules[`./notes/${notePath(version, language)}`]),
+  );
+  if (!locale) return null;
+
+  const loader = changelogModules[`./notes/${notePath(version, locale)}`];
   if (!loader) return null;
 
   const rawMarkdown = await loader();
 
-  // 3. Get current language and extract localized content
-  const lang = await getCurrentLanguage();
-  const extracted = extractLocalizedContent(rawMarkdown, lang);
+  // 3. Drop optional front matter. An empty body is the same as a missing note.
+  const extracted = noteBody(rawMarkdown);
   if (!extracted) return null;
   const localizedContent = rewriteChangelogDocUrls(
     rewriteChangelogImageUrls(extracted, getRuntimeUrl),

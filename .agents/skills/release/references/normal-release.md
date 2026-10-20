@@ -103,7 +103,7 @@ rg 'MARKETING_VERSION|CURRENT_PROJECT_VERSION' \
 
 ### In-product changelog
 
-Create `src/pages/content/changelog/notes/{VERSION}.md`. Read [changelog.md](changelog.md) before authoring it. All 10 locales are required before publication, each opening with the release quote the maintainer picked ([Opening quote](changelog.md#opening-quote-every-release)); `src/pages/content/changelog/__tests__/changelog.test.ts` fails a note without it.
+Create the folder `src/pages/content/changelog/notes/{VERSION}/` with one file per locale (`en.md`, `zh.md`, …). Read [changelog.md](changelog.md) before authoring it. All 10 locales are required before publication, each opening with the release quote the maintainer picked ([Opening quote](changelog.md#opening-quote-every-release)); `src/pages/content/changelog/__tests__/changelog.test.ts` fails a note without it.
 
 Every commit in `PREV_TAG..HEAD` must be accounted for before writing. Scale the effort to the range — do not fan out by default:
 
@@ -112,7 +112,7 @@ Every commit in `PREV_TAG..HEAD` must be accounted for before writing. Scale the
 
 Whoever does the reading — you or an agent — must establish, per commit: the actual user-facing effect, whether the implementation matches the commit message, and whether it belongs in the changelog. Watch specifically for pairs that net to zero inside the window (a `revert` undoing a `feat`, a `fix` deleting most of the feature it follows) — those are the findings that justify the effort, and they must not reach the changelog.
 
-Write `zh` first, derive `en`, then translate the other eight locales while preserving the required on-disk locale order.
+Write `zh` first, derive `en`, then translate the other eight locales, one file each.
 
 ## 3. Verify the final release tree
 
@@ -149,7 +149,7 @@ git add \
   package.json manifest.json manifest.dev.json \
   packages/create-voyager-plugin/package.json \
   Voyager/Voyager.xcodeproj/project.pbxproj \
-  src/pages/content/changelog/notes/{VERSION}.md
+  src/pages/content/changelog/notes/{VERSION}/
 git diff --name-only -- src/features/plugins/constants.ts \
   ':(glob)src/features/plugins/verbs/**/*.ts' \
   ':(glob)src/features/plugins/verbs/*/paramsBaseline.json' \

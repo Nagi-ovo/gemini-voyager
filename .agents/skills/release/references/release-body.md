@@ -9,7 +9,7 @@
 
 ---
 
-This is the body that lands on `https://github.com/voyager-crew/voyager/releases/tag/v{VERSION}`. It's **derivative of the in-product changelog** (`src/pages/content/changelog/notes/{VERSION}.md`) but reformatted for a developer audience:
+This is the body that lands on `https://github.com/voyager-crew/voyager/releases/tag/v{VERSION}`. It's **derivative of the in-product changelog** (`src/pages/content/changelog/notes/{VERSION}/`) but reformatted for a developer audience:
 
 - Two languages (English + 简体中文), rendered as **separate sections** — not mixed per cell.
 - Table format with PR/commit attribution in a third column.
@@ -17,10 +17,10 @@ This is the body that lands on `https://github.com/voyager-crew/voyager/releases
 
 ## Why this exists as a separate artifact from the in-product changelog
 
-| Audience                         | File                                             | Format                                     |
-| -------------------------------- | ------------------------------------------------ | ------------------------------------------ |
-| End users (in-product)           | `src/pages/content/changelog/notes/{VERSION}.md` | 10 locales, bullet lists                   |
-| Developers (GitHub release page) | posted via `gh release edit --notes-file`        | en + zh, tables with PR/commit attribution |
+| Audience                         | File                                           | Format                                     |
+| -------------------------------- | ---------------------------------------------- | ------------------------------------------ |
+| End users (in-product)           | `src/pages/content/changelog/notes/{VERSION}/` | 10 locales, bullet lists                   |
+| Developers (GitHub release page) | posted via `gh release edit --notes-file`      | en + zh, tables with PR/commit attribution |
 
 The workflow (`.github/workflows/release.yml`) generates a default body on tag push using `gh api releases/generate-notes`. The default has contributor attribution but is **not** the curated table. After the workflow finishes, overwrite the body with this template.
 

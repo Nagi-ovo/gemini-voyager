@@ -6,13 +6,13 @@ import { StorageKeys } from '@/core/types/common';
 import { readContentStyle } from '@/tests/contentStyle';
 
 import {
-  extractLocalizedContent,
   hasUnreadChangelog,
   openChangelog,
   resolveChangelogImageUrl,
   rewriteChangelogImageUrls,
 } from '../index';
 import { createChangelogModal } from '../modal';
+import { NOTE_LOCALES, noteBody, notePath, pickNoteLocale } from '../noteSections';
 
 const parseMarkdown = vi.hoisted(() => vi.fn());
 vi.mock('marked', () => ({ marked: { parse: parseMarkdown } }));
@@ -23,110 +23,39 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('extractLocalizedContent', () => {
-  const sampleMarkdown = `<!-- lang:en -->
-### What's New
-- Feature A
-- Bug fix B
+describe('pickNoteLocale', () => {
+  const has = (lang: string) => lang === 'en' || lang === 'zh';
 
-<!-- lang:zh -->
-### 更新内容
-- 功能 A
-- 修复 B
-
-<!-- lang:ja -->
-### 新機能
-- 機能 A
-- バグ修正 B`;
-
-  it('extracts the correct language section', () => {
-    const result = extractLocalizedContent(sampleMarkdown, 'zh');
-    expect(result).toContain('更新内容');
-    expect(result).toContain('功能 A');
-    expect(result).not.toContain("What's New");
+  it('uses the requested language when that note exists', () => {
+    expect(pickNoteLocale('zh', has)).toBe('zh');
   });
 
-  it('extracts English section', () => {
-    const result = extractLocalizedContent(sampleMarkdown, 'en');
-    expect(result).toContain("What's New");
-    expect(result).toContain('Feature A');
+  it('falls back to English when the requested language is missing', () => {
+    expect(pickNoteLocale('fr', has)).toBe('en');
   });
 
-  it('extracts Japanese section', () => {
-    const result = extractLocalizedContent(sampleMarkdown, 'ja');
-    expect(result).toContain('新機能');
-    expect(result).toContain('機能 A');
+  it('returns null when neither the requested language nor English exists', () => {
+    expect(pickNoteLocale('fr', () => false)).toBeNull();
   });
+});
 
-  it('falls back to English when requested language is missing', () => {
-    const result = extractLocalizedContent(sampleMarkdown, 'fr');
-    expect(result).toContain("What's New");
-  });
-
-  it('returns empty string when no sections exist', () => {
-    const result = extractLocalizedContent('No language markers here', 'en');
-    expect(result).toBe('');
-  });
-
-  it('handles front matter and strips it from content', () => {
+describe('noteBody', () => {
+  it('strips front matter and trims the body', () => {
     const withFrontMatter = `---
 images:
   hero: ./assets/1.2.8-hero.gif
 ---
 
-<!-- lang:en -->
-### What's New
-- Feature A`;
-
-    const result = extractLocalizedContent(withFrontMatter, 'en');
-    expect(result).toContain("What's New");
-    expect(result).not.toContain('images:');
-    expect(result).not.toContain('---');
-  });
-
-  it('handles single language section', () => {
-    const single = `<!-- lang:en -->
-### Only English
-- Item 1`;
-
-    const result = extractLocalizedContent(single, 'en');
-    expect(result).toContain('Only English');
-  });
-
-  it('handles zh_TW language code', () => {
-    const withZhTW = `<!-- lang:en -->
 ### What's New
 - Feature A
+`;
 
-<!-- lang:zh_TW -->
-### 更新內容
-- 功能 A`;
-
-    const result = extractLocalizedContent(withZhTW, 'zh_TW');
-    expect(result).toContain('更新內容');
-  });
-
-  it('trims whitespace from extracted content', () => {
-    const result = extractLocalizedContent(sampleMarkdown, 'en');
-    expect(result).not.toMatch(/^\s/);
-    expect(result).not.toMatch(/\s$/);
-  });
-
-  it('keeps the 1.6.0 quote at the start of each localized section', () => {
-    const notes = readFileSync(
-      resolve(process.cwd(), 'src/pages/content/changelog/notes/1.6.0.md'),
-      'utf8',
-    );
-
-    expect(extractLocalizedContent(notes, 'en')).toMatch(
-      /^> \*"Not all those who wander are lost\."/,
-    );
-    expect(extractLocalizedContent(notes, 'zh')).toMatch(/^> \*「并非所有流浪者都迷失了方向。/);
+    expect(noteBody(withFrontMatter)).toBe("### What's New\n- Feature A");
+    expect(noteBody('\n> _quote_\n')).toBe('> _quote_');
   });
 });
 
 describe('release note quotes', () => {
-  const LOCALES = ['en', 'zh', 'zh_TW', 'ja', 'fr', 'es', 'pt', 'ar', 'ko', 'ru'];
   const notesDir = resolve(process.cwd(), 'src/pages/content/changelog/notes');
   const parts = (version: string) => version.split('.').map(Number);
   /** From 2.1.1 every release opens with a quote (the release skill's changelog guide). */
@@ -134,20 +63,42 @@ describe('release note quotes', () => {
     const [major, minor, patch] = parts(version);
     return major * 1e6 + minor * 1e3 + patch >= 2_001_001;
   };
+  const languageFiles = () => NOTE_LOCALES.map((locale) => `${locale}.md`).sort();
 
   it('does not let a release note ship without its opening quote in every locale', () => {
-    const versions = readdirSync(notesDir)
-      .map((file) => file.replace(/\.md$/, ''))
-      .filter((version) => /^\d+\.\d+\.\d+$/.test(version) && sinceQuotesRequired(version));
+    const versions = readdirSync(notesDir, { withFileTypes: true })
+      .filter(
+        (entry) =>
+          entry.isDirectory() &&
+          /^\d+\.\d+\.\d+$/.test(entry.name) &&
+          sinceQuotesRequired(entry.name),
+      )
+      .map((entry) => entry.name);
     expect(versions.length).toBeGreaterThan(0);
     for (const version of versions) {
-      const notes = readFileSync(resolve(notesDir, `${version}.md`), 'utf8');
-      for (const locale of LOCALES) {
-        expect(`${version} ${locale}: ${extractLocalizedContent(notes, locale)}`).toMatch(
+      const versionDir = resolve(notesDir, version);
+      const files = readdirSync(versionDir)
+        .filter((name) => name.endsWith('.md'))
+        .sort();
+      expect(files).toEqual(languageFiles());
+      for (const locale of NOTE_LOCALES) {
+        const body = noteBody(readFileSync(resolve(versionDir, `${locale}.md`), 'utf8'));
+        expect(`${version} ${locale}: ${body}`).toMatch(
           new RegExp(`^${version.replace(/\./g, '\\.')} ${locale}: > _`),
         );
       }
     }
+  });
+
+  it('keeps the 1.6.0 quote at the start of its English and Chinese notes', () => {
+    const versionDir = resolve(notesDir, '1.6.0');
+
+    expect(noteBody(readFileSync(resolve(versionDir, 'en.md'), 'utf8'))).toMatch(
+      /^> \*"Not all those who wander are lost\."/,
+    );
+    expect(noteBody(readFileSync(resolve(versionDir, 'zh.md'), 'utf8'))).toMatch(
+      /^> \*「并非所有流浪者都迷失了方向。/,
+    );
   });
 });
 
@@ -203,14 +154,25 @@ describe('resolveChangelogImageUrl', () => {
   it('resolves every image in the current release note to a runtime URL', () => {
     const version = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'))
       .version as string;
-    const notePath = resolve(__dirname, `../notes/${version}.md`);
-    const markdown = readFileSync(notePath, 'utf8');
+    const versionDir = resolve(__dirname, `../notes/${version}`);
+    const files = readdirSync(versionDir)
+      .filter((name) => name.endsWith('.md'))
+      .sort();
+    expect(files).toEqual(NOTE_LOCALES.map((locale) => `${locale}.md`).sort());
 
-    const unresolved = [...markdown.matchAll(/!\[[^\]]*\]\((https?:\/\/[^)]+)\)/g)]
-      .map((match) => match[1])
-      .filter(
-        (url) => resolveChangelogImageUrl(url, (path) => `moz-extension://test-id/${path}`) === url,
+    const unresolved = NOTE_LOCALES.flatMap((locale) => {
+      const markdown = readFileSync(
+        resolve(__dirname, `../notes/${notePath(version, locale)}`),
+        'utf8',
       );
+      return [...markdown.matchAll(/!\[[^\]]*\]\((https?:\/\/[^)]+)\)/g)]
+        .map((match) => match[1])
+        .filter(
+          (url) =>
+            resolveChangelogImageUrl(url, (path) => `moz-extension://test-id/${path}`) === url,
+        )
+        .map((url) => `${locale}: ${url}`);
+    });
 
     expect(unresolved).toEqual([]);
   });

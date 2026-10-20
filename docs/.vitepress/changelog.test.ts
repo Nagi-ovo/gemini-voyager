@@ -7,9 +7,7 @@ const locale = (note: string) => CHANGELOG_LOCALES.find((entry) => entry.note ==
 const note = (version: string, sections: Record<string, string>, date?: string): ReleaseNote => ({
   version,
   date,
-  raw: Object.entries(sections)
-    .map(([lang, body]) => `<!-- lang:${lang} -->\n\n${body}\n`)
-    .join('\n'),
+  bodies: sections,
 });
 
 describe('site changelog', () => {
