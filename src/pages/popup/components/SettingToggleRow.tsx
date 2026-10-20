@@ -13,8 +13,6 @@ export interface SettingToggleRowProps {
   settingId: string;
   label: TranslationKey;
   hint?: TranslationKey;
-  /** Wider text/switch gap and overflow clamp, as the floating-mode row has always had. */
-  gapped?: boolean;
   experimental?: boolean;
   /** Extra content under the hint, such as a permission call-to-action. */
   extra?: React.ReactNode;
@@ -33,7 +31,6 @@ export function SettingToggleRow({
   settingId,
   label,
   hint,
-  gapped,
   experimental,
   extra,
   checked,
@@ -48,10 +45,8 @@ export function SettingToggleRow({
   const labelNode = (
     <Label
       htmlFor={id}
-      className={`text-sm font-medium transition-colors${
-        disabled
-          ? ' text-muted-foreground cursor-not-allowed'
-          : ' group-hover:text-primary cursor-pointer'
+      className={`text-sm leading-5 font-medium${
+        disabled ? ' text-muted-foreground cursor-not-allowed' : ' cursor-pointer'
       }${experimental ? ' flex items-center gap-1' : ''}`}
     >
       {t(label)}
@@ -59,19 +54,13 @@ export function SettingToggleRow({
     </Label>
   );
   return (
-    <div
-      hidden={!visible}
-      className={`group flex items-center justify-between${gapped ? ' gap-3' : ''}`}
-    >
-      {hint ? (
-        <div className={gapped ? 'min-w-0 flex-1' : 'flex-1'}>
-          {labelNode}
-          <p className="text-muted-foreground mt-1 text-xs">{t(hint)}</p>
-          {extra}
-        </div>
-      ) : (
-        labelNode
-      )}
+    <div hidden={!visible} className="group flex items-center justify-between gap-3">
+      {/* min-w-0 lets a long label wrap instead of pushing into the switch. */}
+      <div className="min-w-0 flex-1">
+        {labelNode}
+        {hint && <p className="text-muted-foreground mt-1 text-xs">{t(hint)}</p>}
+        {extra}
+      </div>
       <Switch
         id={id}
         checked={checked}

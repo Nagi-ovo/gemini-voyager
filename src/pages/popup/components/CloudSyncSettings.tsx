@@ -7,6 +7,7 @@ import type { TranslationKey } from '@/utils/translations';
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
 import { Label } from '../../../components/ui/label';
+import { SegmentedControl } from '../../../components/ui/segmented-control';
 import { Switch } from '../../../components/ui/switch';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { IconChatGPT, IconClaude, IconDeepSeek } from './WebsiteLogos';
@@ -67,8 +68,8 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
   const { labelKey, logo: Logo } = PLATFORM_PRESENTATION[platform];
   if (!hasFolderPlatform) return null;
   return (
-    <Card className="p-3 transition-all hover:shadow-md">
-      <CardTitle className="mb-2">{t('cloudSync')}</CardTitle>
+    <Card className="p-4">
+      <CardTitle className="mb-4">{t('cloudSync')}</CardTitle>
       <CardContent className="space-y-3 p-0">
         {/* Description */}
         <p className="text-muted-foreground text-xs">
@@ -86,22 +87,15 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
         {supportsICloud && (
           <div className="grid grid-cols-[auto_1fr] items-center gap-3">
             <Label className="text-sm font-medium">{t('syncProvider')}</Label>
-            <div className="bg-secondary/60 grid grid-cols-2 gap-1 rounded-xl p-1">
-              {(['googleDrive', 'icloud'] as const).map((provider) => (
-                <button
-                  key={provider}
-                  className={`rounded-lg px-2 py-1.5 text-xs font-bold transition-colors ${
-                    syncState.provider === provider
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                  onClick={() => void handleProviderChange(provider)}
-                  aria-pressed={syncState.provider === provider}
-                >
-                  {provider === 'icloud' ? t('syncProviderICloud') : t('syncProviderGoogleDrive')}
-                </button>
-              ))}
-            </div>
+            <SegmentedControl
+              aria-label={t('syncProvider')}
+              options={[
+                { value: 'googleDrive', label: t('syncProviderGoogleDrive') },
+                { value: 'icloud', label: t('syncProviderICloud') },
+              ]}
+              value={syncState.provider}
+              onChange={(provider) => void handleProviderChange(provider)}
+            />
           </div>
         )}
 
@@ -117,34 +111,15 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
         {/* Sync Mode Toggle */}
         <div className="grid grid-cols-[auto_1fr] items-center gap-3">
           <Label className="text-sm font-medium">{t('syncMode')}</Label>
-          <div className="bg-secondary/60 relative grid grid-cols-2 gap-1 rounded-xl p-1">
-            <div
-              className="bg-primary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg shadow-sm transition-all duration-300 ease-out"
-              style={{
-                left: syncState.mode === 'disabled' ? '4px' : 'calc(50% + 2px)',
-              }}
-            />
-            <button
-              className={`relative z-10 rounded-lg px-2 py-1.5 text-xs font-bold transition-all duration-200 ${
-                syncState.mode === 'disabled'
-                  ? 'text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-              onClick={() => handleModeChange('disabled')}
-            >
-              {t('syncModeDisabled')}
-            </button>
-            <button
-              className={`relative z-10 rounded-lg px-2 py-1.5 text-xs font-bold transition-all duration-200 ${
-                syncState.mode === 'manual'
-                  ? 'text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-              onClick={() => handleModeChange('manual')}
-            >
-              {t('syncModeManual')}
-            </button>
-          </div>
+          <SegmentedControl
+            aria-label={t('syncMode')}
+            options={[
+              { value: 'disabled', label: t('syncModeDisabled') },
+              { value: 'manual', label: t('syncModeManual') },
+            ]}
+            value={syncState.mode === 'disabled' ? 'disabled' : 'manual'}
+            onChange={(mode) => void handleModeChange(mode)}
+          />
         </div>
 
         {FOLDER_PLATFORMS[platform].syncsConversationExtras && (
@@ -180,11 +155,11 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
               <Button
                 variant="outline"
                 size="sm"
-                className="group hover:border-primary/50 w-full"
+                className="w-full"
                 onClick={handleSyncNow}
                 disabled={isUploading || isDownloading}
               >
-                <span className="flex items-center gap-1 text-xs transition-transform group-hover:scale-105">
+                <span className="flex items-center gap-1 text-xs">
                   {isUploading ? (
                     <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
                       <circle
@@ -222,11 +197,10 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
                 <Button
                   variant="outline"
                   size="sm"
-                  className="group hover:border-primary/50"
                   onClick={() => handleDownloadFromDrive('merge')}
                   disabled={isUploading || isDownloading}
                 >
-                  <span className="flex items-center gap-1 text-xs transition-transform group-hover:scale-105">
+                  <span className="flex items-center gap-1 text-xs">
                     {downloadMode === 'merge' ? (
                       <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
                         <circle
@@ -264,11 +238,11 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
                 <Button
                   variant="outline"
                   size="sm"
-                  className="group hover:border-destructive/50"
+                  className="hover:text-destructive"
                   onClick={() => handleDownloadFromDrive('overwrite')}
                   disabled={isUploading || isDownloading}
                 >
-                  <span className="flex items-center gap-1 text-xs transition-transform group-hover:scale-105">
+                  <span className="flex items-center gap-1 text-xs">
                     {downloadMode === 'overwrite' ? (
                       <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
                         <circle
@@ -340,7 +314,6 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
                 data-testid="sync-platform-mark"
                 className="pointer-events-none absolute inset-y-0 end-0 flex w-20 items-center justify-center overflow-hidden"
               >
-                <div className="bg-primary/10 absolute inset-3 rounded-full blur-xl" />
                 {typeof Logo !== 'string' ? (
                   <div className="size-16 opacity-[0.13] dark:opacity-[0.2]">
                     <Logo />
@@ -387,9 +360,9 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
           <p
             className={`text-center text-xs ${
               statusMessage.kind === 'ok'
-                ? 'text-green-600'
+                ? 'text-success'
                 : statusMessage.kind === 'warn'
-                  ? 'text-amber-600'
+                  ? 'text-warning'
                   : 'text-destructive'
             }`}
           >

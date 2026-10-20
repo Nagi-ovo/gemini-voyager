@@ -77,7 +77,7 @@ function OfficialPluginTopicCard({
     // The popup itself sets no direction, so the card mirrors itself for RTL languages.
     <Card
       data-plugin-topic={topic.id}
-      className="p-4 transition-all hover:shadow-md"
+      className="p-4"
       dir={isRTLLanguage(language) ? 'rtl' : undefined}
     >
       <CardTitle id={titleId} className="mb-4">

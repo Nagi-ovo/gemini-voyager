@@ -1,0 +1,20 @@
+/* The toolbar popup's fixed frame. Only the popup entry imports it: the options
+ * page renders the same settings in a full tab and must not inherit 360×600. */
+html {
+  width: 360px;
+  height: 600px;
+}
+
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#__root {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}

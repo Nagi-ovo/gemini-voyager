@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 
 import Popup from '@pages/popup/Popup';
 import '@pages/popup/index.css';
+import '@pages/popup/popupFrame.css';
 
 import '@assets/styles/tailwind.css';
 

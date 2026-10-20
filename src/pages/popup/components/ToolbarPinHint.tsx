@@ -45,14 +45,14 @@ export function ToolbarPinHint({ style }: { style?: CSSProperties }) {
   };
 
   return (
-    <Card style={style} className="bg-accent/60 border-primary/20 p-3 shadow-sm" role="status">
+    <Card style={style} className="p-3" role="status">
       <div className="flex items-center gap-3">
         <Pin className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
         <p className="flex-1 text-sm leading-snug">{t('popupPinHint')}</p>
         <button
           type="button"
           onClick={dismiss}
-          className="text-muted-foreground hover:text-foreground flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors"
+          className="text-muted-foreground hover:bg-secondary hover:text-foreground flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors"
           aria-label={t('popupPinHintDismiss')}
           title={t('popupPinHintDismiss')}
         >

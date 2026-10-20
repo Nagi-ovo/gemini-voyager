@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { Copy, Download, FileJson, X } from 'lucide-react';
+import { Copy, Download, X } from 'lucide-react';
 
 import type { NativeHealthEntry } from '@/core/gemini/nativeHealth';
 import {
@@ -13,6 +13,7 @@ import {
 } from '@/core/services/DiagnosticsExportService';
 
 import { Button } from '../../../components/ui/button';
+import { CardTitle } from '../../../components/ui/card';
 import { useLanguage } from '../../../contexts/LanguageContext';
 
 export interface DiagnosticsExportCardProps {
@@ -73,12 +74,9 @@ export function DiagnosticsExportCard({
 
   return (
     <>
-      <div className="border-border/60 bg-muted/30 flex items-center gap-3 rounded-xl border p-3">
-        <div className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg">
-          <FileJson className="size-4" aria-hidden="true" />
-        </div>
+      <div className="border-border/70 bg-card flex items-center gap-3 rounded-xl border p-3">
         <div className="min-w-0 flex-1">
-          <p className="text-foreground text-xs font-semibold">{t('diagnosticsTitle')}</p>
+          <CardTitle>{t('diagnosticsTitle')}</CardTitle>
           <p className="text-muted-foreground mt-0.5 text-[11px] leading-snug">
             {t('diagnosticsHint')}
           </p>
@@ -137,10 +135,10 @@ export function DiagnosticsExportCard({
                 value={markdown}
                 aria-label={t('diagnosticsPreviewTitle')}
                 onFocus={(event) => event.currentTarget.select()}
-                className="border-border bg-muted/35 text-foreground focus:ring-primary/40 h-[min(16rem,calc(100vh-12rem))] min-h-40 w-full resize-none overflow-auto rounded-xl border p-3 font-mono text-[10px] leading-relaxed outline-none focus:ring-2"
+                className="border-border bg-muted/35 text-foreground focus-visible:border-ring/70 focus-visible:ring-ring/30 h-[min(16rem,calc(100vh-12rem))] min-h-40 w-full resize-none overflow-auto rounded-lg border p-3 font-mono text-[10px] leading-relaxed focus-visible:ring-2 focus-visible:outline-none"
               />
               {copyStatus === 'error' && (
-                <p className="mt-2 text-[11px] text-amber-600 dark:text-amber-400" role="status">
+                <p className="text-warning mt-2 text-[11px]" role="status">
                   {t('diagnosticsCopyFailed')}
                 </p>
               )}

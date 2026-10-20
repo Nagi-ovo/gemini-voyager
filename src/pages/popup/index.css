@@ -1,13 +1,4 @@
-html {
-  width: 360px;
-  height: 600px;
-}
-
 body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
   font-family:
     -apple-system,
     BlinkMacSystemFont,
@@ -16,12 +7,6 @@ body {
     Helvetica,
     Arial,
     sans-serif;
-}
-#__root {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
 }
 
 .highlight-cloud-sync-row {

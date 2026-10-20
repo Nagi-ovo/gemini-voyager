@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Palette, RotateCcw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import { type PromptPanelTheme, usePromptPanelTheme } from '../hooks/usePromptPanelTheme';
@@ -95,7 +96,7 @@ export const ThemeColorButton: React.FC<ThemeColorButtonProps> = ({
         <div
           role="dialog"
           aria-label={t('themeColor')}
-          className="border-border bg-background absolute right-0 z-50 mt-2 w-60 rounded-xl border p-3 shadow-xl"
+          className="border-border bg-popover text-popover-foreground absolute right-0 z-50 mt-2 w-60 rounded-xl border p-3 shadow-[0_6px_20px_oklch(0_0_0/0.16)]"
         >
           <div className="text-foreground text-sm font-semibold">{t('themeColor')}</div>
           <p className="text-foreground/60 mt-1 mb-3 text-xs leading-snug">{t('themeColorDesc')}</p>
@@ -135,23 +136,16 @@ export const ThemeColorButton: React.FC<ThemeColorButtonProps> = ({
 
           <div className="border-border mt-3 border-t pt-3">
             <div className="text-foreground text-sm font-semibold">{t('pmPanelTheme')}</div>
-            <div className="bg-secondary/60 mt-2 flex items-center gap-0.5 rounded-full p-1">
-              {PANEL_THEME_OPTIONS.map(([option, label]) => (
-                <button
-                  key={option}
-                  type="button"
-                  aria-pressed={panelTheme.value === option}
-                  onClick={() => panelTheme.onChange(option)}
-                  className={`flex-1 rounded-full py-1 text-xs font-medium transition-all duration-200 ${
-                    panelTheme.value === option
-                      ? 'bg-background text-foreground shadow-md'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t(label)}
-                </button>
-              ))}
-            </div>
+            <SegmentedControl
+              aria-label={t('pmPanelTheme')}
+              className="mt-2"
+              options={PANEL_THEME_OPTIONS.map(([option, label]) => ({
+                value: option,
+                label: t(label),
+              }))}
+              value={panelTheme.value}
+              onChange={panelTheme.onChange}
+            />
           </div>
         </div>
       )}

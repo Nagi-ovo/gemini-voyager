@@ -1,10 +1,20 @@
+/* The settings column sits centred in the tab. #__root stays the scroller, as
+ * in the popup, so the sticky header, undo toast and scroll restore behave alike. */
+html,
 body {
-  background: hsl(var(--background));
+  height: 100%;
+  background: var(--background);
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
 }
 
 #__root {
   display: flex;
-  min-height: 100vh;
+  height: 100%;
+  overflow-y: auto;
   justify-content: center;
   align-items: flex-start;
 }

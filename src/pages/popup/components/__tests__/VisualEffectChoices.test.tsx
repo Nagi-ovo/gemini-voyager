@@ -41,7 +41,7 @@ describe('VisualEffectChoices', () => {
       'visualEffectRain',
     ]);
     expect(
-      buttons.filter((b) => b.classList.contains('shadow-md')).map((b) => b.textContent),
+      buttons.filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.textContent),
     ).toEqual(['visualEffectSakura']);
     expect(buttons.every((b) => b.querySelector('svg'))).toBe(true);
 

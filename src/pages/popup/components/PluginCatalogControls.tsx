@@ -19,6 +19,7 @@ import {
 } from '@/features/plugins/remote/hostCatalogSettings';
 import type { TranslationKey } from '@/utils/translations';
 
+import { Select } from '../../../components/ui/input';
 import { Switch } from '../../../components/ui/switch';
 import { useLanguage } from '../../../contexts/LanguageContext';
 
@@ -149,19 +150,19 @@ export function PluginCatalogControls({
       </p>
       {catalogSettings.onlineUpdatesEnabled && (
         <div className="flex items-center justify-between gap-3">
-          <span className="text-muted-foreground text-[11px]">{t('pluginsCheckInterval')}</span>
-          <select
+          <span className="text-foreground/80 text-xs">{t('pluginsCheckInterval')}</span>
+          <Select
+            size="sm"
             value={catalogSettings.checkInterval}
             aria-label={t('pluginsCheckInterval')}
             onChange={(event) => handleCheckIntervalChange(event.target.value)}
-            className="bg-background border-border focus:ring-primary/50 rounded-md border px-2 py-1 text-[11px] transition-all focus:ring-2 focus:outline-none"
           >
             {PLUGIN_CATALOG_CHECK_INTERVALS.map((interval) => (
               <option key={interval} value={interval}>
                 {t(CHECK_INTERVAL_LABEL_KEYS[interval])}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       )}
       <p className="text-muted-foreground text-[11px]">{catalogStatusText}</p>

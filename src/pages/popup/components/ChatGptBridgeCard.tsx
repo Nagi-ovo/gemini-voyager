@@ -7,6 +7,7 @@ import type { TranslationKey } from '@/utils/translations';
 
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent } from '../../../components/ui/card';
+import { fieldVariants } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import {
   type BridgeActionResult,
@@ -19,8 +20,7 @@ import {
   useBridgeStatus,
 } from '../hooks/useBridgeStatus';
 
-const INPUT_CLASS =
-  'bg-background border-border focus:ring-primary/50 h-9 w-full rounded-md border px-2 text-sm tabular-nums focus:ring-2 focus:outline-none';
+const INPUT_CLASS = `${fieldVariants({ size: 'lg' })} w-full tabular-nums`;
 
 /** Characters of the server id worth showing; enough to tell two servers apart. */
 const SERVER_ID_PREFIX = 8;
@@ -70,7 +70,7 @@ function popupScheme(): 'light' | 'dark' {
 
 function StatusDot({ tone }: { tone: 'ok' | 'warn' | 'idle' }) {
   const color =
-    tone === 'ok' ? 'bg-emerald-500' : tone === 'warn' ? 'bg-amber-500' : 'bg-muted-foreground/60';
+    tone === 'ok' ? 'bg-success' : tone === 'warn' ? 'bg-warning' : 'bg-muted-foreground/60';
   return (
     <span
       aria-hidden="true"
@@ -174,11 +174,7 @@ export function ChatGptBridgeCard({ t }: ChatGptBridgeCardProps) {
   const shownNote = note ?? lastErrorKey;
 
   return (
-    <Card
-      style={{ order: -2 }}
-      className="border-primary/20 p-4 transition-all hover:shadow-md"
-      data-testid="chatgpt-bridge-card"
-    >
+    <Card style={{ order: -2 }} className="p-4" data-testid="chatgpt-bridge-card">
       <CardContent className="p-0">
         <p className="text-sm font-medium">{t('bridgeCardTitle')}</p>
         {unsupported ? (
@@ -249,7 +245,7 @@ export function ChatGptBridgeCard({ t }: ChatGptBridgeCardProps) {
           </form>
         )}
         {shownNote && (
-          <p role="status" className="mt-2 text-[11px] leading-snug text-red-500">
+          <p role="status" className="text-destructive mt-2 text-[11px] leading-snug">
             {t(shownNote)}
           </p>
         )}

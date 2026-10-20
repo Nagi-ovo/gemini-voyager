@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import type { VisualEffect } from '@/core/utils/visualEffectValues';
 import type { TranslationKey } from '@/utils/translations';
 
@@ -87,23 +88,16 @@ export function VisualEffectChoices({
   className = '',
 }: VisualEffectChoicesProps) {
   return (
-    <div className={`bg-secondary/60 flex items-center gap-0.5 rounded-full p-1 ${className}`}>
-      {OPTIONS.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          aria-pressed={value === option.value}
-          onClick={() => onChange(option.value)}
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-bold transition-all duration-200 ${
-            value === option.value
-              ? 'bg-background text-foreground shadow-md'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          {option.icon}
-          <span>{t(option.label)}</span>
-        </button>
-      ))}
-    </div>
+    <SegmentedControl
+      semantics="pressed"
+      className={className}
+      options={OPTIONS.map((option) => ({
+        value: option.value,
+        label: t(option.label),
+        icon: option.icon,
+      }))}
+      value={value}
+      onChange={onChange}
+    />
   );
 }

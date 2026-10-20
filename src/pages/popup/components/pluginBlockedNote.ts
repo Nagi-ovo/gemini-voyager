@@ -18,7 +18,7 @@ export interface BlockedNote {
 }
 
 export const BLOCKED_NOTE_TONE_CLASS: Readonly<Record<BlockedNoteTone, string>> = {
-  paused: 'text-amber-600 dark:text-amber-400',
+  paused: 'text-warning',
   waiting: 'text-muted-foreground',
 };
 

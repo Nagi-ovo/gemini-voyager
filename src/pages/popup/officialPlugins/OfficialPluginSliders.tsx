@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Slider } from '@/components/ui/slider';
+import { SliderRow } from '@/components/ui/slider-row';
 import type { PluginManifest, PluginSettingValue, PluginSettings } from '@/features/plugins/types';
 import type { TranslationKey } from '@/utils/translations';
 
 import { pickLocalizedSetting } from '../components/PluginIdentity';
 import type { OfficialPluginSlider } from './officialPluginRegistry';
 
-interface SliderRowProps {
+interface PluginSliderProps {
   readonly id: string;
   readonly label: string;
   readonly presentation: OfficialPluginSlider;
@@ -19,7 +20,16 @@ interface SliderRowProps {
   readonly t: (key: TranslationKey) => string;
 }
 
-function SliderRow({ id, label, presentation, min, max, value, onCommit, t }: SliderRowProps) {
+function PluginSlider({
+  id,
+  label,
+  presentation,
+  min,
+  max,
+  value,
+  onCommit,
+  t,
+}: PluginSliderProps) {
   const [draft, setDraft] = useState(value);
   const dragging = useRef(false);
   // Follow storage (a restore, another window) except while the user holds the thumb.
@@ -31,15 +41,14 @@ function SliderRow({ id, label, presentation, min, max, value, onCommit, t }: Sl
       ? t(presentation.zeroLabel)
       : `${draft}${presentation.unit}`;
   return (
-    <div className="mt-2">
-      <div className="mb-1 flex items-center justify-between gap-2 text-[11px]">
-        <span id={id} className="text-muted-foreground min-w-0 truncate">
-          {label}
-        </span>
-        <span className="text-primary bg-primary/10 shrink-0 rounded px-1.5 font-semibold tabular-nums">
-          {shown}
-        </span>
-      </div>
+    <SliderRow
+      className="mt-2.5"
+      label={label}
+      labelId={id}
+      value={shown}
+      minLabel={t(presentation.minLabel)}
+      maxLabel={t(presentation.maxLabel)}
+    >
       <Slider
         min={min}
         max={max}
@@ -65,11 +74,7 @@ function SliderRow({ id, label, presentation, min, max, value, onCommit, t }: Sl
           onCommit(next);
         }}
       />
-      <div className="text-muted-foreground mt-1 flex items-center justify-between text-[10px]">
-        <span>{t(presentation.minLabel)}</span>
-        <span>{t(presentation.maxLabel)}</span>
-      </div>
-    </div>
+    </SliderRow>
   );
 }
 
@@ -102,7 +107,7 @@ export function OfficialPluginSliders({
         const stored = Number(settings[key] ?? field.default);
         const value = presentation.toDisplay ? presentation.toDisplay(stored) : stored;
         return (
-          <SliderRow
+          <PluginSlider
             key={key}
             id={`official-plugin-slider-${manifest.id.replace(/[^a-zA-Z0-9_-]/g, '-')}-${key}`}
             label={

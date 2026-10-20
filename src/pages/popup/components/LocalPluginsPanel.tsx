@@ -64,7 +64,7 @@ function LocalPluginRow({
             onClick={() => setConfirming(true)}
             title={t('localPluginsRemove')}
             aria-label={`${t('localPluginsRemove')} ${name}`}
-            className="text-muted-foreground rounded p-1 transition-colors hover:text-red-500"
+            className="text-muted-foreground hover:text-destructive rounded p-1 transition-colors"
           >
             <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
@@ -81,7 +81,7 @@ function LocalPluginRow({
         </div>
       )}
       {!entry.manifest && (
-        <div className="mt-1 text-[11px] text-red-500/80">
+        <div className="text-destructive/80 mt-1 text-[11px]">
           <p>{t('localPluginsStoredInvalid')}</p>
           <IssueList issues={entry.issues} />
         </div>
@@ -113,7 +113,7 @@ export function LocalPluginsPanel({
   const imported = result?.ok ? result.manifest : null;
 
   return (
-    <Card className="p-4 transition-all hover:shadow-md">
+    <Card className="p-4">
       <CardTitle className="mb-2">{t('localPluginsTitle')}</CardTitle>
       <CardContent className="space-y-3 p-0">
         <p className="text-muted-foreground text-xs">{t('localPluginsDescription')}</p>
@@ -179,7 +179,7 @@ export function LocalPluginsPanel({
               spellCheck={false}
               rows={6}
               placeholder='{ "id": "me.my-tweak", … }'
-              className="bg-background border-border focus:ring-primary/50 w-full rounded-md border p-2 font-mono text-[11px] focus:ring-2 focus:outline-none"
+              className="bg-background border-border focus-visible:border-ring/70 focus-visible:ring-ring/30 w-full rounded-lg border p-2 font-mono text-[11px] transition-[border-color,box-shadow] focus-visible:ring-2 focus-visible:outline-none"
             />
             <div className="flex justify-end gap-2">
               <Button variant="outline" size="sm" onClick={() => setPasteOpen(false)}>
@@ -197,7 +197,7 @@ export function LocalPluginsPanel({
         )}
 
         {result && !result.ok && (
-          <div className="text-[11px] text-red-500" role="alert">
+          <div className="text-destructive text-[11px]" role="alert">
             <p>{t('localPluginsRejected')}</p>
             <IssueList issues={result.issues} />
             {result.previousVersion && (
@@ -209,7 +209,7 @@ export function LocalPluginsPanel({
         )}
         {imported && (
           <div role="status">
-            <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
+            <p className="text-success text-[11px]">
               {t('localPluginsImported')
                 .replace('{name}', imported.name)
                 .replace('{version}', imported.version)}

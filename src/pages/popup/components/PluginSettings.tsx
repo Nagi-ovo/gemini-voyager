@@ -7,6 +7,9 @@ import {
 } from '@/features/plugins/runtime/resolvePluginSettings';
 import type { PluginManifest, PluginSettingValue } from '@/features/plugins/types';
 
+import { Input, Select } from '../../../components/ui/input';
+import { Slider } from '../../../components/ui/slider';
+import { SliderRow, sliderValueChipClass } from '../../../components/ui/slider-row';
 import { Switch } from '../../../components/ui/switch';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { ExperimentalBadge } from './ExperimentalBadge';
@@ -63,7 +66,7 @@ function NumberSetting({ label, value, min, max, disabled, onChange }: NumberSet
   };
 
   return (
-    <input
+    <Input
       type="number"
       min={min}
       max={max}
@@ -77,7 +80,8 @@ function NumberSetting({ label, value, min, max, disabled, onChange }: NumberSet
       onKeyDown={(event) => {
         if (event.key === 'Enter') event.currentTarget.blur();
       }}
-      className="bg-background border-border focus:ring-primary/50 w-16 shrink-0 rounded-md border px-1.5 py-0.5 text-right text-[11px] tabular-nums transition-all focus:ring-2 disabled:cursor-not-allowed"
+      size="sm"
+      className={`${sliderValueChipClass} hover:border-border h-6 w-16 border-transparent text-end`}
     />
   );
 }
@@ -129,18 +133,19 @@ export function PluginSettings({
               key={key}
               className={`flex justify-between gap-3 ${hint ? 'items-start' : 'items-center'}`}
             >
-              <span className={`min-w-0 ${disabled ? 'opacity-50' : ''}`}>
-                <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
+              <span className={`min-w-0 flex-1 ${disabled ? 'opacity-50' : ''}`}>
+                <span className="text-foreground/80 flex items-center gap-1 text-xs">
                   {settingText.label}
                   {field.experimental && <ExperimentalBadge title={t('experimentalLabel')} />}
                 </span>
                 {hint && (
-                  <span className="text-muted-foreground/80 mt-0.5 block text-[10px] leading-snug">
+                  <span className="text-muted-foreground mt-0.5 block text-[11px] leading-snug">
                     {hint}
                   </span>
                 )}
               </span>
               <Switch
+                size="sm"
                 checked={checked}
                 disabled={disabled}
                 aria-label={settingText.label}
@@ -157,12 +162,12 @@ export function PluginSettings({
               key={key}
               className={`flex items-center justify-between gap-3 ${disabled ? 'opacity-50' : ''}`}
             >
-              <span className="text-muted-foreground text-[11px]">{settingText.label}</span>
-              <select
+              <span className="text-foreground/80 min-w-0 text-xs">{settingText.label}</span>
+              <Select
+                size="sm"
                 value={String(rawValue)}
                 disabled={disabled}
                 onChange={(event) => writeNow(key, event.target.value)}
-                className="bg-background border-border focus:ring-primary/50 min-w-0 rounded-md border px-2 py-1 text-[11px] transition-all focus:ring-2 disabled:cursor-not-allowed"
               >
                 {settingText.options?.map((option) => (
                   <option
@@ -173,7 +178,7 @@ export function PluginSettings({
                     {option.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           );
         }
@@ -184,14 +189,13 @@ export function PluginSettings({
         const max = field.max ?? 100;
         const needsPreciseInput = max - min > PRECISE_NUMBER_MIN_RANGE;
         return (
-          <div
+          <SliderRow
             key={key}
             title={`${settingText.label}: ${value}`}
             className={disabled ? 'opacity-50' : undefined}
-          >
-            <div className="text-muted-foreground mb-1 flex items-center justify-between gap-2 text-[11px]">
-              <span className="min-w-0 truncate">{settingText.label}</span>
-              {needsPreciseInput ? (
+            label={settingText.label}
+            value={
+              needsPreciseInput ? (
                 <NumberSetting
                   label={settingText.label}
                   value={value}
@@ -201,36 +205,23 @@ export function PluginSettings({
                   onChange={(next) => handleSetting(plugin.id, key, next)}
                 />
               ) : (
-                <span className="shrink-0 tabular-nums">{value}</span>
-              )}
-            </div>
-            {/* Under the label row, not beside the input: a long hint gets the card's full width. */}
-            {hint && (
-              <p className="text-muted-foreground/80 mb-1.5 text-[10px] leading-snug">{hint}</p>
-            )}
-            <div className="flex items-center gap-2">
-              {settingText.minLabel && (
-                <span className="text-muted-foreground shrink-0 text-[10px]">
-                  {settingText.minLabel}
-                </span>
-              )}
-              <input
-                type="range"
-                min={min}
-                max={max}
-                value={value}
-                disabled={disabled}
-                aria-label={settingText.label}
-                onChange={(e) => handleSetting(plugin.id, key, Number(e.target.value))}
-                className="accent-primary h-1.5 flex-1 cursor-pointer disabled:cursor-not-allowed"
-              />
-              {settingText.maxLabel && (
-                <span className="text-muted-foreground shrink-0 text-[10px]">
-                  {settingText.maxLabel}
-                </span>
-              )}
-            </div>
-          </div>
+                String(value)
+              )
+            }
+            // Under the label row, not beside the value: a long hint gets the card's full width.
+            hint={hint}
+            minLabel={settingText.minLabel}
+            maxLabel={settingText.maxLabel}
+          >
+            <Slider
+              min={min}
+              max={max}
+              value={value}
+              disabled={disabled}
+              aria-label={settingText.label}
+              onValueChange={(next) => handleSetting(plugin.id, key, next)}
+            />
+          </SliderRow>
         );
       })}
     </div>

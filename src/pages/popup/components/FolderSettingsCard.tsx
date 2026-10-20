@@ -4,9 +4,6 @@ import type { TranslationKey } from '@/utils/translations';
 
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
-import { Label } from '../../../components/ui/label';
-import { Switch } from '../../../components/ui/switch';
-import { ExperimentalBadge } from './ExperimentalBadge';
 import { SettingToggleRow } from './SettingToggleRow';
 
 /** Every folder toggle the card edits; the popup owns the state and persistence. */
@@ -57,7 +54,7 @@ export function FolderSettingsCard({
   t,
 }: FolderSettingsCardProps) {
   return (
-    <Card className="p-4 transition-all hover:shadow-md">
+    <Card className="p-4">
       <CardTitle className="mb-4">{t('folderOptions')}</CardTitle>
       <CardContent className="space-y-4 p-0">
         <SettingToggleRow
@@ -74,30 +71,24 @@ export function FolderSettingsCard({
           settingId="enableFolderFloatingMode"
           label="enableFolderFloatingMode"
           hint="enableFolderFloatingModeHint"
-          gapped
           experimental
           checked={values.floatingModeEnabled}
           onChange={(floatingModeEnabled) => onChange({ floatingModeEnabled })}
           isVisible={isVisible}
           t={t}
         />
-        {values.floatingModeEnabled && isVisible('openFloatingFolderOnStartup') && (
-          <div className="group flex items-center justify-between gap-3 pl-4">
-            <div className="min-w-0 flex-1">
-              <Label
-                htmlFor="floating-open-on-start"
-                className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-              >
-                {t('openFloatingFolderOnStartup')}
-              </Label>
-              <p className="text-muted-foreground mt-1 text-xs">
-                {t('openFloatingFolderOnStartupHint')}
-              </p>
-            </div>
-            <Switch
+        {values.floatingModeEnabled && (
+          <div className="ps-4">
+            <SettingToggleRow
               id="floating-open-on-start"
+              settingId="openFloatingFolderOnStartup"
+              label="openFloatingFolderOnStartup"
+              hint="openFloatingFolderOnStartupHint"
               checked={values.floatingOpenOnStart}
-              onChange={(event) => onChange({ floatingOpenOnStart: event.target.checked })}
+              onChange={(floatingOpenOnStart) => onChange({ floatingOpenOnStart })}
+              isVisible={isVisible}
+              unmountWhenHidden
+              t={t}
             />
           </div>
         )}
@@ -119,32 +110,25 @@ export function FolderSettingsCard({
           isVisible={isVisible}
           t={t}
         />
-        <div
-          hidden={!isVisible('enableAccountIsolation')}
-          className="group flex items-center justify-between"
-        >
-          <div className="flex-1">
-            <Label
-              htmlFor="account-isolation-enabled"
-              className="group-hover:text-primary flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
-            >
-              {t('enableAccountIsolation')}
-              <ExperimentalBadge title={t('experimentalLabel')} />
-            </Label>
-            <p className="text-muted-foreground mt-1 text-xs">{t('enableAccountIsolationHint')}</p>
+        <SettingToggleRow
+          id="account-isolation-enabled"
+          settingId="enableAccountIsolation"
+          label="enableAccountIsolation"
+          hint="enableAccountIsolationHint"
+          experimental
+          extra={
             <div className="mt-1 flex items-center gap-2 text-xs">
               <span className="text-muted-foreground">{t('currentPlatform')}:</span>
               <span className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-medium">
                 {accountIsolation.platformLabel}
               </span>
             </div>
-          </div>
-          <Switch
-            id="account-isolation-enabled"
-            checked={accountIsolation.enabled}
-            onChange={(event) => accountIsolation.onChange(event.target.checked)}
-          />
-        </div>
+          }
+          checked={accountIsolation.enabled}
+          onChange={accountIsolation.onChange}
+          isVisible={isVisible}
+          t={t}
+        />
         <SettingToggleRow
           id="folder-project-enabled"
           settingId="folderAsProject"

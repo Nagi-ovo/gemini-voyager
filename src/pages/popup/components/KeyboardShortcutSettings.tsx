@@ -217,11 +217,11 @@ export function KeyboardShortcutSettings() {
   }
 
   return (
-    <Card className="p-4 transition-all hover:shadow-md">
+    <Card className="p-4">
       <CardTitle className="mb-4">{t('keyboardShortcuts')}</CardTitle>
-      <CardContent className="space-y-6 p-0">
+      <CardContent className="space-y-4 p-0">
         {/* Enable/Disable Toggle */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <Label htmlFor="shortcuts-enabled" className="cursor-pointer text-sm font-medium">
             {t('enableShortcuts')}
           </Label>
@@ -235,7 +235,7 @@ export function KeyboardShortcutSettings() {
         {/* Shortcut Configuration */}
         {enabled && (
           <>
-            <div className="grid grid-cols-2 gap-4 pt-2">
+            <div className="grid grid-cols-2 gap-3">
               {/* Previous Node */}
               <div className="space-y-2">
                 <Label className="text-muted-foreground text-xs font-medium">
@@ -244,14 +244,14 @@ export function KeyboardShortcutSettings() {
                 <button
                   type="button"
                   onClick={() => startRecording('previous')}
-                  className={`flex w-full items-center justify-center rounded-lg border-2 px-4 py-3 font-mono text-sm font-semibold transition-all ${
+                  className={`focus-visible:ring-ring/60 flex h-9 w-full items-center justify-center rounded-lg border px-3 font-mono text-[13px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none ${
                     recording.action === 'previous'
-                      ? 'border-primary bg-primary/5 text-primary animate-pulse'
-                      : 'border-border hover:border-primary/50 hover:bg-accent'
+                      ? 'border-primary text-primary bg-card'
+                      : 'border-border bg-secondary/40 text-foreground hover:bg-secondary'
                   } `}
                 >
                   {recording.action === 'previous'
-                    ? 'Press key...'
+                    ? t('shortcutPressKey')
                     : keyboardShortcutService.formatShortcut(config.previous)}
                 </button>
               </div>
@@ -262,14 +262,14 @@ export function KeyboardShortcutSettings() {
                 <button
                   type="button"
                   onClick={() => startRecording('next')}
-                  className={`flex w-full items-center justify-center rounded-lg border-2 px-4 py-3 font-mono text-sm font-semibold transition-all ${
+                  className={`focus-visible:ring-ring/60 flex h-9 w-full items-center justify-center rounded-lg border px-3 font-mono text-[13px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none ${
                     recording.action === 'next'
-                      ? 'border-primary bg-primary/5 text-primary animate-pulse'
-                      : 'border-border hover:border-primary/50 hover:bg-accent'
+                      ? 'border-primary text-primary bg-card'
+                      : 'border-border bg-secondary/40 text-foreground hover:bg-secondary'
                   } `}
                 >
                   {recording.action === 'next'
-                    ? 'Press key...'
+                    ? t('shortcutPressKey')
                     : keyboardShortcutService.formatShortcut(config.next)}
                 </button>
               </div>
@@ -282,14 +282,14 @@ export function KeyboardShortcutSettings() {
                 <button
                   type="button"
                   onClick={() => startRecording('first')}
-                  className={`flex w-full items-center justify-center rounded-lg border-2 px-4 py-3 font-mono text-sm font-semibold transition-all ${
+                  className={`focus-visible:ring-ring/60 flex h-9 w-full items-center justify-center rounded-lg border px-3 font-mono text-[13px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none ${
                     recording.action === 'first'
-                      ? 'border-primary bg-primary/5 text-primary animate-pulse'
-                      : 'border-border hover:border-primary/50 hover:bg-accent'
+                      ? 'border-primary text-primary bg-card'
+                      : 'border-border bg-secondary/40 text-foreground hover:bg-secondary'
                   } `}
                 >
                   {recording.action === 'first'
-                    ? 'Press key...'
+                    ? t('shortcutPressKey')
                     : keyboardShortcutService.formatShortcut(config.first)}
                 </button>
               </div>
@@ -300,14 +300,14 @@ export function KeyboardShortcutSettings() {
                 <button
                   type="button"
                   onClick={() => startRecording('last')}
-                  className={`flex w-full items-center justify-center rounded-lg border-2 px-4 py-3 font-mono text-sm font-semibold transition-all ${
+                  className={`focus-visible:ring-ring/60 flex h-9 w-full items-center justify-center rounded-lg border px-3 font-mono text-[13px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none ${
                     recording.action === 'last'
-                      ? 'border-primary bg-primary/5 text-primary animate-pulse'
-                      : 'border-border hover:border-primary/50 hover:bg-accent'
+                      ? 'border-primary text-primary bg-card'
+                      : 'border-border bg-secondary/40 text-foreground hover:bg-secondary'
                   } `}
                 >
                   {recording.action === 'last'
-                    ? 'Press key...'
+                    ? t('shortcutPressKey')
                     : keyboardShortcutService.formatShortcut(config.last)}
                 </button>
               </div>
@@ -315,8 +315,8 @@ export function KeyboardShortcutSettings() {
 
             {/* Hint text */}
             {recording.action && (
-              <p className="text-muted-foreground animate-in fade-in text-center text-xs">
-                Press Esc to cancel
+              <p className="text-muted-foreground text-center text-xs">
+                {t('shortcutEscToCancel')}
               </p>
             )}
 

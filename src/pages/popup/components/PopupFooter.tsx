@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { Star } from 'lucide-react';
+
 import { getWebStoreRatingChannel } from '@/core/utils/browser';
 import type { TranslationKey } from '@/utils/translations';
 
@@ -38,12 +40,12 @@ export function PopupFooter({
 
         <div className="flex w-full items-center justify-between">
           <div className="text-muted-foreground flex items-center gap-2 text-xs">
-            <span className="text-foreground/80 font-semibold">{t('extensionVersion')}</span>
+            <span className="text-foreground/80 font-medium">{t('extensionVersion')}</span>
             <a
               href={releaseUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-primary hover:text-primary/80 font-semibold transition-colors"
+              className="text-primary hover:text-primary/80 font-medium tabular-nums transition-colors"
               title={extVersion ? extVersion : undefined}
             >
               {extVersion ?? '...'}
@@ -57,11 +59,7 @@ export function PopupFooter({
                 title={t('fableVerifiedBadgeAlt')}
                 aria-label={t('fableVerifiedBadgeAlt')}
               >
-                <img
-                  src={fableBadgeUrl}
-                  alt={t('fableVerifiedBadgeAlt')}
-                  className="h-[40px] w-auto"
-                />
+                <img src={fableBadgeUrl} alt={t('fableVerifiedBadgeAlt')} className="h-6 w-auto" />
               </a>
             )}
           </div>
@@ -70,7 +68,7 @@ export function PopupFooter({
             href={websiteUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-muted-foreground hover:text-primary flex items-center gap-1.5 text-xs font-semibold transition-colors"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs font-medium transition-colors"
           >
             <svg
               width="14"
@@ -99,18 +97,18 @@ export function PopupFooter({
             }
             target="_blank"
             rel="noreferrer"
-            className="group hover:border-primary/30 flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs shadow-sm transition-[border-color,box-shadow] hover:shadow-md"
+            className="border-border bg-card hover:bg-secondary/60 flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-xs transition-colors"
           >
-            <span className="text-base leading-none" aria-hidden="true">
-              ⭐
-            </span>
-            <span className="flex-1 leading-snug text-slate-700">
+            <Star className="text-muted-foreground size-3.5 shrink-0" aria-hidden="true" />
+            <span className="text-muted-foreground flex-1 leading-snug">
               {webStoreRatingChannel === 'edge'
                 ? t('changelog_rate_edge')
                 : t('changelog_rate_chrome')}
             </span>
-            <span className="text-primary font-semibold whitespace-nowrap transition-transform group-hover:translate-x-0.5">
-              {`${webStoreRatingChannel === 'edge' ? t('changelog_rate_edge_cta') : t('changelog_rate_chrome_cta')} →`}
+            <span className="text-primary font-medium whitespace-nowrap">
+              {webStoreRatingChannel === 'edge'
+                ? t('changelog_rate_edge_cta')
+                : t('changelog_rate_chrome_cta')}
             </span>
           </a>
         )}
@@ -119,7 +117,7 @@ export function PopupFooter({
           href="https://github.com/voyager-crew/voyager"
           target="_blank"
           rel="noreferrer"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground hover:shadow-primary/25 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold tracking-wide transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.97]"
+          className="border-border bg-card text-foreground hover:bg-secondary focus-visible:ring-ring/60 inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
           title={t('starProject')}
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">

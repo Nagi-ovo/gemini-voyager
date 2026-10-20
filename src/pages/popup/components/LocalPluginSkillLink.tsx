@@ -45,7 +45,7 @@ export function LocalPluginSkillLink({ t }: { t: (key: TranslationKey) => string
       </div>
       {copy === 'failed' && (
         <div className="space-y-1" role="alert">
-          <p className="text-[11px] text-red-500">{t('localPluginSkillCopyFailed')}</p>
+          <p className="text-destructive text-[11px]">{t('localPluginSkillCopyFailed')}</p>
           <input
             readOnly
             value={WRITE_PLUGIN_SKILL_URL}

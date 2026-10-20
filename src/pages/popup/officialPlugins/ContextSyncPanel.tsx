@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { StorageKeys } from '@/core/types/common';
 
 import type { OfficialPanelProps } from './officialPluginPanels';
@@ -96,10 +97,10 @@ export function ContextSyncPanel({ values, write, contextSync, idPrefix, t }: Of
         {t('contextSyncDescription')}
       </p>
       <div>
-        <label htmlFor={portId} className="text-muted-foreground mb-1 block text-[11px]">
+        <label htmlFor={portId} className="text-foreground/80 mb-1 block text-xs">
           {t('syncServerPort')}
         </label>
-        <input
+        <Input
           id={portId}
           type="number"
           inputMode="numeric"
@@ -107,24 +108,25 @@ export function ContextSyncPanel({ values, write, contextSync, idPrefix, t }: Of
           onChange={handlePortChange}
           min={MIN_PORT}
           max={MAX_PORT}
-          className="border-input focus-visible:ring-ring flex h-8 w-full rounded-md border bg-transparent px-2.5 text-sm shadow-sm focus-visible:ring-1 focus-visible:outline-none"
+          className="w-full tabular-nums"
         />
       </div>
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-2 text-xs font-medium" role="status">
           <span
             aria-hidden="true"
-            className={`h-2 w-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}
+            className={`h-2 w-2 rounded-full ${isOnline ? 'bg-success' : 'bg-destructive'}`}
           />
           {isOnline ? t('ideOnline') : t('ideOffline')}
         </span>
         <Button
           variant="outline"
           size="sm"
+          className="text-xs"
           onClick={() => contextSync?.sync()}
           disabled={!contextSync || !isOnline || syncing}
         >
-          <span className="text-xs">{t('syncToIDE')}</span>
+          {t('syncToIDE')}
         </Button>
       </div>
       {status && (
@@ -132,9 +134,9 @@ export function ContextSyncPanel({ values, write, contextSync, idPrefix, t }: Of
           role={status.kind === 'err' ? 'alert' : 'status'}
           className={`text-xs ${
             status.kind === 'ok'
-              ? 'text-green-600 dark:text-green-400'
+              ? 'text-success'
               : status.kind === 'err'
-                ? 'text-red-600 dark:text-red-400'
+                ? 'text-destructive'
                 : 'text-muted-foreground'
           }`}
         >

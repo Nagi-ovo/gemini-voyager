@@ -236,7 +236,7 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
           <button
             type="button"
             onClick={onClose}
-            className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid h-7 w-7 shrink-0 place-items-center rounded-lg transition-all duration-200 hover:rotate-3 focus-visible:ring-2 focus-visible:outline-none active:scale-95"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid h-7 w-7 shrink-0 place-items-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:outline-none"
             aria-label={t('pm_cancel')}
             title={t('pm_cancel')}
           >
@@ -304,12 +304,12 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
         </div>
 
         <div className="flex min-h-10 items-center gap-1 py-1.5" aria-busy={transferring}>
-          <span className="text-muted-foreground/75 mr-0.5 text-[10px] font-medium tracking-wide">
+          <span className="text-muted-foreground mr-0.5 text-[11px] font-medium">
             {t('pm_export')}
           </span>
           <button
             type="button"
-            className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-[11px] font-medium transition-all focus-visible:ring-2 focus-visible:outline-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-45"
             disabled={transferring}
             onClick={() => void exportHighlights('json')}
             title={`${t('pm_export')} JSON`}
@@ -319,7 +319,7 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
           </button>
           <button
             type="button"
-            className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-[11px] font-medium transition-all focus-visible:ring-2 focus-visible:outline-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-45"
             disabled={transferring}
             onClick={() => void exportHighlights('markdown')}
             title={`${t('pm_export')} Markdown`}
@@ -330,7 +330,7 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
           <span className="bg-border/80 mx-0.5 h-4 w-px" aria-hidden="true" />
           <button
             type="button"
-            className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring ml-auto inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-[11px] font-medium transition-all focus-visible:ring-2 focus-visible:outline-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring ml-auto inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-45"
             disabled={transferring}
             onClick={() => importInputRef.current?.click()}
           >

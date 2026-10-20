@@ -67,9 +67,9 @@ describe('TimelineOptions', () => {
     expect(checked('marker-level-enabled')).toBe(true);
     expect(checked('show-message-timestamps')).toBe(false);
 
-    const active = Array.from(container.querySelectorAll('button.text-primary-foreground')).map(
-      (button) => button.textContent,
-    );
+    const active = Array.from(
+      container.querySelectorAll('[role="radio"][aria-checked="true"]'),
+    ).map((button) => button.textContent);
     expect(active).toEqual(['timelineStyleRuler', 'jump']);
   });
 

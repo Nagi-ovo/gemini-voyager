@@ -48,21 +48,18 @@ export function NativeHealthNotice({
     <Card
       style={style}
       dir={isRTLLanguage(language) ? 'rtl' : 'ltr'}
-      className="border-amber-200 bg-amber-50 p-3 text-amber-900 shadow-sm dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
+      className="border-warning/40 bg-warning/5 p-3"
       role="status"
     >
       <div className="flex items-start gap-3">
-        <TriangleAlert
-          className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
-          aria-hidden="true"
-        />
+        <TriangleAlert className="text-warning mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
         <div className="min-w-0 flex-1 space-y-1">
           {entries.map((entry) => (
             <p key={entry.feature} className="text-sm leading-snug font-medium">
               {t(FEATURE_MESSAGE_KEYS[entry.feature])}
             </p>
           ))}
-          <p className="text-xs leading-snug">
+          <p className="text-muted-foreground text-xs leading-snug">
             {t('nativeHealthCause')}{' '}
             <a
               href={issueUrl}
@@ -77,7 +74,7 @@ export function NativeHealthNotice({
         <button
           type="button"
           onClick={onDismiss}
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-amber-700 transition-colors hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
+          className="text-muted-foreground hover:bg-secondary hover:text-foreground flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors"
           aria-label={t('nativeHealthDismiss')}
           title={t('nativeHealthDismiss')}
         >

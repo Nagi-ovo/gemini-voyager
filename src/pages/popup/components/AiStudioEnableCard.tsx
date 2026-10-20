@@ -18,13 +18,13 @@ export function AiStudioEnableCard({
   t: (key: TranslationKey) => string;
 }) {
   return (
-    <Card style={style} className="border-primary/20 p-4 transition-all hover:shadow-md">
+    <Card style={style} className="p-4">
       <CardContent className="p-0">
-        <div className="group flex items-center justify-between">
-          <div className="flex-1">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
             <Label
               htmlFor="aistudio-enabled"
-              className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+              className="cursor-pointer text-sm leading-5 font-medium"
             >
               {t('enableOnAIStudio')}
             </Label>

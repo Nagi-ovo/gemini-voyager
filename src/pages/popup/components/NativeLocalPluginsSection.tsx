@@ -32,7 +32,7 @@ export function NativeLocalPluginsSection({
 
   if (!opened && localHere.length === 0) {
     return (
-      <Card className="p-0 transition-all hover:shadow-md">
+      <Card className="p-0">
         <button
           type="button"
           onClick={() => setOpened(true)}

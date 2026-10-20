@@ -255,7 +255,7 @@ describe('usePromptDataTransfer', () => {
 
     expect(transfer.status).toEqual({ kind: 'warn', text: 'Conflicts 2' });
     expect(store[StorageKeys.PROMPT_ITEMS]).toHaveLength(2);
-    expect(container.querySelector('p.text-amber-600')?.textContent).toBe('Conflicts 2');
+    expect(container.querySelector('p.text-warning')?.textContent).toBe('Conflicts 2');
   });
 
   it.each([
@@ -384,7 +384,7 @@ describe('usePromptDataTransfer', () => {
 
     expect(transfer.status).toEqual({ kind: 'ok', text: 'Pushed 3' });
     expect(buttons().every((item) => !item.disabled)).toBe(true);
-    expect(container.querySelector('p.text-emerald-600')?.textContent).toBe('Pushed 3');
+    expect(container.querySelector('p.text-success')?.textContent).toBe('Pushed 3');
     expect(chrome.runtime.sendMessage).toHaveBeenCalledOnce();
   });
 });

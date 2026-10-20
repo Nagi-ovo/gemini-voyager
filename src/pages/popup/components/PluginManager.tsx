@@ -160,7 +160,7 @@ export function PluginManager({
   const hasUpdatedPlugins = manifests.some((plugin) => updatedIds.has(plugin.id));
 
   return (
-    <Card className="p-4 transition-all hover:shadow-md">
+    <Card className="p-4">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <CardTitle>{t('pluginsTitle')}</CardTitle>
@@ -266,7 +266,7 @@ export function PluginManager({
                       they explain a toggle the user cannot move, or why an
                       enabled plugin is not running on this page. */}
                   {incompatibleNote && (
-                    <p className="mt-1 text-[11px] leading-snug text-red-500/80">
+                    <p className="text-destructive/80 mt-1 text-[11px] leading-snug">
                       {incompatibleNote}
                     </p>
                   )}
@@ -280,7 +280,7 @@ export function PluginManager({
                   )}
 
                   {status?.kind === 'no-effect' && (
-                    <p className="mt-1 text-[11px] leading-snug text-amber-600 dark:text-amber-400">
+                    <p className="text-warning mt-1 text-[11px] leading-snug">
                       {t('pluginNoEffectOnPage')}
                     </p>
                   )}
@@ -319,17 +319,19 @@ export function PluginManager({
                     timelineRail.render(railKeys ?? [], localizedName, enabled)}
 
                   {deniedId === plugin.id && (
-                    <p className="mt-1 text-[11px] text-red-500">{t('pluginPermissionDenied')}</p>
+                    <p className="text-destructive mt-1 text-[11px]">
+                      {t('pluginPermissionDenied')}
+                    </p>
                   )}
 
                   {unsupportedId === plugin.id && (
-                    <p className="mt-1 text-[11px] text-red-500">
+                    <p className="text-destructive mt-1 text-[11px]">
                       {t('pluginUnsupportedPlatform')}
                     </p>
                   )}
 
                   {enableRefusal?.id === plugin.id && (
-                    <p className="mt-1 text-[11px] text-red-500">{t(enableRefusal.key)}</p>
+                    <p className="text-destructive mt-1 text-[11px]">{t(enableRefusal.key)}</p>
                   )}
                 </div>
                 <Switch

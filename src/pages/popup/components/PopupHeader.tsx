@@ -25,7 +25,7 @@ export function PopupHeader({
       className="bg-background/85 border-border/60 sticky top-0 z-20 border-b backdrop-blur-md"
     >
       <div className="flex items-center justify-between px-5 pt-4 pb-3">
-        <h1 className="text-primary text-2xl font-extrabold tracking-tight">{t('extName')}</h1>
+        <h1 className="text-primary text-xl font-bold tracking-tight">{t('extName')}</h1>
         <div className="flex items-center gap-1">
           <DarkModeToggle />
           <ThemeColorButton {...themePicker} />

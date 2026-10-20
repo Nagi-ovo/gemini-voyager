@@ -250,7 +250,7 @@ export function PluginIdentity({
           {displayName(localizedName)}
         </span>
         {isUpdated && (
-          <span className="bg-primary/10 text-primary mt-0.5 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
+          <span className="bg-primary/10 text-primary mt-0.5 shrink-0 rounded-full px-1.5 py-0.5 text-[11px] leading-none font-medium">
             {t('pluginUpdatedBadge')}
           </span>
         )}

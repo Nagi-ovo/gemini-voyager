@@ -1,9 +1,8 @@
-import React, { useRef } from 'react';
-
 import type { TimelineStyle } from '@/core/types/common';
 import type { TranslationKey } from '@/utils/translations';
 
 import { Button } from '../../../components/ui/button';
+import { SegmentedControl } from '../../../components/ui/segmented-control';
 import { SettingToggleRow } from './SettingToggleRow';
 
 export type ScrollMode = 'jump' | 'flow';
@@ -51,10 +50,7 @@ interface SegmentedChoiceProps<T extends string> {
   t: (key: TranslationKey) => string;
 }
 
-/**
- * A labelled radio group of segmented buttons. The chosen one paints its own
- * background, so it needs no position math and mirrors itself in RTL.
- */
+/** A labelled radio group of segmented buttons. */
 function SegmentedChoice<T extends string>({
   label,
   options,
@@ -63,70 +59,21 @@ function SegmentedChoice<T extends string>({
   onChange,
   t,
 }: SegmentedChoiceProps<T>) {
-  const buttons = useRef<(HTMLButtonElement | null)[]>([]);
-  const enabled = options.map((option) => !isDisabled(option.value));
-  // One Tab stop: the checked radio, or the first enabled one when the checked one is not.
-  const checkedIndex = options.findIndex((option) => option.value === value);
-  const tabStop = enabled[checkedIndex] ? checkedIndex : enabled.indexOf(true);
-
-  // Arrows move the choice to the next enabled radio and wrap, as native radios do.
-  const onKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, from: number) => {
-    const rtl = event.currentTarget.closest('[dir]')?.getAttribute('dir') === 'rtl';
-    const forward = rtl ? 'ArrowLeft' : 'ArrowRight';
-    const backward = rtl ? 'ArrowRight' : 'ArrowLeft';
-    let step = 0;
-    if (event.key === forward || event.key === 'ArrowDown') step = 1;
-    else if (event.key === backward || event.key === 'ArrowUp') step = -1;
-    else if (event.key !== 'Home' && event.key !== 'End') return;
-    event.preventDefault();
-    const order =
-      step === 0
-        ? options.map((_, index) => index)
-        : options.map(
-            (_, offset) => (from + step * (offset + 1) + options.length * 2) % options.length,
-          );
-    const candidates = order.filter((index) => enabled[index]);
-    const next = event.key === 'End' ? candidates[candidates.length - 1] : candidates[0];
-    if (next === undefined || next === from) return;
-    buttons.current[next]?.focus();
-    onChange(options[next].value);
-  };
-
   return (
-    <div role="radiogroup" aria-label={label}>
+    <div>
       <p aria-hidden="true" className="mb-2 text-sm font-medium">
         {label}
       </p>
-      <div
-        className="bg-secondary/60 grid gap-1 rounded-xl p-1"
-        style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
-      >
-        {options.map((option, index) => {
-          const checked = value === option.value;
-          return (
-            <button
-              key={option.value}
-              ref={(element) => {
-                buttons.current[index] = element;
-              }}
-              type="button"
-              role="radio"
-              aria-checked={checked}
-              tabIndex={index === tabStop ? 0 : -1}
-              disabled={!enabled[index]}
-              className={`rounded-lg px-2 py-2 text-sm font-bold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
-                checked
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground enabled:hover:text-foreground'
-              }`}
-              onClick={() => onChange(option.value)}
-              onKeyDown={(event) => onKeyDown(event, index)}
-            >
-              {t(option.label)}
-            </button>
-          );
-        })}
-      </div>
+      <SegmentedControl
+        aria-label={label}
+        options={options.map((option) => ({
+          value: option.value,
+          label: t(option.label),
+          disabled: isDisabled(option.value),
+        }))}
+        value={value}
+        onChange={onChange}
+      />
     </div>
   );
 }
@@ -234,34 +181,31 @@ export function TimelineOptions({
         disabled={off}
         variant="outline"
         size="sm"
-        className="group hover:border-primary/50 mt-2 w-full"
+        className="mt-2 w-full text-xs"
         onClick={onResetPosition}
       >
-        <span className="text-xs transition-transform group-hover:scale-105">
-          {t('resetTimelinePosition')}
-        </span>
+        {t('resetTimelinePosition')}
       </Button>
       <Button
         hidden={!isVisible('viewStarredHistory')}
         variant="outline"
         size="sm"
-        className="group hover:border-primary/50 mt-2 w-full"
+        className="mt-2 w-full"
         onClick={onViewStarredHistory}
       >
-        <span className="flex items-center gap-1.5 text-xs transition-transform group-hover:scale-105">
+        <span className="flex items-center gap-1.5 text-xs">
           <svg
             width="14"
             height="14"
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="text-primary"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinejoin="round"
             aria-hidden="true"
           >
-            <path
-              d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
-              fill="currentColor"
-            />
+            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
           </svg>
           {t('viewStarredHistory')}
         </span>

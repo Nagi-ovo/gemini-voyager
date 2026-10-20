@@ -1,9 +1,12 @@
 import React from 'react';
 
+import { Check, X } from 'lucide-react';
+
 import type { TranslationKey } from '@/utils/translations';
 
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
+import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import type { PromptDataTransferController } from '../hooks/usePromptDataTransfer';
 import type { PromptManagerSettings } from '../hooks/usePromptManagerSettings';
@@ -37,7 +40,7 @@ export function PromptManagerSettingsCard({
   const { values, onChange, customWebsites, newWebsiteInput, websiteError } = settings;
 
   return (
-    <Card className="p-4 transition-all hover:shadow-md">
+    <Card className="p-4">
       <CardTitle className="mb-4">{t('promptManagerOptions')}</CardTitle>
       <CardContent className="space-y-3 p-0">
         <SettingToggleRow
@@ -87,24 +90,11 @@ export function PromptManagerSettingsCard({
         {isVisible('promptDataMigration') && <PromptDataTransfer t={t} transfer={transfer} />}
         {isVisible('customWebsites') && (
           <div>
-            <Label className="mb-2 block text-sm font-medium">{t('customWebsites')}</Label>
+            <Label className="mb-1 block text-sm font-medium">{t('customWebsites')}</Label>
             {!isPluginSite && (
-              <div className="bg-primary/10 border-primary/20 mb-2 flex items-center gap-2 rounded-md border p-2">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="text-primary shrink-0"
-                >
-                  <path
-                    d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 11c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm1-4H7V5h2v3z"
-                    fill="currentColor"
-                  />
-                </svg>
-                <p className="text-primary text-xs font-medium">{t('geminiOnlyNotice')}</p>
-              </div>
+              <p className="text-muted-foreground mb-2.5 text-xs leading-snug">
+                {t('geminiOnlyNotice')}
+              </p>
             )}
             {/* Prompt Manager coverage is separate from plugins on these shared sites. */}
             <div className="mb-3 flex flex-wrap gap-1.5">
@@ -121,13 +111,14 @@ export function PromptManagerSettingsCard({
                 return (
                   <button
                     key={domain}
+                    type="button"
                     onClick={() => {
                       void settings.toggleQuickWebsite(domain, isEnabled);
                     }}
-                    className={`inline-flex min-w-[30%] grow items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all ${
+                    className={`inline-flex h-7 items-center gap-1.5 rounded-md border px-2 text-xs font-medium transition-colors ${
                       isEnabled
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
+                        ? 'border-border bg-secondary text-foreground'
+                        : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground border-border/70'
                     }`}
                     title={label}
                   >
@@ -135,30 +126,36 @@ export function PromptManagerSettingsCard({
                       <Icon />
                     </span>
                     <span className="truncate">{label}</span>
-                    <span
-                      className={`w-2.5 shrink-0 text-center text-[10px] transition-opacity ${isEnabled ? 'opacity-100' : 'opacity-0'}`}
-                    >
-                      ✓
-                    </span>
+                    {isEnabled && (
+                      <Check
+                        className="text-primary size-3 shrink-0"
+                        strokeWidth={2.5}
+                        aria-hidden="true"
+                      />
+                    )}
                   </button>
                 );
               })}
             </div>
             {customWebsites.length > 0 && (
-              <div className="mb-3 space-y-2">
+              <div className="mb-3 space-y-1">
                 {customWebsites.map((website) => (
                   <div
                     key={website}
-                    className="bg-secondary/30 group hover:bg-secondary/50 flex items-center justify-between rounded-md px-3 py-2 transition-colors"
+                    className="bg-secondary/40 flex items-center justify-between gap-2 rounded-lg py-1 ps-2.5 pe-1"
                   >
-                    <span className="text-foreground/90 font-mono text-sm">{website}</span>
+                    <span className="text-foreground/90 min-w-0 truncate text-[13px]">
+                      {website}
+                    </span>
                     <button
+                      type="button"
                       onClick={() => {
                         void settings.handleRemoveWebsite(website);
                       }}
-                      className="text-destructive hover:text-destructive/80 text-xs font-medium opacity-70 transition-opacity group-hover:opacity-100"
+                      className="text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:ring-ring/60 flex size-6 shrink-0 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
                     >
-                      {t('removeWebsite')}
+                      <X className="size-3.5" aria-hidden="true" />
+                      <span className="sr-only">{t('removeWebsite')}</span>
                     </button>
                   </div>
                 ))}
@@ -166,7 +163,7 @@ export function PromptManagerSettingsCard({
             )}
             <div className="space-y-2">
               <div className="flex flex-wrap gap-2">
-                <input
+                <Input
                   type="text"
                   value={newWebsiteInput}
                   onChange={(event) => settings.onWebsiteInputChange(event.target.value)}
@@ -174,7 +171,7 @@ export function PromptManagerSettingsCard({
                     if (event.key === 'Enter') void settings.handleAddWebsite();
                   }}
                   placeholder={t('customWebsitesPlaceholder')}
-                  className="bg-background border-border focus:ring-primary/50 min-w-0 flex-1 rounded-md border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
+                  className="flex-1"
                 />
                 <Button
                   onClick={() => {
@@ -188,9 +185,9 @@ export function PromptManagerSettingsCard({
               </div>
               {websiteError && <p className="text-destructive text-xs">{websiteError}</p>}
             </div>
-            <div className="bg-primary/5 border-primary/20 mt-3 rounded-md border p-2">
-              <p className="text-muted-foreground text-xs">{t('customWebsitesNote')}</p>
-            </div>
+            <p className="text-muted-foreground mt-3 text-xs leading-snug">
+              {t('customWebsitesNote')}
+            </p>
           </div>
         )}
       </CardContent>

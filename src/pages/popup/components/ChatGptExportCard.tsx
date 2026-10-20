@@ -9,8 +9,8 @@ import { openChatGptExportInTab } from '../utils/chatgptExportEntry';
 import { hasPluginSiteAccess, setPluginEnabledWithSiteAccess } from '../utils/pluginEnablement';
 
 const NOTE_TONE: Readonly<Partial<Record<TranslationKey, string>>> = {
-  pluginPermissionDenied: 'text-red-500',
-  pluginUnsupportedPlatform: 'text-red-500',
+  pluginPermissionDenied: 'text-destructive',
+  pluginUnsupportedPlatform: 'text-destructive',
 };
 
 export interface ChatGptExportCardProps {
@@ -93,11 +93,7 @@ export function ChatGptExportCard({
   };
 
   return (
-    <Card
-      style={{ order: -2 }}
-      className="border-primary/20 p-4 transition-all hover:shadow-md"
-      data-testid="chatgpt-export-card"
-    >
+    <Card style={{ order: -2 }} className="p-4" data-testid="chatgpt-export-card">
       <CardContent className="p-0">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">

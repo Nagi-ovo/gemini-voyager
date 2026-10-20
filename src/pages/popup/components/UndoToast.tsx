@@ -42,13 +42,15 @@ export function UndoToast({
             onBlur={(event) => {
               if (!event.currentTarget.contains(event.relatedTarget)) onFocusInside(false);
             }}
-            className="bg-foreground text-background pointer-events-auto flex items-center gap-3 rounded-xl px-4 py-3 text-[13px] leading-snug shadow-lg"
+            // The page toast's face: surface card, hairline border, tone dot.
+            className="border-border bg-card text-card-foreground pointer-events-auto flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-[13px] leading-snug shadow-[0_6px_20px_oklch(0_0_0/0.16)] dark:shadow-[0_6px_20px_oklch(0_0_0/0.4)]"
           >
+            <span aria-hidden="true" className="bg-primary size-2 shrink-0 rounded-full" />
             <span className="min-w-0 flex-1">{offer.message}</span>
             <button
               type="button"
               onClick={onUndo}
-              className="focus-visible:ring-background/70 -mx-1 shrink-0 rounded-md px-1 py-0.5 font-semibold underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+              className="text-primary hover:bg-primary/10 focus-visible:ring-ring/60 -my-1 shrink-0 rounded-md px-2 py-1 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
             >
               {undoLabel}
             </button>

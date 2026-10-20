@@ -4,6 +4,8 @@ import { Search, X } from 'lucide-react';
 
 import type { TranslationKey } from '@/utils/translations';
 
+import { Input } from '../../../components/ui/input';
+
 export interface PopupSearchBoxProps {
   query: string;
   onChange: (query: string) => void;
@@ -18,13 +20,14 @@ export function PopupSearchBox({ query, onChange, dir, t }: PopupSearchBoxProps)
         className="text-muted-foreground pointer-events-none absolute start-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2"
         aria-hidden="true"
       />
-      <input
+      <Input
         type="search"
+        size="lg"
         value={query}
         onChange={(event) => onChange(event.target.value)}
         placeholder={t('popupSettingsSearchExamples')}
         aria-label={t('popupSettingsSearchPlaceholder')}
-        className={`bg-card border-border focus:ring-primary/40 placeholder:text-muted-foreground h-11 w-full rounded-xl border ps-10 text-sm shadow-sm transition-all outline-none focus:ring-2 [&::-webkit-search-cancel-button]:hidden ${query ? 'pe-10' : 'pe-3'}`}
+        className={`bg-card h-10 w-full ps-10 [&::-webkit-search-cancel-button]:hidden ${query ? 'pe-10' : 'pe-3'}`}
       />
       {query && (
         <button

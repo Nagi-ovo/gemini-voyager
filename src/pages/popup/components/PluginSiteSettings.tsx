@@ -58,16 +58,13 @@ export function PluginSiteSettings({
         />
       )}
       {siteDomain && (
-        <Card
-          style={{ order: -2 }}
-          className="border-primary/20 p-4 transition-all hover:shadow-md"
-        >
+        <Card style={{ order: -2 }} className="p-4">
           <CardContent className="p-0">
             <div className="group flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <Label
                   htmlFor="prompt-manager-site-enabled"
-                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  className="cursor-pointer text-sm font-medium"
                 >
                   {t('enablePromptManagerOnSite').replace('{site}', siteLabel || siteDomain)}
                 </Label>
@@ -85,7 +82,7 @@ export function PluginSiteSettings({
         </Card>
       )}
       {/* The shared prompt library remains available on third-party sites. */}
-      <Card style={{ order: -2 }} className="border-primary/20 p-4">
+      <Card style={{ order: -2 }} className="p-4">
         <CardContent className="p-0">
           <PromptDataTransfer t={t} transfer={promptDataTransfer} />
         </CardContent>

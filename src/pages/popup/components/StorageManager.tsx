@@ -165,13 +165,13 @@ function LimitNotice({ snapshot }: { snapshot: StorageQuotaSnapshot }) {
       className={cn(
         'flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-xs leading-relaxed',
         hasLegacySafariLimit
-          ? 'border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300'
+          ? 'border-warning/30 bg-warning/10 text-foreground'
           : 'border-border bg-muted/40 text-muted-foreground',
       )}
       role="note"
     >
       {hasLegacySafariLimit ? (
-        <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <TriangleAlert className="text-warning mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       ) : (
         <CircleHelp className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       )}
@@ -307,7 +307,7 @@ export function StorageManager({
               <div className="flex items-center justify-between">
                 <h2
                   id="storage-soft-limit-title"
-                  className="text-muted-foreground text-xs font-bold tracking-wider uppercase"
+                  className="text-foreground/80 text-[13px] font-semibold"
                 >
                   {translateStorageQuota(t, 'storageQuotaSoftLimit')}
                 </h2>
@@ -396,7 +396,7 @@ export function StorageManager({
             <section aria-labelledby="storage-breakdown-title" className="space-y-2.5">
               <h2
                 id="storage-breakdown-title"
-                className="text-muted-foreground text-xs font-bold tracking-wider uppercase"
+                className="text-foreground/80 text-[13px] font-semibold"
               >
                 {translateStorageQuota(t, 'storageQuotaBreakdown')}
               </h2>

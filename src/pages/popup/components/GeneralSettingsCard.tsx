@@ -4,8 +4,6 @@ import type { TranslationKey } from '@/utils/translations';
 
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
-import { Label } from '../../../components/ui/label';
-import { Switch } from '../../../components/ui/switch';
 import { SettingToggleRow } from './SettingToggleRow';
 
 /** Every general toggle the card edits; the popup owns the state and persistence. */
@@ -58,23 +56,21 @@ export function GeneralSettingsCard({
   );
 
   return (
-    <Card className="p-4 transition-all hover:shadow-md">
+    <Card className="p-4">
       <CardTitle className="mb-4">{t('generalOptions')}</CardTitle>
       <CardContent className="space-y-4 p-0">
-        {isVisible('enableTabTitleUpdate') && (
-          <div className="flex items-center justify-between opacity-60">
-            <div className="flex-1">
-              <Label
-                htmlFor="tab-title-update"
-                className="text-muted-foreground cursor-not-allowed text-sm font-medium"
-              >
-                {t('enableTabTitleUpdate')}
-              </Label>
-              <p className="text-muted-foreground mt-1 text-xs">{t('enableTabTitleUpdateHint')}</p>
-            </div>
-            <Switch id="tab-title-update" checked={false} disabled className="opacity-70" />
-          </div>
-        )}
+        <SettingToggleRow
+          id="tab-title-update"
+          settingId="enableTabTitleUpdate"
+          label="enableTabTitleUpdate"
+          hint="enableTabTitleUpdateHint"
+          checked={false}
+          disabled
+          onChange={() => {}}
+          isVisible={isVisible}
+          unmountWhenHidden
+          t={t}
+        />
         {row(
           'persistent-export-toolbar',
           'persistentExportToolbar',

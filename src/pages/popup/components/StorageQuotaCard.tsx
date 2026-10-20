@@ -1,17 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  CheckCircle2,
-  CircleAlert,
-  CircleHelp,
-  Database,
-  RefreshCw,
-  TriangleAlert,
-} from 'lucide-react';
+import { CheckCircle2, CircleAlert, CircleHelp, RefreshCw, TriangleAlert } from 'lucide-react';
 import browser from 'webextension-polyfill';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   STORAGE_QUOTA_CRITICAL_RATIO,
@@ -189,8 +182,8 @@ function quotaSeverityStyles(severity: QuotaSeverity): {
       };
     case 'warning':
       return {
-        fill: 'bg-amber-500 dark:bg-amber-400',
-        badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+        fill: 'bg-warning',
+        badge: 'bg-warning/10 text-warning',
       };
     case 'normal':
       return {
@@ -282,11 +275,9 @@ export function StorageQuotaAreaRow({
   return (
     <div className="space-y-1.5">
       <div className="flex items-end justify-between gap-3">
-        <span className="text-muted-foreground text-[11px] font-semibold tracking-wide uppercase">
-          {label}
-        </span>
+        <span className="text-muted-foreground text-xs font-medium">{label}</span>
         <div className="flex min-w-0 items-baseline gap-2 text-right tabular-nums">
-          <span className="truncate text-sm font-semibold tracking-tight">{valueLabel}</span>
+          <span className="truncate text-[13px] font-medium">{valueLabel}</span>
           {usage.usageRatio !== null && (
             <span className="text-muted-foreground shrink-0 text-[11px] font-medium">
               {Math.round(usage.usageRatio * 100)}%
@@ -347,14 +338,9 @@ export function StorageQuotaCard({
       <CardContent className="p-0">
         <div className="p-4">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="bg-primary/10 text-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-lg">
-                <Database className="h-3.5 w-3.5" aria-hidden="true" />
-              </span>
-              <h2 className="truncate text-sm font-semibold tracking-tight">
-                {translateStorageQuota(t, 'storageQuotaTitle')}
-              </h2>
-            </div>
+            <CardTitle className="min-w-0 truncate">
+              {translateStorageQuota(t, 'storageQuotaTitle')}
+            </CardTitle>
             <div className="flex shrink-0 items-center gap-1">
               <QuotaStatus severity={error ? 'unknown' : severity} t={t} />
               <Button

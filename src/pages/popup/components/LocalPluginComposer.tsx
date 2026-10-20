@@ -13,6 +13,7 @@ import { type CheckedPluginReply, checkPluginReply } from '@/features/plugins/lo
 import type { TranslationKey } from '@/utils/translations';
 
 import { Button } from '../../../components/ui/button';
+import { Select } from '../../../components/ui/input';
 import type { LocalPluginsController } from '../hooks/useLocalPlugins';
 import { LocalPluginCssSource } from './LocalPluginCssSource';
 import { LocalPluginInspection } from './LocalPluginInspection';
@@ -21,7 +22,7 @@ import { LocalPluginSkillLink } from './LocalPluginSkillLink';
 import { REPLY_PROBLEM_KEYS, changeText, warningText } from './localPluginPreviewText';
 
 const FIELD_CLASS =
-  'bg-background border-border focus:ring-primary/50 w-full rounded-md border p-2 text-[11px] focus:ring-2 focus:outline-none';
+  'bg-background border-border w-full rounded-lg border p-2 text-xs transition-[border-color,box-shadow] focus-visible:border-ring/70 focus-visible:ring-ring/30 focus-visible:ring-2 focus-visible:outline-none';
 
 type CopyState = 'idle' | 'copied' | 'failed';
 
@@ -172,23 +173,21 @@ export function LocalPluginComposer({
       </label>
       <div className="flex items-center justify-between gap-2">
         <label className="flex items-center gap-2">
-          <span className="text-muted-foreground text-[11px]">
-            {t('localPluginDescribeSiteLabel')}
-          </span>
-          <select
+          <span className="text-foreground/80 text-xs">{t('localPluginDescribeSiteLabel')}</span>
+          <Select
+            size="sm"
             value={siteId}
             onChange={(event) => {
               setPicked({ id: event.target.value, chosen: true });
               setPrompt(null);
             }}
-            className="bg-background border-border focus:ring-primary/50 rounded-md border px-2 py-1 text-[11px] transition-all focus:ring-2 focus:outline-none"
           >
             {sites.map((candidate) => (
               <option key={candidate.id} value={candidate.id}>
                 {candidate.label}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <Button size="sm" disabled={!site || request.trim() === ''} onClick={writePrompt}>
           {t('localPluginDescribeBuildPrompt')}
@@ -224,7 +223,7 @@ export function LocalPluginComposer({
             className={`${FIELD_CLASS} text-muted-foreground font-mono text-[10px]`}
           />
           {copy === 'failed' && (
-            <p className="text-[11px] text-red-500" role="alert">
+            <p className="text-destructive text-[11px]" role="alert">
               {t('localPluginDescribeCopyFailed')}
             </p>
           )}
@@ -256,7 +255,7 @@ export function LocalPluginComposer({
 
       {checked && !checked.ok && (
         <div
-          className="text-[11px] text-red-500"
+          className="text-destructive text-[11px]"
           role="alert"
           data-testid="local-plugin-reply-error"
         >
@@ -272,7 +271,7 @@ export function LocalPluginComposer({
       )}
 
       {changedSinceReview && (
-        <p className="text-[11px] text-amber-700 dark:text-amber-400" role="alert">
+        <p className="text-warning text-[11px]" role="alert">
           {t('localPluginChangedSinceReview')}
         </p>
       )}
@@ -306,7 +305,7 @@ export function LocalPluginComposer({
           </div>
           <LocalPluginCssSource css={preview.css} label={t('localPluginInspectCss')} />
           {preview.warnings.length > 0 && (
-            <div className="text-amber-700 dark:text-amber-400" data-testid="local-plugin-warnings">
+            <div className="text-warning" data-testid="local-plugin-warnings">
               <p className="text-[11px] font-medium">{t('localPluginPreviewWarnings')}</p>
               <ul className="mt-0.5 list-disc space-y-0.5 ps-4 text-[11px]">
                 {preview.warnings.map((warning, index) => (

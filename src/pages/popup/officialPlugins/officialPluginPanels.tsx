@@ -47,7 +47,7 @@ function FormulaCopyPanel({ values, write, idPrefix, t }: OfficialPanelProps) {
     <div className="space-y-2">
       <p className="text-muted-foreground text-[11px] leading-snug">{t('formulaCopyScopeNote')}</p>
       <div role="radiogroup" aria-labelledby={legendId} className="space-y-1.5">
-        <p id={legendId} className="text-muted-foreground text-[11px]">
+        <p id={legendId} className="text-foreground/80 text-xs">
           {t('formulaCopyFormatHint')}
         </p>
         {FORMAT_OPTIONS.map((option) => (
@@ -75,18 +75,16 @@ function HighlightPanel({ values, write, idPrefix, t }: OfficialPanelProps) {
   const hintId = `${idPrefix}-markers-hint`;
   return (
     <div className="flex items-start justify-between gap-3">
-      <span className="min-w-0">
-        <span className="text-muted-foreground block text-[11px]">
+      <span className="min-w-0 flex-1">
+        <span className="text-foreground/80 block text-xs">
           {t('showHighlightTimelineMarkers')}
         </span>
-        <span
-          id={hintId}
-          className="text-muted-foreground/80 mt-0.5 block text-[10px] leading-snug"
-        >
+        <span id={hintId} className="text-muted-foreground mt-0.5 block text-[11px] leading-snug">
           {t('showHighlightTimelineMarkersHint')}
         </span>
       </span>
       <Switch
+        size="sm"
         checked={markers}
         aria-label={t('showHighlightTimelineMarkers')}
         aria-describedby={hintId}

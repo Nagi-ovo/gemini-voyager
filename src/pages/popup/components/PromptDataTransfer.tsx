@@ -105,9 +105,9 @@ export function PromptDataTransfer({ transfer, t }: PromptDataTransferProps) {
         <p
           className={`text-xs ${
             status.kind === 'ok'
-              ? 'text-emerald-600 dark:text-emerald-400'
+              ? 'text-success'
               : status.kind === 'warn'
-                ? 'text-amber-600 dark:text-amber-400'
+                ? 'text-warning'
                 : 'text-destructive'
           }`}
         >

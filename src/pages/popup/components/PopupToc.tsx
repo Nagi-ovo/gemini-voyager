@@ -79,7 +79,7 @@ export function PopupToc({ sections, dir, t }: PopupTocProps) {
                   event.currentTarget.closest<HTMLElement>('[data-popup-header]'),
                 )
               }
-              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded-sm text-[12.5px] font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded-sm text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
             >
               {item.label}
             </button>
