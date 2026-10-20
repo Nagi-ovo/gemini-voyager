@@ -166,6 +166,53 @@ describe('startExportSelectionSession', () => {
     session.cancel();
   });
 
+  it('keeps the checkbox inside the turn when the turn clips its paint', () => {
+    const root = document.createElement('div');
+    place(root, 0, 1368);
+    const turn = (msg: ExportMessage) => {
+      const container = document.createElement('div');
+      container.style.setProperty('content-visibility', 'auto');
+      place(container, 300, 768);
+      container.appendChild(msg.hostElement);
+      root.appendChild(container);
+    };
+    const user = message('1:u', 'user');
+    const assistant = message('1:a', 'assistant');
+    turn(user);
+    turn(assistant);
+    document.body.appendChild(root);
+    place(user.hostElement, 731, 337);
+    place(assistant.hostElement, 300, 768);
+    const { session } = start({
+      readMessages: () => [user, assistant],
+      anchors: { topUserElement: () => null, conversationRoot: () => root },
+    });
+
+    expect(checkboxX(user.hostElement)).toBe(checkboxX(assistant.hostElement));
+    expect(checkboxX(assistant.hostElement)).toBe(308);
+    session.cancel();
+  });
+
+  it('still uses the gutter when a clipping wrapper spans it', () => {
+    const root = document.createElement('div');
+    place(root, 0, 1368);
+    const wrapper = document.createElement('div');
+    wrapper.style.overflowX = 'hidden';
+    place(wrapper, 0, 1368);
+    const assistant = message('1:a', 'assistant');
+    wrapper.appendChild(assistant.hostElement);
+    root.appendChild(wrapper);
+    document.body.appendChild(root);
+    place(assistant.hostElement, 300, 768);
+    const { session } = start({
+      readMessages: () => [assistant],
+      anchors: { topUserElement: () => null, conversationRoot: () => root },
+    });
+
+    expect(checkboxX(assistant.hostElement)).toBe(272);
+    session.cancel();
+  });
+
   it('preselects the requested message and toggles messages by clicking them', () => {
     const { session, messages } = start({ initialSelectedMessageId: '1:a' });
 

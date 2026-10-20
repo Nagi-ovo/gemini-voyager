@@ -106,6 +106,39 @@ function createCloseIcon(): SVGSVGElement {
   return svg;
 }
 
+const PAINT_CONTAINMENT = /\b(?:paint|strict|content)\b/;
+
+function clipsHorizontalPaint(el: Element): boolean {
+  const style = window.getComputedStyle(el);
+  const contentVisibility = style.getPropertyValue('content-visibility');
+  if (contentVisibility === 'auto' || contentVisibility === 'hidden') return true;
+  if (PAINT_CONTAINMENT.test(style.getPropertyValue('contain'))) return true;
+  return style.overflowX !== '' && style.overflowX !== 'visible';
+}
+
+/**
+ * Whether an element between a message and the conversation root would cut off
+ * a checkbox placed at `columnLeft`: one that clips its paint and starts right
+ * of that column.
+ */
+function clipsGutterColumn(
+  hosts: readonly HTMLElement[],
+  root: HTMLElement,
+  columnLeft: number,
+): boolean {
+  const seen = new Set<Element>();
+  for (const host of hosts) {
+    for (let el: Element | null = host; el && el !== root; el = el.parentElement) {
+      if (el === document.body || el === document.documentElement || seen.has(el)) break;
+      seen.add(el);
+      // A Gemini turn is `content-visibility: auto`, which clips paint and hit-testing to its box,
+      // so a checkbox moved into the gutter outside it was invisible and clicks fell through.
+      if (el.getBoundingClientRect().left > columnLeft && clipsHorizontalPaint(el)) return true;
+    }
+  }
+  return false;
+}
+
 function swallow(ev: Event): void {
   try {
     ev.preventDefault();
@@ -261,10 +294,17 @@ function createSelectionView(
     });
     if (placed.length === 0) return;
     const edge = placed.reduce((min, { left }) => Math.min(min, left), Infinity);
-    const gutter = edge - anchors.conversationRoot().getBoundingClientRect().left;
+    const root = anchors.conversationRoot();
+    const gutter = edge - root.getBoundingClientRect().left;
+    const gutterOffset = -(CHECKBOX_SIZE_PX + SELECTOR_INSET_PX);
     const offset =
-      gutter >= CHECKBOX_SIZE_PX + 2 * SELECTOR_INSET_PX
-        ? -(CHECKBOX_SIZE_PX + SELECTOR_INSET_PX)
+      gutter >= CHECKBOX_SIZE_PX + 2 * SELECTOR_INSET_PX &&
+      !clipsGutterColumn(
+        placed.map(({ binding }) => binding.host),
+        root,
+        edge + gutterOffset,
+      )
+        ? gutterOffset
         : SELECTOR_INSET_PX;
     placed.forEach(({ binding, left }) => {
       binding.selector.style.left = `${Math.round(edge - left) + offset}px`;
