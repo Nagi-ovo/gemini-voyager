@@ -8,6 +8,7 @@ import type { TranslationKey } from '@/utils/translations';
  * timeline summaries and export never read it, and its colours follow the
  * reply's own text colour in either theme.
  */
+import { iconButtonCss } from '../iconButton';
 import { createCopyIcon, createSheetIcon } from './icons';
 import type messages from './messages/en.json';
 import type { TableCopyFormat } from './serialize';
@@ -20,7 +21,7 @@ declare module '@/utils/translations' {
 
 export const TABLE_COPY_CLASS = 'gv-table-copy';
 
-const ICON_SIZE = 14;
+const ICON_SIZE = 16;
 
 const TEXT = {
   markdown: 'tableCopyMarkdownButton',
@@ -36,21 +37,8 @@ const ICONS: Record<TableCopyFormat, (size: number) => SVGSVGElement> = {
 
 const SHADOW_CSS = `
 :host { display: block; position: sticky; inset-inline-start: 0; }
-.toolbar { display: flex; justify-content: flex-end; gap: 4px; margin-bottom: 4px; }
-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px 7px;
-  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
-  border-radius: 6px;
-  background: transparent;
-  color: inherit;
-  opacity: 0.72;
-  cursor: pointer;
-}
-button:hover { opacity: 1; background: color-mix(in srgb, currentColor 8%, transparent); }
-button:focus-visible { opacity: 1; outline: 2px solid var(--gv-pm-brand, #1a73e8); outline-offset: 2px; }`;
+.toolbar { display: flex; justify-content: flex-end; gap: 2px; margin-bottom: 4px; }
+${iconButtonCss('button')}`;
 
 /** A toolbar string in the Voyager language. */
 export function tableCopyText(name: keyof typeof TEXT): string {

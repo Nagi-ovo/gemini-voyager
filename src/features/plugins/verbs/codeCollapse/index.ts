@@ -33,6 +33,7 @@ import { onCachedLanguageChange } from '@/utils/i18n';
 import type { ManifestIssue } from '../../manifest/validate';
 import type { PluginScope } from '../../runtime/pluginScope';
 import { getPrimitiveContract } from '../contracts';
+import { iconButtonCss } from '../iconButton';
 import type { Primitive } from '../types';
 import { COLLAPSE_ALL_CLASS, createCollapseAllBar } from './codeCollapseAll';
 
@@ -54,49 +55,14 @@ const PAGE_CSS = `
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 72px), transparent);
   mask-image: linear-gradient(to bottom, #000 calc(100% - 72px), transparent);
 }
-.gv-code-block-toggle,
-.${COLLAPSE_ALL_CLASS} button {
-  box-sizing: border-box;
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin: 0;
-  padding: 6px;
-  color: inherit;
-  background: transparent;
-  border: 0;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background-color 160ms ease;
-}
-.gv-code-block-toggle:hover,
-.${COLLAPSE_ALL_CLASS} button:hover:not(:disabled) {
-  background: rgb(127 127 127 / 14%);
-}
-.gv-code-block-toggle:focus-visible,
-.${COLLAPSE_ALL_CLASS} button:focus-visible {
-  outline: 2px solid var(--gv-pm-brand, currentcolor);
-  outline-offset: 1px;
-}
-.gv-code-block-toggle svg,
-.${COLLAPSE_ALL_CLASS} svg {
-  width: 16px;
-  height: 16px;
-  pointer-events: none;
-}
+${iconButtonCss('.gv-code-block-toggle', `.${COLLAPSE_ALL_CLASS} button`)}
 .${COLLAPSE_ALL_CLASS} {
   display: flex;
   justify-content: flex-end;
   gap: 4px;
   margin: 8px 0 4px;
 }
-.${COLLAPSE_ALL_CLASS} button:disabled {
-  opacity: 0.45;
-  cursor: default;
-}`;
+`;
 
 /** The packaged Gemini adapter, whose code blocks follow Gemini's own collapse. */
 const GEMINI_SITE_ID = 'gemini';

@@ -6,6 +6,7 @@ import { getTranslationSync, onCachedLanguageChange } from '@/utils/i18n';
 
 import type { ManifestIssue } from '../../manifest/validate';
 import { getPrimitiveContract } from '../contracts';
+import { iconButtonCss } from '../iconButton';
 import type { Primitive } from '../types';
 import type messages from './messages/en.json';
 
@@ -37,31 +38,12 @@ function collapseCss(instance: string, maxPx: number): string {
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - ${fadePx}px), transparent);
   mask-image: linear-gradient(to bottom, #000 calc(100% - ${fadePx}px), transparent);
 }
+${iconButtonCss(`.${instance}-toggle`)}
 .${instance}-toggle {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: 28px;
-  height: 28px;
   margin-block: 4px;
   margin-inline-start: auto;
   margin-inline-end: 0;
-  padding: 6px;
-  border: 0;
-  border-radius: 50%;
-  color: inherit;
-  background: transparent;
-  cursor: pointer;
-}
-.${instance}-toggle:focus-visible {
-  outline: 2px solid var(--gv-pm-brand, currentcolor);
-  outline-offset: 2px;
-}
-.${instance}-toggle svg { pointer-events: none; }
-@media (hover: hover) {
-  html[data-gv-scheme='light'] .${instance}-toggle:hover { background: rgb(127 127 127 / 14%); }
-  html[data-gv-scheme='dark'] .${instance}-toggle:hover { background: rgb(127 127 127 / 24%); }
 }
 body.gv-rtl .${instance}-toggle { direction: rtl; }
 `;

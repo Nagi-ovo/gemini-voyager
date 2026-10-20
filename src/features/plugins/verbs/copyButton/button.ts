@@ -8,6 +8,7 @@ import type { TranslationKey } from '@/utils/translations';
  * timeline summaries and export never read it, and its colours follow the
  * page's own text colour in either theme.
  */
+import { iconButtonCss } from '../iconButton';
 import { createCopyIcon } from './icons';
 import type messages from './messages/en.json';
 
@@ -29,25 +30,12 @@ export const COPY_TARGET_LABELS = {
 
 export type CopyTarget = keyof typeof COPY_TARGET_LABELS;
 
-const ICON_SIZE = 14;
+const ICON_SIZE = 16;
 
 const SHADOW_CSS = `
 :host { display: block; }
 .row { display: flex; justify-content: flex-end; margin-bottom: 4px; }
-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px 7px;
-  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
-  border-radius: 6px;
-  background: transparent;
-  color: inherit;
-  opacity: 0.72;
-  cursor: pointer;
-}
-button:hover { opacity: 1; background: color-mix(in srgb, currentColor 8%, transparent); }
-button:focus-visible { opacity: 1; outline: 2px solid var(--gv-pm-brand, #1a73e8); outline-offset: 2px; }`;
+${iconButtonCss('button')}`;
 
 export interface CopyButton {
   readonly host: HTMLElement;
