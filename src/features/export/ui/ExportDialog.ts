@@ -1,6 +1,6 @@
 /**
  * Export Dialog UI
- * Material Design styled format selection dialog
+ * Format selection dialog
  */
 import { isSafari } from '@/core/utils/browser';
 

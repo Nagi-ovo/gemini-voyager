@@ -19,17 +19,26 @@ describe('selection mode interaction', () => {
     expect(ruleBody(css, '.gv-export-select-bar')).toMatch(/\btop:\s*12px;/);
   });
 
-  it('supports dark-theme selectors for the export dialog', () => {
+  it('paints the export dialog and selection bar from the scheme-following ui tokens', () => {
     const css = readContentStyle();
 
-    expect(css).toContain("html[data-gv-scheme='dark'] .gv-export-dialog");
+    for (const selector of ['.gv-export-dialog', '.gv-export-select-bar']) {
+      const block = ruleBody(css, selector);
+      expect(block).toMatch(/background:\s*var\(--gv-ui-surface\);/);
+      expect(block).toMatch(/color:\s*var\(--gv-ui-text\);/);
+      expect(block).toMatch(/font-family:\s*var\(--gv-ui-font\);/);
+    }
   });
 
-  it('styles the Markdown prompt heading switch for dark and RTL layouts', () => {
+  it('starts the Markdown prompt heading switch knob on the right in RTL layouts', () => {
     const css = readContentStyle();
+    const knobBlock = ruleBody(
+      css,
+      'body.gv-rtl .gv-export-dialog .gv-export-prompt-heading-switch .gv-coach-knob',
+    );
 
-    expect(css).toContain("html[data-gv-scheme='dark'] .gv-export-prompt-heading-section");
-    expect(css).toContain('body.gv-rtl .gv-export-prompt-heading-switch .gv-coach-knob');
+    expect(knobBlock).toMatch(/\bright:\s*2px;/);
+    expect(knobBlock).toContain('left: auto;');
   });
 
   it('keeps logo wrapper from blocking top-bar button clicks', () => {
@@ -54,7 +63,10 @@ describe('selection mode interaction', () => {
     expect(barBlock).toContain('scrollbar-width: none;');
 
     // Check for nowrapping and no shrinking on buttons
-    const btnBlock = ruleBody(css, '.gv-export-select-all-toggle, .gv-export-select-role-btn');
+    const btnBlock = ruleBody(
+      css,
+      '.gv-export-select-all-toggle, .gv-export-select-role-btn, .gv-export-select-export-btn, .gv-export-select-cancel-btn',
+    );
     expect(btnBlock).toContain('white-space: nowrap;');
     expect(btnBlock).toContain('flex-shrink: 0;');
   });

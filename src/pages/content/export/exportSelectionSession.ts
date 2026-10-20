@@ -88,6 +88,23 @@ interface MessageBinding {
 
 /** Gap between the shared left edge and every checkbox; matches `.gv-export-msg-selector`. */
 const SELECTOR_INSET_PX = 8;
+/** Width of `.gv-export-msg-checkbox`. */
+const CHECKBOX_SIZE_PX = 20;
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+function createCloseIcon(): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', 'M18 6 6 18M6 6l12 12');
+  svg.appendChild(path);
+  return svg;
+}
 
 function swallow(ev: Event): void {
   try {
@@ -152,8 +169,10 @@ function createSelectionView(
   const exportBtn = createBarButton('gv-export-select-export-btn', 'export', t('pm_export'));
   exportBtn.disabled = true;
 
-  const cancelBtn = createBarButton('gv-export-select-cancel-btn', null, '×');
+  const cancelBtn = createBarButton('gv-export-select-cancel-btn', null, '');
   cancelBtn.title = t('pm_cancel');
+  cancelBtn.setAttribute('aria-label', t('pm_cancel'));
+  cancelBtn.appendChild(createCloseIcon());
 
   bar.append(selectAllBtn, selectUserBtn, selectAIBtn, count, exportBtn, cancelBtn);
   document.body.appendChild(bar);
@@ -232,7 +251,9 @@ function createSelectionView(
   };
 
   // A user bubble and a response start at different x (Gemini right-aligns the bubble), so each
-  // checkbox is moved onto the leftmost message edge to keep them in one column.
+  // checkbox is moved onto the leftmost message edge to keep them in one column. A ChatGPT reply's
+  // text starts at that edge, so a checkbox inside it covered the reply: when the conversation
+  // leaves a gutter left of the edge, the column goes there instead.
   const alignSelectors = () => {
     const placed = Array.from(bindings.values()).flatMap((binding) => {
       const rect = binding.host.getBoundingClientRect();
@@ -240,8 +261,13 @@ function createSelectionView(
     });
     if (placed.length === 0) return;
     const edge = placed.reduce((min, { left }) => Math.min(min, left), Infinity);
+    const gutter = edge - anchors.conversationRoot().getBoundingClientRect().left;
+    const offset =
+      gutter >= CHECKBOX_SIZE_PX + 2 * SELECTOR_INSET_PX
+        ? -(CHECKBOX_SIZE_PX + SELECTOR_INSET_PX)
+        : SELECTOR_INSET_PX;
     placed.forEach(({ binding, left }) => {
-      binding.selector.style.left = `${Math.round(edge - left) + SELECTOR_INSET_PX}px`;
+      binding.selector.style.left = `${Math.round(edge - left) + offset}px`;
     });
   };
   window.addEventListener('resize', alignSelectors);

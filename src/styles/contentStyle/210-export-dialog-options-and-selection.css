@@ -1,158 +1,153 @@
-/* Font size control section in export dialog */
-.gv-export-fontsize-section {
-  margin-bottom: 20px;
-  padding: 16px;
-  border: 1px solid #dadce0;
-  border-radius: 8px;
-  background: #f8f9fa;
-}
-
-html[data-gv-scheme='dark'] .gv-export-fontsize-section {
-  border-color: #3c4043;
-  background: #2d2e30;
-}
-
+/* Font size and image width sections in the export dialog (frames in 200) */
 .gv-export-fontsize-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .gv-export-fontsize-label {
-  font-size: 14px;
+  color: var(--gv-ui-text);
+  font-size: 13px;
   font-weight: 500;
-  color: #202124;
-}
-
-html[data-gv-scheme='dark'] .gv-export-fontsize-label {
-  color: #e8eaed;
 }
 
 .gv-export-fontsize-value {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1a73e8;
   min-width: 40px;
+  color: var(--gv-ui-primary);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
-html[data-gv-scheme='dark'] .gv-export-fontsize-value {
-  color: #8ab4f8;
-}
-
 .gv-export-fontsize-slider {
+  --gv-export-slider-track: oklch(0.9 0.006 250);
+  display: block;
   width: 100%;
-  height: 4px;
-  -webkit-appearance: none;
+  height: 18px;
+  margin: 0 0 10px;
+  padding: 0;
   appearance: none;
+  -webkit-appearance: none;
   outline: none;
-  border-radius: 2px;
-  background: #dadce0;
+  background: transparent;
   cursor: pointer;
-  margin-bottom: 12px;
-}
-
-.gv-export-fontsize-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #1a73e8;
-  cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.gv-export-fontsize-slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #1a73e8;
-  cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 html[data-gv-scheme='dark'] .gv-export-fontsize-slider {
-  background: #3c4043;
+  --gv-export-slider-track: oklch(0.36 0.008 285);
 }
 
+.gv-export-fontsize-slider:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.gv-export-fontsize-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--gv-export-slider-track);
+}
+
+.gv-export-fontsize-slider::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  -webkit-appearance: none;
+  appearance: none;
+  border: 2px solid var(--gv-ui-primary);
+  border-radius: 50%;
+  background: oklch(0.995 0.002 250);
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.18);
+  cursor: pointer;
+}
+
+.gv-export-fontsize-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--gv-export-slider-track);
+}
+
+.gv-export-fontsize-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--gv-ui-primary);
+}
+
+.gv-export-fontsize-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--gv-ui-primary);
+  border-radius: 50%;
+  background: oklch(0.995 0.002 250);
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.18);
+  cursor: pointer;
+}
+
+/* Georgia on purpose: PDF (pdfPrintStyles.ts) and image (ImageExportService.ts)
+   exports both set their body in it, so the preview shows the output font. */
 .gv-export-fontsize-preview {
-  padding: 10px 14px;
-  border: 1px solid #dadce0;
-  border-radius: 6px;
-  background: white;
-  color: #202124;
-  font-family: Georgia, 'Times New Roman', serif;
-  line-height: 1.6;
   max-height: 60px;
   overflow: hidden;
-}
-
-html[data-gv-scheme='dark'] .gv-export-fontsize-preview {
-  border-color: #3c4043;
-  background: #1e1e1e;
-  color: #e8eaed;
-}
-
-/* Image Width Section */
-.gv-export-imagewidth-section {
-  margin-top: 16px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.02);
+  padding: 8px 12px;
+  border: 1px solid var(--gv-ui-border);
   border-radius: 8px;
+  background: var(--gv-ui-surface);
+  color: var(--gv-ui-text);
+  font-family: Georgia, 'Times New Roman', serif;
+  line-height: 1.6;
 }
 
-html[data-gv-scheme='dark'] .gv-export-imagewidth-section {
-  background: rgba(255, 255, 255, 0.04);
-}
-
+/* A segmented control, as in folder settings: neutral track, raised face. */
 .gv-export-width-group {
   display: flex;
-  gap: 8px;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 9px;
+  background: oklch(0.95 0.004 250 / 0.8);
+}
+
+html[data-gv-scheme='dark'] .gv-export-width-group {
+  background: oklch(0.24 0.008 285 / 0.8);
 }
 
 .gv-export-width-btn {
   flex: 1;
-  padding: 6px 12px;
+  min-height: 26px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--gv-ui-text-muted);
+  font-family: inherit;
   font-size: 12px;
   font-weight: 500;
-  background: transparent;
-  color: #4b5563;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  line-height: 18px;
+  white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
-.gv-export-width-btn:hover {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: #9ca3af;
+.gv-export-width-btn:hover:not(.active) {
+  background: var(--gv-ui-hover);
+}
+
+.gv-export-width-btn:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring);
+  outline-offset: 1px;
 }
 
 .gv-export-width-btn.active {
-  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  color: #ffffff;
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  box-shadow: 0 2px 4px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.2);
-}
-
-html[data-gv-scheme='dark'] .gv-export-width-btn {
-  color: #9ca3af;
-  border-color: #374151;
-}
-
-html[data-gv-scheme='dark'] .gv-export-width-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: #4b5563;
+  background: var(--gv-ui-surface);
+  color: var(--gv-ui-primary);
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.12);
 }
 
 html[data-gv-scheme='dark'] .gv-export-width-btn.active {
-  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  color: #111827;
-  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  background: oklch(0.38 0.01 285);
 }
 
 /* Message selection mode for export */
@@ -161,12 +156,13 @@ html[data-gv-scheme='dark'] .gv-export-width-btn.active {
   cursor: pointer;
 }
 
+/* Top-anchored next to the first line; `left` is written by
+   exportSelectionSession.ts, in the gutter beside the messages when there is room. */
 .gv-export-msg-selector {
   display: none;
   position: absolute;
   left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 6px;
   z-index: 30;
 }
 
@@ -177,22 +173,30 @@ html[data-gv-scheme='dark'] .gv-export-width-btn.active {
 }
 
 .gv-export-msg-checkbox {
-  width: 22px;
-  height: 22px;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 1.5px solid color-mix(in srgb, var(--gv-ui-text) 32%, transparent);
   border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  background: rgba(255, 255, 255, 0.9);
-  color: #64748b;
+  background: var(--gv-ui-surface);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
 }
 
 .gv-export-msg-checkbox:hover {
-  border-color: rgba(22, 163, 74, 0.6);
-  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.12);
+  border-color: var(--gv-ui-primary);
+}
+
+.gv-export-msg-checkbox:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring);
+  outline-offset: 2px;
 }
 
 .gv-export-msg-checkbox-mark {
@@ -204,34 +208,21 @@ html[data-gv-scheme='dark'] .gv-export-width-btn.active {
 }
 
 .gv-export-msg-checkbox[data-selected='true'] {
-  background: #16a34a;
-  border-color: #16a34a;
+  border-color: var(--gv-ui-primary);
+  background: var(--gv-ui-primary);
 }
 
 .gv-export-msg-checkbox[data-selected='true'] .gv-export-msg-checkbox-mark {
-  border-left-color: #fff;
-  border-bottom-color: #fff;
-}
-
-/* Dark theme for checkbox */
-html[data-gv-scheme='dark'] .gv-export-msg-checkbox {
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(19, 22, 28, 0.9);
-  color: #8b98aa;
-}
-
-html[data-gv-scheme='dark'] .gv-export-msg-checkbox:hover {
-  border-color: rgba(128, 255, 176, 0.7);
-  box-shadow: 0 0 0 2px rgba(128, 255, 176, 0.15);
+  border-left-color: var(--gv-ui-primary-fg);
+  border-bottom-color: var(--gv-ui-primary-fg);
 }
 
 .gv-export-msg-selected {
-  box-shadow:
-    0 0 0 1px rgba(34, 197, 94, 0.55),
-    0 8px 18px rgba(34, 197, 94, 0.1);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gv-ui-primary) 55%, transparent);
 }
 
 .gv-export-select-bar {
+  box-sizing: border-box;
   position: fixed;
   left: 50%;
   top: 12px;
@@ -241,16 +232,16 @@ html[data-gv-scheme='dark'] .gv-export-msg-checkbox:hover {
   z-index: 2147483600;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: rgba(13, 17, 23, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(10px);
-  color: #e5ecf5;
-  box-shadow:
-    0 12px 30px rgba(0, 0, 0, 0.38),
-    0 2px 8px rgba(0, 0, 0, 0.22);
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--gv-ui-border);
+  border-radius: 12px;
+  background: var(--gv-ui-surface);
+  color: var(--gv-ui-text);
+  box-shadow: var(--gv-ui-shadow);
+  font-family: var(--gv-ui-font);
+  font-size: 13px;
+  line-height: 18px;
   overflow-x: auto;
   scrollbar-width: none;
   /* Firefox */
@@ -265,83 +256,96 @@ html[data-gv-scheme='dark'] .gv-export-msg-checkbox:hover {
 .gv-export-select-role-btn,
 .gv-export-select-export-btn,
 .gv-export-select-cancel-btn {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  height: 28px;
+  margin: 0;
   border: 0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease,
+    filter 0.12s ease;
+}
+
+.gv-export-select-all-toggle:focus-visible,
+.gv-export-select-role-btn:focus-visible,
+.gv-export-select-export-btn:focus-visible,
+.gv-export-select-cancel-btn:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring);
+  outline-offset: 1px;
 }
 
 .gv-export-select-all-toggle,
 .gv-export-select-role-btn {
-  min-width: 68px;
-  flex-shrink: 0;
-  height: 34px;
-  padding: 0 12px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #e5ecf5;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
+  padding: 0 10px;
+  background: transparent;
+  color: var(--gv-ui-text);
+}
+
+.gv-export-select-all-toggle:hover:not(:disabled),
+.gv-export-select-role-btn:hover:not(:disabled) {
+  background: var(--gv-ui-hover);
 }
 
 .gv-export-select-all-toggle[data-checked='true'],
-.gv-export-select-role-btn[data-checked='true'],
-.gv-export-select-role-btn:active {
-  background: rgba(22, 163, 74, 0.24);
-  color: #bbf7d0;
-}
-
-.gv-export-select-all-toggle:hover:not(:active),
-.gv-export-select-role-btn:hover:not(:active) {
-  background: rgba(255, 255, 255, 0.14);
+.gv-export-select-role-btn[data-checked='true'] {
+  background: color-mix(in srgb, var(--gv-ui-primary) 12%, transparent);
+  color: var(--gv-ui-primary);
 }
 
 .gv-export-select-count {
-  min-width: 92px;
   flex-shrink: 0;
+  min-width: 72px;
+  padding: 0 8px;
+  color: var(--gv-ui-text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
   text-align: center;
-  color: #cfd8e3;
-  font-size: 13px;
-  font-weight: 600;
   white-space: nowrap;
 }
 
 .gv-export-select-export-btn {
-  min-width: 74px;
-  flex-shrink: 0;
-  height: 34px;
   padding: 0 14px;
-  border-radius: 10px;
-  background: #1d4ed8;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  white-space: nowrap;
+  background: var(--gv-ui-primary);
+  color: var(--gv-ui-primary-fg);
 }
 
 .gv-export-select-export-btn:hover:not(:disabled) {
-  background: #2563eb;
+  filter: brightness(1.06);
 }
 
+.gv-export-select-all-toggle:disabled,
+.gv-export-select-role-btn:disabled,
 .gv-export-select-export-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
 .gv-export-select-cancel-btn {
-  width: 34px;
-  flex-shrink: 0;
-  height: 34px;
-  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  padding: 0;
   background: transparent;
-  color: #a8b6c8;
-  font-size: 20px;
-  line-height: 1;
+  color: var(--gv-ui-text-muted);
+}
+
+.gv-export-select-cancel-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .gv-export-select-cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #eef4ff;
+  background: var(--gv-ui-hover);
+  color: var(--gv-ui-text);
 }
 
 @media (max-width: 640px) {
@@ -351,21 +355,16 @@ html[data-gv-scheme='dark'] .gv-export-msg-checkbox:hover {
     top: 10px;
     transform: none;
     justify-content: space-between;
-    gap: 8px;
+    gap: 2px;
   }
 
-  .gv-export-select-all-toggle {
-    min-width: 62px;
-    padding: 0 10px;
+  .gv-export-select-all-toggle,
+  .gv-export-select-role-btn,
+  .gv-export-select-export-btn {
+    padding: 0 8px;
   }
 
   .gv-export-select-count {
-    min-width: 82px;
-    font-size: 12px;
-  }
-
-  .gv-export-select-export-btn {
-    min-width: 66px;
-    padding: 0 10px;
+    min-width: 0;
   }
 }
