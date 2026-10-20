@@ -83,6 +83,10 @@
     "message": "语言",
     "description": "语言标签"
   },
+  "languageSwitchTo": {
+    "message": "切换为 {language}",
+    "description": "Tooltip on the popup's language button; {language} is the target language's native name (e.g. English, 中文)"
+  },
   "pm_title": {
     "message": "Voyager",
     "description": "面板标题"
@@ -291,7 +295,7 @@
     "description": "备份取消提示"
   },
   "pm_backup_error": {
-    "message": "✗ 备份失败",
+    "message": "备份失败",
     "description": "备份失败提示"
   },
   "pm_backup_hint_options": {
@@ -307,7 +311,7 @@
     "description": "备份步骤 2"
   },
   "pm_backup_step3": {
-    "message": "点击 \"💾 本地备份\" 按钮，选择备份文件夹",
+    "message": "点击 \"本地备份\" 按钮，选择备份文件夹",
     "description": "备份步骤 3"
   },
   "pm_backup_note": {
@@ -339,7 +343,7 @@
     "description": "Validation shown when saving a prompt with an existing name"
   },
   "pm_name_conflict_badge": {
-    "message": "名称重复——改名后可使用 /",
+    "message": "名称重复，改名后可使用 /",
     "description": "名称重复而无法使用 / 快速插入时显示的标记"
   },
   "pm_prompt_manager": {
@@ -407,7 +411,7 @@
     "description": "Alt text for the Fable 5 Verified badge in the popup footer"
   },
   "starProject": {
-    "message": "为项目点亮 ⭐️",
+    "message": "在 GitHub 上点 Star",
     "description": "Github 引导"
   },
   "sponsorMe": {
@@ -623,11 +627,11 @@
     "description": "侧边栏变宽标签"
   },
   "formula_copied": {
-    "message": "✓ 公式已复制",
+    "message": "公式已复制",
     "description": "公式复制成功消息"
   },
   "formula_copy_failed": {
-    "message": "✗ 复制失败",
+    "message": "复制失败",
     "description": "公式复制失败消息"
   },
   "enableFormulaCopy": {
@@ -783,15 +787,15 @@
     "description": "导入文件选择提示"
   },
   "folder_import_success": {
-    "message": "✓ 已导入 {folders} 个文件夹，{conversations} 个对话",
+    "message": "已导入 {folders} 个文件夹，{conversations} 个对话",
     "description": "导入成功消息"
   },
   "folder_import_success_skipped": {
-    "message": "✓ 已导入 {folders} 个文件夹，{conversations} 个对话（跳过 {skipped} 个重复项）",
+    "message": "已导入 {folders} 个文件夹，{conversations} 个对话（跳过 {skipped} 个重复项）",
     "description": "导入成功并跳过重复项消息"
   },
   "folder_import_error": {
-    "message": "✗ 导入失败：{error}",
+    "message": "导入失败：{error}",
     "description": "导入错误消息"
   },
   "conversation_added_to_folder": {
@@ -819,7 +823,7 @@
     "description": "文件夹更改保存失败时显示的提示"
   },
   "folder_export_success": {
-    "message": "✓ 文件夹导出成功",
+    "message": "文件夹导出成功",
     "description": "导出成功消息"
   },
   "folder_import_invalid_format": {
@@ -867,8 +871,12 @@
     "description": "导出格式选择标签"
   },
   "export_dialog_warning": {
-    "message": "⚠️ 点击导出后，系统将自动跳转至首条消息以加载完整内容。在此期间请勿操作，跳转完成后将自动继续导出。",
+    "message": "点击导出后，系统将自动跳转至首条消息以加载完整内容。在此期间请勿操作，跳转完成后将自动继续导出。",
     "description": "关于内容完整性和自动跳转的提示"
+  },
+  "export_format_recommended": {
+    "message": "推荐",
+    "description": "Tag next to the recommended export format"
   },
   "export_dialog_safari_cmdp_hint": {
     "message": "Safari 提示：请先点击下方“导出”按钮，稍等片刻，再按 ⌘P 选择“保存为 PDF”。",
@@ -978,6 +986,10 @@
     "message": "关闭",
     "description": "Aria label for the floating panel close button"
   },
+  "commonClose": {
+    "message": "关闭",
+    "description": "Generic accessible name and tooltip for a close (X) button"
+  },
   "floatingPanelEmpty": {
     "message": "还没有文件夹。",
     "description": "Empty state shown when the user has no folders"
@@ -1007,7 +1019,7 @@
     "description": "提示默认范围为 Gemini/AI Studio"
   },
   "folderManager_dataLossWarning": {
-    "message": "⚠️ 警告：无法加载文件夹数据。您的文件夹可能已损坏。请检查浏览器控制台以获取详细信息，并在可用时尝试从备份恢复。",
+    "message": "警告：无法加载文件夹数据。您的文件夹可能已损坏。请检查浏览器控制台以获取详细信息，并在可用时尝试从备份恢复。",
     "description": "文件夹数据加载失败时显示的警告"
   },
   "folderManager_dataRecovered": {
@@ -1075,15 +1087,15 @@
     "description": "从未备份过"
   },
   "backupSuccess": {
-    "message": "✓ 备份创建成功：{prompts} 个提示词、{folders} 个文件夹、{conversations} 个对话",
+    "message": "备份创建成功：{prompts} 个提示词、{folders} 个文件夹、{conversations} 个对话",
     "description": "备份成功消息"
   },
   "backupError": {
-    "message": "✗ 备份失败：{error}",
+    "message": "备份失败：{error}",
     "description": "备份错误消息"
   },
   "backupNotSupported": {
-    "message": "⚠️ 自动备份需要支持文件系统访问 API 的现代浏览器",
+    "message": "自动备份需要支持文件系统访问 API 的现代浏览器",
     "description": "浏览器不支持消息"
   },
   "backupSelectFolderFirst": {
@@ -1095,11 +1107,11 @@
     "description": "用户取消文件夹选择"
   },
   "backupConfigSaved": {
-    "message": "✓ 备份设置已保存",
+    "message": "备份设置已保存",
     "description": "配置保存消息"
   },
   "backupPermissionDenied": {
-    "message": "⚠️ 无法访问此目录。请选择其他位置（例如：文档、下载，或桌面中的自定义文件夹）",
+    "message": "无法访问此目录。请选择其他位置（例如：文档、下载，或桌面中的自定义文件夹）",
     "description": "受限目录权限被拒绝"
   },
   "backupConfigureInOptions": {
@@ -1314,6 +1326,14 @@
     "message": "修饰键",
     "description": "快捷键修饰键标签"
   },
+  "shortcutPressKey": {
+    "message": "请按下按键…",
+    "description": "Shown on a keyboard-shortcut button while it is recording the next key press"
+  },
+  "shortcutEscToCancel": {
+    "message": "按 Esc 取消",
+    "description": "Shown under the keyboard-shortcut buttons while one is recording a key press"
+  },
   "resetShortcuts": {
     "message": "恢复默认",
     "description": "重置快捷键按钮"
@@ -1431,23 +1451,23 @@
     "description": "从未上传消息"
   },
   "syncSuccess": {
-    "message": "✓ 同步成功",
+    "message": "同步成功",
     "description": "同步成功消息"
   },
   "syncSuccessHighlightsSkipped": {
-    "message": "✓ 已同步；高亮已跳过，请打开 Gemini 后重试",
+    "message": "已同步；高亮已跳过，请打开 Gemini 后重试",
     "description": "因无法识别账号而跳过高亮时的同步成功消息"
   },
   "syncSuccessFoldersMissing": {
-    "message": "✓ 其他数据已同步；云端没有文件夹备份",
+    "message": "其他数据已同步；云端没有文件夹备份",
     "description": "云端没有文件夹数据时的部分同步提示"
   },
   "syncError": {
-    "message": "✗ 同步失败：{error}",
+    "message": "同步失败：{error}",
     "description": "同步错误消息"
   },
   "syncRestorePartial": {
-    "message": "✗ 恢复未完成。已恢复：{restored}。未恢复：{failed}（{error}）",
+    "message": "恢复未完成。已恢复：{restored}。未恢复：{failed}（{error}）",
     "description": "Drive restore stopped partway: which parts were restored and which were not"
   },
   "syncRestoreForks": {
@@ -1471,7 +1491,7 @@
     "description": "上传进行中消息"
   },
   "uploadSuccess": {
-    "message": "✓ 上传成功",
+    "message": "上传成功",
     "description": "上传成功消息"
   },
   "downloadInProgress": {
@@ -1479,7 +1499,7 @@
     "description": "下载进行中消息"
   },
   "downloadMergeSuccess": {
-    "message": "✓ 下载合并成功",
+    "message": "下载合并成功",
     "description": "下载合并成功消息"
   },
   "syncUpload": {
@@ -1508,10 +1528,10 @@
     "message": "正在删除 iCloud 备份…"
   },
   "syncDeleteICloudSuccess": {
-    "message": "✓ 已删除 {count} 个 iCloud 备份文件，本机数据未改变"
+    "message": "已删除 {count} 个 iCloud 备份文件，本机数据未改变"
   },
   "syncDeleteICloudFailed": {
-    "message": "✗ 无法删除 iCloud 备份：{error}"
+    "message": "无法删除 iCloud 备份：{error}"
   },
   "syncMode": {
     "message": "同步模式",
@@ -1726,7 +1746,7 @@
     "description": "批量删除进度消息"
   },
   "batch_delete_success": {
-    "message": "✓ 已删除 {count} 个会话",
+    "message": "已删除 {count} 个会话",
     "description": "批量删除成功消息"
   },
   "batch_delete_partial": {
@@ -1772,6 +1792,14 @@
   "enableMermaidRenderingHint": {
     "message": "自动将代码块中的 Mermaid 代码渲染为图表",
     "description": "Mermaid 渲染功能提示"
+  },
+  "mermaidSyntaxError": {
+    "message": "Mermaid 语法错误",
+    "description": "Title of the card shown in place of a Mermaid diagram whose source fails to parse"
+  },
+  "mermaidErrorHint": {
+    "message": "点「代码」查看源码",
+    "description": "Hint under the Mermaid syntax error title; the quoted label matches diagramCodeButton"
   },
   "enableQuoteReply": {
     "message": "启用引用回复",
@@ -1952,6 +1980,22 @@
   "gemsShow": {
     "message": "显示 Gems",
     "description": "显示 Gems 列表区域的提示"
+  },
+  "gemsPinToSidebar": {
+    "message": "固定到侧边栏",
+    "description": "Tooltip on the Gems manager pin button of an unpinned gem: pins it to the sidebar list"
+  },
+  "gemsUnpinFromSidebar": {
+    "message": "从侧边栏取消固定",
+    "description": "Tooltip on the Gems manager pin button of a pinned gem: removes it from the sidebar list"
+  },
+  "gemsPin": {
+    "message": "固定 Gem",
+    "description": "Accessible name of the pin button for an unpinned gem"
+  },
+  "gemsUnpin": {
+    "message": "取消固定 Gem",
+    "description": "Accessible name of the pin button for a pinned gem"
   },
   "notebooksHide": {
     "message": "隐藏笔记本",
@@ -2334,7 +2378,7 @@
     "description": "Changelog modal recommendation message"
   },
   "changelog_follow_cta": {
-    "message": "获取最新更新，欢迎关注我的社交媒体，新功能与即时修复都在这里第一时间发布。",
+    "message": "新功能和修复会先在这些地方发布。",
     "description": "Changelog modal follow-me CTA headline"
   },
   "changelog_social_xiaohongshu": {
@@ -2346,19 +2390,19 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "觉得 Voyager 好用吗？在 Chrome 应用商店给个好评，能帮助更多人发现它！",
+    "message": "如果 Voyager 对你有帮助，在 Chrome 应用商店留个评分，可以让更多人找到它。",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
-    "message": "立即评分",
+    "message": "评分",
     "description": "Chrome Web Store rating CTA button text"
   },
   "changelog_rate_edge": {
-    "message": "觉得 Voyager 好用吗？在 Edge 加载项商店给个好评，能帮助更多人发现它！",
+    "message": "如果 Voyager 对你有帮助，在 Edge 加载项商店留个评分，可以让更多人找到它。",
     "description": "Edge Add-ons store rating prompt in changelog modal"
   },
   "changelog_rate_edge_cta": {
-    "message": "立即评分",
+    "message": "评分",
     "description": "Edge Add-ons store rating CTA button text"
   },
   "changelog_badge_mode": {
@@ -2474,11 +2518,11 @@
     "description": "复制 AI 整理提示后的确认"
   },
   "aiOrgError": {
-    "message": "失败 — 请先打开 Gemini",
+    "message": "失败，请先打开 Gemini",
     "description": "复制 AI 整理提示失败时的错误"
   },
   "aiOrgNoConversations": {
-    "message": "未找到对话 — 请展开并滚动聊天列表后重试",
+    "message": "未找到对话，请展开并滚动聊天列表后重试",
     "description": "AI 整理未能读取到任何对话时的按钮文字"
   },
   "aiOrgCopyHint": {
@@ -2874,7 +2918,7 @@
     "description": "Button that repairs missing optional site access for an enabled plugin"
   },
   "pluginUnsupportedPlatform": {
-    "message": "此浏览器不支持——无法授予该插件所需的网站权限。",
+    "message": "此浏览器不支持，无法授予该插件所需的网站权限。",
     "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
   },
   "chatgptExportCardTitle": {
@@ -3254,7 +3298,7 @@
     "description": "Label for the switch that allows online plugin update checks for this site"
   },
   "pluginsOnlineUpdatesHint": {
-    "message": "会向 voyager.nagi.fun 查询此网站的插件更新——只发送网站名称，不发送 Cookie 或页面内容。关闭后，只有上方的刷新按钮会联网。",
+    "message": "会向 voyager.nagi.fun 查询此网站的插件更新。只发送网站名称，不发送 Cookie 或页面内容。关闭后，只有上方的刷新按钮会联网。",
     "description": "Explains what the online plugin update check sends and when it runs"
   },
   "pluginsCheckInterval": {

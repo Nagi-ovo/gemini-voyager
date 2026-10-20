@@ -388,7 +388,7 @@ describe('AI Studio import', () => {
     // The counts are what the merge added; the file's repeated prompts count as they are
     // appended. A file repeating a folder id is refused (aistudioPersistence.test.ts).
     expect(lastNotice()).toMatchObject({
-      message: '✓ Imported 1 folders, 3 conversations',
+      message: 'Imported 1 folders, 3 conversations',
       tone: 'success',
     });
   });
@@ -462,7 +462,7 @@ describe('AI Studio import', () => {
       tone: 'error',
     });
     await importText(manager, 'not json {}');
-    expect(lastNotice()?.message).toMatch(/^✗ Import failed: SyntaxError: /);
+    expect(lastNotice()?.message).toMatch(/^Import failed: SyntaxError: /);
     expect(lastNotice()?.tone).toBe('error');
     expect(manager.replaceData).not.toHaveBeenCalled();
     expect(sessionStorage.length).toBe(0);

@@ -83,6 +83,10 @@
     "message": "Language",
     "description": "Language label"
   },
+  "languageSwitchTo": {
+    "message": "Switch to {language}",
+    "description": "Tooltip on the popup's language button; {language} is the target language's native name (e.g. English, 中文)"
+  },
   "pm_title": {
     "message": "Voyager",
     "description": "Prompt Manager title"
@@ -291,7 +295,7 @@
     "description": "Backup cancelled hint"
   },
   "pm_backup_error": {
-    "message": "✗ Backup failed",
+    "message": "Backup failed",
     "description": "Backup failed hint"
   },
   "pm_backup_hint_options": {
@@ -307,7 +311,7 @@
     "description": "Backup step 2"
   },
   "pm_backup_step3": {
-    "message": "Click the \"💾 Local Backup\" button and select a backup folder",
+    "message": "Click the \"Local Backup\" button and select a backup folder",
     "description": "Backup step 3"
   },
   "pm_backup_note": {
@@ -339,7 +343,7 @@
     "description": "Validation shown when saving a prompt with an existing name"
   },
   "pm_name_conflict_badge": {
-    "message": "Duplicate name — rename to use /",
+    "message": "Duplicate name. Rename to use /",
     "description": "Badge shown on prompts excluded from slash completion by a duplicate name"
   },
   "pm_prompt_manager": {
@@ -407,7 +411,7 @@
     "description": "Alt text for the Fable 5 Verified badge in the popup footer"
   },
   "starProject": {
-    "message": "Support me ⭐",
+    "message": "Star on GitHub",
     "description": "Github callout"
   },
   "sponsorMe": {
@@ -623,11 +627,11 @@
     "description": "Wide sidebar width label"
   },
   "formula_copied": {
-    "message": "✓ Formula copied",
+    "message": "Formula copied",
     "description": "Formula copied success message"
   },
   "formula_copy_failed": {
-    "message": "✗ Failed to copy",
+    "message": "Failed to copy",
     "description": "Formula copy failed message"
   },
   "enableFormulaCopy": {
@@ -783,15 +787,15 @@
     "description": "Import file selection prompt"
   },
   "folder_import_success": {
-    "message": "✓ Imported {folders} folders, {conversations} conversations",
+    "message": "Imported {folders} folders, {conversations} conversations",
     "description": "Import success message"
   },
   "folder_import_success_skipped": {
-    "message": "✓ Imported {folders} folders, {conversations} conversations ({skipped} duplicates skipped)",
+    "message": "Imported {folders} folders, {conversations} conversations ({skipped} duplicates skipped)",
     "description": "Import success with skipped message"
   },
   "folder_import_error": {
-    "message": "✗ Import failed: {error}",
+    "message": "Import failed: {error}",
     "description": "Import error message"
   },
   "conversation_added_to_folder": {
@@ -819,7 +823,7 @@
     "description": "Shown when folder changes could not be saved"
   },
   "folder_export_success": {
-    "message": "✓ Folders exported successfully",
+    "message": "Folders exported successfully",
     "description": "Export success message"
   },
   "folder_import_invalid_format": {
@@ -867,8 +871,12 @@
     "description": "Export format selection label"
   },
   "export_dialog_warning": {
-    "message": "⚠️ After clicking export, the system will auto-jump to the beginning to load all content. Please do not operate; export will continue automatically after the jump.",
+    "message": "After clicking export, the system will auto-jump to the beginning to load all content. Please do not operate; export will continue automatically after the jump.",
     "description": "Warning about auto-jump and loading completeness"
+  },
+  "export_format_recommended": {
+    "message": "Recommended",
+    "description": "Tag next to the recommended export format"
   },
   "export_dialog_safari_cmdp_hint": {
     "message": "Safari tip: Click 'Export' below, wait a moment, then press ⌘P and choose 'Save to PDF'.",
@@ -978,6 +986,10 @@
     "message": "Close",
     "description": "Aria label for the floating panel close button"
   },
+  "commonClose": {
+    "message": "Close",
+    "description": "Generic accessible name and tooltip for a close (X) button"
+  },
   "floatingPanelEmpty": {
     "message": "No folders yet.",
     "description": "Empty state shown when the user has no folders"
@@ -1007,7 +1019,7 @@
     "description": "Notice that defaults are limited to Gemini/AI Studio"
   },
   "folderManager_dataLossWarning": {
-    "message": "⚠️ Warning: Failed to load folder data. Your folders may have been corrupted. Please check the browser console for details and try restoring from backup if available.",
+    "message": "Warning: Failed to load folder data. Your folders may have been corrupted. Please check the browser console for details and try restoring from backup if available.",
     "description": "Warning shown when folder data fails to load"
   },
   "folderManager_dataRecovered": {
@@ -1075,15 +1087,15 @@
     "description": "Never backed up"
   },
   "backupSuccess": {
-    "message": "✓ Backup created: {prompts} prompts, {folders} folders, {conversations} conversations",
+    "message": "Backup created: {prompts} prompts, {folders} folders, {conversations} conversations",
     "description": "Backup success message"
   },
   "backupError": {
-    "message": "✗ Backup failed: {error}",
+    "message": "Backup failed: {error}",
     "description": "Backup error message"
   },
   "backupNotSupported": {
-    "message": "⚠️ Auto backup requires a modern browser with File System Access API support",
+    "message": "Auto backup requires a modern browser with File System Access API support",
     "description": "Browser not supported message"
   },
   "backupSelectFolderFirst": {
@@ -1095,11 +1107,11 @@
     "description": "User cancelled folder selection"
   },
   "backupConfigSaved": {
-    "message": "✓ Backup settings saved",
+    "message": "Backup settings saved",
     "description": "Config saved message"
   },
   "backupPermissionDenied": {
-    "message": "⚠️ Cannot access this directory. Please choose a different location (e.g., Documents, Downloads, or a folder in Desktop)",
+    "message": "Cannot access this directory. Please choose a different location (e.g., Documents, Downloads, or a folder in Desktop)",
     "description": "Permission denied for restricted directory"
   },
   "backupConfigureInOptions": {
@@ -1314,6 +1326,14 @@
     "message": "Modifiers",
     "description": "Shortcut modifiers label"
   },
+  "shortcutPressKey": {
+    "message": "Press a key…",
+    "description": "Shown on a keyboard-shortcut button while it is recording the next key press"
+  },
+  "shortcutEscToCancel": {
+    "message": "Press Esc to cancel",
+    "description": "Shown under the keyboard-shortcut buttons while one is recording a key press"
+  },
   "resetShortcuts": {
     "message": "Reset to defaults",
     "description": "Reset shortcuts button"
@@ -1431,23 +1451,23 @@
     "description": "Never uploaded message"
   },
   "syncSuccess": {
-    "message": "✓ Synced successfully",
+    "message": "Synced successfully",
     "description": "Sync success message"
   },
   "syncSuccessHighlightsSkipped": {
-    "message": "✓ Synced; highlights skipped — open Gemini and try again",
+    "message": "Synced; highlights skipped. Open Gemini and try again",
     "description": "Sync success message when account-scoped highlights were skipped"
   },
   "syncSuccessFoldersMissing": {
-    "message": "✓ Other data synced; no folder backup was found",
+    "message": "Other data synced; no folder backup was found",
     "description": "Partial sync message when the cloud has no folders payload"
   },
   "syncError": {
-    "message": "✗ Sync failed: {error}",
+    "message": "Sync failed: {error}",
     "description": "Sync error message"
   },
   "syncRestorePartial": {
-    "message": "✗ Restore incomplete. Restored: {restored}. Not restored: {failed} ({error})",
+    "message": "Restore incomplete. Restored: {restored}. Not restored: {failed} ({error})",
     "description": "Drive restore stopped partway: which parts were restored and which were not"
   },
   "syncRestoreForks": {
@@ -1471,7 +1491,7 @@
     "description": "Upload in progress message"
   },
   "uploadSuccess": {
-    "message": "✓ Uploaded successfully",
+    "message": "Uploaded successfully",
     "description": "Upload success message"
   },
   "downloadInProgress": {
@@ -1479,7 +1499,7 @@
     "description": "Download in progress message"
   },
   "downloadMergeSuccess": {
-    "message": "✓ Downloaded and merged",
+    "message": "Downloaded and merged",
     "description": "Download and merge success message"
   },
   "syncUpload": {
@@ -1508,10 +1528,10 @@
     "message": "Deleting iCloud backup…"
   },
   "syncDeleteICloudSuccess": {
-    "message": "✓ Deleted {count} iCloud backup files; local data is unchanged"
+    "message": "Deleted {count} iCloud backup files; local data is unchanged"
   },
   "syncDeleteICloudFailed": {
-    "message": "✗ Could not delete iCloud backup: {error}"
+    "message": "Could not delete iCloud backup: {error}"
   },
   "syncMode": {
     "message": "Sync Mode",
@@ -1726,7 +1746,7 @@
     "description": "Batch delete progress message"
   },
   "batch_delete_success": {
-    "message": "✓ Deleted {count} conversation(s)",
+    "message": "Deleted {count} conversation(s)",
     "description": "Batch delete success message"
   },
   "batch_delete_partial": {
@@ -1772,6 +1792,14 @@
   "enableMermaidRenderingHint": {
     "message": "Automatically render Mermaid diagrams in code blocks",
     "description": "Mermaid rendering feature hint"
+  },
+  "mermaidSyntaxError": {
+    "message": "Mermaid syntax error",
+    "description": "Title of the card shown in place of a Mermaid diagram whose source fails to parse"
+  },
+  "mermaidErrorHint": {
+    "message": "Click \"Code\" to view the source",
+    "description": "Hint under the Mermaid syntax error title; the quoted label matches diagramCodeButton"
   },
   "enableQuoteReply": {
     "message": "Enable quote reply",
@@ -1953,6 +1981,22 @@
     "message": "Show Gems",
     "description": "Tooltip for showing Gems list section"
   },
+  "gemsPinToSidebar": {
+    "message": "Pin to sidebar",
+    "description": "Tooltip on the Gems manager pin button of an unpinned gem: pins it to the sidebar list"
+  },
+  "gemsUnpinFromSidebar": {
+    "message": "Unpin from sidebar",
+    "description": "Tooltip on the Gems manager pin button of a pinned gem: removes it from the sidebar list"
+  },
+  "gemsPin": {
+    "message": "Pin gem",
+    "description": "Accessible name of the pin button for an unpinned gem"
+  },
+  "gemsUnpin": {
+    "message": "Unpin gem",
+    "description": "Accessible name of the pin button for a pinned gem"
+  },
   "notebooksHide": {
     "message": "Hide Notebooks",
     "description": "Tooltip for hiding Notebooks list section"
@@ -2006,7 +2050,7 @@
     "description": "Hint text under the default-model auto-apply toggle"
   },
   "defaultModelAutoApplyFailed": {
-    "message": "Default model couldn't auto-apply after 3 tries. Gemini may have changed its menu — you can turn this feature off for now.",
+    "message": "Default model couldn't auto-apply after 3 tries. Gemini may have changed its menu. You can turn this feature off for now.",
     "description": "Toast body when the model locker hits its consecutive-failure threshold"
   },
   "defaultModelAutoApplyFailedAction": {
@@ -2334,7 +2378,7 @@
     "description": "Changelog modal recommendation message"
   },
   "changelog_follow_cta": {
-    "message": "Get the latest updates — follow me on social media for new releases and quick fixes.",
+    "message": "New features and fixes are announced here first.",
     "description": "Changelog modal follow-me CTA headline"
   },
   "changelog_social_xiaohongshu": {
@@ -2346,19 +2390,19 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "Love Voyager? A quick rating on the Chrome Web Store makes a huge difference!",
+    "message": "If Voyager helps you, a rating on the Chrome Web Store helps others find it.",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
-    "message": "Rate Now",
+    "message": "Rate",
     "description": "Chrome Web Store rating CTA button text"
   },
   "changelog_rate_edge": {
-    "message": "Love Voyager? A quick rating on the Edge Add-ons store makes a huge difference!",
+    "message": "If Voyager helps you, a rating on the Edge Add-ons store helps others find it.",
     "description": "Edge Add-ons store rating prompt in changelog modal"
   },
   "changelog_rate_edge_cta": {
-    "message": "Rate Now",
+    "message": "Rate",
     "description": "Edge Add-ons store rating CTA button text"
   },
   "changelog_badge_mode": {
@@ -2474,11 +2518,11 @@
     "description": "Confirmation after copying AI organization prompt"
   },
   "aiOrgError": {
-    "message": "Failed — open Gemini first",
+    "message": "Failed. Open Gemini first",
     "description": "Error when copying AI organization prompt fails"
   },
   "aiOrgNoConversations": {
-    "message": "No chats found — open and scroll your chat list, then retry",
+    "message": "No chats found. Open and scroll your chat list, then retry",
     "description": "Button text shown when no conversations could be read for AI organization"
   },
   "aiOrgCopyHint": {
@@ -2866,7 +2910,7 @@
     "description": "Link label to a plugin source/repo"
   },
   "pluginPermissionDenied": {
-    "message": "Site permission denied — the plugin can't run without it.",
+    "message": "Site permission denied. The plugin can't run without it.",
     "description": "Shown when the user denies the site permission for a plugin"
   },
   "pluginGrantRequiredAccess": {
@@ -2874,7 +2918,7 @@
     "description": "Button that repairs missing optional site access for an enabled plugin"
   },
   "pluginUnsupportedPlatform": {
-    "message": "Unsupported on this browser — it can't grant the site access this plugin needs.",
+    "message": "Unsupported on this browser. It can't grant the site access this plugin needs.",
     "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
   },
   "chatgptExportCardTitle": {
@@ -3394,7 +3438,7 @@
     "description": "Coachmark title introducing the folder Activity view"
   },
   "folderActivityCoachmarkBody": {
-    "message": "Focus on conversations in motion: Priority, today, and recent days—without moving anything out of its folders.",
+    "message": "Focus on conversations in motion: Priority, today, and recent days, without moving anything out of its folders.",
     "description": "Coachmark body text introducing the folder Activity view"
   },
   "folderActivityCoachmarkToggle": {

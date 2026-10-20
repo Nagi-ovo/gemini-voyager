@@ -228,7 +228,7 @@ describe('Prompt Manager write notices', () => {
     await deleteFirstPrompt();
     write([gamma, prompts[1]]);
     expect(rowIds()).toEqual(['Gamma', 'Beta']);
-    expect(toastDriver.messages()).toEqual(['✓ Synced successfully']);
+    expect(toastDriver.messages()).toEqual(['Synced successfully']);
     // Nothing is read back: a read failing now cannot blank the list.
     vi.mocked(chrome.storage.local.get).mockRejectedValue(
       new Error('Extension context invalidated.'),

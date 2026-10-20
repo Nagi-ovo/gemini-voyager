@@ -243,13 +243,13 @@ describe('AI Studio folder messages', () => {
     );
     expect(lastNotification()).toEqual({
       level: 'success',
-      message: '✓ Imported 1 folders, 2 conversations',
+      message: 'Imported 1 folders, 2 conversations',
     });
 
     await importText(manager, 'not json');
     const failure = lastNotification();
     expect(failure.level).toBe('error');
-    expect(failure.message).toMatch(/^✗ Import failed: SyntaxError/);
+    expect(failure.message).toMatch(/^Import failed: SyntaxError/);
     for (const message of toastDriver.messages()) expectRendered(message);
 
     // The parser quotes the bad input; `$&` in it is not a replacement pattern.

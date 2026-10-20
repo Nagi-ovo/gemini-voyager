@@ -288,7 +288,7 @@ describe('Formula copy service', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(toastDriver.all().map(({ message, tone }) => [message, tone])).toEqual([
-      ['✓ 公式已复制', 'success'],
+      ['公式已复制', 'success'],
     ]);
 
     setCachedLanguage('en');

@@ -83,6 +83,10 @@
     "message": "Язык",
     "description": "Language label"
   },
+  "languageSwitchTo": {
+    "message": "Переключить на {language}",
+    "description": "Tooltip on the popup's language button; {language} is the target language's native name (e.g. English, 中文)"
+  },
   "pm_title": {
     "message": "Voyager",
     "description": "Prompt Manager title"
@@ -291,7 +295,7 @@
     "description": "Backup cancelled hint"
   },
   "pm_backup_error": {
-    "message": "✗ Ошибка резервного копирования",
+    "message": "Ошибка резервного копирования",
     "description": "Backup failed hint"
   },
   "pm_backup_hint_options": {
@@ -307,7 +311,7 @@
     "description": "Backup step 2"
   },
   "pm_backup_step3": {
-    "message": "Нажмите кнопку \"💾 Локальное резервное копирование\" и выберите папку для резервного копирования",
+    "message": "Нажмите кнопку \"Локальное резервное копирование\" и выберите папку для резервного копирования",
     "description": "Backup step 3"
   },
   "pm_backup_note": {
@@ -339,7 +343,7 @@
     "description": "Validation shown when saving a prompt with an existing name"
   },
   "pm_name_conflict_badge": {
-    "message": "Имя дублируется — переименуйте для /",
+    "message": "Имя дублируется. Переименуйте для /",
     "description": "Метка промптов, исключённых из дополнения через / из-за совпадающего имени"
   },
   "pm_prompt_manager": {
@@ -407,7 +411,7 @@
     "description": "Alt text for the Fable 5 Verified badge in the popup footer"
   },
   "starProject": {
-    "message": "Поддержать меня ⭐",
+    "message": "Поставить звезду на GitHub",
     "description": "Github callout"
   },
   "sponsorMe": {
@@ -623,11 +627,11 @@
     "description": "Wide sidebar width label"
   },
   "formula_copied": {
-    "message": "✓ Формула скопирована",
+    "message": "Формула скопирована",
     "description": "Formula copied success message"
   },
   "formula_copy_failed": {
-    "message": "✗ Не удалось скопировать",
+    "message": "Не удалось скопировать",
     "description": "Formula copy failed message"
   },
   "enableFormulaCopy": {
@@ -783,15 +787,15 @@
     "description": "Import file selection prompt"
   },
   "folder_import_success": {
-    "message": "✓ Импортировано папок: {folders}, разговоров: {conversations}",
+    "message": "Импортировано папок: {folders}, разговоров: {conversations}",
     "description": "Import success message"
   },
   "folder_import_success_skipped": {
-    "message": "✓ Импортировано папок: {folders}, разговоров: {conversations} ({skipped} дубликатов пропущено)",
+    "message": "Импортировано папок: {folders}, разговоров: {conversations} ({skipped} дубликатов пропущено)",
     "description": "Import success with skipped message"
   },
   "folder_import_error": {
-    "message": "✗ Ошибка импорта: {error}",
+    "message": "Ошибка импорта: {error}",
     "description": "Import error message"
   },
   "conversation_added_to_folder": {
@@ -819,7 +823,7 @@
     "description": "Shown when folder changes could not be saved"
   },
   "folder_export_success": {
-    "message": "✓ Папки успешно экспортированы",
+    "message": "Папки успешно экспортированы",
     "description": "Export success message"
   },
   "folder_import_invalid_format": {
@@ -867,8 +871,12 @@
     "description": "Export format selection label"
   },
   "export_dialog_warning": {
-    "message": "⚠️ После нажатия на экспорт система автоматически перейдет к первому сообщению для загрузки всего контента. Пожалуйста, не совершайте никаких действий; экспорт продолжится автоматически после перехода.",
+    "message": "После нажатия на экспорт система автоматически перейдет к первому сообщению для загрузки всего контента. Пожалуйста, не совершайте никаких действий; экспорт продолжится автоматически после перехода.",
     "description": "Warning about auto-jump and loading completeness"
+  },
+  "export_format_recommended": {
+    "message": "Рекомендуется",
+    "description": "Tag next to the recommended export format"
   },
   "export_dialog_safari_cmdp_hint": {
     "message": "Совет для Safari: нажмите «Экспорт» ниже, подождите немного, затем нажмите ⌘P и выберите «Сохранить как PDF».",
@@ -978,6 +986,10 @@
     "message": "Закрыть",
     "description": "Aria label for the floating panel close button"
   },
+  "commonClose": {
+    "message": "Закрыть",
+    "description": "Generic accessible name and tooltip for a close (X) button"
+  },
   "floatingPanelEmpty": {
     "message": "Пока нет папок.",
     "description": "Empty state shown when the user has no folders"
@@ -1007,7 +1019,7 @@
     "description": "Notice that defaults are limited to Gemini/AI Studio"
   },
   "folderManager_dataLossWarning": {
-    "message": "⚠️ Внимание: не удалось загрузить данные папок. Ваши папки могут быть повреждены. Пожалуйста, проверьте консоль браузера для получения подробной информации и попробуйте восстановить из резервной копии, если она доступна.",
+    "message": "Внимание: не удалось загрузить данные папок. Ваши папки могут быть повреждены. Пожалуйста, проверьте консоль браузера для получения подробной информации и попробуйте восстановить из резервной копии, если она доступна.",
     "description": "Warning shown when folder data fails to load"
   },
   "folderManager_dataRecovered": {
@@ -1075,15 +1087,15 @@
     "description": "Never backed up"
   },
   "backupSuccess": {
-    "message": "✓ Бэкап создан: {prompts} промптов, {folders} папок, {conversations} разговоров",
+    "message": "Бэкап создан: {prompts} промптов, {folders} папок, {conversations} разговоров",
     "description": "Backup success message"
   },
   "backupError": {
-    "message": "✗ Ошибка бэкапа: {error}",
+    "message": "Ошибка бэкапа: {error}",
     "description": "Backup error message"
   },
   "backupNotSupported": {
-    "message": "⚠️ Авто-бэкап требует современный браузер с поддержкой File System Access API",
+    "message": "Авто-бэкап требует современный браузер с поддержкой File System Access API",
     "description": "Browser not supported message"
   },
   "backupSelectFolderFirst": {
@@ -1095,11 +1107,11 @@
     "description": "User cancelled folder selection"
   },
   "backupConfigSaved": {
-    "message": "✓ Настройки бэкапа сохранены",
+    "message": "Настройки бэкапа сохранены",
     "description": "Config saved message"
   },
   "backupPermissionDenied": {
-    "message": "⚠️ Нет доступа к этой директории. Пожалуйста, выберите другое место (например, Документы, Загрузки или папку на Рабочем столе)",
+    "message": "Нет доступа к этой директории. Пожалуйста, выберите другое место (например, Документы, Загрузки или папку на Рабочем столе)",
     "description": "Permission denied for restricted directory"
   },
   "backupConfigureInOptions": {
@@ -1314,6 +1326,14 @@
     "message": "Модификаторы",
     "description": "Shortcut modifiers label"
   },
+  "shortcutPressKey": {
+    "message": "Нажмите клавишу…",
+    "description": "Shown on a keyboard-shortcut button while it is recording the next key press"
+  },
+  "shortcutEscToCancel": {
+    "message": "Нажмите Esc для отмены",
+    "description": "Shown under the keyboard-shortcut buttons while one is recording a key press"
+  },
   "resetShortcuts": {
     "message": "Сбросить по умолчанию",
     "description": "Reset shortcuts button"
@@ -1431,23 +1451,23 @@
     "description": "Never uploaded message"
   },
   "syncSuccess": {
-    "message": "✓ Синхронизация успешна",
+    "message": "Синхронизация успешна",
     "description": "Sync success message"
   },
   "syncSuccessHighlightsSkipped": {
-    "message": "✓ Синхронизировано; выделения пропущены. Откройте Gemini и повторите попытку",
+    "message": "Синхронизировано; выделения пропущены. Откройте Gemini и повторите попытку",
     "description": "Sync success message when account-scoped highlights were skipped"
   },
   "syncSuccessFoldersMissing": {
-    "message": "✓ Остальные данные синхронизированы; резервная копия папок не найдена",
+    "message": "Остальные данные синхронизированы; резервная копия папок не найдена",
     "description": "Partial sync message when the cloud has no folders payload"
   },
   "syncError": {
-    "message": "✗ Ошибка синхронизации: {error}",
+    "message": "Ошибка синхронизации: {error}",
     "description": "Sync error message"
   },
   "syncRestorePartial": {
-    "message": "✗ Восстановление не завершено. Восстановлено: {restored}. Не восстановлено: {failed} ({error})",
+    "message": "Восстановление не завершено. Восстановлено: {restored}. Не восстановлено: {failed} ({error})",
     "description": "Drive restore stopped partway: which parts were restored and which were not"
   },
   "syncRestoreForks": {
@@ -1471,7 +1491,7 @@
     "description": "Upload in progress message"
   },
   "uploadSuccess": {
-    "message": "✓ Uploaded successfully",
+    "message": "Uploaded successfully",
     "description": "Upload success message"
   },
   "downloadInProgress": {
@@ -1479,7 +1499,7 @@
     "description": "Download in progress message"
   },
   "downloadMergeSuccess": {
-    "message": "✓ Downloaded and merged",
+    "message": "Downloaded and merged",
     "description": "Download and merge success message"
   },
   "syncUpload": {
@@ -1508,10 +1528,10 @@
     "message": "Удаление резервной копии iCloud…"
   },
   "syncDeleteICloudSuccess": {
-    "message": "✓ Удалено файлов iCloud: {count}; локальные данные не изменены"
+    "message": "Удалено файлов iCloud: {count}; локальные данные не изменены"
   },
   "syncDeleteICloudFailed": {
-    "message": "✗ Не удалось удалить резервную копию iCloud: {error}"
+    "message": "Не удалось удалить резервную копию iCloud: {error}"
   },
   "syncMode": {
     "message": "Режим синхронизации",
@@ -1726,7 +1746,7 @@
     "description": "Batch delete progress message"
   },
   "batch_delete_success": {
-    "message": "✓ Удалено {count} разговор(ов)",
+    "message": "Удалено {count} разговор(ов)",
     "description": "Batch delete success message"
   },
   "batch_delete_partial": {
@@ -1772,6 +1792,14 @@
   "enableMermaidRenderingHint": {
     "message": "Автоматически рендерить диаграммы Mermaid в блоках кода",
     "description": "Mermaid rendering feature hint"
+  },
+  "mermaidSyntaxError": {
+    "message": "Ошибка синтаксиса Mermaid",
+    "description": "Title of the card shown in place of a Mermaid diagram whose source fails to parse"
+  },
+  "mermaidErrorHint": {
+    "message": "Нажмите «Код», чтобы посмотреть исходный текст",
+    "description": "Hint under the Mermaid syntax error title; the quoted label matches diagramCodeButton"
   },
   "enableQuoteReply": {
     "message": "Включить ответ с цитированием",
@@ -1953,6 +1981,22 @@
     "message": "Показать Gems",
     "description": "Подсказка для отображения раздела списка Gems"
   },
+  "gemsPinToSidebar": {
+    "message": "Закрепить на боковой панели",
+    "description": "Tooltip on the Gems manager pin button of an unpinned gem: pins it to the sidebar list"
+  },
+  "gemsUnpinFromSidebar": {
+    "message": "Открепить от боковой панели",
+    "description": "Tooltip on the Gems manager pin button of a pinned gem: removes it from the sidebar list"
+  },
+  "gemsPin": {
+    "message": "Закрепить Gem",
+    "description": "Accessible name of the pin button for an unpinned gem"
+  },
+  "gemsUnpin": {
+    "message": "Открепить Gem",
+    "description": "Accessible name of the pin button for a pinned gem"
+  },
   "notebooksHide": {
     "message": "Скрыть Notebooks",
     "description": "Подсказка для скрытия раздела списка Notebooks"
@@ -2006,7 +2050,7 @@
     "description": "Hint text under the default-model auto-apply toggle"
   },
   "defaultModelAutoApplyFailed": {
-    "message": "Модель по умолчанию не удалось применить 3 раза подряд. Возможно, меню Gemini изменилось — вы можете временно отключить эту функцию.",
+    "message": "Модель по умолчанию не удалось применить 3 раза подряд. Возможно, меню Gemini изменилось. Вы можете временно отключить эту функцию.",
     "description": "Toast body when the model locker hits its consecutive-failure threshold"
   },
   "defaultModelAutoApplyFailedAction": {
@@ -2334,7 +2378,7 @@
     "description": "Changelog modal recommendation message"
   },
   "changelog_follow_cta": {
-    "message": "Получайте свежие обновления — подпишитесь на меня в соцсетях, новые релизы и быстрые исправления появляются там первыми.",
+    "message": "Новые функции и исправления сначала появляются здесь.",
     "description": "Changelog modal follow-me CTA headline"
   },
   "changelog_social_xiaohongshu": {
@@ -2346,7 +2390,7 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "Нравится Voyager? Оценка в Chrome Web Store помогает другим пользователям найти расширение!",
+    "message": "Если Voyager вам помогает, оценка в Chrome Web Store поможет другим его найти.",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
@@ -2354,7 +2398,7 @@
     "description": "Chrome Web Store rating CTA button text"
   },
   "changelog_rate_edge": {
-    "message": "Нравится Voyager? Оценка в магазине надстроек Edge помогает другим пользователям найти расширение!",
+    "message": "Если Voyager вам помогает, оценка в магазине надстроек Edge поможет другим его найти.",
     "description": "Edge Add-ons store rating prompt in changelog modal"
   },
   "changelog_rate_edge_cta": {
@@ -2474,11 +2518,11 @@
     "description": "Подтверждение после копирования промпта организации ИИ"
   },
   "aiOrgError": {
-    "message": "Ошибка — сначала откройте Gemini",
+    "message": "Ошибка. Сначала откройте Gemini",
     "description": "Ошибка при копировании промпта организации ИИ"
   },
   "aiOrgNoConversations": {
-    "message": "Чаты не найдены — откройте и прокрутите список чатов, затем повторите попытку",
+    "message": "Чаты не найдены. Откройте и прокрутите список чатов, затем повторите попытку",
     "description": "Текст кнопки, когда не удалось прочитать ни одной беседы для ИИ-организации"
   },
   "aiOrgCopyHint": {
@@ -2866,7 +2910,7 @@
     "description": "Link label to a plugin source/repo"
   },
   "pluginPermissionDenied": {
-    "message": "Доступ к сайту отклонён — плагин не может работать без него.",
+    "message": "Доступ к сайту отклонён. Плагин не может работать без него.",
     "description": "Shown when the user denies the site permission for a plugin"
   },
   "pluginGrantRequiredAccess": {
@@ -2874,7 +2918,7 @@
     "description": "Button that repairs missing optional site access for an enabled plugin"
   },
   "pluginUnsupportedPlatform": {
-    "message": "Не поддерживается в этом браузере — невозможно предоставить доступ к сайту, нужный плагину.",
+    "message": "Не поддерживается в этом браузере. Невозможно предоставить доступ к сайту, нужный плагину.",
     "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
   },
   "chatgptExportCardTitle": {

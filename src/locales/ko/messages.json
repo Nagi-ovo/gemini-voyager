@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Gemini™, Claude™, ChatGPT™, DeepSeek™을 위한 더 나은 작업 공간 — 프롬프트, 읽기 도구, 정리, 내보내기 등을 제공합니다.",
+    "message": "Gemini™, Claude™, ChatGPT™, DeepSeek™을 위한 더 나은 작업 공간. 프롬프트, 읽기 도구, 정리, 내보내기 등을 제공합니다.",
     "description": "Extension description"
   },
   "timelineStyle": {
@@ -82,6 +82,10 @@
   "language": {
     "message": "언어",
     "description": "Language label"
+  },
+  "languageSwitchTo": {
+    "message": "언어 전환: {language}",
+    "description": "Tooltip on the popup's language button; {language} is the target language's native name (e.g. English, 中文)"
   },
   "pm_title": {
     "message": "Voyager",
@@ -291,7 +295,7 @@
     "description": "Backup cancelled hint"
   },
   "pm_backup_error": {
-    "message": "✗ 백업 실패",
+    "message": "백업 실패",
     "description": "Backup failed hint"
   },
   "pm_backup_hint_options": {
@@ -307,7 +311,7 @@
     "description": "Backup step 2"
   },
   "pm_backup_step3": {
-    "message": "\"💾 로컬 백업\" 버튼을 클릭하고 백업 폴더를 선택합니다",
+    "message": "\"로컬 백업\" 버튼을 클릭하고 백업 폴더를 선택합니다",
     "description": "Backup step 3"
   },
   "pm_backup_note": {
@@ -339,7 +343,7 @@
     "description": "Validation shown when saving a prompt with an existing name"
   },
   "pm_name_conflict_badge": {
-    "message": "이름 중복 — / 사용을 위해 이름 변경",
+    "message": "이름 중복. / 사용을 위해 이름 변경",
     "description": "이름 중복으로 / 자동 완성에서 제외된 프롬프트 배지"
   },
   "pm_prompt_manager": {
@@ -407,7 +411,7 @@
     "description": "Alt text for the Fable 5 Verified badge in the popup footer"
   },
   "starProject": {
-    "message": "지원하기 ⭐",
+    "message": "GitHub에서 스타 주기",
     "description": "Github callout"
   },
   "sponsorMe": {
@@ -623,11 +627,11 @@
     "description": "Wide sidebar width label"
   },
   "formula_copied": {
-    "message": "✓ 수식 복사됨",
+    "message": "수식 복사됨",
     "description": "Formula copied success message"
   },
   "formula_copy_failed": {
-    "message": "✗ 복사 실패",
+    "message": "복사 실패",
     "description": "Formula copy failed message"
   },
   "enableFormulaCopy": {
@@ -783,15 +787,15 @@
     "description": "Import file selection prompt"
   },
   "folder_import_success": {
-    "message": "✓ {folders}개의 폴더, {conversations}개의 대화를 가져왔습니다",
+    "message": "{folders}개의 폴더, {conversations}개의 대화를 가져왔습니다",
     "description": "Import success message"
   },
   "folder_import_success_skipped": {
-    "message": "✓ {folders}개의 폴더, {conversations}개의 대화를 가져왔습니다 ({skipped}개의 중복 항목 건너뜀)",
+    "message": "{folders}개의 폴더, {conversations}개의 대화를 가져왔습니다 ({skipped}개의 중복 항목 건너뜀)",
     "description": "Import success with skipped message"
   },
   "folder_import_error": {
-    "message": "✗ 가져오기 실패: {error}",
+    "message": "가져오기 실패: {error}",
     "description": "Import error message"
   },
   "conversation_added_to_folder": {
@@ -819,7 +823,7 @@
     "description": "Shown when folder changes could not be saved"
   },
   "folder_export_success": {
-    "message": "✓ 폴더를 성공적으로 내보냈습니다",
+    "message": "폴더를 성공적으로 내보냈습니다",
     "description": "Export success message"
   },
   "folder_import_invalid_format": {
@@ -867,8 +871,12 @@
     "description": "Export format selection label"
   },
   "export_dialog_warning": {
-    "message": "⚠️ 내보내기를 클릭하면 모든 내용을 불러오기 위해 첫 번째 메시지로 자동 이동합니다. 이동 중에는 조작하지 마십시오. 이동이 완료되면 내보내기가 자동으로 계속됩니다.",
+    "message": "내보내기를 클릭하면 모든 내용을 불러오기 위해 첫 번째 메시지로 자동 이동합니다. 이동 중에는 조작하지 마십시오. 이동이 완료되면 내보내기가 자동으로 계속됩니다.",
     "description": "Warning about auto-jump and loading completeness"
+  },
+  "export_format_recommended": {
+    "message": "추천",
+    "description": "Tag next to the recommended export format"
   },
   "export_dialog_safari_cmdp_hint": {
     "message": "Safari 팁: 아래 '내보내기'를 클릭하고 잠시 기다린 다음, ⌘P 를 누르고 'PDF 로 저장'을 선택하세요.",
@@ -978,6 +986,10 @@
     "message": "닫기",
     "description": "Aria label for the floating panel close button"
   },
+  "commonClose": {
+    "message": "닫기",
+    "description": "Generic accessible name and tooltip for a close (X) button"
+  },
   "floatingPanelEmpty": {
     "message": "아직 폴더가 없습니다.",
     "description": "Empty state shown when the user has no folders"
@@ -1007,7 +1019,7 @@
     "description": "Notice that defaults are limited to Gemini/AI Studio"
   },
   "folderManager_dataLossWarning": {
-    "message": "⚠️ 경고: 폴더 데이터를 로드하지 못했습니다. 폴더가 손상되었을 수 있습니다. 브라우저 콘솔에서 자세한 내용을 확인하고 가능한 경우 백업에서 복원을 시도하십시오.",
+    "message": "경고: 폴더 데이터를 로드하지 못했습니다. 폴더가 손상되었을 수 있습니다. 브라우저 콘솔에서 자세한 내용을 확인하고 가능한 경우 백업에서 복원을 시도하십시오.",
     "description": "Warning shown when folder data fails to load"
   },
   "folderManager_dataRecovered": {
@@ -1075,15 +1087,15 @@
     "description": "Never backed up"
   },
   "backupSuccess": {
-    "message": "✓ 백업 생성됨: {prompts}개의 프롬프트, {folders}개의 폴더, {conversations}개의 대화",
+    "message": "백업 생성됨: {prompts}개의 프롬프트, {folders}개의 폴더, {conversations}개의 대화",
     "description": "Backup success message"
   },
   "backupError": {
-    "message": "✗ 백업 실패: {error}",
+    "message": "백업 실패: {error}",
     "description": "Backup error message"
   },
   "backupNotSupported": {
-    "message": "⚠️ 자동 백업에는 File System Access API 를 지원하는 최신 브라우저가 필요합니다",
+    "message": "자동 백업에는 File System Access API 를 지원하는 최신 브라우저가 필요합니다",
     "description": "Browser not supported message"
   },
   "backupSelectFolderFirst": {
@@ -1095,11 +1107,11 @@
     "description": "User cancelled folder selection"
   },
   "backupConfigSaved": {
-    "message": "✓ 백업 설정 저장됨",
+    "message": "백업 설정 저장됨",
     "description": "Config saved message"
   },
   "backupPermissionDenied": {
-    "message": "⚠️ 이 디렉토리에 액세스할 수 없습니다. 다른 위치를 선택하세요 (예: 문서, 다운로드 또는 바탕 화면의 폴더)",
+    "message": "이 디렉토리에 액세스할 수 없습니다. 다른 위치를 선택하세요 (예: 문서, 다운로드 또는 바탕 화면의 폴더)",
     "description": "Permission denied for restricted directory"
   },
   "backupConfigureInOptions": {
@@ -1314,6 +1326,14 @@
     "message": "수정 키",
     "description": "Shortcut modifiers label"
   },
+  "shortcutPressKey": {
+    "message": "키를 누르세요…",
+    "description": "Shown on a keyboard-shortcut button while it is recording the next key press"
+  },
+  "shortcutEscToCancel": {
+    "message": "취소하려면 Esc를 누르세요",
+    "description": "Shown under the keyboard-shortcut buttons while one is recording a key press"
+  },
   "resetShortcuts": {
     "message": "기본값으로 초기화",
     "description": "Reset shortcuts button"
@@ -1431,23 +1451,23 @@
     "description": "Never uploaded message"
   },
   "syncSuccess": {
-    "message": "✓ 성공적으로 동기화되었습니다",
+    "message": "성공적으로 동기화되었습니다",
     "description": "Sync success message"
   },
   "syncSuccessHighlightsSkipped": {
-    "message": "✓ 동기화됨. 하이라이트는 건너뜀 — Gemini를 열고 다시 시도하세요",
+    "message": "동기화됨. 하이라이트는 건너뜀. Gemini를 열고 다시 시도하세요",
     "description": "Sync success message when account-scoped highlights were skipped"
   },
   "syncSuccessFoldersMissing": {
-    "message": "✓ 다른 데이터는 동기화되었습니다. 폴더 백업을 찾지 못했습니다",
+    "message": "다른 데이터는 동기화되었습니다. 폴더 백업을 찾지 못했습니다",
     "description": "Partial sync message when the cloud has no folders payload"
   },
   "syncError": {
-    "message": "✗ 동기화 실패: {error}",
+    "message": "동기화 실패: {error}",
     "description": "Sync error message"
   },
   "syncRestorePartial": {
-    "message": "✗ 복원이 완료되지 않았습니다. 복원됨: {restored}. 복원되지 않음: {failed} ({error})",
+    "message": "복원이 완료되지 않았습니다. 복원됨: {restored}. 복원되지 않음: {failed} ({error})",
     "description": "Drive restore stopped partway: which parts were restored and which were not"
   },
   "syncRestoreForks": {
@@ -1471,7 +1491,7 @@
     "description": "Upload in progress message"
   },
   "uploadSuccess": {
-    "message": "✓ Uploaded successfully",
+    "message": "Uploaded successfully",
     "description": "Upload success message"
   },
   "downloadInProgress": {
@@ -1479,7 +1499,7 @@
     "description": "Download in progress message"
   },
   "downloadMergeSuccess": {
-    "message": "✓ Downloaded and merged",
+    "message": "Downloaded and merged",
     "description": "Download and merge success message"
   },
   "syncUpload": {
@@ -1508,10 +1528,10 @@
     "message": "iCloud 백업 삭제 중…"
   },
   "syncDeleteICloudSuccess": {
-    "message": "✓ iCloud 백업 파일 {count}개를 삭제했습니다. 로컬 데이터는 그대로입니다"
+    "message": "iCloud 백업 파일 {count}개를 삭제했습니다. 로컬 데이터는 그대로입니다"
   },
   "syncDeleteICloudFailed": {
-    "message": "✗ iCloud 백업을 삭제하지 못했습니다: {error}"
+    "message": "iCloud 백업을 삭제하지 못했습니다: {error}"
   },
   "syncMode": {
     "message": "동기화 모드",
@@ -1726,7 +1746,7 @@
     "description": "Batch delete progress message"
   },
   "batch_delete_success": {
-    "message": "✓ {count}개의 대화를 삭제했습니다",
+    "message": "{count}개의 대화를 삭제했습니다",
     "description": "Batch delete success message"
   },
   "batch_delete_partial": {
@@ -1772,6 +1792,14 @@
   "enableMermaidRenderingHint": {
     "message": "코드 블록에서 Mermaid 다이어그램을 자동으로 렌더링합니다",
     "description": "Mermaid rendering feature hint"
+  },
+  "mermaidSyntaxError": {
+    "message": "Mermaid 구문 오류",
+    "description": "Title of the card shown in place of a Mermaid diagram whose source fails to parse"
+  },
+  "mermaidErrorHint": {
+    "message": "\"코드\"를 클릭하면 소스를 볼 수 있습니다",
+    "description": "Hint under the Mermaid syntax error title; the quoted label matches diagramCodeButton"
   },
   "enableQuoteReply": {
     "message": "인용 답장 활성화",
@@ -1952,6 +1980,22 @@
   "gemsShow": {
     "message": "Gem 표시",
     "description": "Tooltip for showing Gems list section"
+  },
+  "gemsPinToSidebar": {
+    "message": "사이드바에 고정",
+    "description": "Tooltip on the Gems manager pin button of an unpinned gem: pins it to the sidebar list"
+  },
+  "gemsUnpinFromSidebar": {
+    "message": "사이드바 고정 해제",
+    "description": "Tooltip on the Gems manager pin button of a pinned gem: removes it from the sidebar list"
+  },
+  "gemsPin": {
+    "message": "Gem 고정",
+    "description": "Accessible name of the pin button for an unpinned gem"
+  },
+  "gemsUnpin": {
+    "message": "Gem 고정 해제",
+    "description": "Accessible name of the pin button for a pinned gem"
   },
   "notebooksHide": {
     "message": "노트북 숨기기",
@@ -2330,11 +2374,11 @@
     "description": "Changelog modal documentation link text"
   },
   "changelog_recommendation": {
-    "message": "Voyager 가 도움이 되셨다면, 친구나 SNS 에서 공유해 주세요 — 개발자를 태그해 주시면 큰 힘이 됩니다!",
+    "message": "Voyager 가 도움이 되셨다면, 친구나 SNS 에서 공유해 주세요. 개발자를 태그해 주시면 큰 힘이 됩니다!",
     "description": "Changelog modal recommendation message"
   },
   "changelog_follow_cta": {
-    "message": "최신 업데이트를 받아보세요 — 새 릴리스와 즉시 수정 소식은 SNS에서 가장 먼저 알려드립니다. 팔로우해 주세요!",
+    "message": "새 기능과 수정 사항은 이곳에서 가장 먼저 알려드립니다.",
     "description": "Changelog modal follow-me CTA headline"
   },
   "changelog_social_xiaohongshu": {
@@ -2346,19 +2390,19 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "Voyager가 마음에 드시나요? Chrome 웹 스토어에 평점을 남겨 더 많은 분들이 발견할 수 있게 해주세요!",
+    "message": "Voyager가 도움이 되었다면 Chrome 웹 스토어에 평점을 남겨 주세요. 다른 분들이 찾는 데 도움이 됩니다.",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
-    "message": "평점 주기",
+    "message": "평가하기",
     "description": "Chrome Web Store rating CTA button text"
   },
   "changelog_rate_edge": {
-    "message": "Voyager가 마음에 드시나요? Edge 부가 기능 스토어에 평점을 남겨 더 많은 분들이 발견할 수 있게 해주세요!",
+    "message": "Voyager가 도움이 되었다면 Edge 부가 기능 스토어에 평점을 남겨 주세요. 다른 분들이 찾는 데 도움이 됩니다.",
     "description": "Edge Add-ons store rating prompt in changelog modal"
   },
   "changelog_rate_edge_cta": {
-    "message": "평점 주기",
+    "message": "평가하기",
     "description": "Edge Add-ons store rating CTA button text"
   },
   "changelog_badge_mode": {
@@ -2474,11 +2518,11 @@
     "description": "AI 정리 프롬프트 복사 후 확인"
   },
   "aiOrgError": {
-    "message": "실패 — 먼저 Gemini를 열어주세요",
+    "message": "실패했습니다. 먼저 Gemini를 열어주세요",
     "description": "AI 정리 프롬프트 복사 실패 시 에러"
   },
   "aiOrgNoConversations": {
-    "message": "대화를 찾을 수 없습니다 — 채팅 목록을 열고 스크롤한 후 다시 시도하세요",
+    "message": "대화를 찾을 수 없습니다. 채팅 목록을 열고 스크롤한 후 다시 시도하세요",
     "description": "AI 정리에서 대화를 읽지 못했을 때 표시되는 버튼 텍스트"
   },
   "aiOrgCopyHint": {

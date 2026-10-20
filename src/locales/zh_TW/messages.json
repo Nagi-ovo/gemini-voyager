@@ -83,6 +83,10 @@
     "message": "語言",
     "description": "語言標籤"
   },
+  "languageSwitchTo": {
+    "message": "切換為 {language}",
+    "description": "Tooltip on the popup's language button; {language} is the target language's native name (e.g. English, 中文)"
+  },
   "pm_title": {
     "message": "Voyager",
     "description": "面板標題"
@@ -291,7 +295,7 @@
     "description": "備份取消提示"
   },
   "pm_backup_error": {
-    "message": "✗ 備份失敗",
+    "message": "備份失敗",
     "description": "備份失敗提示"
   },
   "pm_backup_hint_options": {
@@ -307,7 +311,7 @@
     "description": "備份步驟 2"
   },
   "pm_backup_step3": {
-    "message": "點擊 \"💾 本機備份\" 按鈕，選擇備份資料夾",
+    "message": "點擊 \"本機備份\" 按鈕，選擇備份資料夾",
     "description": "備份步驟 3"
   },
   "pm_backup_note": {
@@ -339,7 +343,7 @@
     "description": "Validation shown when saving a prompt with an existing name"
   },
   "pm_name_conflict_badge": {
-    "message": "名稱重複——重新命名後可使用 /",
+    "message": "名稱重複，重新命名後可使用 /",
     "description": "名稱重複而無法使用 / 快速插入時顯示的標記"
   },
   "pm_prompt_manager": {
@@ -407,7 +411,7 @@
     "description": "Alt text for the Fable 5 Verified badge in the popup footer"
   },
   "starProject": {
-    "message": "為專案點亮 ⭐️",
+    "message": "在 GitHub 上給 Star",
     "description": "Github 引導"
   },
   "sponsorMe": {
@@ -583,11 +587,11 @@
     "description": "側邊欄變寬標籤"
   },
   "formula_copied": {
-    "message": "✓ 公式已複製",
+    "message": "公式已複製",
     "description": "公式複製成功訊息"
   },
   "formula_copy_failed": {
-    "message": "✗ 複製失敗",
+    "message": "複製失敗",
     "description": "公式複製失敗訊息"
   },
   "enableFormulaCopy": {
@@ -743,15 +747,15 @@
     "description": "匯入檔案選擇提示"
   },
   "folder_import_success": {
-    "message": "✓ 已匯入 {folders} 個資料夾，{conversations} 個對話",
+    "message": "已匯入 {folders} 個資料夾，{conversations} 個對話",
     "description": "匯入成功訊息"
   },
   "folder_import_success_skipped": {
-    "message": "✓ 已匯入 {folders} 個資料夾，{conversations} 個對話（略過 {skipped} 個重複項）",
+    "message": "已匯入 {folders} 個資料夾，{conversations} 個對話（略過 {skipped} 個重複項）",
     "description": "匯入成功並略過重複項訊息"
   },
   "folder_import_error": {
-    "message": "✗ 匯入失敗：{error}",
+    "message": "匯入失敗：{error}",
     "description": "匯入錯誤訊息"
   },
   "conversation_added_to_folder": {
@@ -779,7 +783,7 @@
     "description": "資料夾變更儲存失敗時顯示的提示"
   },
   "folder_export_success": {
-    "message": "✓ 資料夾匯出成功",
+    "message": "資料夾匯出成功",
     "description": "匯出成功訊息"
   },
   "folder_import_invalid_format": {
@@ -827,8 +831,12 @@
     "description": "匯出格式選擇標籤"
   },
   "export_dialog_warning": {
-    "message": "⚠️ 點擊匯出後，系統將自動跳轉至首則訊息以載入完整內容。在此期間請勿操作，跳轉完成後將自動繼續匯出。",
+    "message": "點擊匯出後，系統將自動跳轉至首則訊息以載入完整內容。在此期間請勿操作，跳轉完成後將自動繼續匯出。",
     "description": "關於內容完整性和自動跳轉的提示"
+  },
+  "export_format_recommended": {
+    "message": "推薦",
+    "description": "Tag next to the recommended export format"
   },
   "export_dialog_safari_cmdp_hint": {
     "message": "Safari 提示：請先點選下方「匯出」按鈕，稍等片刻，再按 ⌘P 選擇「儲存為 PDF」。",
@@ -938,6 +946,10 @@
     "message": "關閉",
     "description": "Aria label for the floating panel close button"
   },
+  "commonClose": {
+    "message": "關閉",
+    "description": "Generic accessible name and tooltip for a close (X) button"
+  },
   "floatingPanelEmpty": {
     "message": "尚無資料夾。",
     "description": "Empty state shown when the user has no folders"
@@ -967,7 +979,7 @@
     "description": "提示預設範圍為 Gemini/AI Studio"
   },
   "folderManager_dataLossWarning": {
-    "message": "⚠️ 警告：無法載入資料夾資料。您的資料夾可能已損壞。請檢查瀏覽器主控台以取得詳細資訊，並在可用時嘗試從備份還原。",
+    "message": "警告：無法載入資料夾資料。您的資料夾可能已損壞。請檢查瀏覽器主控台以取得詳細資訊，並在可用時嘗試從備份還原。",
     "description": "資料夾資料載入失敗時顯示的警告"
   },
   "folderManager_dataRecovered": {
@@ -1035,15 +1047,15 @@
     "description": "從未備份過"
   },
   "backupSuccess": {
-    "message": "✓ 備份建立成功：{prompts} 個提示詞、{folders} 個資料夾、{conversations} 個對話",
+    "message": "備份建立成功：{prompts} 個提示詞、{folders} 個資料夾、{conversations} 個對話",
     "description": "備份成功訊息"
   },
   "backupError": {
-    "message": "✗ 備份失敗：{error}",
+    "message": "備份失敗：{error}",
     "description": "備份錯誤訊息"
   },
   "backupNotSupported": {
-    "message": "⚠️ 自動備份需要支援檔案系統存取 API 的現代瀏覽器",
+    "message": "自動備份需要支援檔案系統存取 API 的現代瀏覽器",
     "description": "瀏覽器不支援訊息"
   },
   "backupSelectFolderFirst": {
@@ -1055,11 +1067,11 @@
     "description": "使用者取消資料夾選擇"
   },
   "backupConfigSaved": {
-    "message": "✓ 備份設定已儲存",
+    "message": "備份設定已儲存",
     "description": "設定儲存訊息"
   },
   "backupPermissionDenied": {
-    "message": "⚠️ 無法存取此目錄。請選擇其他位置（例如：文件、下載，或桌面中的自訂資料夾）",
+    "message": "無法存取此目錄。請選擇其他位置（例如：文件、下載，或桌面中的自訂資料夾）",
     "description": "受限目錄權限被拒絕"
   },
   "backupConfigureInOptions": {
@@ -1274,6 +1286,14 @@
     "message": "修飾鍵",
     "description": "快速鍵修飾鍵標籤"
   },
+  "shortcutPressKey": {
+    "message": "請按下按鍵…",
+    "description": "Shown on a keyboard-shortcut button while it is recording the next key press"
+  },
+  "shortcutEscToCancel": {
+    "message": "按 Esc 取消",
+    "description": "Shown under the keyboard-shortcut buttons while one is recording a key press"
+  },
   "resetShortcuts": {
     "message": "恢復預設",
     "description": "重設快速鍵按鈕"
@@ -1391,23 +1411,23 @@
     "description": "從未上傳訊息"
   },
   "syncSuccess": {
-    "message": "✓ 同步成功",
+    "message": "同步成功",
     "description": "同步成功訊息"
   },
   "syncSuccessHighlightsSkipped": {
-    "message": "✓ 已同步；已略過醒目提示，請開啟 Gemini 後重試",
+    "message": "已同步；已略過醒目提示，請開啟 Gemini 後重試",
     "description": "因無法識別帳號而略過醒目提示時的同步成功訊息"
   },
   "syncSuccessFoldersMissing": {
-    "message": "✓ 其他資料已同步；雲端沒有資料夾備份",
+    "message": "其他資料已同步；雲端沒有資料夾備份",
     "description": "雲端沒有資料夾資料時的部分同步提示"
   },
   "syncError": {
-    "message": "✗ 同步失敗：{error}",
+    "message": "同步失敗：{error}",
     "description": "同步錯誤訊息"
   },
   "syncRestorePartial": {
-    "message": "✗ 還原未完成。已還原：{restored}。未還原：{failed}（{error}）",
+    "message": "還原未完成。已還原：{restored}。未還原：{failed}（{error}）",
     "description": "Drive restore stopped partway: which parts were restored and which were not"
   },
   "syncRestoreForks": {
@@ -1431,7 +1451,7 @@
     "description": "上傳進行中訊息"
   },
   "uploadSuccess": {
-    "message": "✓ 上傳成功",
+    "message": "上傳成功",
     "description": "上傳成功訊息"
   },
   "downloadInProgress": {
@@ -1439,7 +1459,7 @@
     "description": "下載進行中訊息"
   },
   "downloadMergeSuccess": {
-    "message": "✓ 下載合併成功",
+    "message": "下載合併成功",
     "description": "下載合併成功訊息"
   },
   "syncUpload": {
@@ -1468,10 +1488,10 @@
     "message": "正在刪除 iCloud 備份…"
   },
   "syncDeleteICloudSuccess": {
-    "message": "✓ 已刪除 {count} 個 iCloud 備份檔案，本機資料未變更"
+    "message": "已刪除 {count} 個 iCloud 備份檔案，本機資料未變更"
   },
   "syncDeleteICloudFailed": {
-    "message": "✗ 無法刪除 iCloud 備份：{error}"
+    "message": "無法刪除 iCloud 備份：{error}"
   },
   "syncMode": {
     "message": "同步模式",
@@ -1686,7 +1706,7 @@
     "description": "批次刪除進度訊息"
   },
   "batch_delete_success": {
-    "message": "✓ 已刪除 {count} 個對話",
+    "message": "已刪除 {count} 個對話",
     "description": "批次刪除成功訊息"
   },
   "batch_delete_partial": {
@@ -1732,6 +1752,14 @@
   "enableMermaidRenderingHint": {
     "message": "自動將程式碼區塊中的 Mermaid 程式碼轉譯為圖表",
     "description": "Mermaid 轉譯功能提示"
+  },
+  "mermaidSyntaxError": {
+    "message": "Mermaid 語法錯誤",
+    "description": "Title of the card shown in place of a Mermaid diagram whose source fails to parse"
+  },
+  "mermaidErrorHint": {
+    "message": "點「程式碼」查看原始碼",
+    "description": "Hint under the Mermaid syntax error title; the quoted label matches diagramCodeButton"
   },
   "enableQuoteReply": {
     "message": "啟用引用回覆",
@@ -1952,6 +1980,22 @@
   "gemsShow": {
     "message": "顯示 Gems",
     "description": "顯示 Gems 列表區域的提示"
+  },
+  "gemsPinToSidebar": {
+    "message": "固定到側邊欄",
+    "description": "Tooltip on the Gems manager pin button of an unpinned gem: pins it to the sidebar list"
+  },
+  "gemsUnpinFromSidebar": {
+    "message": "從側邊欄取消固定",
+    "description": "Tooltip on the Gems manager pin button of a pinned gem: removes it from the sidebar list"
+  },
+  "gemsPin": {
+    "message": "固定 Gem",
+    "description": "Accessible name of the pin button for an unpinned gem"
+  },
+  "gemsUnpin": {
+    "message": "取消固定 Gem",
+    "description": "Accessible name of the pin button for a pinned gem"
   },
   "notebooksHide": {
     "message": "隱藏筆記本",
@@ -2334,7 +2378,7 @@
     "description": "Changelog modal recommendation message"
   },
   "changelog_follow_cta": {
-    "message": "獲取最新更新，歡迎追蹤我的社群媒體，新功能與即時修復都會在這裡第一時間發布。",
+    "message": "新功能和修正會先在這些地方發布。",
     "description": "Changelog modal follow-me CTA headline"
   },
   "changelog_social_xiaohongshu": {
@@ -2346,19 +2390,19 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "覺得 Voyager 好用嗎？在 Chrome 線上應用程式商店給個好評，幫助更多人發現它！",
+    "message": "如果 Voyager 對你有幫助，在 Chrome 線上應用程式商店留個評分，可以讓更多人找到它。",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
-    "message": "立即評分",
+    "message": "評分",
     "description": "Chrome Web Store rating CTA button text"
   },
   "changelog_rate_edge": {
-    "message": "覺得 Voyager 好用嗎？在 Edge 附加元件商店給個好評，幫助更多人發現它！",
+    "message": "如果 Voyager 對你有幫助，在 Edge 附加元件商店留個評分，可以讓更多人找到它。",
     "description": "Edge Add-ons store rating prompt in changelog modal"
   },
   "changelog_rate_edge_cta": {
-    "message": "立即評分",
+    "message": "評分",
     "description": "Edge Add-ons store rating CTA button text"
   },
   "changelog_badge_mode": {
@@ -2474,11 +2518,11 @@
     "description": "複製 AI 整理提示後的確認"
   },
   "aiOrgError": {
-    "message": "失敗 — 請先開啟 Gemini",
+    "message": "失敗，請先開啟 Gemini",
     "description": "複製 AI 整理提示失敗時的錯誤"
   },
   "aiOrgNoConversations": {
-    "message": "找不到對話 — 請展開並捲動聊天清單後重試",
+    "message": "找不到對話，請展開並捲動聊天清單後重試",
     "description": "AI 整理未能讀取到任何對話時的按鈕文字"
   },
   "aiOrgCopyHint": {
@@ -2874,7 +2918,7 @@
     "description": "Button that repairs missing optional site access for an enabled plugin"
   },
   "pluginUnsupportedPlatform": {
-    "message": "此瀏覽器不支援——無法授予此外掛所需的網站權限。",
+    "message": "此瀏覽器不支援，無法授予此外掛所需的網站權限。",
     "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
   },
   "chatgptExportCardTitle": {
@@ -3254,7 +3298,7 @@
     "description": "Label for the switch that allows online plugin update checks for this site"
   },
   "pluginsOnlineUpdatesHint": {
-    "message": "會向 voyager.nagi.fun 查詢此網站的外掛更新——只傳送網站名稱，不傳送 Cookie 或頁面內容。關閉後，只有上方的重新整理按鈕會連線。",
+    "message": "會向 voyager.nagi.fun 查詢此網站的外掛更新。只傳送網站名稱，不傳送 Cookie 或頁面內容。關閉後，只有上方的重新整理按鈕會連線。",
     "description": "Explains what the online plugin update check sends and when it runs"
   },
   "pluginsCheckInterval": {

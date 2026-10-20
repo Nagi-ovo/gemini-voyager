@@ -83,6 +83,10 @@
     "message": "اللغة",
     "description": "Language label"
   },
+  "languageSwitchTo": {
+    "message": "التبديل إلى {language}",
+    "description": "Tooltip on the popup's language button; {language} is the target language's native name (e.g. English, 中文)"
+  },
   "pm_title": {
     "message": "Voyager",
     "description": "Prompt Manager title"
@@ -291,7 +295,7 @@
     "description": "Backup cancelled hint"
   },
   "pm_backup_error": {
-    "message": "✗ فشل النسخ الاحتياطي",
+    "message": "فشل النسخ الاحتياطي",
     "description": "Backup failed hint"
   },
   "pm_backup_hint_options": {
@@ -307,7 +311,7 @@
     "description": "Backup step 2"
   },
   "pm_backup_step3": {
-    "message": "انقر فوق زر \"💾 نسخ احتياطي محلي\" وحدد مجلد النسخ الاحتياطي",
+    "message": "انقر فوق زر \"نسخ احتياطي محلي\" وحدد مجلد النسخ الاحتياطي",
     "description": "Backup step 3"
   },
   "pm_backup_note": {
@@ -339,7 +343,7 @@
     "description": "Validation shown when saving a prompt with an existing name"
   },
   "pm_name_conflict_badge": {
-    "message": "اسم مكرر — أعد التسمية لاستخدام /",
+    "message": "اسم مكرر. أعد التسمية لاستخدام /",
     "description": "شارة للمطالبات المستبعدة من الإكمال عبر / بسبب تكرار الاسم"
   },
   "pm_prompt_manager": {
@@ -407,7 +411,7 @@
     "description": "Alt text for the Fable 5 Verified badge in the popup footer"
   },
   "starProject": {
-    "message": "ادعمني ⭐",
+    "message": "أضف نجمة على GitHub",
     "description": "Github callout"
   },
   "sponsorMe": {
@@ -623,11 +627,11 @@
     "description": "Wide sidebar width label"
   },
   "formula_copied": {
-    "message": "✓ تم نسخ الصيغة",
+    "message": "تم نسخ الصيغة",
     "description": "Formula copied success message"
   },
   "formula_copy_failed": {
-    "message": "✗ فشل النسخ",
+    "message": "فشل النسخ",
     "description": "Formula copy failed message"
   },
   "enableFormulaCopy": {
@@ -783,15 +787,15 @@
     "description": "Import file selection prompt"
   },
   "folder_import_success": {
-    "message": "✓ تم استيراد {folders} مجلد، و {conversations} محادثة",
+    "message": "تم استيراد {folders} مجلد، و {conversations} محادثة",
     "description": "Import success message"
   },
   "folder_import_success_skipped": {
-    "message": "✓ تم استيراد {folders} مجلد، و {conversations} محادثة (تم تخطي {skipped} مكرر)",
+    "message": "تم استيراد {folders} مجلد، و {conversations} محادثة (تم تخطي {skipped} مكرر)",
     "description": "Import success with skipped message"
   },
   "folder_import_error": {
-    "message": "✗ فشل الاستيراد: {error}",
+    "message": "فشل الاستيراد: {error}",
     "description": "Import error message"
   },
   "conversation_added_to_folder": {
@@ -819,7 +823,7 @@
     "description": "Shown when folder changes could not be saved"
   },
   "folder_export_success": {
-    "message": "✓ تم تصدير المجلدات بنجاح",
+    "message": "تم تصدير المجلدات بنجاح",
     "description": "Export success message"
   },
   "folder_import_invalid_format": {
@@ -867,8 +871,12 @@
     "description": "Export format selection label"
   },
   "export_dialog_warning": {
-    "message": "⚠️ بعد النقر على تصدير، سيقفز النظام تلقائياً إلى الرسالة الأولى لتحميل المحتوى بالكامل. يرجى عدم إجراء أي عمليات؛ سيستمر التصدير تلقائياً بعد القفز.",
+    "message": "بعد النقر على تصدير، سيقفز النظام تلقائياً إلى الرسالة الأولى لتحميل المحتوى بالكامل. يرجى عدم إجراء أي عمليات؛ سيستمر التصدير تلقائياً بعد القفز.",
     "description": "Warning about auto-jump and loading completeness"
+  },
+  "export_format_recommended": {
+    "message": "موصى به",
+    "description": "Tag next to the recommended export format"
   },
   "export_dialog_safari_cmdp_hint": {
     "message": "نصيحة Safari: انقر فوق 'تصدير' أدناه، وانتظر لحظة، ثم اضغط على ⌘P واختر 'حفظ بتنسيق PDF'.",
@@ -978,6 +986,10 @@
     "message": "إغلاق",
     "description": "Aria label for the floating panel close button"
   },
+  "commonClose": {
+    "message": "إغلاق",
+    "description": "Generic accessible name and tooltip for a close (X) button"
+  },
   "floatingPanelEmpty": {
     "message": "لا توجد مجلدات بعد.",
     "description": "Empty state shown when the user has no folders"
@@ -1007,7 +1019,7 @@
     "description": "Notice that defaults are limited to Gemini/AI Studio"
   },
   "folderManager_dataLossWarning": {
-    "message": "⚠️ تحذير: فشل تحميل بيانات المجلد. ربما تكون مجلداتك تالفة. يرجى التحقق من وحدة تحكم المتصفح للحصول على التفاصيل ومحاولة الاستعادة من النسخة الاحتياطية إذا كانت متوفرة.",
+    "message": "تحذير: فشل تحميل بيانات المجلد. ربما تكون مجلداتك تالفة. يرجى التحقق من وحدة تحكم المتصفح للحصول على التفاصيل ومحاولة الاستعادة من النسخة الاحتياطية إذا كانت متوفرة.",
     "description": "Warning shown when folder data fails to load"
   },
   "folderManager_dataRecovered": {
@@ -1075,15 +1087,15 @@
     "description": "Never backed up"
   },
   "backupSuccess": {
-    "message": "✓ تم إنشاء النسخ الاحتياطي: {prompts} مطالبة، {folders} مجلد، {conversations} محادثة",
+    "message": "تم إنشاء النسخ الاحتياطي: {prompts} مطالبة، {folders} مجلد، {conversations} محادثة",
     "description": "Backup success message"
   },
   "backupError": {
-    "message": "✗ فشل النسخ الاحتياطي: {error}",
+    "message": "فشل النسخ الاحتياطي: {error}",
     "description": "Backup error message"
   },
   "backupNotSupported": {
-    "message": "⚠️ يتطلب النسخ الاحتياطي التلقائي متصفحًا حديثًا يدعم File System Access API",
+    "message": "يتطلب النسخ الاحتياطي التلقائي متصفحًا حديثًا يدعم File System Access API",
     "description": "Browser not supported message"
   },
   "backupSelectFolderFirst": {
@@ -1095,11 +1107,11 @@
     "description": "User cancelled folder selection"
   },
   "backupConfigSaved": {
-    "message": "✓ تم حفظ إعدادات النسخ الاحتياطي",
+    "message": "تم حفظ إعدادات النسخ الاحتياطي",
     "description": "Config saved message"
   },
   "backupPermissionDenied": {
-    "message": "⚠️ لا يمكن الوصول إلى هذا الدليل. يرجى اختيار موقع مختلف (مثل المستندات أو التنزيلات أو مجلد في سطح المكتب)",
+    "message": "لا يمكن الوصول إلى هذا الدليل. يرجى اختيار موقع مختلف (مثل المستندات أو التنزيلات أو مجلد في سطح المكتب)",
     "description": "Permission denied for restricted directory"
   },
   "backupConfigureInOptions": {
@@ -1314,6 +1326,14 @@
     "message": "معدّلات",
     "description": "Shortcut modifiers label"
   },
+  "shortcutPressKey": {
+    "message": "اضغط على مفتاح…",
+    "description": "Shown on a keyboard-shortcut button while it is recording the next key press"
+  },
+  "shortcutEscToCancel": {
+    "message": "اضغط Esc للإلغاء",
+    "description": "Shown under the keyboard-shortcut buttons while one is recording a key press"
+  },
   "resetShortcuts": {
     "message": "إعادة التعيين إلى الافتراضيات",
     "description": "Reset shortcuts button"
@@ -1431,23 +1451,23 @@
     "description": "Never uploaded message"
   },
   "syncSuccess": {
-    "message": "✓ تمت المزامنة بنجاح",
+    "message": "تمت المزامنة بنجاح",
     "description": "Sync success message"
   },
   "syncSuccessHighlightsSkipped": {
-    "message": "✓ تمت المزامنة؛ تم تخطي التمييزات. افتح Gemini وحاول مرة أخرى",
+    "message": "تمت المزامنة؛ تم تخطي التمييزات. افتح Gemini وحاول مرة أخرى",
     "description": "Sync success message when account-scoped highlights were skipped"
   },
   "syncSuccessFoldersMissing": {
-    "message": "✓ تمت مزامنة البيانات الأخرى؛ لم يتم العثور على نسخة احتياطية للمجلدات",
+    "message": "تمت مزامنة البيانات الأخرى؛ لم يتم العثور على نسخة احتياطية للمجلدات",
     "description": "Partial sync message when the cloud has no folders payload"
   },
   "syncError": {
-    "message": "✗ فشلت المزامنة: {error}",
+    "message": "فشلت المزامنة: {error}",
     "description": "Sync error message"
   },
   "syncRestorePartial": {
-    "message": "✗ لم تكتمل الاستعادة. تمت استعادة: {restored}. لم تتم استعادة: {failed} ({error})",
+    "message": "لم تكتمل الاستعادة. تمت استعادة: {restored}. لم تتم استعادة: {failed} ({error})",
     "description": "Drive restore stopped partway: which parts were restored and which were not"
   },
   "syncRestoreForks": {
@@ -1471,7 +1491,7 @@
     "description": "Upload in progress message"
   },
   "uploadSuccess": {
-    "message": "✓ Uploaded successfully",
+    "message": "Uploaded successfully",
     "description": "Upload success message"
   },
   "downloadInProgress": {
@@ -1479,7 +1499,7 @@
     "description": "Download in progress message"
   },
   "downloadMergeSuccess": {
-    "message": "✓ Downloaded and merged",
+    "message": "Downloaded and merged",
     "description": "Download and merge success message"
   },
   "syncUpload": {
@@ -1508,10 +1528,10 @@
     "message": "جارٍ حذف نسخة iCloud الاحتياطية…"
   },
   "syncDeleteICloudSuccess": {
-    "message": "✓ تم حذف {count} من ملفات iCloud الاحتياطية؛ لم تتغير البيانات المحلية"
+    "message": "تم حذف {count} من ملفات iCloud الاحتياطية؛ لم تتغير البيانات المحلية"
   },
   "syncDeleteICloudFailed": {
-    "message": "✗ تعذر حذف نسخة iCloud الاحتياطية: {error}"
+    "message": "تعذر حذف نسخة iCloud الاحتياطية: {error}"
   },
   "syncMode": {
     "message": "وضع المزامنة",
@@ -1726,7 +1746,7 @@
     "description": "Batch delete progress message"
   },
   "batch_delete_success": {
-    "message": "✓ تم حذف {count} محادثة",
+    "message": "تم حذف {count} محادثة",
     "description": "Batch delete success message"
   },
   "batch_delete_partial": {
@@ -1772,6 +1792,14 @@
   "enableMermaidRenderingHint": {
     "message": "عرض مخططات Mermaid تلقائيًا في كتل التعليمات البرمجية",
     "description": "Mermaid rendering feature hint"
+  },
+  "mermaidSyntaxError": {
+    "message": "خطأ في صياغة Mermaid",
+    "description": "Title of the card shown in place of a Mermaid diagram whose source fails to parse"
+  },
+  "mermaidErrorHint": {
+    "message": "انقر على «الكود» لعرض المصدر",
+    "description": "Hint under the Mermaid syntax error title; the quoted label matches diagramCodeButton"
   },
   "enableQuoteReply": {
     "message": "تمكين الرد بالاقتباس",
@@ -1953,6 +1981,22 @@
     "message": "إظهار Gems",
     "description": "تلميح لإظهار قسم قائمة Gems"
   },
+  "gemsPinToSidebar": {
+    "message": "تثبيت في الشريط الجانبي",
+    "description": "Tooltip on the Gems manager pin button of an unpinned gem: pins it to the sidebar list"
+  },
+  "gemsUnpinFromSidebar": {
+    "message": "إلغاء التثبيت من الشريط الجانبي",
+    "description": "Tooltip on the Gems manager pin button of a pinned gem: removes it from the sidebar list"
+  },
+  "gemsPin": {
+    "message": "تثبيت Gem",
+    "description": "Accessible name of the pin button for an unpinned gem"
+  },
+  "gemsUnpin": {
+    "message": "إلغاء تثبيت Gem",
+    "description": "Accessible name of the pin button for a pinned gem"
+  },
   "notebooksHide": {
     "message": "إخفاء دفاتر الملاحظات",
     "description": "تلميح لإخفاء قسم قائمة دفاتر الملاحظات"
@@ -2006,7 +2050,7 @@
     "description": "Hint text under the default-model auto-apply toggle"
   },
   "defaultModelAutoApplyFailed": {
-    "message": "فشل تطبيق النموذج الافتراضي تلقائيًا 3 مرات متتالية. ربما تغيّرت قائمة Gemini — يمكنك إيقاف هذه الميزة في الوقت الحالي.",
+    "message": "فشل تطبيق النموذج الافتراضي تلقائيًا 3 مرات متتالية. ربما تغيّرت قائمة Gemini. يمكنك إيقاف هذه الميزة في الوقت الحالي.",
     "description": "Toast body when the model locker hits its consecutive-failure threshold"
   },
   "defaultModelAutoApplyFailedAction": {
@@ -2334,7 +2378,7 @@
     "description": "Changelog modal recommendation message"
   },
   "changelog_follow_cta": {
-    "message": "اطّلِع على آخر التحديثات — تابعني عبر وسائل التواصل الاجتماعي للاطلاع على الإصدارات الجديدة والإصلاحات السريعة.",
+    "message": "تُعلَن الميزات الجديدة والإصلاحات هنا أولاً.",
     "description": "Changelog modal follow-me CTA headline"
   },
   "changelog_social_xiaohongshu": {
@@ -2346,19 +2390,19 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "هل أعجبك Voyager؟ تقييمك على متجر Chrome الإلكتروني يساعد الآخرين على اكتشافه!",
+    "message": "إذا كان Voyager مفيدًا لك، فإن تقييمك على متجر Chrome الإلكتروني يساعد الآخرين على اكتشافه.",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
-    "message": "تقييم الآن",
+    "message": "تقييم",
     "description": "Chrome Web Store rating CTA button text"
   },
   "changelog_rate_edge": {
-    "message": "هل أعجبك Voyager؟ تقييمك على متجر إضافات Edge يساعد الآخرين على اكتشافه!",
+    "message": "إذا كان Voyager مفيدًا لك، فإن تقييمك على متجر إضافات Edge يساعد الآخرين على اكتشافه.",
     "description": "Edge Add-ons store rating prompt in changelog modal"
   },
   "changelog_rate_edge_cta": {
-    "message": "تقييم الآن",
+    "message": "تقييم",
     "description": "Edge Add-ons store rating CTA button text"
   },
   "changelog_badge_mode": {
@@ -2474,11 +2518,11 @@
     "description": "تأكيد بعد نسخ موجه تنظيم AI"
   },
   "aiOrgError": {
-    "message": "فشل — افتح Gemini أولاً",
+    "message": "فشل. افتح Gemini أولاً",
     "description": "خطأ عند فشل نسخ موجه تنظيم AI"
   },
   "aiOrgNoConversations": {
-    "message": "لم يتم العثور على محادثات — افتح قائمة محادثاتك ومرّرها ثم أعد المحاولة",
+    "message": "لم يتم العثور على محادثات. افتح قائمة محادثاتك ومرّرها ثم أعد المحاولة",
     "description": "نص الزر عند تعذّر قراءة أي محادثة لأجل التنظيم بالذكاء الاصطناعي"
   },
   "aiOrgCopyHint": {
@@ -2874,7 +2918,7 @@
     "description": "Button that repairs missing optional site access for an enabled plugin"
   },
   "pluginUnsupportedPlatform": {
-    "message": "غير مدعوم في هذا المتصفّح — لا يمكن منح إذن الموقع الذي تحتاجه الإضافة.",
+    "message": "غير مدعوم في هذا المتصفّح. لا يمكن منح إذن الموقع الذي تحتاجه الإضافة.",
     "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
   },
   "chatgptExportCardTitle": {

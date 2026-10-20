@@ -83,6 +83,10 @@
     "message": "Idioma",
     "description": "Language label"
   },
+  "languageSwitchTo": {
+    "message": "Cambiar a {language}",
+    "description": "Tooltip on the popup's language button; {language} is the target language's native name (e.g. English, 中文)"
+  },
   "pm_title": {
     "message": "Voyager",
     "description": "Prompt Manager title"
@@ -291,7 +295,7 @@
     "description": "Backup cancelled hint"
   },
   "pm_backup_error": {
-    "message": "✗ Error en el respaldo",
+    "message": "Error en el respaldo",
     "description": "Backup failed hint"
   },
   "pm_backup_hint_options": {
@@ -307,7 +311,7 @@
     "description": "Backup step 2"
   },
   "pm_backup_step3": {
-    "message": "Haz clic en el botón \"💾 Respaldo local\" y selecciona una carpeta de respaldo",
+    "message": "Haz clic en el botón \"Respaldo local\" y selecciona una carpeta de respaldo",
     "description": "Backup step 3"
   },
   "pm_backup_note": {
@@ -339,7 +343,7 @@
     "description": "Validation shown when saving a prompt with an existing name"
   },
   "pm_name_conflict_badge": {
-    "message": "Nombre duplicado — cámbialo para usar /",
+    "message": "Nombre duplicado. Cámbialo para usar /",
     "description": "Etiqueta para prompts excluidos del autocompletado con / por tener un nombre duplicado"
   },
   "pm_prompt_manager": {
@@ -407,7 +411,7 @@
     "description": "Alt text for the Fable 5 Verified badge in the popup footer"
   },
   "starProject": {
-    "message": "Apóyame ⭐",
+    "message": "Dar una estrella en GitHub",
     "description": "Github callout"
   },
   "sponsorMe": {
@@ -623,11 +627,11 @@
     "description": "Wide sidebar width label"
   },
   "formula_copied": {
-    "message": "✓ Fórmula copiada",
+    "message": "Fórmula copiada",
     "description": "Formula copied success message"
   },
   "formula_copy_failed": {
-    "message": "✗ Error al copiar",
+    "message": "Error al copiar",
     "description": "Formula copy failed message"
   },
   "enableFormulaCopy": {
@@ -783,15 +787,15 @@
     "description": "Import file selection prompt"
   },
   "folder_import_success": {
-    "message": "✓ Importadas {folders} carpetas, {conversations} conversaciones",
+    "message": "Importadas {folders} carpetas, {conversations} conversaciones",
     "description": "Import success message"
   },
   "folder_import_success_skipped": {
-    "message": "✓ Importadas {folders} carpetas, {conversations} conversaciones ({skipped} duplicados omitidos)",
+    "message": "Importadas {folders} carpetas, {conversations} conversaciones ({skipped} duplicados omitidos)",
     "description": "Import success with skipped message"
   },
   "folder_import_error": {
-    "message": "✗ Error en la importación: {error}",
+    "message": "Error en la importación: {error}",
     "description": "Import error message"
   },
   "conversation_added_to_folder": {
@@ -819,7 +823,7 @@
     "description": "Shown when folder changes could not be saved"
   },
   "folder_export_success": {
-    "message": "✓ Carpetas exportadas correctamente",
+    "message": "Carpetas exportadas correctamente",
     "description": "Export success message"
   },
   "folder_import_invalid_format": {
@@ -867,8 +871,12 @@
     "description": "Export format selection label"
   },
   "export_dialog_warning": {
-    "message": "⚠️ Tras hacer clic en exportar, el sistema saltará automáticamente al primer mensaje para cargar todo el contenido. Por favor, no realice ninguna acción; la exportación continuará automáticamente tras el salto.",
+    "message": "Tras hacer clic en exportar, el sistema saltará automáticamente al primer mensaje para cargar todo el contenido. Por favor, no realice ninguna acción; la exportación continuará automáticamente tras el salto.",
     "description": "Warning about auto-jump and loading completeness"
+  },
+  "export_format_recommended": {
+    "message": "Recomendado",
+    "description": "Tag next to the recommended export format"
   },
   "export_dialog_safari_cmdp_hint": {
     "message": "Consejo para Safari: haz clic en 'Exportar' abajo, espera un momento, luego presiona ⌘P y elige 'Guardar como PDF'.",
@@ -978,6 +986,10 @@
     "message": "Cerrar",
     "description": "Aria label for the floating panel close button"
   },
+  "commonClose": {
+    "message": "Cerrar",
+    "description": "Generic accessible name and tooltip for a close (X) button"
+  },
   "floatingPanelEmpty": {
     "message": "Aún no hay carpetas.",
     "description": "Empty state shown when the user has no folders"
@@ -1007,7 +1019,7 @@
     "description": "Notice that defaults are limited to Gemini/AI Studio"
   },
   "folderManager_dataLossWarning": {
-    "message": "⚠️ Advertencia: Error al cargar datos de carpetas. Tus carpetas pueden estar corruptas. Por favor revisa la consola del navegador para más detalles e intenta restaurar desde una copia de seguridad si está disponible.",
+    "message": "Advertencia: Error al cargar datos de carpetas. Tus carpetas pueden estar corruptas. Por favor revisa la consola del navegador para más detalles e intenta restaurar desde una copia de seguridad si está disponible.",
     "description": "Warning shown when folder data fails to load"
   },
   "folderManager_dataRecovered": {
@@ -1075,15 +1087,15 @@
     "description": "Never backed up"
   },
   "backupSuccess": {
-    "message": "✓ Respaldo creado: {prompts} prompts, {folders} carpetas, {conversations} conversaciones",
+    "message": "Respaldo creado: {prompts} prompts, {folders} carpetas, {conversations} conversaciones",
     "description": "Backup success message"
   },
   "backupError": {
-    "message": "✗ Error en el respaldo: {error}",
+    "message": "Error en el respaldo: {error}",
     "description": "Backup error message"
   },
   "backupNotSupported": {
-    "message": "⚠️ El respaldo automático requiere un navegador moderno con soporte para File System Access API",
+    "message": "El respaldo automático requiere un navegador moderno con soporte para File System Access API",
     "description": "Browser not supported message"
   },
   "backupSelectFolderFirst": {
@@ -1095,11 +1107,11 @@
     "description": "User cancelled folder selection"
   },
   "backupConfigSaved": {
-    "message": "✓ Configuración de respaldo guardada",
+    "message": "Configuración de respaldo guardada",
     "description": "Config saved message"
   },
   "backupPermissionDenied": {
-    "message": "⚠️ No se puede acceder a este directorio. Por favor elige una ubicación diferente (ej. Documentos, Descargas, o una carpeta en el Escritorio)",
+    "message": "No se puede acceder a este directorio. Por favor elige una ubicación diferente (ej. Documentos, Descargas, o una carpeta en el Escritorio)",
     "description": "Permission denied for restricted directory"
   },
   "backupConfigureInOptions": {
@@ -1314,6 +1326,14 @@
     "message": "Modificadores",
     "description": "Shortcut modifiers label"
   },
+  "shortcutPressKey": {
+    "message": "Pulsa una tecla…",
+    "description": "Shown on a keyboard-shortcut button while it is recording the next key press"
+  },
+  "shortcutEscToCancel": {
+    "message": "Pulsa Esc para cancelar",
+    "description": "Shown under the keyboard-shortcut buttons while one is recording a key press"
+  },
   "resetShortcuts": {
     "message": "Restablecer a valores predeterminados",
     "description": "Reset shortcuts button"
@@ -1431,23 +1451,23 @@
     "description": "Never uploaded message"
   },
   "syncSuccess": {
-    "message": "✓ Sincronizado correctamente",
+    "message": "Sincronizado correctamente",
     "description": "Sync success message"
   },
   "syncSuccessHighlightsSkipped": {
-    "message": "✓ Sincronizado; se omitieron los destacados. Abre Gemini e inténtalo de nuevo",
+    "message": "Sincronizado; se omitieron los destacados. Abre Gemini e inténtalo de nuevo",
     "description": "Sync success message when account-scoped highlights were skipped"
   },
   "syncSuccessFoldersMissing": {
-    "message": "✓ Otros datos sincronizados; no se encontró una copia de carpetas",
+    "message": "Otros datos sincronizados; no se encontró una copia de carpetas",
     "description": "Partial sync message when the cloud has no folders payload"
   },
   "syncError": {
-    "message": "✗ Error de sincronización: {error}",
+    "message": "Error de sincronización: {error}",
     "description": "Sync error message"
   },
   "syncRestorePartial": {
-    "message": "✗ Restauración incompleta. Restaurado: {restored}. Sin restaurar: {failed} ({error})",
+    "message": "Restauración incompleta. Restaurado: {restored}. Sin restaurar: {failed} ({error})",
     "description": "Drive restore stopped partway: which parts were restored and which were not"
   },
   "syncRestoreForks": {
@@ -1471,7 +1491,7 @@
     "description": "Upload in progress message"
   },
   "uploadSuccess": {
-    "message": "✓ Uploaded successfully",
+    "message": "Uploaded successfully",
     "description": "Upload success message"
   },
   "downloadInProgress": {
@@ -1479,7 +1499,7 @@
     "description": "Download in progress message"
   },
   "downloadMergeSuccess": {
-    "message": "✓ Downloaded and merged",
+    "message": "Downloaded and merged",
     "description": "Download and merge success message"
   },
   "syncUpload": {
@@ -1508,10 +1528,10 @@
     "message": "Eliminando copia de iCloud…"
   },
   "syncDeleteICloudSuccess": {
-    "message": "✓ Se eliminaron {count} archivos de iCloud; los datos locales no cambiaron"
+    "message": "Se eliminaron {count} archivos de iCloud; los datos locales no cambiaron"
   },
   "syncDeleteICloudFailed": {
-    "message": "✗ No se pudo eliminar la copia de iCloud: {error}"
+    "message": "No se pudo eliminar la copia de iCloud: {error}"
   },
   "syncMode": {
     "message": "Modo sinc.",
@@ -1726,7 +1746,7 @@
     "description": "Batch delete progress message"
   },
   "batch_delete_success": {
-    "message": "✓ Eliminadas {count} conversación(es)",
+    "message": "Eliminadas {count} conversación(es)",
     "description": "Batch delete success message"
   },
   "batch_delete_partial": {
@@ -1772,6 +1792,14 @@
   "enableMermaidRenderingHint": {
     "message": "Renderiza automáticamente diagramas Mermaid en bloques de código",
     "description": "Mermaid rendering feature hint"
+  },
+  "mermaidSyntaxError": {
+    "message": "Error de sintaxis de Mermaid",
+    "description": "Title of the card shown in place of a Mermaid diagram whose source fails to parse"
+  },
+  "mermaidErrorHint": {
+    "message": "Haz clic en «Código» para ver el código fuente",
+    "description": "Hint under the Mermaid syntax error title; the quoted label matches diagramCodeButton"
   },
   "enableQuoteReply": {
     "message": "Habilitar citar al responder",
@@ -1953,6 +1981,22 @@
     "message": "Mostrar Gems",
     "description": "Tooltip para mostrar la sección de la lista de Gems"
   },
+  "gemsPinToSidebar": {
+    "message": "Fijar en la barra lateral",
+    "description": "Tooltip on the Gems manager pin button of an unpinned gem: pins it to the sidebar list"
+  },
+  "gemsUnpinFromSidebar": {
+    "message": "Quitar de la barra lateral",
+    "description": "Tooltip on the Gems manager pin button of a pinned gem: removes it from the sidebar list"
+  },
+  "gemsPin": {
+    "message": "Fijar Gem",
+    "description": "Accessible name of the pin button for an unpinned gem"
+  },
+  "gemsUnpin": {
+    "message": "Desfijar Gem",
+    "description": "Accessible name of the pin button for a pinned gem"
+  },
   "notebooksHide": {
     "message": "Ocultar Notebooks",
     "description": "Tooltip para ocultar la sección de la lista de Notebooks"
@@ -2006,7 +2050,7 @@
     "description": "Hint text under the default-model auto-apply toggle"
   },
   "defaultModelAutoApplyFailed": {
-    "message": "El modelo predeterminado no pudo aplicarse 3 veces seguidas. El menú de Gemini puede haber cambiado — puedes desactivar esta función por ahora.",
+    "message": "El modelo predeterminado no pudo aplicarse 3 veces seguidas. El menú de Gemini puede haber cambiado. Puedes desactivar esta función por ahora.",
     "description": "Toast body when the model locker hits its consecutive-failure threshold"
   },
   "defaultModelAutoApplyFailedAction": {
@@ -2334,7 +2378,7 @@
     "description": "Changelog modal recommendation message"
   },
   "changelog_follow_cta": {
-    "message": "Recibe las últimas novedades — sígueme en redes sociales para nuevas versiones y correcciones rápidas.",
+    "message": "Las nuevas funciones y correcciones se anuncian aquí primero.",
     "description": "Changelog modal follow-me CTA headline"
   },
   "changelog_social_xiaohongshu": {
@@ -2346,7 +2390,7 @@
     "description": "Changelog annotation pointing to docs icon"
   },
   "changelog_rate_chrome": {
-    "message": "¿Te gusta Voyager? ¡Una valoración en la Chrome Web Store ayuda a otros a descubrirlo!",
+    "message": "Si Voyager te resulta útil, una valoración en la Chrome Web Store ayuda a que otros lo encuentren.",
     "description": "Chrome Web Store rating prompt in changelog modal"
   },
   "changelog_rate_chrome_cta": {
@@ -2354,7 +2398,7 @@
     "description": "Chrome Web Store rating CTA button text"
   },
   "changelog_rate_edge": {
-    "message": "¿Te gusta Voyager? ¡Una valoración en la tienda de complementos de Edge ayuda a otros a descubrirlo!",
+    "message": "Si Voyager te resulta útil, una valoración en la tienda de complementos de Edge ayuda a que otros lo encuentren.",
     "description": "Edge Add-ons store rating prompt in changelog modal"
   },
   "changelog_rate_edge_cta": {
@@ -2474,7 +2518,7 @@
     "description": "Confirmación después de copiar el prompt de organización con IA"
   },
   "aiOrgError": {
-    "message": "Error — abre Gemini primero",
+    "message": "Error. Abre Gemini primero",
     "description": "Error al copiar el prompt de organización con IA"
   },
   "aiOrgNoConversations": {
