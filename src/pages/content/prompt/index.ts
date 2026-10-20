@@ -7,6 +7,7 @@
  * This file assembles the panel and switches between its two views; each part
  * lives in its own module:
  * - promptTrigger.ts: the ball, its position and visibility, the release-notes announcement
+ * - promptPanelChrome.ts: header, search bar, tag strip and footer elements
  * - promptPanelPlacement.ts: anchoring, lock, drag
  * - promptListView.ts: tag filter and prompt rows
  * - savedLibraryView.ts: starred messages and highlights
@@ -14,46 +15,46 @@
  * - promptPreview.ts: the hover card with the rendered prompt (via promptMarkdownLoader.ts)
  * - promptVersionBadge.ts, promptThemeToggle.ts, promptViewModeToggle.ts: header controls
  * - promptPrefs.ts: how panel and trigger preferences are read and written
+ * - promptStartup.ts: settings read before mounting, legacy preference migration
+ * - promptI18n.ts, promptSettingsButton.ts, promptSupportLink.ts: language, footer links
  */
 import browser from 'webextension-polyfill';
 
 import { createStarIcon } from '@/core/icons/folderIcons';
-import { createLockOpenIcon } from '@/core/icons/promptManagerIcons';
 import { logger } from '@/core/services/LoggerService';
-import { promptStorageService } from '@/core/services/StorageService';
 import { StorageKeys } from '@/core/types/common';
 import { isVoyagerLayerEvent } from '@/core/ui/layer';
 import { createToaster } from '@/core/ui/toast/toaster';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
-import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
 import type { PromptSiteAdapter } from '@/features/prompt/PromptSiteAdapter';
 import { createRuntimePromptLibraryClient } from '@/features/prompt/library/promptLibraryMessages';
-import { getCurrentLanguage, getTranslationSync, initI18n, setCachedLanguage } from '@/utils/i18n';
-import {
-  APP_LANGUAGES,
-  APP_LANGUAGE_LABELS,
-  type AppLanguage,
-  isAppLanguage,
-  normalizeLanguage,
-} from '@/utils/language';
-import type { TranslationKey } from '@/utils/translations';
+import { initI18n } from '@/utils/i18n';
+import { normalizeLanguage } from '@/utils/language';
 
-import { hasUnreadChangelog } from '../changelog/index';
 import { onOtherSurfaceOpened } from '../floatingSurfaces';
 import { createPromptEditForm } from './promptEditForm';
+import { createLanguageSelect, createPromptI18n } from './promptI18n';
 import { createPromptLibraryState, readPromptLibrary } from './promptLibraryState';
 import { createPromptListView } from './promptListView';
 import { installKatexWarningFilter } from './promptMarkdownLoader';
+import {
+  createPanelFooter,
+  createPanelHeader,
+  createSearchBar,
+  createTagsBar,
+} from './promptPanelChrome';
 import { createPanelPlacement } from './promptPanelPlacement';
 import { readPromptPref, readSyncedChoice, writeSyncedChoice } from './promptPrefs';
 import { createPromptPreview } from './promptPreview';
+import { createSettingsButton } from './promptSettingsButton';
+import { migratePromptPanelPrefs, readPromptStartupSettings } from './promptStartup';
+import { createSupportLink } from './promptSupportLink';
 import { createThemeToggle } from './promptThemeToggle';
 import { mountPromptTrigger } from './promptTrigger';
 import { createVersionBadge } from './promptVersionBadge';
 import { createViewModeToggle } from './promptViewModeToggle';
 import { createSavedLibraryView } from './savedLibraryView';
 import { PROMPT_TRIGGER_ELEMENT_ID } from './triggerClearance';
-import { mascotLogoFromRecord } from './triggerLogo';
 
 type PMPanelView = 'prompts' | 'starred';
 
@@ -63,9 +64,6 @@ function isPMPanelView(value: unknown): value is PMPanelView {
 
 const STORAGE_KEYS = {
   items: StorageKeys.PROMPT_ITEMS,
-  locked: StorageKeys.PROMPT_PANEL_LOCKED,
-  position: StorageKeys.PROMPT_PANEL_POSITION,
-  triggerPos: StorageKeys.PROMPT_TRIGGER_POSITION,
   selectedTags: StorageKeys.PROMPT_SELECTED_TAGS,
 } as const;
 
@@ -73,43 +71,6 @@ const ID = {
   trigger: PROMPT_TRIGGER_ELEMENT_ID,
   panel: 'gv-pm-panel',
 } as const;
-
-const SPONSOR_HEART_PATH_16 =
-  'M7.655 14.916h-.002l-.006-.003l-.018-.01a22 22 0 0 1-3.744-2.584C2.045 10.731 0 8.35 0 5.5C0 2.836 2.086 1 4.25 1C5.797 1 7.153 1.802 8 3.02C8.847 1.802 10.203 1 11.75 1C13.914 1 16 2.836 16 5.5c0 2.85-2.044 5.231-3.886 6.818a22 22 0 0 1-3.433 2.414a7 7 0 0 1-.31.17l-.018.01l-.008.004a.75.75 0 0 1-.69 0';
-
-// Use centralized i18n system
-function createI18n() {
-  return {
-    t: (key: TranslationKey): string => getTranslationSync(key),
-    set: async (lang: AppLanguage) => {
-      try {
-        // Check if extension context is still valid
-        if (!browser.runtime?.id) {
-          // Extension context invalidated, skip
-          return;
-        }
-        setCachedLanguage(lang);
-        await browser.storage.sync.set({ language: lang });
-        return;
-      } catch (e) {
-        try {
-          await browser.storage.local.set({ language: lang });
-          return;
-        } catch (localError) {
-          // Silently ignore extension context errors
-          if (
-            isExtensionContextInvalidatedError(e) ||
-            isExtensionContextInvalidatedError(localError)
-          ) {
-            return;
-          }
-          console.warn('[PromptManager] Failed to set language:', e, localError);
-        }
-      }
-    },
-    get: async (): Promise<AppLanguage> => await getCurrentLanguage(),
-  };
-}
 
 const pmLogger = logger.createChild('PromptManager');
 
@@ -122,114 +83,31 @@ function createEl<K extends keyof HTMLElementTagNameMap>(
   return el;
 }
 
-function createSponsorHeartIcon(size = 14): SVGSVGElement {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('width', String(size));
-  svg.setAttribute('height', String(size));
-  svg.setAttribute('viewBox', '0 0 16 16');
-  svg.setAttribute('fill', 'currentColor');
-  svg.setAttribute('aria-hidden', 'true');
-
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  path.setAttribute('d', SPONSOR_HEART_PATH_16);
-  svg.appendChild(path);
-
-  return svg;
-}
-
-function renderSupportLinkLabel(link: HTMLAnchorElement, label: string): void {
-  const labelEl = createEl('span', 'gv-pm-support-label');
-  labelEl.textContent = label;
-  link.replaceChildren(createSponsorHeartIcon(), labelEl);
-}
-
 export async function startPromptManager(
   site: PromptSiteAdapter,
 ): Promise<{ destroy: () => void }> {
   try {
-    // Check if the prompt manager should be hidden & changelog badge state
-    let pmHiddenByUser = false;
-    let changelogBadgeActive = false;
-    let useMascotLogo = false;
+    const startup = await readPromptStartupSettings();
     // Read by the prompt list on every render; the view mode comes from its toggle.
     const listSettings = {
       get viewMode() {
         return viewMode.mode;
       },
-      insertOnClick: false,
+      insertOnClick: startup.insertOnClick,
       // Experiment: when on, the row itself takes the drag and its primary action
       // moves to pointerup. Flip it to compare against the handle before choosing.
-      rowDrag: false,
+      rowDrag: startup.rowDrag,
     };
-
-    try {
-      const result = await browser.storage.sync.get({ gvHidePromptManager: false });
-      pmHiddenByUser = result?.gvHidePromptManager === true;
-    } catch (error) {
-      pmLogger.warn(
-        'Failed to check hide prompt manager setting, continuing with default behavior',
-        { error },
-      );
-    }
-
-    try {
-      const result = await browser.storage.sync.get({
-        [StorageKeys.PROMPT_INSERT_ON_CLICK]: false,
-        [StorageKeys.PROMPT_ROW_DRAG]: false,
-        [StorageKeys.PROMPT_TRIGGER_MASCOT_LOGO]: false,
-      });
-      listSettings.insertOnClick = result?.[StorageKeys.PROMPT_INSERT_ON_CLICK] === true;
-      listSettings.rowDrag = result?.[StorageKeys.PROMPT_ROW_DRAG] === true;
-      useMascotLogo = mascotLogoFromRecord(result);
-    } catch (error) {
-      pmLogger.warn('Failed to check prompt click mode setting, falling back to copy behavior', {
-        error,
-      });
-    }
-
-    // Check changelog badge mode
-    try {
-      const [modeRes, unread] = await Promise.all([
-        browser.storage.local.get(StorageKeys.CHANGELOG_NOTIFY_MODE),
-        hasUnreadChangelog(),
-      ]);
-      const notifyMode = modeRes?.[StorageKeys.CHANGELOG_NOTIFY_MODE];
-      changelogBadgeActive = notifyMode === 'badge' && unread;
-    } catch {
-      // Ignore errors
-    }
 
     installKatexWarningFilter();
 
-    // Migrate data from localStorage to chrome.storage.local (one-time migration)
-    try {
-      // The prompt library itself is seeded through its owner below.
-      const keysToMigrate = [STORAGE_KEYS.locked, STORAGE_KEYS.position, STORAGE_KEYS.triggerPos];
-
-      const migrationResult = await migrateFromLocalStorage(keysToMigrate, promptStorageService, {
-        deleteAfterMigration: false, // Keep localStorage as backup
-        skipExisting: true, // Skip if already migrated
-      });
-
-      if (migrationResult.migratedKeys.length > 0) {
-        pmLogger.info('Migrated prompt data from localStorage to chrome.storage.local', {
-          migratedKeys: migrationResult.migratedKeys,
-        });
-      }
-
-      if (migrationResult.errors.length > 0) {
-        pmLogger.warn('Some keys failed to migrate', { errors: migrationResult.errors });
-      }
-    } catch (migrationError) {
-      pmLogger.error('Migration failed, continuing with current storage', { migrationError });
-      // Continue even if migration fails - data will still work from current storage
-    }
+    await migratePromptPanelPrefs();
 
     // marked + KaTeX load lazily on the first Markdown render (promptMarkdownLoader.ts).
 
     // Initialize centralized i18n system
     await initI18n();
-    const i18n = createI18n();
+    const i18n = createPromptI18n();
 
     // Prevent duplicate injection
     if (document.getElementById(ID.trigger)) {
@@ -237,9 +115,9 @@ export async function startPromptManager(
     }
 
     const trigger = await mountPromptTrigger({
-      mascotLogo: useMascotLogo,
-      hiddenByUser: pmHiddenByUser,
-      attention: changelogBadgeActive,
+      mascotLogo: startup.mascotLogo,
+      hiddenByUser: startup.hiddenByUser,
+      attention: startup.changelogBadgeActive,
       onAttentionChange: (active) => versionBadge.setAttention(active),
       defaultSpot: (ballHeight) => site.defaultTriggerSpot(ballHeight),
     });
@@ -251,74 +129,21 @@ export async function startPromptManager(
     panel.setAttribute('aria-modal', 'false');
     document.body.appendChild(panel);
 
-    // Build panel DOM
-    const header = createEl('div', 'gv-pm-header');
-    const dragHandle = createEl('div', 'gv-pm-drag');
-
-    const titleRow = createEl('div', 'gv-pm-title-row');
-    const title = createEl('div', 'gv-pm-title');
-    const titleText = document.createElement('span');
-    titleText.textContent = 'Voyager';
-    title.appendChild(titleText);
-
     // Version badge always opens changelog modal
     const versionBadge = createVersionBadge({ t: i18n.t, trigger, beforeOpen: closePanel });
-
     const themeToggle = createThemeToggle({ panel, t: i18n.t, pageScheme: () => site.scheme() });
-
-    titleRow.appendChild(title);
-    titleRow.appendChild(themeToggle.element);
-    titleRow.appendChild(versionBadge.element);
-
-    const controls = createEl('div', 'gv-pm-controls');
-
-    const langSel = createEl('select', 'gv-pm-lang');
-    for (const lang of APP_LANGUAGES) {
-      const opt = createEl('option');
-      opt.value = lang;
-      opt.textContent = APP_LANGUAGE_LABELS[lang];
-      langSel.appendChild(opt);
-    }
-    // Set initial language value asynchronously
-    i18n
-      .get()
-      .then((lang) => {
-        langSel.value = lang;
-      })
-      .catch(() => {
-        langSel.value = 'en';
-      });
-
-    const lockBtn = createEl('button', 'gv-pm-lock');
-    lockBtn.setAttribute('type', 'button');
-    lockBtn.setAttribute('aria-pressed', 'false');
-    lockBtn.appendChild(createLockOpenIcon(15));
-    lockBtn.title = i18n.t('pm_lock');
-
-    const addBtn = createEl('button', 'gv-pm-add');
-    addBtn.textContent = i18n.t('pm_add');
-
-    const viewModeBtn = createEl('button', 'gv-pm-view-mode');
-    viewModeBtn.setAttribute('type', 'button');
-    // Icon, title, and aria-label come from its view-mode toggle below.
-
-    controls.appendChild(langSel);
-    controls.appendChild(addBtn);
-    controls.appendChild(lockBtn);
-    header.appendChild(dragHandle);
-    header.appendChild(titleRow);
-    header.appendChild(controls);
-
-    // Search wrap hosts the search input and, on its right edge, the
-    // compact/comfortable view-mode toggle. Keeping the toggle here instead of
-    // the header controls row prevents the "Voyager" title from being squeezed
-    // into ellipsis, and keeps it adjacent to the list it governs.
-    const searchWrap = createEl('div', 'gv-pm-search');
-    const searchInput = createEl('input') as HTMLInputElement;
-    searchInput.type = 'search';
-    searchInput.placeholder = i18n.t('pm_search_placeholder');
-    searchWrap.appendChild(searchInput);
-    searchWrap.appendChild(viewModeBtn);
+    const langSel = createLanguageSelect(i18n, () => refreshUITexts());
+    const {
+      element: header,
+      titleText,
+      lockBtn,
+      addBtn,
+    } = createPanelHeader({
+      t: i18n.t,
+      titleControls: [themeToggle.element, versionBadge.element],
+      langSelect: langSel,
+    });
+    const { element: searchWrap, input: searchInput, viewModeBtn } = createSearchBar({ t: i18n.t });
 
     const list = createEl('div', 'gv-pm-list');
 
@@ -335,43 +160,19 @@ export async function startPromptManager(
       onNavigated: closePanel,
     });
 
-    const tagsWrapOuter = createEl('div', 'gv-pm-tags-wrap');
-    const tagsWrap = createEl('div', 'gv-pm-tags');
-    const tagsScrollHint = createEl('div', 'gv-pm-tags-scroll-hint');
-    tagsScrollHint.setAttribute('aria-hidden', 'true');
-    tagsScrollHint.textContent = '▼';
-    tagsWrapOuter.appendChild(tagsWrap);
-    tagsWrapOuter.appendChild(tagsScrollHint);
+    const { outer: tagsWrapOuter, tags: tagsWrap } = createTagsBar();
 
-    const footer = createEl('div', 'gv-pm-footer');
-    // Primary view switch: the previous local backup slot now opens the
-    // Saved Library. Its return action lives in the dedicated saved footer.
-    const backupBtn = createEl('button', 'gv-pm-backup-btn');
-    backupBtn.setAttribute('type', 'button');
-
-    // Primary actions container
-    const primaryActions = createEl('div', 'gv-pm-footer-actions');
-    primaryActions.appendChild(backupBtn);
-
-    // Secondary actions container
-    const secondaryActions = createEl('div', 'gv-pm-footer-secondary');
-
-    const settingsBtn = createEl('button', 'gv-pm-settings');
-    settingsBtn.textContent = i18n.t('pm_settings');
-    settingsBtn.title = i18n.t('pm_settings_tooltip');
-
-    const supportLink = document.createElement('a');
-    supportLink.className = 'gv-pm-support';
-    supportLink.target = '_blank';
-    supportLink.rel = 'noreferrer';
-    supportLink.title = i18n.t('sponsorMe');
-
-    secondaryActions.appendChild(settingsBtn);
-    secondaryActions.appendChild(supportLink);
-
-    footer.appendChild(primaryActions);
-    footer.appendChild(saved.footerActions);
-    footer.appendChild(secondaryActions);
+    const settings = createSettingsButton({ t: i18n.t, setNotice });
+    const supportLink = createSupportLink({ t: i18n.t, getLanguage: i18n.get });
+    const {
+      element: footer,
+      backupBtn,
+      primaryActions,
+      secondaryActions,
+    } = createPanelFooter({
+      savedFooterActions: saved.footerActions,
+      secondary: [settings.element, supportLink.element],
+    });
 
     const toaster = createToaster();
 
@@ -553,17 +354,8 @@ export async function startPromptManager(
     function refreshUITexts(): void {
       // Keep custom icon + label
       addBtn.textContent = i18n.t('pm_add');
-      renderSupportLinkLabel(supportLink, i18n.t('sponsorMe'));
-      supportLink.title = i18n.t('sponsorMe');
-      i18n.get().then((lang) => {
-        supportLink.href =
-          lang === 'zh'
-            ? 'https://voyager.nagi.fun/guide/sponsor.html'
-            : `https://voyager.nagi.fun/${lang}/guide/sponsor.html`;
-      });
-
-      settingsBtn.textContent = i18n.t('pm_settings');
-      settingsBtn.title = i18n.t('pm_settings_tooltip');
+      supportLink.applyTexts();
+      settings.applyTexts();
       form.applyTexts();
       placement.applyTexts();
       viewMode.applyTexts();
@@ -626,13 +418,6 @@ export async function startPromptManager(
     };
     window.addEventListener('keydown', onWindowKeyDown, { passive: true });
 
-    langSel.addEventListener('change', async () => {
-      const next = langSel.value;
-      if (!isAppLanguage(next)) return;
-      await i18n.set(next);
-      refreshUITexts();
-    });
-
     // Listen to external language changes (popup/options)
     // Note: The centralized i18n system already handles storage changes,
     // we just need to update the UI when language changes
@@ -692,48 +477,6 @@ export async function startPromptManager(
       ev.preventDefault();
       ev.stopPropagation();
       form.startAdd();
-    });
-
-    settingsBtn.addEventListener('click', async (ev) => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      try {
-        // Check if extension context is still valid
-        if (!browser.runtime?.id) {
-          // Extension context invalidated, show fallback message
-          setNotice(
-            i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置',
-            'err',
-          );
-          return;
-        }
-
-        // Send message to background to open popup
-        const response = (await browser.runtime.sendMessage({ type: 'gv.openPopup' })) as {
-          ok?: boolean;
-        };
-        if (!response?.ok) {
-          // If programmatic opening failed, show a helpful message
-          setNotice(
-            i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置',
-            'err',
-          );
-        }
-      } catch (err) {
-        // Silently handle extension context errors
-        if (isExtensionContextInvalidatedError(err)) {
-          setNotice(
-            i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置',
-            'err',
-          );
-          return;
-        }
-        console.warn('[PromptManager] Failed to open settings:', err);
-        setNotice(
-          i18n.t('pm_settings_fallback') || '请点击浏览器工具栏中的扩展图标打开设置',
-          'err',
-        );
-      }
     });
 
     searchInput.addEventListener('input', () => {
