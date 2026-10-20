@@ -267,6 +267,37 @@ describe('persistentExportToolbar', () => {
     header.remove();
   });
 
+  it('keeps clear of Share while the export dialog is open', async () => {
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1280);
+    const header = document.createElement('header');
+    const share = document.createElement('button');
+    header.appendChild(share);
+    document.body.appendChild(header);
+    mockRect(share, { top: 4, bottom: 48, left: 1129, right: 1181, width: 52, height: 44 });
+    // The dialog's full-page overlay is topmost everywhere, the header row included.
+    const overlay = document.createElement('div');
+    overlay.className = 'gv-export-dialog-overlay';
+    overlay.appendChild(document.createElement('button'));
+    document.body.appendChild(overlay);
+    stubElementsFromPoint((x, y) =>
+      y >= 4 && y <= 48 && x >= 1129 && x <= 1181 ? [overlay, share] : [overlay, header],
+    );
+
+    const handle = mountPersistentExportToolbar({
+      label: 'Export',
+      tooltip: 'Export chat history',
+      onClick: vi.fn(),
+    });
+    handle.root.setAttribute('data-gv-platform', 'chatgpt');
+    mockRect(handle.root, { top: 12, bottom: 48, width: 82, height: 36 });
+
+    await nextFrame();
+
+    expect(handle.root.style.getPropertyValue('--gv-persistent-export-right')).toBe('163px');
+    overlay.remove();
+    header.remove();
+  });
+
   it('leaves the Gemini toolbar on its selector-based offset', async () => {
     vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1280);
     const control = document.createElement('button');

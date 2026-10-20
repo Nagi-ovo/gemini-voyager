@@ -48,6 +48,15 @@ const TOP_RIGHT_AVOIDANCE_SELECTORS = `${TOP_RIGHT_CONTROL_SELECTORS},${TOP_RIGH
 /** Conversation turns on Gemini (Angular hosts) and ChatGPT (role attribute). */
 const CONVERSATION_TURN_SELECTOR = 'user-query, model-response, [data-message-author-role]';
 const INTERACTIVE_SELECTOR = 'button, a[href], [role="button"]';
+/** Voyager's own layers and full-page dialog overlays, which can sit above the host header. */
+const VOYAGER_SURFACE_SELECTOR = [
+  '[data-gv-layer]',
+  '.gv-export-dialog-overlay',
+  '.gv-folder-dialog-overlay',
+  '.gv-fi-overlay',
+  '.gv-changelog-overlay',
+  '.gv-chatgpt-handoff-overlay',
+].join(',');
 const ROW_PROBE_STEP_PX = 8;
 const MAX_ROW_SHIFTS = 4;
 const ROW_AVOIDANCE_PLATFORMS = new Set(['chatgpt']);
@@ -139,9 +148,13 @@ function findControlUnderToolbar(toolbarRoot: HTMLElement, right: number): HTMLE
   const y = rect.top + rect.height / 2;
   const end = window.innerWidth - right;
   for (let x = end - 1; x > end - rect.width; x -= ROW_PROBE_STEP_PX) {
+    // Voyager's export dialog overlay is topmost over the whole header; taking it
+    // for "nothing here" dropped the offset to the default, right over Share.
     const topmost = document
       .elementsFromPoint(x, y)
-      .find((element) => !toolbarRoot.contains(element));
+      .find(
+        (element) => !toolbarRoot.contains(element) && !element.closest(VOYAGER_SURFACE_SELECTOR),
+      );
     const control = topmost?.closest<HTMLElement>(INTERACTIVE_SELECTOR);
     if (control) return control;
   }
