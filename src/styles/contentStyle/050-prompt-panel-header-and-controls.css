@@ -18,26 +18,7 @@
   /* The panel must stay above both its trigger and the floating usage bar. */
   z-index: 2147483200;
   color: oklch(0.14 0.004 285);
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    Helvetica,
-    Arial,
-    'Apple Color Emoji',
-    'Segoe UI Emoji';
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-pm-panel {
-    --gv-pm-surface: oklch(0.2 0.008 285);
-    background: oklch(0.2 0.008 285);
-    color: oklch(0.92 0.004 250);
-    border-color: oklch(0.3 0.008 285 / 0.7);
-    box-shadow: none;
-  }
+  font-family: var(--gv-ui-font);
 }
 
 html[data-gv-scheme='dark'] .gv-pm-panel {
@@ -68,12 +49,6 @@ html[data-gv-scheme='light'] .gv-pm-panel {
   cursor: default;
 }
 
-@media (prefers-color-scheme: dark) {
-  .gv-pm-header {
-    border-bottom-color: oklch(0.3 0.008 285 / 0.5);
-  }
-}
-
 .gv-pm-title {
   font-weight: 800;
   font-size: 17px;
@@ -86,12 +61,6 @@ html[data-gv-scheme='light'] .gv-pm-panel {
   text-overflow: ellipsis;
   position: relative;
   z-index: 1;
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-pm-title {
-    color: oklch(0.92 0.004 250);
-  }
 }
 
 html[data-gv-scheme='dark'] .gv-pm-title {
@@ -121,96 +90,43 @@ html[data-gv-scheme='light'] .gv-pm-title {
   background: oklch(0.95 0.004 250 / 0.6);
   color: oklch(0.4 0.006 250);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.01em;
   text-decoration: none;
   border: 1px solid oklch(0.92 0.004 250 / 0.5);
-  box-shadow: 0 1px 4px oklch(0 0 0 / 0.04);
   transition:
-    transform 120ms cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 160ms ease,
     background 160ms ease,
     border-color 160ms ease;
   white-space: nowrap;
 }
 
 .gv-pm-version:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px oklch(0 0 0 / 0.08);
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
+  border-color: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent);
   background: oklch(0.95 0.004 250 / 0.8);
 }
 
-.gv-pm-version-outdated {
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.6);
+.gv-pm-panel[data-gv-theme] .gv-pm-version.gv-pm-version-outdated {
+  border-color: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 60%, transparent);
 }
 
 .gv-pm-version-outdated::after {
+  /* A static tag, not a floating orange pill: the accent says "new", and the
+     ring of panel surface keeps it apart from the badge it sits on. */
   content: 'NEW';
   position: absolute;
-  top: -14px;
-  right: -2px;
-  transform: translateX(35%);
-  padding: 3px 7px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: oklch(0.95 0.02 95);
-  background: linear-gradient(120deg, oklch(0.76 0.18 50), oklch(0.68 0.2 30));
-  box-shadow: 0 8px 18px oklch(0 0 0 / 0.16);
-  animation: gv-pm-float 1.8s ease-in-out infinite;
+  top: -12px;
+  right: -12px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
+  background: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  box-shadow: 0 0 0 2px var(--gv-pm-surface, oklch(0.995 0.002 250));
   pointer-events: none;
   white-space: nowrap;
-}
-
-@keyframes gv-pm-float {
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-
-  50% {
-    transform: translateY(-2px);
-    opacity: 0.92;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-pm-title-row {
-    color: oklch(0.92 0.004 250);
-  }
-
-  .gv-pm-version {
-    background: oklch(0.26 0.008 285 / 0.7);
-    color: oklch(0.72 0.006 250);
-    border-color: oklch(0.3 0.008 285 / 0.6);
-    box-shadow: 0 1px 4px oklch(0 0 0 / 0.2);
-  }
-
-  .gv-pm-version:hover {
-    border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
-    background: oklch(0.28 0.008 285 / 0.8);
-  }
-
-  .gv-pm-version-outdated::after {
-    background: linear-gradient(120deg, oklch(0.72 0.18 45), oklch(0.62 0.2 28));
-    color: oklch(0.98 0.01 96);
-    box-shadow: 0 6px 16px oklch(0 0 0 / 0.3);
-  }
-}
-
-html[data-gv-scheme='dark'] .gv-pm-version {
-  background: oklch(0.26 0.008 285 / 0.7);
-  color: oklch(0.72 0.006 250);
-  border-color: oklch(0.3 0.008 285 / 0.6);
-  box-shadow: 0 1px 4px oklch(0 0 0 / 0.2);
-}
-
-html[data-gv-scheme='dark'] .gv-pm-version:hover {
-  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
-  background: oklch(0.28 0.008 285 / 0.8);
 }
 
 .gv-pm-header .gv-pm-controls {
@@ -229,15 +145,19 @@ html[data-gv-scheme='dark'] .gv-pm-version:hover {
 }
 
 .gv-pm-lang {
-  background: oklch(0.995 0.002 250);
+  box-sizing: border-box;
+  height: 28px;
+  background-color: transparent;
   color: oklch(0.38 0.006 250);
   border: 1px solid oklch(0.92 0.004 250);
-  border-radius: 10px;
-  padding: 6px 10px;
+  border-radius: 8px;
+  padding: 0 10px;
+  font: inherit;
   font-size: 12px;
   font-weight: 500;
-  box-shadow: 0 1px 3px oklch(0 0 0 / 0.05);
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 /* Draw our OWN dropdown chevron for the language <select>. The native arrow is
@@ -248,7 +168,7 @@ html[data-gv-scheme='dark'] .gv-pm-version:hover {
 .gv-pm-lang {
   appearance: none !important;
   -webkit-appearance: none !important;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8d94' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
   background-repeat: no-repeat !important;
   background-position: right 10px center !important;
   padding-inline-end: 30px !important;
@@ -258,179 +178,58 @@ body.gv-rtl .gv-pm-lang {
   background-position: left 10px center !important;
 }
 
-.gv-pm-lang:hover {
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-  box-shadow: 0 2px 6px oklch(0 0 0 / 0.06);
+.gv-pm-lang:focus-visible,
+.gv-pm-lock:focus-visible,
+.gv-pm-add:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring);
+  outline-offset: 2px;
 }
 
-html[data-gv-scheme='light'] .gv-pm-lang {
-  background: oklch(0.995 0.002 250);
-  color: oklch(0.38 0.006 250);
-  border-color: oklch(0.92 0.004 250);
-}
-
-html[data-gv-scheme='light'] .gv-pm-lang:hover {
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-  box-shadow: 0 2px 6px oklch(0 0 0 / 0.06);
-}
-
-html[data-gv-scheme='dark'] .gv-pm-lang {
-  background: oklch(0.24 0.008 285);
-  color: oklch(0.72 0.006 250);
-  border-color: oklch(0.3 0.008 285);
-}
-
-html[data-gv-scheme='dark'] .gv-pm-lang:hover {
-  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-pm-lang {
-    background: oklch(0.24 0.008 285);
-    color: oklch(0.72 0.006 250);
-    border-color: oklch(0.3 0.008 285);
-  }
-
-  .gv-pm-lang:hover {
-    border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-  }
-}
-
+/* Header controls share one 28px row: the select, the primary Add and the
+   icon-only lock, so no control in the panel reads louder by its size. */
 .gv-pm-lock {
-  width: 32px;
-  height: 32px;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  background: oklch(0.995 0.002 250);
+  border-radius: 8px;
+  background: transparent;
   border: 1px solid oklch(0.92 0.004 250);
+  color: inherit;
   position: relative;
-  box-shadow: 0 1px 3px oklch(0 0 0 / 0.05);
-  transition: all 0.2s ease;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .gv-pm-lock svg {
+  width: 14px;
+  height: 14px;
   pointer-events: none;
 }
 
-.gv-pm-lock:hover {
-  background: oklch(0.96 0.003 250);
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
-}
-
-.gv-pm-lock.active {
-  background: oklch(0.94 0.015 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  box-shadow: 0 0 0 3px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
-}
-
-html[data-gv-scheme='light'] .gv-pm-lock {
-  background: oklch(0.995 0.002 250);
-  border-color: oklch(0.92 0.004 250);
-}
-
-html[data-gv-scheme='light'] .gv-pm-lock:hover {
-  background: oklch(0.96 0.003 250);
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
-}
-
-html[data-gv-scheme='light'] .gv-pm-lock.active {
-  background: oklch(0.94 0.015 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  box-shadow: 0 0 0 3px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
-}
-
-html[data-gv-scheme='dark'] .gv-pm-lock {
-  background: oklch(0.24 0.008 285);
-  border-color: oklch(0.3 0.008 285);
-}
-
-html[data-gv-scheme='dark'] .gv-pm-lock:hover {
-  background: oklch(0.28 0.008 285);
-  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
-}
-
-html[data-gv-scheme='dark'] .gv-pm-lock.active {
-  background: oklch(0.28 0.008 285);
-  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  box-shadow: 0 0 0 3px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-pm-lock {
-    background: oklch(0.24 0.008 285);
-    border-color: oklch(0.3 0.008 285);
-  }
-
-  .gv-pm-lock:hover {
-    background: oklch(0.28 0.008 285);
-    border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
-  }
-
-  .gv-pm-lock.active {
-    background: oklch(0.28 0.008 285);
-    border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-    box-shadow: 0 0 0 3px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
-  }
-}
-
+/* The accent fill carries the emphasis; no ripple, lift or coloured glow. */
 .gv-pm-add {
-  height: 33px;
-  border-radius: 10px;
-  padding: 0 16px;
+  box-sizing: border-box;
+  height: 28px;
+  border-radius: 8px;
+  padding: 0 12px;
   background: var(--gv-pm-brand, var(--gv-pm-brand-default));
   color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
   border: none;
-  font-weight: 700;
-  box-shadow: 0 3px 10px
-    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 35%, transparent);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.gv-pm-add::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
-  transform: translate(-50%, -50%);
-  transition:
-    width 0.6s,
-    height 0.6s;
-}
-
-.gv-pm-add:active::before {
-  width: 300px;
-  height: 300px;
-  transition:
-    width 0s,
-    height 0s;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
 .gv-pm-add:hover {
   background: var(--gv-pm-brand-hover);
-  box-shadow: 0 6px 18px
-    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent);
-  transform: translateY(-2px);
-}
-
-.gv-pm-add:active {
-  transform: translateY(0);
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-pm-add {
-    background: var(--gv-pm-brand, var(--gv-pm-brand-default));
-    color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
-  }
-
-  .gv-pm-add:hover {
-    background: var(--gv-pm-brand-hover);
-  }
 }

@@ -20,7 +20,10 @@ describe('prompt hover preview styling', () => {
     // host font while the list underneath it does not.
     const tooltip = cssBlock(readContentStyle(), '.gv-pm-tooltip');
 
-    expect(tooltip).toMatch(/font-family:\s*\n?\s*ui-sans-serif/);
+    expect(tooltip).toMatch(/font-family:\s*var\(--gv-ui-font\)/);
+    expect(cssBlock(readContentStyle(), '.gv-pm-panel')).toMatch(
+      /font-family:\s*var\(--gv-ui-font\)/,
+    );
   });
 
   it('draws the preview surface from the panel colour tokens in both themes', () => {

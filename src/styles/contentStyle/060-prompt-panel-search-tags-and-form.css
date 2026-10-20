@@ -8,11 +8,13 @@
 .gv-pm-search input[type='search'] {
   flex: 1;
   min-width: 0;
-  border-radius: 10px;
-  background: rgba(31, 41, 55, 0.5);
-  color: #e5e7eb;
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
-  padding: 9px 12px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--gv-pm-wash, oklch(0.14 0.004 285 / 0.04));
+  color: inherit;
+  border: 1px solid var(--gv-ui-border);
+  padding: 0 12px;
+  font: inherit;
   font-size: 13px;
   box-sizing: border-box;
   transition:
@@ -23,43 +25,8 @@
 }
 
 .gv-pm-search input[type='search']:focus {
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
-  background: rgba(31, 41, 55, 0.7);
-  box-shadow: 0 0 0 3px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
-}
-
-html[data-gv-scheme='light'] .gv-pm-search input[type='search'] {
-  background: rgba(0, 0, 0, 0.04);
-  color: #1f2937;
-  border: 1.5px solid rgba(0, 0, 0, 0.08);
-}
-
-html[data-gv-scheme='light'] .gv-pm-search input[type='search']:focus {
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
-  background: rgba(0, 0, 0, 0.02);
-  box-shadow: 0 0 0 3px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.08);
-}
-
-html[data-gv-scheme='light'] .gv-pm-search input[type='search']::placeholder {
-  color: #6b7280;
-  opacity: 0.7;
-}
-
-html[data-gv-scheme='dark'] .gv-pm-search input[type='search'] {
-  background: rgba(31, 41, 55, 0.5);
-  color: #e5e7eb;
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
-}
-
-html[data-gv-scheme='dark'] .gv-pm-search input[type='search']:focus {
-  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.5);
-  background: rgba(31, 41, 55, 0.7);
-  box-shadow: 0 0 0 3px oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
-}
-
-html[data-gv-scheme='dark'] .gv-pm-search input[type='search']::placeholder {
-  color: #9ca3af;
-  opacity: 0.7;
+  border-color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  box-shadow: 0 0 0 3px var(--gv-pm-brand-soft);
 }
 
 .gv-pm-saved-toolbar {
@@ -76,61 +43,43 @@ html[data-gv-scheme='dark'] .gv-pm-search input[type='search']::placeholder {
   gap: 3px;
   width: 100%;
   padding: 3px;
+  box-sizing: border-box;
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--gv-pm-wash-strong, oklch(0.14 0.004 285 / 0.07));
 }
 
 .gv-pm-saved-filter {
   min-width: 0;
-  height: 28px;
+  height: 26px;
   padding: 0 8px;
   border: 0;
   border-radius: 7px;
   background: transparent;
-  color: rgba(229, 231, 235, 0.62);
+  color: var(--gv-ui-text-muted);
   cursor: pointer;
-  font-size: 11px;
-  font-weight: 650;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .gv-pm-saved-filter:hover {
-  color: #e5e7eb;
+  color: var(--gv-ui-text);
 }
 
+/* Selected is a neutral raised face, like the folder settings segments; the
+   accent is kept for what the user acts on. */
 .gv-pm-saved-filter.active {
-  background: rgba(255, 255, 255, 0.1);
-  color: oklch(0.76 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+  background: var(--gv-pm-segment-selected, oklch(0.995 0.002 250));
+  color: var(--gv-ui-text);
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.16);
 }
 
 .gv-pm-saved-filter:focus-visible {
-  outline: 2px solid oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
+  outline: 2px solid var(--gv-ui-focus-ring);
   outline-offset: 2px;
-}
-
-html[data-gv-scheme='light'] .gv-pm-saved-filters,
-.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-filters {
-  background: rgba(0, 0, 0, 0.055);
-}
-
-html[data-gv-scheme='light'] .gv-pm-saved-filter,
-.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-filter {
-  color: rgba(31, 41, 55, 0.62);
-}
-
-html[data-gv-scheme='light'] .gv-pm-saved-filter:hover,
-.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-filter:hover {
-  color: #1f2937;
-}
-
-html[data-gv-scheme='light'] .gv-pm-saved-filter.active,
-.gv-pm-panel[data-gv-theme='light'] .gv-pm-saved-filter.active {
-  background: #fff;
-  color: oklch(0.5 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .gv-pm-tags-wrap {
@@ -174,7 +123,8 @@ html[data-gv-scheme='light'] .gv-pm-saved-filter.active,
   border-radius: 9999px;
   display: grid;
   place-items: center;
-  font-size: 12px;
+  /* Hides the text glyph the node is built with; ::before draws a line chevron. */
+  font-size: 0;
   line-height: 1;
   background: oklch(0.2 0.008 285 / 0.72);
   color: oklch(0.92 0.004 250);
@@ -187,6 +137,17 @@ html[data-gv-scheme='light'] .gv-pm-saved-filter.active,
     transform 0.2s ease;
 }
 
+.gv-pm-tags-scroll-hint::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  background: currentColor;
+  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>')
+    center / contain no-repeat;
+  mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>')
+    center / contain no-repeat;
+}
+
 .gv-pm-tags-wrap.gv-pm-tags-scrollable:not(.gv-pm-tags-scroll-end) .gv-pm-tags-scroll-hint {
   opacity: 0.9;
   transform: translateY(0);
@@ -195,55 +156,25 @@ html[data-gv-scheme='light'] .gv-pm-saved-filter.active,
 .gv-pm-tag {
   border-radius: 9999px;
   padding: 4px 10px;
+  font: inherit;
   font-size: 12px;
   font-weight: 500;
-  background: rgba(55, 65, 81, 0.4);
-  color: rgba(229, 231, 235, 0.8);
+  background: var(--gv-pm-wash-strong, oklch(0.14 0.004 285 / 0.07));
+  color: var(--gv-ui-text-muted);
   border: none;
-  transition: all 0.15s ease;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .gv-pm-tag:hover {
-  background: rgba(55, 65, 81, 0.6);
-  color: #e5e7eb;
+  color: var(--gv-ui-text);
 }
 
 .gv-pm-tag.active {
   background: var(--gv-pm-brand-soft);
-  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
-  font-weight: 600;
-}
-
-html[data-gv-scheme='light'] .gv-pm-tag {
-  background: rgba(0, 0, 0, 0.05);
-  color: rgba(31, 41, 55, 0.7);
-  border: none;
-}
-
-html[data-gv-scheme='light'] .gv-pm-tag:hover {
-  background: rgba(0, 0, 0, 0.08);
-  color: #1f2937;
-}
-
-html[data-gv-scheme='light'] .gv-pm-tag.active {
-  background: var(--gv-pm-brand-soft);
-  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
-}
-
-html[data-gv-scheme='dark'] .gv-pm-tag {
-  background: rgba(55, 65, 81, 0.4);
-  color: rgba(229, 231, 235, 0.8);
-  border: none;
-}
-
-html[data-gv-scheme='dark'] .gv-pm-tag:hover {
-  background: rgba(55, 65, 81, 0.6);
-  color: #e5e7eb;
-}
-
-html[data-gv-scheme='dark'] .gv-pm-tag.active {
-  background: var(--gv-pm-brand-soft);
-  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  color: var(--gv-pm-brand-ink, var(--gv-pm-brand, var(--gv-pm-brand-default)));
 }
 
 .gv-pm-add-form {
@@ -295,15 +226,6 @@ html[data-gv-scheme='dark'] .gv-pm-tag.active {
   box-shadow: 0 0 0 3px var(--gv-pm-brand-soft);
 }
 
-@media (prefers-color-scheme: dark) {
-  .gv-pm-input-text,
-  .gv-pm-input-tags,
-  .gv-pm-input-name {
-    background: oklch(0.92 0.004 250 / 0.04);
-    border-color: oklch(0.3 0.008 285 / 0.9);
-  }
-}
-
 html[data-gv-scheme='dark'] .gv-pm-input-text,
 html[data-gv-scheme='dark'] .gv-pm-input-tags,
 html[data-gv-scheme='dark'] .gv-pm-input-name {
@@ -329,21 +251,23 @@ html[data-gv-scheme='light'] .gv-pm-input-name {
 .gv-pm-inline-hint {
   margin-right: auto;
   font-size: 12px;
-  color: #fca5a5;
-  opacity: 0.95;
+  color: var(--gv-ui-danger);
 }
 
 .gv-pm-inline-hint.ok {
-  color: #86efac;
+  color: var(--gv-pm-brand-ink, var(--gv-pm-brand, var(--gv-pm-brand-default)));
 }
 
 .gv-pm-save,
 .gv-pm-cancel {
-  border-radius: 10px;
-  padding: 7px 14px;
+  box-sizing: border-box;
+  height: 28px;
+  border-radius: 8px;
+  padding: 0 12px;
+  font: inherit;
   font-size: 13px;
-  font-weight: 600;
-  line-height: 1.4;
+  font-weight: 500;
+  line-height: 1;
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -376,16 +300,6 @@ html[data-gv-scheme='light'] .gv-pm-input-name {
 
 .gv-pm-cancel:hover {
   background: oklch(0.14 0.004 285 / 0.05);
-}
-
-@media (prefers-color-scheme: dark) {
-  .gv-pm-cancel {
-    border-color: oklch(0.3 0.008 285 / 0.9);
-  }
-
-  .gv-pm-cancel:hover {
-    background: oklch(0.92 0.004 250 / 0.06);
-  }
 }
 
 html[data-gv-scheme='dark'] .gv-pm-cancel {

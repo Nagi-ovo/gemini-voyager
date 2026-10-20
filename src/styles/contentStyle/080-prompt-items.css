@@ -300,25 +300,6 @@ html[data-gv-scheme='dark'] .gv-pm-chip {
   border: none;
 }
 
-.gv-pm-chip.gv-pm-name-conflict,
-.gv-pm-chip.gv-pm-name-conflict:hover {
-  cursor: default;
-  background: rgba(245, 158, 11, 0.2);
-  color: #fcd34d;
-}
-
-html[data-gv-scheme='light'] .gv-pm-chip.gv-pm-name-conflict,
-html[data-gv-scheme='light'] .gv-pm-chip.gv-pm-name-conflict:hover {
-  background: rgba(217, 119, 6, 0.12);
-  color: #92400e;
-}
-
-html[data-gv-scheme='dark'] .gv-pm-chip.gv-pm-name-conflict,
-html[data-gv-scheme='dark'] .gv-pm-chip.gv-pm-name-conflict:hover {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fcd34d;
-}
-
 .gv-pm-actions {
   display: inline-flex;
   gap: 8px;

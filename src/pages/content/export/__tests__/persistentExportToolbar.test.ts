@@ -90,7 +90,7 @@ describe('persistentExportToolbar', () => {
     expect(document.querySelector('.gv-persistent-export-toolbar')).toBeNull();
   });
 
-  it('keeps ChatGPT toolbar avoidance and dark-mode styles', () => {
+  it('keeps ChatGPT toolbar avoidance and paints the button from the theme tokens', () => {
     const css = readContentStyle();
     const platformRule = css.match(
       /\.gv-persistent-export-toolbar\[data-gv-platform='chatgpt'\]\s*\{([^}]*)\}/,
@@ -98,8 +98,16 @@ describe('persistentExportToolbar', () => {
 
     expect(platformRule).toContain('top: 12px');
     expect(platformRule).not.toContain('right:');
-    expect(css).toContain("html[data-gv-scheme='dark'] .gv-persistent-export-btn");
-    expect(css).toContain("html[data-gv-scheme='dark'] .gv-persistent-export-btn:hover");
+    // A ghost button like the host's own Share: its ink and hover wash follow
+    // data-gv-scheme through the shared tokens instead of per-theme literals,
+    // and the accent only reaches the focus ring.
+    const button = css.match(/\.gv-persistent-export-btn\s*\{([^}]*)\}/)?.[1] ?? '';
+    const hover = css.match(/\.gv-persistent-export-btn:hover[^{]*\{([^}]*)\}/)?.[1] ?? '';
+    expect(button).toContain('var(--gv-ui-text)');
+    expect(button).toMatch(/background:\s*transparent/);
+    expect(button).not.toMatch(/#[0-9a-f]{3,6}\b|rgba?\(/i);
+    expect(hover).toContain('var(--gv-ui-hover)');
+    expect(hover).not.toContain('--gv-pm-brand');
   });
 
   it('setText updates label/tooltip after language change', () => {

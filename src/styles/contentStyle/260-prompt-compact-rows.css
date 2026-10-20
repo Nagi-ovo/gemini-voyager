@@ -4,19 +4,24 @@
  * title doesn't have to shrink. Icon-only, sized to align with the search
  * input baseline. */
 .gv-pm-view-mode {
-  width: 36px;
-  height: 36px;
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--gv-ui-border);
   position: relative;
-  transition: all 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
   cursor: pointer;
-  color: rgba(229, 231, 235, 0.65);
+  color: var(--gv-ui-text-muted);
 }
 
 .gv-pm-view-mode svg {
@@ -24,33 +29,19 @@
 }
 
 .gv-pm-view-mode:hover {
-  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.35);
-  color: #e5e7eb;
+  background: var(--gv-ui-hover);
+  color: var(--gv-ui-text);
+}
+
+.gv-pm-view-mode:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring);
+  outline-offset: 2px;
 }
 
 .gv-pm-view-mode.gv-pm-view-mode-compact {
-  border-color: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.6);
-  color: oklch(0.8 0.08 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  background: oklch(0.7 0.16 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
-}
-
-html[data-gv-scheme='light'] .gv-pm-view-mode,
-.gv-pm-panel[data-gv-theme='light'] .gv-pm-view-mode {
-  border-color: rgba(0, 0, 0, 0.08);
-  color: rgba(31, 41, 55, 0.6);
-}
-
-html[data-gv-scheme='light'] .gv-pm-view-mode:hover,
-.gv-pm-panel[data-gv-theme='light'] .gv-pm-view-mode:hover {
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.4);
-  color: #1f2937;
-}
-
-html[data-gv-scheme='light'] .gv-pm-view-mode.gv-pm-view-mode-compact,
-.gv-pm-panel[data-gv-theme='light'] .gv-pm-view-mode.gv-pm-view-mode-compact {
-  border-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.6);
-  color: oklch(0.4 0.12 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)));
-  background: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.08);
+  border-color: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent);
+  color: var(--gv-pm-brand-ink, var(--gv-pm-brand, var(--gv-pm-brand-default)));
+  background: var(--gv-pm-brand-soft);
 }
 
 /* ----- Compact list row ----- */

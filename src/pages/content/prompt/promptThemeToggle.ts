@@ -40,7 +40,7 @@ export function createThemeToggle({
     currentTheme = theme;
     panel.setAttribute('data-gv-theme', theme);
     themeToggle.classList.toggle('gv-pm-theme-dark', theme === 'dark');
-    themeToggle.replaceChildren(theme === 'dark' ? createMoonIcon(11) : createSunIcon(11));
+    themeToggle.replaceChildren(theme === 'dark' ? createMoonIcon(9) : createSunIcon(9));
     themeToggle.title = theme === 'dark' ? t('pm_theme_light') : t('pm_theme_dark');
     themeToggle.setAttribute('aria-label', themeToggle.title);
   }

@@ -10,20 +10,11 @@
   overflow: auto;
   overscroll-behavior: contain;
   padding: 12px 14px;
-  border-radius: 14px;
+  border-radius: 12px;
   /* Pin the panel's font stack: without this the preview inherits the host
      page's font (Gemini/Claude/ChatGPT each differ) while the panel beneath
      it does not, so the two surfaces never look like one product. */
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    Helvetica,
-    Arial,
-    'Apple Color Emoji',
-    'Segoe UI Emoji';
+  font-family: var(--gv-ui-font);
   font-size: 13px;
   line-height: 1.6;
   word-break: break-word;
