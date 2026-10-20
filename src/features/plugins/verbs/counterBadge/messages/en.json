@@ -1,18 +1,34 @@
 {
   "counterBadgeChars": {
-    "message": "Characters: {count}",
-    "description": "Small read-only badge above the prompt box or under a reply. {count} is the formatted number of characters (line breaks excluded); keep {count} exactly as written"
+    "message": "{count} chars",
+    "description": "Small read-only badge above the prompt box or under a reply: the number first, as short as the language allows. {count} is the formatted number of characters (line breaks excluded); keep {count} exactly as written"
+  },
+  "counterBadgeCharsOne": {
+    "message": "{count} char",
+    "description": "The same badge as counterBadgeChars when the language treats {count} as singular (English: exactly 1). Use the singular noun; where the language has no singular form, repeat counterBadgeChars. Keep {count} exactly as written"
   },
   "counterBadgeWords": {
-    "message": "Words: {count}",
-    "description": "Small read-only badge above the prompt box or under a reply. {count} is the formatted number of words (each Chinese, Japanese or Korean character counts as one word); keep {count} exactly as written"
+    "message": "{count} words",
+    "description": "Small read-only badge above the prompt box or under a reply: the number first, as short as the language allows. {count} is the formatted number of words (each Chinese, Japanese or Korean character counts as one word); keep {count} exactly as written"
+  },
+  "counterBadgeWordsOne": {
+    "message": "{count} word",
+    "description": "The same badge as counterBadgeWords when the language treats {count} as singular (English: exactly 1). Use the singular noun; where the language has no singular form, repeat counterBadgeWords. Keep {count} exactly as written"
   },
   "counterBadgeCjkChars": {
-    "message": "CJK characters: {count}",
-    "description": "Small read-only badge above the prompt box or under a reply. {count} is the formatted number of Chinese, Japanese and Korean characters only; keep {count} exactly as written"
+    "message": "{count} CJK chars",
+    "description": "Small read-only badge above the prompt box or under a reply: the number first, as short as the language allows. {count} is the formatted number of Chinese, Japanese and Korean characters only; keep {count} exactly as written"
+  },
+  "counterBadgeCjkCharsOne": {
+    "message": "{count} CJK char",
+    "description": "The same badge as counterBadgeCjkChars when the language treats {count} as singular (English: exactly 1). Use the singular noun; where the language has no singular form, repeat counterBadgeCjkChars. Keep {count} exactly as written"
   },
   "counterBadgeLines": {
-    "message": "Lines: {count}",
-    "description": "Small read-only badge above the prompt box or under a reply. {count} is the formatted number of lines; keep {count} exactly as written"
+    "message": "{count} lines",
+    "description": "Small read-only badge above the prompt box or under a reply: the number first, as short as the language allows. {count} is the formatted number of lines; keep {count} exactly as written"
+  },
+  "counterBadgeLinesOne": {
+    "message": "{count} line",
+    "description": "The same badge as counterBadgeLines when the language treats {count} as singular (English: exactly 1). Use the singular noun; where the language has no singular form, repeat counterBadgeLines. Keep {count} exactly as written"
   }
 }

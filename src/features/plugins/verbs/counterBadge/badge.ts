@@ -33,12 +33,20 @@ const METRIC_LABELS = {
   lines: 'counterBadgeLines',
 } as const satisfies Record<CounterMetric, TranslationKey>;
 
+/** The label for a count the language calls singular ("1 char", not "1 chars"). */
+const METRIC_LABELS_ONE = {
+  chars: 'counterBadgeCharsOne',
+  words: 'counterBadgeWordsOne',
+  cjkChars: 'counterBadgeCjkCharsOne',
+  lines: 'counterBadgeLinesOne',
+} as const satisfies Record<CounterMetric, TranslationKey>;
+
 export const COUNTER_BADGE_CSS = `
 .${COUNTER_BADGE_CLASS} {
   box-sizing: border-box;
   padding: 0 6px;
   border-radius: 8px;
-  font: 500 11px/18px system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font: 500 11px/18px var(--gv-ui-font, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif);
   font-variant-numeric: tabular-nums;
   letter-spacing: normal;
   white-space: nowrap;
@@ -91,15 +99,23 @@ export function isCounterBadge(node: Node): boolean {
 export function counterLabel(metric: CounterMetric, count: number): string {
   const locale = getCachedLocale();
   if (numberFormat?.locale !== locale) {
-    numberFormat = { locale, format: new Intl.NumberFormat(locale) };
+    numberFormat = {
+      locale,
+      format: new Intl.NumberFormat(locale),
+      plural: new Intl.PluralRules(locale),
+    };
   }
-  return getTranslationSync(METRIC_LABELS[metric]).replace(
-    '{count}',
-    numberFormat.format.format(count),
-  );
+  const labels = numberFormat.plural.select(count) === 'one' ? METRIC_LABELS_ONE : METRIC_LABELS;
+  return getTranslationSync(labels[metric]).replace('{count}', numberFormat.format.format(count));
 }
 
-let numberFormat: { readonly locale: string; readonly format: Intl.NumberFormat } | undefined;
+let numberFormat:
+  | {
+      readonly locale: string;
+      readonly format: Intl.NumberFormat;
+      readonly plural: Intl.PluralRules;
+    }
+  | undefined;
 
 export function setBadgeLabel(badge: HTMLElement, label: string): void {
   if (badge.getAttribute(TEXT_ATTR) !== label) badge.setAttribute(TEXT_ATTR, label);

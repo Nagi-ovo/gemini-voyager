@@ -166,12 +166,12 @@ describe.each(sites)('counterBadge composer on $name', (site) => {
     const badge = onlyBadge();
     const root = composerOf(site).closest(site.adapter.selectors.composerRoot!);
     expect(badge.parentElement).toBe(root);
-    expect(badgeLabel(badge)).toBe('Characters: 5');
+    expect(badgeLabel(badge)).toBe('5 chars');
 
     typeDraft(composerOf(site), ['你好 😀', 'line two']);
     await vi.advanceTimersByTimeAsync(20);
     // 你 好 space 😀 + "line two" (8): the line break is not a character.
-    expect(badgeLabel(badge)).toBe('Characters: 12');
+    expect(badgeLabel(badge)).toBe('12 chars');
   });
 
   it('stays visible above a composer card that clips its overflow', () => {
@@ -189,7 +189,7 @@ describe.each(sites)('counterBadge composer on $name', (site) => {
     typeDraft(composerOf(site), ['a', 'b', 'c']);
     await vi.advanceTimersByTimeAsync(20);
     expect(onlyBadge().hidden).toBe(false);
-    expect(badgeLabel(onlyBadge())).toBe('Lines: 3');
+    expect(badgeLabel(onlyBadge())).toBe('3 lines');
 
     typeDraft(composerOf(site), []);
     await vi.advanceTimersByTimeAsync(20);
@@ -199,16 +199,16 @@ describe.each(sites)('counterBadge composer on $name', (site) => {
   it('formats the number and label in the Voyager language', async () => {
     document.body.innerHTML = `<main>${site.composer(['x'.repeat(1234)])}</main>`;
     activate(site.adapter, { target: 'composer', metric: 'chars' });
-    expect(badgeLabel(onlyBadge())).toBe('Characters: 1,234');
+    expect(badgeLabel(onlyBadge())).toBe('1,234 chars');
 
     setCachedLanguage('zh');
-    expect(badgeLabel(onlyBadge())).toBe('字符数：1,234');
+    expect(badgeLabel(onlyBadge())).toBe('1,234 字符');
   });
 
   it('moves to a remounted composer without leaving a second badge', async () => {
     document.body.innerHTML = `<main>${site.composer(['old'])}</main>`;
     activate(site.adapter, { target: 'composer', metric: 'words' });
-    expect(badgeLabel(onlyBadge())).toBe('Words: 1');
+    expect(badgeLabel(onlyBadge())).toBe('1 word');
 
     // In-app navigation replaces the whole composer subtree.
     document.querySelector('main')!.innerHTML = site.composer(['new draft here']);
@@ -218,7 +218,7 @@ describe.each(sites)('counterBadge composer on $name', (site) => {
     expect(badge.parentElement).toBe(
       composerOf(site).closest(site.adapter.selectors.composerRoot!),
     );
-    expect(badgeLabel(badge)).toBe('Words: 3');
+    expect(badgeLabel(badge)).toBe('3 words');
   });
 
   it('restores the page exactly when the plugin is turned off', async () => {
@@ -277,7 +277,7 @@ describe.each(sites)('counterBadge assistantTurn on $name', (site) => {
 
     expect(badges()).toHaveLength(2);
     expect(turns.map((turn) => turn.lastChild)).toEqual(badges());
-    expect(badges().map(badgeLabel)).toEqual(['Words: 2', 'Words: 5']);
+    expect(badges().map(badgeLabel)).toEqual(['2 words', '5 words']);
     // Copy, export and the count itself read text; the label is not part of it.
     expect(turns.map((turn) => copyableText(turn))).toEqual(['hello world', '日本語です']);
     expect(badges().every((badge) => badge.getAttribute('aria-hidden') === 'true')).toBe(true);
@@ -286,7 +286,7 @@ describe.each(sites)('counterBadge assistantTurn on $name', (site) => {
   it('recounts a streaming reply once it settles, without rescanning for its own badge', async () => {
     document.body.innerHTML = `<main>${site.turn('Once')}</main>`;
     activate(site.adapter, { target: 'assistantTurn', metric: 'chars' });
-    expect(badgeLabel(onlyBadge())).toBe('Characters: 4');
+    expect(badgeLabel(onlyBadge())).toBe('4 chars');
     expect(vi.getTimerCount()).toBe(0);
 
     const paragraph = document.querySelector('main p')!;
@@ -295,7 +295,7 @@ describe.each(sites)('counterBadge assistantTurn on $name', (site) => {
       await vi.advanceTimersByTimeAsync(50);
     }
     // Still streaming: the count waits for the reply to settle.
-    expect(badgeLabel(onlyBadge())).toBe('Characters: 4');
+    expect(badgeLabel(onlyBadge())).toBe('4 chars');
 
     // The host appends a new block after the badge, as a streamed paragraph does.
     const turn = document.querySelector<HTMLElement>(site.adapter.selectors.assistantTurn!)!;
@@ -308,7 +308,7 @@ describe.each(sites)('counterBadge assistantTurn on $name', (site) => {
     await vi.advanceTimersByTimeAsync(TURN_SETTLE_MS);
     const badge = onlyBadge();
     // "Once upon a time" (16) and "The end" (7).
-    expect(badgeLabel(badge)).toBe('Characters: 23');
+    expect(badgeLabel(badge)).toBe('23 chars');
     expect(reply.lastChild).toBe(badge);
     // Moving the badge back to the end is its own mutation: nothing else is scheduled.
     await vi.advanceTimersByTimeAsync(0);
@@ -323,11 +323,11 @@ describe.each(sites)('counterBadge assistantTurn on $name', (site) => {
     const main = document.querySelector('main')!;
     main.insertAdjacentHTML('beforeend', site.turn('second!'));
     await vi.advanceTimersByTimeAsync(TURN_SETTLE_MS);
-    expect(badges().map(badgeLabel)).toEqual(['Characters: 5', 'Characters: 7']);
+    expect(badges().map(badgeLabel)).toEqual(['5 chars', '7 chars']);
 
     main.firstElementChild!.remove();
     await vi.advanceTimersByTimeAsync(TURN_SETTLE_MS);
-    expect(badges().map(badgeLabel)).toEqual(['Characters: 7']);
+    expect(badges().map(badgeLabel)).toEqual(['7 chars']);
   });
 
   it('restores the page exactly when the plugin is turned off', async () => {
