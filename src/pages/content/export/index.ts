@@ -54,18 +54,20 @@ let pendingRunChecked = false;
 export async function startExportButton(
   options: { signal?: AbortSignal } = {},
 ): Promise<() => void> {
-  if (options.signal?.aborted) return () => {};
-  // Check for pending export immediately
+  // A mount aborted before it finished owns nothing; its late cleanup must not
+  // touch the runner, which a newer mount may already be using.
+  const noCleanup = () => {};
+  if (options.signal?.aborted) return noCleanup;
+  // Check for pending export immediately; the mount's abort ends the resumed run.
   if (exportSite.history && !pendingRunChecked) {
     pendingRunChecked = true;
-    void exportRunner.resumePending();
+    void exportRunner.resumePending(options.signal);
   }
-  const cancelRun = () => exportRunner.cancel();
 
   const dict = await loadExportDictionaries();
-  if (options.signal?.aborted) return cancelRun;
+  if (options.signal?.aborted) return noCleanup;
   let lang = await readExportLanguage();
-  if (options.signal?.aborted) return cancelRun;
+  if (options.signal?.aborted) return noCleanup;
   const entryPoints = exportSite.entryPoints;
 
   if (entryPoints.kind === 'toolbar') {
@@ -134,11 +136,16 @@ async function mountGeminiEntryPoints(
   const stop = () => {
     if (stopped) return;
     stopped = true;
+    signal?.removeEventListener('abort', stop);
     exportRunner.cancel();
     activeExportDialog?.hide();
     activeExportDialog = null;
     for (const stopOne of stops.splice(0).reverse()) stopOne();
   };
+  // Tear down the moment the plugin unmounts, not when this mount's startup
+  // (the logo wait) settles: a remount in between would otherwise reuse the
+  // page-wide watchers this late stop then disconnects.
+  signal?.addEventListener('abort', stop, { once: true });
   const openDialog = (initialSelectedMessageId?: string | null) =>
     showExportDialog(dict, lang, { initialSelectedMessageId, signal });
 
@@ -192,7 +199,9 @@ async function mountGeminiEntryPoints(
   // The lr26 UI removed the logo entirely; resolveExportLogoAnchor short-circuits
   // there instead of waiting out the full timeout (which delayed this fallback
   // toolbar by several seconds on every conversation load).
-  const logo = await resolveExportLogoAnchor(waitForElement);
+  const logo = await resolveExportLogoAnchor((selector, timeoutMs) =>
+    waitForElement(selector, timeoutMs, signal),
+  );
   if (signal?.aborted) return stop;
   if (logo) {
     logoButton = mountLogoExportButton(logo, {

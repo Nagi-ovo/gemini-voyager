@@ -108,8 +108,12 @@ export interface ExportRunner {
     locale: ExportRunLocale,
     prepare?: (signal: AbortSignal) => Promise<void>,
   ): Promise<void>;
-  /** Continue a run interrupted by a page reload, if this page has one pending. */
-  resumePending(): Promise<void>;
+  /**
+   * Continue a run interrupted by a page reload, if this page has one pending.
+   * `signal` is the lifetime of the entry point that resumed it: its abort ends
+   * this run only, never a newer one.
+   */
+  resumePending(signal?: AbortSignal): Promise<void>;
   /** Abort the active run and dismiss its selection UI. */
   cancel(): void;
 }
@@ -214,13 +218,15 @@ export function createExportRunner(deps: ExportRunnerDeps): ExportRunner {
     // 1. Find Top Node
     if (state.attempt > 0) {
       logger.debug('[Gemini Voyager] Resuming export... waiting for content load.');
-      await waitForAnyElement(history.userSelectors(), 15000);
+      await waitForAnyElement(history.userSelectors(), 15000, signal);
+      throwIfExportCancelled(signal);
     }
 
     // Wait a bit if we just reloaded
     let topNode = collector.topUserElement();
     if (!topNode) {
-      await waitForElement('body', 2000);
+      await waitForElement('body', 2000, signal);
+      throwIfExportCancelled(signal);
       const pairs = collector.collectChatPairs();
       if (pairs.length > 0 && pairs[0].userElement) {
         topNode = pairs[0].userElement;
@@ -243,6 +249,8 @@ export function createExportRunner(deps: ExportRunnerDeps): ExportRunner {
 
     logger.debug(`[Gemini Voyager] Simulating click on top node (Attempt ${state.attempt + 1})...`);
 
+    // A run switched off while the page loaded must not click: the click can reload the page.
+    throwIfExportCancelled(signal);
     // Update state before action to persist across potential reload
     persistPendingExportState(sessionStorage, state, Date.now());
 
@@ -456,8 +464,12 @@ export function createExportRunner(deps: ExportRunnerDeps): ExportRunner {
   /**
    * Check if there is a pending export operation from a previous page load.
    */
-  async function resumePending(): Promise<void> {
+  async function resumePending(owner?: AbortSignal): Promise<void> {
+    if (owner?.aborted) return;
     let controller: AbortController | null = null;
+    const endWithOwner = () => {
+      if (controller && activeExportController === controller) cancelActiveExportOperation();
+    };
     try {
       const state = restorePendingExportState(sessionStorage, location.href);
       if (!state) return;
@@ -467,6 +479,7 @@ export function createExportRunner(deps: ExportRunnerDeps): ExportRunner {
       logger.debug('[Gemini Voyager] Resuming pending export sequence...');
       // The resumed run is the active one, so `cancel` (export switched off) ends it too.
       controller = beginExportOperation();
+      owner?.addEventListener('abort', endWithOwner, { once: true });
 
       // We need i18n for final export/alert
       const dict = await loadExportDictionaries();
@@ -483,6 +496,7 @@ export function createExportRunner(deps: ExportRunnerDeps): ExportRunner {
       console.error('[Gemini Voyager] Failed to resume pending export:', e);
       clearPendingExportState(sessionStorage);
     } finally {
+      owner?.removeEventListener('abort', endWithOwner);
       if (controller && activeExportController === controller) {
         activeExportController = null;
         activeExportSelectionCleanup = null;

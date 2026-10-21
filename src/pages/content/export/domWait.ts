@@ -1,43 +1,45 @@
 /**
  * Resolve with the first element matching any selector, waiting for DOM
- * mutations until `timeoutMs` (0 = no timeout). Resolves `null` on timeout and
- * never rejects; the observer is always disconnected once settled.
+ * mutations until `timeoutMs` (0 = no timeout). Resolves `null` on timeout or
+ * when `signal` aborts, and never rejects; the observer and timer are always
+ * released once settled.
  */
 export function waitForAnyElement(
   selectors: string[],
   timeoutMs: number = 10000,
+  signal?: AbortSignal,
 ): Promise<Element | null> {
   return new Promise((resolve) => {
-    // Check first
-    for (const s of selectors) {
-      const el = document.querySelector(s);
-      if (el) return resolve(el);
-    }
-
-    const obs = new MutationObserver(() => {
+    const find = (): Element | null => {
       for (const s of selectors) {
-        const found = document.querySelector(s);
-        if (found) {
-          try {
-            obs.disconnect();
-          } catch {}
-          resolve(found);
-          return;
-        }
+        const el = document.querySelector(s);
+        if (el) return el;
       }
+      return null;
+    };
+    const present = find();
+    if (present || signal?.aborted) return resolve(present);
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const settle = (value: Element | null) => {
+      try {
+        obs.disconnect();
+      } catch {}
+      if (timer !== null) clearTimeout(timer);
+      signal?.removeEventListener('abort', onAbort);
+      resolve(value);
+    };
+    const onAbort = () => settle(null);
+    const obs = new MutationObserver(() => {
+      const found = find();
+      if (found) settle(found);
     });
 
     try {
       obs.observe(document.body, { childList: true, subtree: true });
     } catch {}
-
-    if (timeoutMs > 0)
-      setTimeout(() => {
-        try {
-          obs.disconnect();
-        } catch {}
-        resolve(null);
-      }, timeoutMs);
+    signal?.addEventListener('abort', onAbort, { once: true });
+    if (timeoutMs > 0) timer = setTimeout(() => settle(null), timeoutMs);
   });
 }
 
@@ -45,28 +47,7 @@ export function waitForAnyElement(
 export function waitForElement(
   selector: string,
   timeoutMs: number = 6000,
+  signal?: AbortSignal,
 ): Promise<Element | null> {
-  return new Promise((resolve) => {
-    const el = document.querySelector(selector);
-    if (el) return resolve(el);
-    const obs = new MutationObserver(() => {
-      const found = document.querySelector(selector);
-      if (found) {
-        try {
-          obs.disconnect();
-        } catch {}
-        resolve(found);
-      }
-    });
-    try {
-      obs.observe(document.body, { childList: true, subtree: true });
-    } catch {}
-    if (timeoutMs > 0)
-      setTimeout(() => {
-        try {
-          obs.disconnect();
-        } catch {}
-        resolve(null);
-      }, timeoutMs);
-  });
+  return waitForAnyElement([selector], timeoutMs, signal);
 }

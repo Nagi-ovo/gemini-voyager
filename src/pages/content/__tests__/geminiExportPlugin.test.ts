@@ -141,6 +141,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
+  vi.useRealTimers();
   host?.stop();
   releaseHandlers?.();
   cleanupManager.executeCleanups();
@@ -189,6 +190,28 @@ describe('Gemini conversation export through its official plugin', () => {
     setSwitch(true);
     await expectEntryPoints(true);
     expect(harness.ledger.openObservers()).toHaveLength(observers);
+  });
+
+  // The pre-lr26 layout waits up to 8 s for a logo; a fast off/on lands inside that wait.
+  it('keeps the menu and copy-as-image entry points after a fast off and on while the logo loads', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'], shouldAdvanceTime: true });
+    document.body.className = '';
+    await start();
+    await vi.waitFor(() => expect(count(COPY_IMAGE)).toBe(1));
+
+    setSwitch(false);
+    await vi.waitFor(() => expect(statusOf()).not.toBe('mounted'));
+    setSwitch(true);
+    await vi.waitFor(() => expect(statusOf()).toBe('mounted'));
+    // Long past the first mount's logo wait, whose late cleanup must not strip the second.
+    await vi.advanceTimersByTimeAsync(9000);
+    openConversationMenu();
+
+    await vi.waitFor(() => {
+      expect(count(COPY_IMAGE)).toBe(1);
+      expect(count(MENU_ITEM)).toBe(1);
+    });
+    vi.useRealTimers();
   });
 
   it('removes the logo dropdown on teardown and puts the logo back', async () => {
