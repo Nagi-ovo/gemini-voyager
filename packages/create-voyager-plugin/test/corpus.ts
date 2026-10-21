@@ -255,6 +255,11 @@ const EDGES: CorpusCase[] = [
     base({ contributes: { domOps: [{ op: 'addClass', target: sem, className: 'gv-a gv-b' }] } }),
   ),
   folder(
+    'css-target-does-not-parse',
+    false,
+    base({ contributes: { domOps: [{ op: 'hide', target: 'nav[aria-label]]' }] } }),
+  ),
+  folder(
     'claude-thinking-block',
     false,
     base({

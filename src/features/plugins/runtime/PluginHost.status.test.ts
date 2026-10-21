@@ -382,4 +382,42 @@ describe('PluginHost status machine (plan §4.2)', () => {
     expect(host.getStatuses()).toEqual([]);
     host.stop();
   });
+
+  it('says what each op finds for a plugin that is not on yet', async () => {
+    document.body.innerHTML = '<div class="user-turn">hi</div>';
+    const adapter: SiteAdapter = {
+      ...deepseek,
+      selectors: { ...deepseek.selectors, sidebar: 'nav' },
+    };
+    const source: PluginSource = {
+      ...remoteSource({ current: [] }),
+      siteOverride: async () => adapter,
+    };
+    const blur = manifest('x.blur', {
+      contributes: {
+        domOps: [
+          { op: 'addClass', target: { kind: 'css', selector: 'body' }, className: 'gv-x' },
+          { op: 'addClass', target: { kind: 'semantic', key: 'sidebar' }, className: 'gv-y' },
+        ],
+      },
+    });
+    source.list = async () => [blur];
+    mockState({});
+    const host = new PluginHost({
+      url: URL,
+      sources: [source],
+      doc: document,
+      requestCatalogRefresh: () => {},
+      isTopFrame: true,
+    });
+    await host.start();
+
+    const [ready] = host.getStatuses();
+    expect(ready).toMatchObject({ kind: 'ready' });
+    expect(ready.ops?.map((op) => [op.label, op.count])).toEqual([
+      ['body', 1],
+      ['sidebar', 0],
+    ]);
+    host.stop();
+  });
 });

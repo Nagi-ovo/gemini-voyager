@@ -3349,6 +3349,14 @@
     "message": "在此頁面上找不到可處理的內容",
     "description": "Note on an enabled plugin that found no matching elements on this page"
   },
+  "pluginOpsFoundOnPage": {
+    "message": "本頁找到：{ops}",
+    "description": "Per-change match counts in a plugin's expanded details; {ops} lists each change's target with the number of elements it found now, e.g. 'sidebar · 0, body · 1'"
+  },
+  "pluginOpsPartlyFound": {
+    "message": "{total} 項變更中有 {count} 項在本頁找不到元素：{targets}",
+    "description": "Warning on a running plugin when some of its changes found nothing on this page; {count} is how many, {total} all its changes, {targets} names their targets (e.g. 'sidebar')"
+  },
   "pluginUpdateAfterReload": {
     "message": "更新 {version} 將在重新載入頁面後生效",
     "description": "Note that a newer plugin version takes effect on the next page load; {version} is the pending version"

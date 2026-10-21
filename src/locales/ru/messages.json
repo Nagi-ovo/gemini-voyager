@@ -3349,6 +3349,14 @@
     "message": "На этой странице не нашлось ничего, с чем можно работать",
     "description": "Note on an enabled plugin that found no matching elements on this page"
   },
+  "pluginOpsFoundOnPage": {
+    "message": "Найдено на этой странице: {ops}",
+    "description": "Per-change match counts in a plugin's expanded details; {ops} lists each change's target with the number of elements it found now, e.g. 'sidebar · 0, body · 1'"
+  },
+  "pluginOpsPartlyFound": {
+    "message": "Ничего не найдено на этой странице для {count} из {total} изменений: {targets}",
+    "description": "Warning on a running plugin when some of its changes found nothing on this page; {count} is how many, {total} all its changes, {targets} names their targets (e.g. 'sidebar')"
+  },
   "pluginUpdateAfterReload": {
     "message": "Обновление {version} применится после перезагрузки страницы",
     "description": "Note that a newer plugin version takes effect on the next page load; {version} is the pending version"

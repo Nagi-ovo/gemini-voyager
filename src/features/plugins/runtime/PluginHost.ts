@@ -288,6 +288,7 @@ export class PluginHost {
       },
       blocked: this.blocked,
       engine: this.engine,
+      doc: this.doc,
     });
   }
 

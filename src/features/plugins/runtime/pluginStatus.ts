@@ -11,7 +11,9 @@
  *   needs-semantic   the site adapter lacks a semantic key it relies on
  *   ready            compatible, not enabled (or enabled and not yet mounted)
  *   mounted          enabled and running on this page
- *   no-effect        mounted, but the health signal found no targets (D12)
+ *   no-effect        mounted, but the health signal found no targets (D12);
+ *                    a mounted plugin with only some ops finding nothing stays
+ *                    `mounted` and names them in `zeroOps`
  *   blocked          compatible, but something else keeps it off this page;
  *                    `blockedReason` says what (see `PluginBlockedReason`)
  *
@@ -24,6 +26,7 @@ import { acceptedSemanticKeyParamValues } from '../manifest/semanticKeyParams';
 import { engineSatisfied } from '../semver';
 import type { PluginManifest, SiteAdapter } from '../types';
 import { EFFECTIVE_PLUGIN_ENGINE_VERSION, getPrimitiveContract } from '../verbs/contracts';
+import type { OpDiagnostic } from './opDiagnostics';
 
 export type PluginStatusKind =
   | 'needs-engine'
@@ -79,6 +82,17 @@ export interface PluginStatus {
   readonly blockedReason?: PluginBlockedReason;
   /** For blocked by conflict, releasing or pending: the other plugin's id. */
   readonly blockedBy?: string;
+  /**
+   * For a plugin that can run here (ready, mounted, no-effect, blocked) with
+   * targeted DOM ops: what each op finds on the page right now.
+   */
+  readonly ops?: readonly OpDiagnostic[];
+  /**
+   * For mounted / no-effect: the `ops` indexes the health check found nothing
+   * for although the page shows what they need (`missingOps`). Present only
+   * when there is at least one.
+   */
+  readonly zeroOps?: readonly number[];
 }
 
 export interface PluginIncompatibility {

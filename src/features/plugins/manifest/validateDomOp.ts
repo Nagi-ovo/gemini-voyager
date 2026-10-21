@@ -4,6 +4,7 @@
  * `validate.ts` runs every entry through `normalizeOp`, then checks its
  * templated values with `renderedOpIsSafe`.
  */
+import { isValidSelectorSyntax } from '../sites/siteAdapterData';
 import type { DomOperation, SelectorRef } from '../types';
 import { PRIMITIVE_NAME_PATTERN } from '../verbs/contracts';
 import { isRecord, isString, nonEmptyString } from './jsonGuards';
@@ -17,6 +18,16 @@ const MAX_PARAMS_DEPTH = 4;
 const MAX_PARAMS_KEYS = 50;
 const MAX_PARAM_STRING_LENGTH = 2_000;
 
+/**
+ * A raw CSS target that does not parse would make the engine skip the op on
+ * every pass without a word, so it never gets past import.
+ */
+function parsedCss(selector: string, path: string, issues: ManifestIssue[]): SelectorRef | null {
+  if (isValidSelectorSyntax(selector)) return { kind: 'css', selector };
+  issues.push({ path, message: 'selector does not parse as CSS' });
+  return null;
+}
+
 function normalizeSelector(
   raw: unknown,
   path: string,
@@ -27,7 +38,7 @@ function normalizeSelector(
       issues.push({ path, message: 'selector string is empty' });
       return null;
     }
-    return { kind: 'css', selector: raw };
+    return parsedCss(raw, path, issues);
   }
   if (isRecord(raw) && (raw.kind === 'css' || raw.kind === 'semantic')) {
     if (raw.kind === 'css') {
@@ -35,7 +46,7 @@ function normalizeSelector(
         issues.push({ path: `${path}.selector`, message: 'required non-empty string' });
         return null;
       }
-      return { kind: 'css', selector: raw.selector };
+      return parsedCss(raw.selector, `${path}.selector`, issues);
     }
     if (!nonEmptyString(raw.key)) {
       issues.push({ path: `${path}.key`, message: 'required non-empty string' });

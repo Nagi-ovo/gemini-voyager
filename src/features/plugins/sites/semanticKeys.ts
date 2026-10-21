@@ -79,3 +79,27 @@ export const SEMANTIC_KEY_SINCE_VERSION: Readonly<Record<SemanticSelectorKey, st
   composerRoot: '2.0.0',
   sendButton: '2.0.0',
 };
+
+/**
+ * When a key's element is expected on the page, so finding none means the
+ * site's selector no longer matches (the per-op health check):
+ *
+ *   page          on every page of the site once it has loaded, an empty chat included
+ *   conversation  once the conversation shows at least one user turn
+ *   transient     only sometimes (a code block, the send button), never judged
+ */
+export type SemanticKeyPresence = 'page' | 'conversation' | 'transient';
+
+export const SEMANTIC_KEY_PRESENCE: Readonly<Record<SemanticSelectorKey, SemanticKeyPresence>> = {
+  userTurn: 'conversation',
+  assistantTurn: 'conversation',
+  thinkingBlock: 'transient',
+  codeBlock: 'transient',
+  composer: 'page',
+  sidebar: 'page',
+  sidePanel: 'transient',
+  headerActions: 'conversation',
+  scrollContainer: 'conversation',
+  composerRoot: 'page',
+  sendButton: 'transient',
+};

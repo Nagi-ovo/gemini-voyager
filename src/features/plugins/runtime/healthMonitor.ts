@@ -10,17 +10,24 @@
  *   targets > 0                      →  cleared immediately on the next check
  *   userTurns === 0                  →  never flagged (empty conversation)
  *
+ * The same verdict also names the ops that found nothing although the page
+ * shows what they need (`missingOps` in `opDiagnostics.ts`): a `sidebar` op
+ * that stopped matching after a redesign, say, while another op on `body`
+ * keeps the plugin-wide count above zero. Those ops are reported beside the
+ * flag, never instead of it, and `page` keys are judged on an empty chat too.
+ *
  * Quiet detection drives the timing so a slow network never produces a false
  * positive; a fixed deadline only caps how long the first verdict may wait.
  * Pure-CSS plugins are never tracked (they have no countable targets). The
  * engine's own MutationObserver feeds `noteMutation`; the monitor installs
  * none of its own.
  */
+import { type OpDiagnostic, missingOps } from './opDiagnostics';
 
 export interface HealthMonitorOptions {
   /** Elements the site adapter recognises as user turns; 0 means "empty page". */
   readonly countUserTurns: () => number;
-  readonly onChange?: (id: string, noEffect: boolean) => void;
+  readonly onChange?: (id: string, noEffect: boolean, zeroOps: readonly number[]) => void;
   /** DOM silence required before a verdict. */
   readonly quietMs?: number;
   /** Upper bound on the wait for the first verdict after a plugin is tracked. */
@@ -30,14 +37,25 @@ export interface HealthMonitorOptions {
 export const HEALTH_QUIET_MS = 1_500;
 export const HEALTH_MAX_WAIT_MS = 10_000;
 
-interface Tracked {
-  readonly countTargets: () => number;
-  noEffect: boolean | undefined;
+/** One look at a plugin's targets. */
+export interface HealthSample {
+  /** Elements its ops and primitive counters found, page-root targets included. */
+  readonly targets: number;
+  /** Its targeted ops, each with its own count. */
+  readonly ops: readonly OpDiagnostic[];
 }
+
+interface Tracked {
+  readonly sample: () => HealthSample;
+  noEffect: boolean | undefined;
+  zeroOps: readonly number[];
+}
+
+const EMPTY_SAMPLE: HealthSample = { targets: 0, ops: [] };
 
 export class HealthMonitor {
   private readonly countUserTurns: () => number;
-  private readonly onChange?: (id: string, noEffect: boolean) => void;
+  private readonly onChange?: HealthMonitorOptions['onChange'];
   private readonly quietMs: number;
   private readonly maxWaitMs: number;
   private readonly tracked = new Map<string, Tracked>();
@@ -54,9 +72,9 @@ export class HealthMonitor {
   }
 
   /** Start watching a plugin. Its first verdict arrives after the next quiet period. */
-  track(id: string, countTargets: () => number): void {
+  track(id: string, sample: () => HealthSample): void {
     if (this.disposed) return;
-    this.tracked.set(id, { countTargets, noEffect: undefined });
+    this.tracked.set(id, { sample, noEffect: undefined, zeroOps: [] });
     this.armQuietTimer();
     this.armDeadline();
   }
@@ -86,22 +104,29 @@ export class HealthMonitor {
     return this.tracked.get(id)?.noEffect;
   }
 
+  /** `domOps` indexes the last verdict found nothing for (see the class doc); `[]` before one. */
+  zeroOps(id: string): readonly number[] {
+    return this.tracked.get(id)?.zeroOps ?? [];
+  }
+
   /** Evaluate every tracked plugin now (tests, and the quiet/deadline timers). */
   evaluateNow(): void {
     if (this.disposed || this.tracked.size === 0) return;
     this.clearDeadline();
     const userTurns = this.countUserTurns();
     for (const [id, entry] of this.tracked) {
-      let targets = 0;
+      let sample = EMPTY_SAMPLE;
       try {
-        targets = entry.countTargets();
+        sample = entry.sample();
       } catch {
-        targets = 0;
+        // A throwing sample reports nothing.
       }
-      const noEffect = userTurns > 0 && targets === 0;
-      if (entry.noEffect !== noEffect) {
+      const noEffect = userTurns > 0 && sample.targets === 0;
+      const zeroOps = missingOps(sample.ops, userTurns);
+      if (entry.noEffect !== noEffect || !sameIndexes(entry.zeroOps, zeroOps)) {
         entry.noEffect = noEffect;
-        this.onChange?.(id, noEffect);
+        entry.zeroOps = zeroOps;
+        this.onChange?.(id, noEffect, zeroOps);
       }
     }
   }
@@ -142,4 +167,8 @@ export class HealthMonitor {
     this.quietTimer = null;
     this.clearDeadline();
   }
+}
+
+function sameIndexes(a: readonly number[], b: readonly number[]): boolean {
+  return a.length === b.length && a.every((value, i) => value === b[i]);
 }

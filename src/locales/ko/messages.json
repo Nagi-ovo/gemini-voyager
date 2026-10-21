@@ -3349,6 +3349,14 @@
     "message": "이 페이지에서 처리할 대상을 찾지 못했습니다",
     "description": "Note on an enabled plugin that found no matching elements on this page"
   },
+  "pluginOpsFoundOnPage": {
+    "message": "이 페이지에서 찾은 수: {ops}",
+    "description": "Per-change match counts in a plugin's expanded details; {ops} lists each change's target with the number of elements it found now, e.g. 'sidebar · 0, body · 1'"
+  },
+  "pluginOpsPartlyFound": {
+    "message": "변경 {total}개 중 {count}개는 이 페이지에서 대상을 찾지 못했습니다: {targets}",
+    "description": "Warning on a running plugin when some of its changes found nothing on this page; {count} is how many, {total} all its changes, {targets} names their targets (e.g. 'sidebar')"
+  },
   "pluginUpdateAfterReload": {
     "message": "업데이트 {version}은 페이지를 새로고침하면 적용됩니다",
     "description": "Note that a newer plugin version takes effect on the next page load; {version} is the pending version"

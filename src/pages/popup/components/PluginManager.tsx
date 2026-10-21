@@ -15,6 +15,7 @@ import {
   siteHostsFromMatches,
   usePluginSite,
 } from './PluginIdentity';
+import { PluginOpsNotes } from './PluginOpsNotes';
 import { PluginSettings } from './PluginSettings';
 import { BLOCKED_NOTE_TONE_CLASS, blockedPluginNote } from './pluginBlockedNote';
 import { usePluginAccess } from './usePluginAccess';
@@ -284,6 +285,8 @@ export function PluginManager({
                       {t('pluginNoEffectOnPage')}
                     </p>
                   )}
+
+                  <PluginOpsNotes status={status} isOpen={isOpen} t={t} />
 
                   {status?.pendingVersion && (
                     <p className="text-muted-foreground mt-1 text-[11px] leading-snug">

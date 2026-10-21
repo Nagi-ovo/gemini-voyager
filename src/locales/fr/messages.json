@@ -3349,6 +3349,14 @@
     "message": "N'a rien trouvé sur quoi agir dans cette page",
     "description": "Note on an enabled plugin that found no matching elements on this page"
   },
+  "pluginOpsFoundOnPage": {
+    "message": "Trouvé sur cette page : {ops}",
+    "description": "Per-change match counts in a plugin's expanded details; {ops} lists each change's target with the number of elements it found now, e.g. 'sidebar · 0, body · 1'"
+  },
+  "pluginOpsPartlyFound": {
+    "message": "Rien trouvé sur cette page pour {count} des {total} modifications : {targets}",
+    "description": "Warning on a running plugin when some of its changes found nothing on this page; {count} is how many, {total} all its changes, {targets} names their targets (e.g. 'sidebar')"
+  },
   "pluginUpdateAfterReload": {
     "message": "La mise à jour {version} sera appliquée après le rechargement de la page",
     "description": "Note that a newer plugin version takes effect on the next page load; {version} is the pending version"

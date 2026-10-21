@@ -40,8 +40,9 @@ import type {
   SiteAdapter,
 } from '../types';
 import { DomEffectLedger } from './domEffectLedger';
-import { HealthMonitor } from './healthMonitor';
+import { type HealthMonitorOptions, type HealthSample, HealthMonitor } from './healthMonitor';
 import { type NativeHandler, getNativeHandler } from './nativeHandlers';
+import { diagnoseOps } from './opDiagnostics';
 import { PluginScope } from './pluginScope';
 import {
   type PrimitiveEnv,
@@ -68,8 +69,8 @@ export interface DeclarativeEngineOptions {
   readonly doc?: Document;
   /** Adapter used to resolve `semantic` selector refs. May be null (unknown site). */
   readonly adapter?: SiteAdapter | null;
-  /** Health verdict changes (plan D12): `noEffect` true = flagged, false = cleared. */
-  readonly onHealthChange?: (id: string, noEffect: boolean) => void;
+  /** Health verdict changes (plan D12): `noEffect` true = flagged; `zeroOps` the ops that found nothing. */
+  readonly onHealthChange?: HealthMonitorOptions['onChange'];
   /** Test hook: DOM silence before a health verdict. */
   readonly healthQuietMs?: number;
   readonly healthMaxWaitMs?: number;
@@ -146,6 +147,11 @@ export class DeclarativeEngine {
     return this.health.get(id);
   }
 
+  /** `domOps` indexes the last health verdict found nothing for, page-root targets aside. */
+  getZeroOps(id: string): readonly number[] {
+    return this.health.zeroOps(id);
+  }
+
   /** Force a health evaluation now (tests and debugging). */
   evaluateHealthNow(): void {
     this.health.evaluateNow();
@@ -186,14 +192,12 @@ export class DeclarativeEngine {
   private trackHealth(entry: ActivePlugin): void {
     const ops = entry.manifest.contributes.domOps ?? [];
     if (ops.length === 0 || !this.shouldTrackHealth(entry.manifest)) return;
-    this.health.track(entry.manifest.id, () => this.countTargets(entry));
+    this.health.track(entry.manifest.id, () => this.healthSample(entry));
   }
 
-  private countTargets(entry: ActivePlugin): number {
-    let total = 0;
-    for (const op of entry.manifest.contributes.domOps ?? []) {
-      if (isTargetedOp(op)) total += this.queryAll(op.target).length;
-    }
+  private healthSample(entry: ActivePlugin): HealthSample {
+    const ops = diagnoseOps(this.doc, this.adapter, entry.manifest);
+    let total = ops.reduce((sum, op) => sum + op.count, 0);
     for (const count of entry.targetCounters) {
       try {
         total += count();
@@ -201,7 +205,7 @@ export class DeclarativeEngine {
         // A throwing counter reports nothing.
       }
     }
-    return total;
+    return { targets: total, ops };
   }
 
   private countUserTurns(): number {
