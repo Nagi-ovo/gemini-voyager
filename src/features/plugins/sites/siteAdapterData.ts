@@ -30,6 +30,7 @@ import {
   bridgePolicySectionToData,
   readBridgePolicySection,
 } from './sections/bridgePolicyData';
+import { type FoldersSection, readFoldersSection } from './sections/foldersData';
 import { type ModelPickerSection, readModelPickerSection } from './sections/modelPickerData';
 import { type PageHooksSection, readPageHooksSection } from './sections/pageHooksData';
 import { type ProjectsSection, readProjectsSection } from './sections/projectsData';
@@ -51,6 +52,7 @@ export interface SiteAdapterData {
   readonly projects?: ProjectsSection;
   readonly pageHooks?: PageHooksSection;
   readonly bridge?: BridgePolicySection;
+  readonly folders?: FoldersSection;
 }
 
 const SITE_CAPABILITIES = ['chat', 'sidebar', 'composer', 'darkMode'] as const;
@@ -191,7 +193,7 @@ export interface SiteAdapterDataRead {
   /**
    * Problems that never fail `result`: a selector key this build does not
    * know (dropped), and a broken optional section (`modelPicker`, `projects`,
-   * `pageHooks`, `bridge`), which is left off the adapter. Selector fixes keep
+   * `pageHooks`, `bridge`, `folders`), which is left off the adapter. Selector fixes keep
    * reaching clients while only that key or capability is unavailable (a
    * missing `bridge` denies the bridge). Publishing fails on any of them.
    */
@@ -238,6 +240,7 @@ function parseSiteAdapterData(input: unknown): SiteAdapterDataParse {
   const projectsRead = readProjectsSection(input.projects, isValidSelectorSyntax);
   const pageHooksRead = readPageHooksSection(input.pageHooks, isValidSelectorSyntax);
   const bridgeRead = readBridgePolicySection(input.bridge);
+  const foldersRead = readFoldersSection(input.folders, isValidSelectorSyntax);
 
   if (!nonEmptyString(input.id) || !SITE_ID_PATTERN.test(input.id)) {
     issues.push({ path: 'id', message: 'must match ^[a-z][a-z0-9-]*$' });
@@ -271,6 +274,7 @@ function parseSiteAdapterData(input: unknown): SiteAdapterDataParse {
     ...projectsRead.issues,
     ...pageHooksRead.issues,
     ...bridgeRead.issues,
+    ...foldersRead.issues,
   ];
 
   if (input.brandColor !== undefined && !isHexColor(input.brandColor)) {
@@ -348,6 +352,7 @@ function parseSiteAdapterData(input: unknown): SiteAdapterDataParse {
         ...(projectsRead.projects ? { projects: projectsRead.projects } : {}),
         ...(pageHooksRead.pageHooks ? { pageHooks: pageHooksRead.pageHooks } : {}),
         ...(bridgeRead.policy ? { bridge: bridgeRead.policy } : {}),
+        ...(foldersRead.folders ? { folders: foldersRead.folders } : {}),
       },
     },
   };
@@ -373,5 +378,6 @@ export function siteAdapterToData(adapter: SiteAdapter): SiteAdapterData {
     ...(adapter.projects ? { projects: { ...adapter.projects } } : {}),
     ...(adapter.pageHooks ? { pageHooks: { ...adapter.pageHooks } } : {}),
     ...(adapter.bridge ? { bridge: bridgePolicySectionToData(adapter.bridge) } : {}),
+    ...(adapter.folders ? { folders: { ...adapter.folders } } : {}),
   };
 }
