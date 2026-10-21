@@ -96,6 +96,7 @@ describe('the official plugin topic cards', () => {
       await mount();
       expect(tocLinks()).toEqual([
         en.cloudSync,
+        en.localPluginsTitle,
         en.pluginTopicLayoutShort,
         en.pluginTopicSidebarShort,
         en.pluginTopicTimelineShort,
@@ -104,7 +105,6 @@ describe('the official plugin topic cards', () => {
         en.pluginTopicExportShort,
         en.pluginTopicInputShort,
         en.pluginTopicConversationsShort,
-        en.localPluginsTitle,
         en.folder_title,
         en.popupTocShortcuts,
         en.popupTocPrompts,
@@ -138,12 +138,12 @@ describe('the official plugin topic cards', () => {
       await mount();
       expect(tocLinks()).toEqual([
         en.cloudSync,
+        en.localPluginsTitle,
         en.pluginTopicLayoutShort,
         en.pluginTopicSidebarShort,
         en.pluginTopicContentShort,
         en.pluginTopicInputShort,
         en.pluginTopicConversationsShort,
-        en.localPluginsTitle,
         en.folder_title,
         en.popupTocPrompts,
         en.popupTocGeneral,

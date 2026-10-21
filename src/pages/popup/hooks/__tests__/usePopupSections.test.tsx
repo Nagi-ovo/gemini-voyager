@@ -109,8 +109,8 @@ describe('usePopupSections', () => {
     const cloudSyncOrder = Number(section('cloudSync')?.style.order);
     expect(section('folder')?.style.order).toBe('0');
     expect(cloudSyncOrder).toBeGreaterThan(0);
-    // The eight topic cards keep their default slots after Cloud Sync.
-    expect(Number(section('localPlugins')?.style.order)).toBe(cloudSyncOrder + 18);
+    // Local plugins keeps its default slot right after Cloud Sync.
+    expect(Number(section('localPlugins')?.style.order)).toBe(cloudSyncOrder + 2);
     expect(section('contextSync')).toBeUndefined();
     expect(section('nanobanana')).toBeUndefined();
     // A topic card takes no slot until it has a row on this tab.
@@ -119,7 +119,7 @@ describe('usePopupSections', () => {
 
     await render({ nativePopupPlatform: 'aistudio' });
     expect(sections.hydrateFromStorage).toBe(hydrate);
-    expect(Number(section('localPlugins')?.style.order)).toBe(cloudSyncOrder + 18);
+    expect(Number(section('localPlugins')?.style.order)).toBe(cloudSyncOrder + 2);
     expect(browser.storage.local.get).toHaveBeenCalledTimes(1);
   });
 
@@ -133,8 +133,8 @@ describe('usePopupSections', () => {
     // The topic cards have no rows here and the tree indent is hidden on AI Studio;
     // folderSpacing is the visible slot above Cloud Sync.
     expect(saved.slice(8, 13)).toEqual([
+      'pluginsInput',
       'pluginsConversations',
-      'localPlugins',
       'folderSpacing',
       'cloudSync',
       'folderTreeIndent',
@@ -155,7 +155,7 @@ describe('usePopupSections', () => {
     expect(section('folderTreeIndent')).toBeUndefined();
     expect(section('pluginsLayout')).toBeUndefined();
     expect(sections.getSectionProps('folderTreeIndent').order).toBe(24);
-    expect(sections.getSectionProps('pluginsLayout').order).toBe(2);
+    expect(sections.getSectionProps('pluginsLayout').order).toBe(4);
   });
 
   it('puts a section added since the order was saved in its default slot, not at the bottom', async () => {
@@ -171,8 +171,8 @@ describe('usePopupSections', () => {
     );
 
     const after = (id: string) => Number(section(id)?.style.order);
-    expect(after('pluginsLayout')).toBe(after('cloudSync') + 2);
-    expect(after('pluginsConversations')).toBe(after('cloudSync') + 16);
+    expect(after('pluginsLayout')).toBe(after('localPlugins') + 2);
+    expect(after('pluginsConversations')).toBe(after('localPlugins') + 16);
     expect(after('general')).toBe(0);
     expect(writeSyncStorage).not.toHaveBeenCalled();
   });

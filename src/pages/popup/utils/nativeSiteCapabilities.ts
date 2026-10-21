@@ -25,8 +25,9 @@ export const RETIRED_OFFICIAL_PLUGINS_SECTION_ID = 'officialPlugins';
 
 export const NATIVE_POPUP_SECTION_IDS = [
   'cloudSync',
-  ...OFFICIAL_PLUGIN_TOPIC_IDS,
+  // Above the topic cards: below them it sat about ten screens down on Gemini.
   'localPlugins',
+  ...OFFICIAL_PLUGIN_TOPIC_IDS,
   'folder',
   'folderSpacing',
   'folderTreeIndent',
