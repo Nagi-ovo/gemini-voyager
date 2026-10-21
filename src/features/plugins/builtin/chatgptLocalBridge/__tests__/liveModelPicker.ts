@@ -11,8 +11,9 @@
  *   500 ms later. A bridge tab opened in the background rendered that row
  *   without the slider inside (`sliderRendered: false`);
  * - the model radios sit in a collapsed `aria-hidden` sub-panel;
- * - Escape on the menu closes it. The selection is account-wide, so it
- *   survives closing and reopening.
+ * - Escape on the menu closes it, and only then does ChatGPT save the step
+ *   (measured 2026-10-21: one PATCH of `user_last_used_model_config` on close,
+ *   none while the menu is open). The saved step is account-wide.
  *
  * Knobs model what was not measured (a lower `max`, a stuck slider, another
  * name in the status) so the engine's refusals can be proven.
@@ -37,11 +38,18 @@ export interface PickerOptions {
   readonly sliderRendered?: boolean;
   /** The status line for a step, as another UI language words it. */
   readonly status?: (label: string, position: number, count: number) => string;
+  /** Escapes the open menu ignores, as when another layer sits above it; Infinity: all. */
+  readonly escapesIgnored?: number;
+  /** Closing keeps the step saved before, and the trigger names that one again. */
+  readonly discardsOnClose?: boolean;
 }
 
 export interface PickerState {
   readonly model: string;
+  /** The slider's step. */
   readonly effort: number;
+  /** The step ChatGPT saved: the slider's, taken only as the menu closes. */
+  readonly committed: number;
   readonly open: boolean;
   readonly pointerdowns: number;
   readonly keydowns: number;
@@ -71,6 +79,8 @@ export function mountLiveModelPicker(
     (options.status ?? zhStatus)(names[index], index + 1, names.length);
   const model = options.model ?? 'GPT-6';
   let effort = options.effort ?? labels.length - 1;
+  let committed = effort;
+  let escapesIgnored = options.escapesIgnored ?? 0;
   let pointerdowns = 0;
   let keydowns = 0;
   let overlapping = 0;
@@ -103,6 +113,9 @@ export function mountLiveModelPicker(
   const close = (): void => {
     menu?.remove();
     menu = null;
+    if (options.discardsOnClose) effort = committed;
+    else committed = effort;
+    paintTrigger();
     trigger.setAttribute('aria-expanded', 'false');
     trigger.setAttribute('data-state', 'closed');
     trigger.removeAttribute('aria-controls');
@@ -149,7 +162,9 @@ export function mountLiveModelPicker(
       }, STEP_DELAY_MS);
     });
     current.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') close();
+      if (event.key !== 'Escape') return;
+      if (escapesIgnored > 0) escapesIgnored -= 1;
+      else close();
     });
     document.body.appendChild(current);
     trigger.setAttribute('aria-expanded', 'true');
@@ -173,6 +188,7 @@ export function mountLiveModelPicker(
     state: () => ({
       model,
       effort,
+      committed,
       open: menu !== null,
       pointerdowns,
       keydowns,

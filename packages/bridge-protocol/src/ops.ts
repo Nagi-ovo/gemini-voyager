@@ -151,6 +151,11 @@ export interface ModelSelection {
 export interface ModelSelectResult {
   readonly changed: boolean;
   readonly previous?: ModelSelection;
+  /**
+   * Read before the menu closed, and returned only once it closed, which is
+   * when ChatGPT saves the choice. A failed select never carries it; its
+   * details say `applied: false` when ChatGPT kept none of the requested step.
+   */
   readonly observed: ModelSelection;
   readonly evidence: Evidence;
 }
