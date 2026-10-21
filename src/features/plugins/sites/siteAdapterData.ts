@@ -8,10 +8,17 @@
  *     override the bundled adapter at runtime (remote override, plan §3);
  *   - `scripts/build-plugin-catalog.ts`, which validates before publishing.
  *
- * Remote input is UNTRUSTED: every field is shape-checked, selector keys must
- * belong to the semantic vocabulary, colours must be hex literals (they are
- * concatenated into `color-mix(...)`), and sizes are capped. No schema library
- * by design (D17) — hand-written guards like `manifest/validate.ts`.
+ * Remote input is UNTRUSTED: every field is shape-checked, colours must be hex
+ * literals (they are concatenated into `color-mix(...)`), and sizes are
+ * capped. No schema library by design (D17) — hand-written guards like
+ * `manifest/validate.ts`.
+ *
+ * Two verdicts share one reader. `readSiteAdapterData` is the runtime read:
+ * a selector key outside this build's vocabulary is dropped and reported in
+ * `sectionIssues`, because the vocabulary only grows and one host file serves
+ * every extension version. `validateSiteAdapterData` is the authoring verdict
+ * (`plugin:check`, `catalog:build`): the same key is an error there, so a
+ * typo in a repo `site.json` still fails.
  */
 import type { Result } from '@/core/types/common';
 
@@ -143,7 +150,18 @@ function readTheme(raw: unknown, issues: ManifestIssue[]): SiteThemeDescriptor |
   };
 }
 
-function readSelectors(raw: unknown, issues: ManifestIssue[]): Record<string, string> {
+/**
+ * A key outside the vocabulary goes to `unknownKeys`, not `issues`: a newer
+ * catalog may name a key this build predates, and failing on it would drop
+ * every remote selector fix for the site. A known key with a bad value stays
+ * fatal, since the remote adapter replaces the bundled one whole and dropping
+ * the key would also lose the bundled selector for it.
+ */
+function readSelectors(
+  raw: unknown,
+  issues: ManifestIssue[],
+  unknownKeys: ManifestIssue[],
+): Record<string, string> {
   const selectors: Record<string, string> = {};
   if (raw === undefined) return selectors;
   if (!isRecord(raw)) {
@@ -152,7 +170,7 @@ function readSelectors(raw: unknown, issues: ManifestIssue[]): Record<string, st
   }
   for (const [key, value] of Object.entries(raw)) {
     if (!isSemanticSelectorKey(key)) {
-      issues.push({ path: `selectors.${key}`, message: 'unknown semantic selector key' });
+      unknownKeys.push({ path: `selectors.${key}`, message: 'unknown semantic selector key' });
       continue;
     }
     if (!nonEmptyString(value) || value.length > MAX_SELECTOR_LENGTH) {
@@ -171,42 +189,55 @@ function readSelectors(raw: unknown, issues: ManifestIssue[]): Record<string, st
 export interface SiteAdapterDataRead {
   readonly result: Result<SiteAdapter, ManifestIssue[]>;
   /**
-   * Problems in the optional sections (`modelPicker`, `projects`, `pageHooks`, `bridge`). They never
-   * fail `result`: the broken section is left off the adapter, so selector
-   * fixes keep reaching clients while only that capability is unavailable (a
+   * Problems that never fail `result`: a selector key this build does not
+   * know (dropped), and a broken optional section (`modelPicker`, `projects`,
+   * `pageHooks`, `bridge`), which is left off the adapter. Selector fixes keep
+   * reaching clients while only that key or capability is unavailable (a
    * missing `bridge` denies the bridge). Publishing fails on any of them.
    */
   readonly sectionIssues: readonly ManifestIssue[];
 }
 
-/**
- * Validate a `site.json` document. Selector keys outside the vocabulary and
- * malformed fields are reported as issues; the result is usable only when the
- * issue list is empty (a partially valid adapter must never mask a typo).
- */
-export function validateSiteAdapterData(input: unknown): Result<SiteAdapter, ManifestIssue[]> {
-  return readSiteAdapterData(input).result;
+interface SiteAdapterDataParse extends SiteAdapterDataRead {
+  /** The `selectors.<key>` subset of `sectionIssues`. */
+  readonly unknownKeys: readonly ManifestIssue[];
 }
 
-/** `validateSiteAdapterData` plus the optional-section issues it leaves out of the verdict. */
+/**
+ * Authoring verdict for a `site.json` document. Selector keys outside the
+ * vocabulary and malformed fields are reported as issues; the result is usable
+ * only when the issue list is empty (a partially valid adapter must never mask
+ * a typo). Runtime reads use `readSiteAdapterData`, which drops unknown keys.
+ */
+export function validateSiteAdapterData(input: unknown): Result<SiteAdapter, ManifestIssue[]> {
+  const { result, unknownKeys } = parseSiteAdapterData(input);
+  if (unknownKeys.length === 0) return result;
+  return { success: false, error: [...(result.success ? [] : result.error), ...unknownKeys] };
+}
+
+/**
+ * The adapter a client applies, plus the problems it tolerated: unknown
+ * selector keys and optional sections (`sectionIssues`).
+ */
 export function readSiteAdapterData(input: unknown): SiteAdapterDataRead {
+  const { result, sectionIssues } = parseSiteAdapterData(input);
+  return { result, sectionIssues };
+}
+
+function parseSiteAdapterData(input: unknown): SiteAdapterDataParse {
   if (!isRecord(input)) {
     return {
       result: { success: false, error: [{ path: '', message: 'site must be an object' }] },
       sectionIssues: [],
+      unknownKeys: [],
     };
   }
   const issues: ManifestIssue[] = [];
+  const unknownKeys: ManifestIssue[] = [];
   const modelPickerRead = readModelPickerSection(input.modelPicker);
   const projectsRead = readProjectsSection(input.projects, isValidSelectorSyntax);
   const pageHooksRead = readPageHooksSection(input.pageHooks, isValidSelectorSyntax);
   const bridgeRead = readBridgePolicySection(input.bridge);
-  const sectionIssues = [
-    ...modelPickerRead.issues,
-    ...projectsRead.issues,
-    ...pageHooksRead.issues,
-    ...bridgeRead.issues,
-  ];
 
   if (!nonEmptyString(input.id) || !SITE_ID_PATTERN.test(input.id)) {
     issues.push({ path: 'id', message: 'must match ^[a-z][a-z0-9-]*$' });
@@ -232,8 +263,15 @@ export function readSiteAdapterData(input: unknown): SiteAdapterDataRead {
     issues.push({ path: 'catalogRevision', message: 'must be a non-negative safe integer' });
   }
 
-  const selectors = readSelectors(input.selectors, issues);
+  const selectors = readSelectors(input.selectors, issues, unknownKeys);
   const theme = readTheme(input.theme, issues);
+  const sectionIssues = [
+    ...unknownKeys,
+    ...modelPickerRead.issues,
+    ...projectsRead.issues,
+    ...pageHooksRead.issues,
+    ...bridgeRead.issues,
+  ];
 
   if (input.brandColor !== undefined && !isHexColor(input.brandColor)) {
     issues.push({ path: 'brandColor', message: 'must be a hex colour' });
@@ -282,10 +320,11 @@ export function readSiteAdapterData(input: unknown): SiteAdapterDataRead {
   }
 
   if (issues.length > 0 || !theme)
-    return { result: { success: false, error: issues }, sectionIssues };
+    return { result: { success: false, error: issues }, sectionIssues, unknownKeys };
 
   return {
     sectionIssues,
+    unknownKeys,
     result: {
       success: true,
       data: {

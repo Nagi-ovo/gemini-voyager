@@ -89,10 +89,38 @@ describe('validateSiteAdapterData', () => {
     expect(issuesOf(VALID)).toEqual([]);
   });
 
-  it('rejects selector keys outside the semantic vocabulary', () => {
+  it('fails the authoring verdict for a selector key outside the vocabulary', () => {
     expect(issuesOf({ ...VALID, selectors: { ...VALID.selectors, messageBubble: '.x' } })).toEqual([
       'selectors.messageBubble',
     ]);
+    // Alongside other errors, so a typo is never hidden behind them.
+    expect(issuesOf({ ...VALID, id: 'Deep Seek', selectors: { messageBubble: '.x' } })).toEqual([
+      'id',
+      'selectors.messageBubble',
+    ]);
+  });
+
+  it('a newer catalog key no longer drops every remote selector fix', () => {
+    const read = readSiteAdapterData({
+      ...VALID,
+      selectors: { ...VALID.selectors, messageBubble: '.x' },
+    });
+    expect(read.result.success).toBe(true);
+    if (!read.result.success) return;
+    expect(read.result.data.selectors).toEqual(VALID.selectors);
+    expect(read.sectionIssues).toEqual([
+      { path: 'selectors.messageBubble', message: 'unknown semantic selector key' },
+    ]);
+  });
+
+  it('still drops the whole adapter for a known key whose selector does not parse', () => {
+    const read = readSiteAdapterData({
+      ...VALID,
+      selectors: { ...VALID.selectors, messageBubble: '.x', userTurn: '[' },
+    });
+    expect(read.result.success).toBe(false);
+    if (read.result.success) return;
+    expect(read.result.error.map((issue) => issue.path)).toEqual(['selectors.userTurn']);
   });
 
   it('rejects malformed ids, labels, matches, colours, capabilities and patterns', () => {

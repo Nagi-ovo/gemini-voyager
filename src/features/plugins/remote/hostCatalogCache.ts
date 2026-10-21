@@ -16,7 +16,7 @@ import { StorageKeys } from '@/core/types/common';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
 import { validateManifest } from '../manifest/validate';
-import { type SiteAdapterData, validateSiteAdapterData } from '../sites/siteAdapterData';
+import { type SiteAdapterData, readSiteAdapterData } from '../sites/siteAdapterData';
 import type { PluginManifest, SiteAdapter } from '../types';
 
 /**
@@ -88,7 +88,7 @@ export function normalizeHostCatalogCacheEntry(
     }
   }
   const site =
-    status === 'ok' && raw.site !== undefined && validateSiteAdapterData(raw.site).success
+    status === 'ok' && raw.site !== undefined && readSiteAdapterData(raw.site).result.success
       ? (raw.site as SiteAdapterData)
       : undefined;
   return {
@@ -114,7 +114,7 @@ export function siteAdapterFromEntry(
 ): SiteAdapter | null {
   if (!entry || entry.status !== 'ok' || entry.extensionVersion !== extensionVersion) return null;
   if (!entry.site) return null;
-  const result = validateSiteAdapterData(entry.site);
+  const { result } = readSiteAdapterData(entry.site);
   return result.success ? result.data : null;
 }
 

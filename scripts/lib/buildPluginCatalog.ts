@@ -24,7 +24,9 @@
  * of that, the primitive checks from plan §5 / §8 run here: a plugin may only
  * name primitives this build ships, its `engine` range may not admit a build
  * older than those primitives, and every semantic key it relies on must be
- * defined by its own site. Those rules live in `scripts/lib/pluginChecks.ts` so
+ * defined by its own site. A published site may not use a semantic key that
+ * the oldest consumer would reject together with its whole adapter
+ * (`sites/semanticKeyPublishing.ts`). Those rules live in `scripts/lib/pluginChecks.ts` so
  * that `bun run plugin:check` enforces exactly the same ones before a
  * contribution ever reaches this script. Any violation aborts the build: the
  * snapshot we ship is expected to be clean, and a broken host file would be
@@ -52,6 +54,11 @@ import {
 } from '../../src/features/plugins/remote/hostCatalogFile';
 import { allowsRemoteCatalog } from '../../src/features/plugins/sites/hostPolicy';
 import { matchesAnyPattern } from '../../src/features/plugins/sites/matchPattern';
+import {
+  OLDEST_REMOTE_SITE_CONSUMER_VERSION,
+  UNKNOWN_SEMANTIC_KEY_TOLERANT_VERSION,
+  semanticKeysTooNewToPublish,
+} from '../../src/features/plugins/sites/semanticKeyPublishing';
 import type { SiteAdapterData } from '../../src/features/plugins/sites/siteAdapterData';
 import {
   readSiteAdapterData,
@@ -199,6 +206,25 @@ function concreteHosts(matches: readonly string[]): readonly string[] {
 }
 
 /**
+ * Every release that fetches this host file must read the site's keys, or it
+ * would drop all of the site's remote selector fixes for one key it lacks.
+ */
+function assertPublishableSemanticKeys(host: string, site: CatalogSite): void {
+  const tooNew = semanticKeysTooNewToPublish(Object.keys(site.adapter.selectors));
+  if (tooNew.length === 0) return;
+  const keys = tooNew.map(({ key, since }) => `  - selectors.${key} (read since ${since})`);
+  throw new Error(
+    [
+      `${host}: sites/${site.dir}/site.json uses keys Voyager ${OLDEST_REMOTE_SITE_CONSUMER_VERSION} cannot read;`,
+      'that release would discard the whole remote adapter:',
+      ...keys,
+      `Publish them once OLDEST_REMOTE_SITE_CONSUMER_VERSION reaches ${UNKNOWN_SEMANTIC_KEY_TOLERANT_VERSION}`,
+      '(src/features/plugins/sites/semanticKeyPublishing.ts), or keep them out of published sites.',
+    ].join('\n'),
+  );
+}
+
+/**
  * Build every host file from a catalog directory. Pure: nothing is written and
  * nothing outside `catalogDir` is read.
  */
@@ -232,6 +258,7 @@ export async function buildHostCatalogs(
     if (!site) {
       throw new Error(`${host}: no site.json under sites/ covers this host`);
     }
+    assertPublishableSemanticKeys(host, site);
     files.set(host, {
       format: HOST_CATALOG_FORMAT,
       host,
@@ -266,8 +293,9 @@ export async function writeHostCatalogs(
     if (!validation) {
       throw new Error(`${host}: host catalog file was rejected by validateHostCatalogFile`);
     }
-    if (validation.issues.length > 0) {
-      throw new Error(`${host}: host catalog file has issues\n${formatIssues(validation.issues)}`);
+    const fileIssues = [...validation.issues, ...validation.siteIssues];
+    if (fileIssues.length > 0) {
+      throw new Error(`${host}: host catalog file has issues\n${formatIssues(fileIssues)}`);
     }
     if (validation.manifests.length !== file.plugins.length) {
       throw new Error(

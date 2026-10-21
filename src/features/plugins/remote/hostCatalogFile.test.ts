@@ -114,13 +114,34 @@ describe('validateHostCatalogFile', () => {
     });
 
     const invalid = validateHostCatalogFile(
-      file([VALID], { site: { ...site, selectors: { bogus: '.x' } } }),
+      file([VALID], { site: { ...site, selectors: { userTurn: '[' } } }),
       'chat.deepseek.com',
     );
     expect(invalid?.site).toBeUndefined();
-    expect(invalid?.issues.some((issue) => issue.path === 'site.selectors.bogus')).toBe(true);
+    expect(invalid?.issues.some((issue) => issue.path === 'site.selectors.userTurn')).toBe(true);
     // Plugins still load when only the site section is bad.
     expect(invalid?.manifests).toHaveLength(1);
+  });
+
+  it('a newer catalog key no longer drops every remote selector fix', () => {
+    const site = {
+      id: 'deepseek',
+      label: 'DeepSeek',
+      matches: ['https://chat.deepseek.com/*'],
+      selectors: { userTurn: '.ds-message.user-fixed', chatListItemFromTheFuture: 'li' },
+      theme: { hostSelector: 'body', lightSelector: 'body.light', darkSelector: 'body.dark' },
+      capabilities: ['chat'],
+    };
+    const result = validateHostCatalogFile(file([VALID], { site }), 'chat.deepseek.com');
+
+    expect(result?.site?.selectors).toEqual({ userTurn: '.ds-message.user-fixed' });
+    expect(result?.issues).toEqual([]);
+    expect(result?.siteIssues).toEqual([
+      {
+        path: 'site.selectors.chatListItemFromTheFuture',
+        message: 'unknown semantic selector key',
+      },
+    ]);
   });
 
   it('rejects CSS the bundled validator would reject (remote CSS is untrusted)', () => {

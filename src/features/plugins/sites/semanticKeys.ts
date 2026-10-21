@@ -4,8 +4,10 @@
  * A site adapter maps these keys to site-specific CSS selectors; plugins and
  * primitives reference the KEY, never the selector, so a site redesign is a
  * one-file adapter fix. The list only ever grows: a key is never removed or
- * given a new meaning, and a site.json that uses a key outside this list is
- * rejected so authors cannot invent one silently.
+ * given a new meaning. The authoring checks reject a site.json that uses a key
+ * outside this list, so authors cannot invent one silently; a runtime read
+ * drops such a key instead, since a newer catalog may carry it (`siteAdapterData.ts`).
+ * A new key also needs its `SEMANTIC_KEY_SINCE_VERSION` entry.
  *
  *   userTurn         a user message container
  *   assistantTurn    an assistant message container
@@ -55,4 +57,25 @@ export const SEMANTIC_KEY_DESCRIPTIONS: Readonly<Record<SemanticSelectorKey, str
   scrollContainer: 'the element that scrolls the conversation',
   composerRoot: 'the container around the prompt input and its action buttons',
   sendButton: 'the button that sends the prompt (may exist only while the prompt is non-empty)',
+};
+
+/**
+ * The first Voyager release (extension version, not engine) that reads each key
+ * in a remote `site` section. The plugin engine stayed at 1.9.0 across releases
+ * that reject an unknown key and the first one that drops it, so only the
+ * extension version tells them apart. A new key gets the release it ships in;
+ * `catalog:build` uses this through `semanticKeyPublishing.ts`.
+ */
+export const SEMANTIC_KEY_SINCE_VERSION: Readonly<Record<SemanticSelectorKey, string>> = {
+  userTurn: '1.9.0',
+  assistantTurn: '1.9.0',
+  thinkingBlock: '1.9.0',
+  codeBlock: '1.9.0',
+  composer: '1.9.0',
+  sidebar: '1.9.0',
+  sidePanel: '1.9.0',
+  headerActions: '1.9.0',
+  scrollContainer: '1.9.0',
+  composerRoot: '2.0.0',
+  sendButton: '2.0.0',
 };

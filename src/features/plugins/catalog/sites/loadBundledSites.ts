@@ -4,7 +4,7 @@
  * Vitest); the `create-voyager-plugin` CLI build feeds it the same files read
  * from disk. Both therefore validate and order the sites the same way.
  */
-import { validateSiteAdapterData } from '../../sites/siteAdapterData';
+import { readSiteAdapterData } from '../../sites/siteAdapterData';
 import type { SiteAdapter } from '../../types';
 
 export interface BundledSiteEntry {
@@ -44,7 +44,9 @@ export function loadBundledSiteAdapters(
       });
       continue;
     }
-    const result = validateSiteAdapterData(parsed);
+    // Runtime read, like the remote one; `catalog:build` and `plugin:check` hold the
+    // authored file to the strict verdict.
+    const { result } = readSiteAdapterData(parsed);
     if (!result.success) {
       options.onInvalid('Invalid bundled site.json', { path: entry.path, issues: result.error });
       continue;

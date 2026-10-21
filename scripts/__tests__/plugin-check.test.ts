@@ -368,6 +368,14 @@ describe('plugin-check', () => {
     expect(result.issues).toEqual([]);
   });
 
+  it('reports a site.json key outside the vocabulary, which clients would drop', async () => {
+    const result = await checkPluginDir(makeFixturePlugin({ selectors: { chatListIten: 'li' } }));
+    expect(result.ok).toBe(false);
+    expect(result.issues.join('\n')).toMatch(
+      /selectors\.chatListIten: unknown semantic selector key/,
+    );
+  });
+
   it('reports a site.json whose id does not match its directory', async () => {
     const result = await checkPluginDir(makeFixturePlugin({ site: { id: 'not-demo' } }));
     expect(result.ok).toBe(false);

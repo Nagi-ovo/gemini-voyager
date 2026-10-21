@@ -223,6 +223,12 @@ export class HostCatalogRefresher {
         issues: validation.issues,
       });
     }
+    if (validation.siteIssues.length > 0) {
+      logger.warn('Host catalog: applied the site adapter without parts this build cannot read', {
+        host,
+        issues: validation.siteIssues,
+      });
+    }
     const next: HostCatalogCacheEntry = {
       host,
       status: 'ok',

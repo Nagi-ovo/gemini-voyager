@@ -14,7 +14,7 @@
  */
 import { type ManifestIssue, validateManifest } from '../manifest/validate';
 import { matchesAnyPattern } from '../sites/matchPattern';
-import { validateSiteAdapterData } from '../sites/siteAdapterData';
+import { readSiteAdapterData } from '../sites/siteAdapterData';
 import type { PluginManifest, SiteAdapter } from '../types';
 
 export const HOST_CATALOG_FORMAT = 1;
@@ -33,6 +33,11 @@ export interface HostCatalogFileValidation {
    * runtime (plan §3); an invalid section is reported and ignored.
    */
   readonly site?: SiteAdapter;
+  /**
+   * What the accepted `site` left out without failing (logged, never fatal):
+   * selector keys this build does not know yet, and broken optional sections.
+   */
+  readonly siteIssues: readonly ManifestIssue[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -78,8 +83,10 @@ export function validateHostCatalogFile(
   });
 
   let site: SiteAdapter | undefined;
+  let siteIssues: readonly ManifestIssue[] = [];
   if (raw.site !== undefined) {
-    const result = validateSiteAdapterData(raw.site);
+    // The tolerant read: a newer catalog key must not discard the whole adapter.
+    const { result, sectionIssues } = readSiteAdapterData(raw.site);
     if (!result.success) {
       issues.push(
         ...result.error.map((issue) => ({ path: `site.${issue.path}`, message: issue.message })),
@@ -88,12 +95,14 @@ export function validateHostCatalogFile(
       issues.push({ path: 'site.matches', message: 'does not cover this host' });
     } else {
       site = result.data;
+      siteIssues = sectionIssues.map((issue) => ({ ...issue, path: `site.${issue.path}` }));
     }
   }
 
   return {
     manifests,
     issues,
+    siteIssues,
     ...(typeof raw.generatedAt === 'string' ? { generatedAt: raw.generatedAt } : {}),
     ...(site ? { site } : {}),
   };
