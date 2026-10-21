@@ -40,6 +40,7 @@ import {
   activateGeminiEditInputWidth,
   updateGeminiEditInputWidthSettings,
 } from './editInputWidth/pluginHandler';
+import { activateGeminiExport } from './export/pluginHandler';
 import { activateGeminiFork } from './fork/pluginHandler';
 import {
   activateGeminiGemsSidebar,
@@ -132,6 +133,7 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   },
   'voyager.gemini-markdown-fix': { activate: activateGeminiMarkdownFix },
   'voyager.gemini-message-timestamps': { activate: activateGeminiMessageTimestamps },
+  'voyager.gemini-export': { activate: activateGeminiExport },
   'voyager.gemini-canvas-copy': { activate: activateGeminiCanvasCopy },
   'voyager.gemini-deep-research-export': { activate: activateGeminiDeepResearchExport },
   'voyager.gemini-edit-input-width': {

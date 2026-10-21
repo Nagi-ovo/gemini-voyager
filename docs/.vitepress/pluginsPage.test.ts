@@ -104,7 +104,7 @@ describe('plugin table', () => {
     expect(rows).toEqual([]);
   });
 
-  it('ticks native folders and export on rows a plugin already has, and adds no row for them', () => {
+  it('ticks native folders on the row a plugin already has, and adds no row for them', () => {
     const folders: SitePlugin = {
       site: 'chatgpt',
       feature: 'folders',
@@ -149,7 +149,6 @@ describe('plugin table', () => {
       { site: 'claude', feature: 'timeline', manifest: manifest('c', 'Claude · Timeline') },
       { site: 'gemini', feature: 'echarts', manifest: manifest('e', 'Gemini · ECharts') },
       { site: 'gemini', feature: 'wavedrom', manifest: manifest('w', 'Gemini · WaveDrom') },
-      { site: 'chatgpt', feature: 'export', manifest: manifest('x', 'ChatGPT · Export') },
     ];
 
     const page = renderPluginsPage(
@@ -162,8 +161,24 @@ describe('plugin table', () => {
     expect(cells(page, 'Timeline')).toEqual(['on', '', '', '✓', '']);
     // One of Gemini's two diagram plugins is still off: the reader has to switch it on.
     expect(cells(page, 'ECharts')).toEqual(['✓', '', '', '', '']);
-    // Gemini's native export runs without a switch.
-    expect(cells(page, 'Export')).toEqual(['on', '', '✓', '', '']);
+  });
+
+  it("shows Gemini's export as its default-on plugin in ChatGPT's export row", () => {
+    const manifests = BUILTIN_PLUGINS.filter(
+      (plugin) =>
+        plugin.id === OFFICIAL_PLUGIN_IDS.geminiExport || plugin.id === 'voyager.chatgpt-export',
+    );
+    const rows = featureRows(builtinPlugins(manifests));
+    expect(ticked(rows)).toEqual([['export', ['chatgpt', 'gemini']]]);
+    expect(rows[0].native).toEqual([]);
+    for (const entry of PLUGINS_LOCALES) {
+      const prefix = entry.prefix ? `/${entry.prefix}` : '';
+      const exists = (path: string) => existsSync(resolve('docs', `.${path}.md`));
+      const page = renderPluginsPage(entry, rows, FRESH_INSTALL_ON, exists);
+      const chatgpt = rows[0].plugins.chatgpt![0];
+      const name = (chatgpt.i18n?.[entry.manifest]?.name ?? chatgpt.name).replace(/^[^·]*·\s*/, '');
+      expect(cells(page, `[${name}](${prefix}/guide/export)`)).toEqual(['on', '', '✓', '', '']);
+    }
   });
 
   it("links a row to its guide page in the page's locale only where that page exists", () => {

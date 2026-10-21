@@ -12,6 +12,7 @@ import {
   getResponseMenuContext,
   injectConversationMenuExportButton,
   injectResponseMenuExportButton,
+  removeExportMenuItems,
 } from './conversationMenuInjection';
 
 const CONVERSATION_MENU_TRIGGER_TEST_IDS = [
@@ -57,7 +58,8 @@ function parseMenuTriggerPanelIds(trigger: HTMLElement): string[] {
 /**
  * Start watching for export-capable menus. Page-wide and idempotent: while a
  * watcher runs, later calls are ignored. The watcher stops on `beforeunload`
- * or when the returned function is called.
+ * or when the returned function is called; stopping also removes the items
+ * from menus still open, and retries already scheduled inject nothing.
  */
 export function watchConversationMenusForExport(
   options: ConversationMenuExportOptions,
@@ -65,12 +67,21 @@ export function watchConversationMenusForExport(
   if (stopActiveWatcher) return () => {};
 
   const { label: readLabel, onExport } = options;
+  let stopped = false;
+  const timers = new Set<number>();
+  const later = (run: () => void, delayMs: number) => {
+    const id = window.setTimeout(() => {
+      timers.delete(id);
+      run();
+    }, delayMs);
+    timers.add(id);
+  };
 
   const tryInjectOnPanel = (
     menuPanel: HTMLElement,
     retriesLeft: number = MENU_INJECTION_RETRY_LIMIT,
   ) => {
-    if (!menuPanel.isConnected) return;
+    if (stopped || !menuPanel.isConnected) return;
     const label = readLabel();
     const tooltip = readLabel();
 
@@ -82,10 +93,7 @@ export function watchConversationMenusForExport(
         onClick: () => onExport(menuContext),
       });
       if (!injected && retriesLeft > 0) {
-        window.setTimeout(
-          () => tryInjectOnPanel(menuPanel, retriesLeft - 1),
-          MENU_INJECTION_RETRY_DELAY_MS,
-        );
+        later(() => tryInjectOnPanel(menuPanel, retriesLeft - 1), MENU_INJECTION_RETRY_DELAY_MS);
       }
       return;
     }
@@ -102,19 +110,13 @@ export function watchConversationMenusForExport(
           }),
       });
       if (!injected && retriesLeft > 0) {
-        window.setTimeout(
-          () => tryInjectOnPanel(menuPanel, retriesLeft - 1),
-          MENU_INJECTION_RETRY_DELAY_MS,
-        );
+        later(() => tryInjectOnPanel(menuPanel, retriesLeft - 1), MENU_INJECTION_RETRY_DELAY_MS);
       }
       return;
     }
 
     if (retriesLeft > 0) {
-      window.setTimeout(
-        () => tryInjectOnPanel(menuPanel, retriesLeft - 1),
-        MENU_INJECTION_RETRY_DELAY_MS,
-      );
+      later(() => tryInjectOnPanel(menuPanel, retriesLeft - 1), MENU_INJECTION_RETRY_DELAY_MS);
     }
   };
 
@@ -128,7 +130,7 @@ export function watchConversationMenusForExport(
         const closestPanel = node.closest(MENU_PANEL_SELECTOR) as HTMLElement | null;
         if (closestPanel) panelSet.add(closestPanel);
         panelSet.forEach((panel) => {
-          window.setTimeout(() => tryInjectOnPanel(panel), 30);
+          later(() => tryInjectOnPanel(panel), 30);
         });
       });
     }
@@ -137,7 +139,7 @@ export function watchConversationMenusForExport(
   observer.observe(document.body, { childList: true, subtree: true });
 
   const existingPanels = document.querySelectorAll<HTMLElement>(MENU_PANEL_SELECTOR);
-  existingPanels.forEach((panel) => window.setTimeout(() => tryInjectOnPanel(panel), 30));
+  existingPanels.forEach((panel) => later(() => tryInjectOnPanel(panel), 30));
 
   const triggerSelector = [...CONVERSATION_MENU_TRIGGER_TEST_IDS, RESPONSE_MENU_TRIGGER_TEST_ID]
     .map((id) => `[data-test-id="${id}"]`)
@@ -152,7 +154,7 @@ export function watchConversationMenusForExport(
     if (panelIds.length === 0) return;
 
     for (let attempt = 0; attempt <= MENU_INJECTION_RETRY_LIMIT; attempt++) {
-      window.setTimeout(() => {
+      later(() => {
         panelIds.forEach((id) => {
           const panel = document.getElementById(id);
           if (!(panel instanceof HTMLElement)) return;
@@ -167,7 +169,12 @@ export function watchConversationMenusForExport(
   document.addEventListener('pointerdown', onMenuTriggerInteraction, true);
 
   const stop = () => {
+    if (stopped) return;
+    stopped = true;
     window.removeEventListener('beforeunload', stop);
+    for (const id of timers) window.clearTimeout(id);
+    timers.clear();
+    removeExportMenuItems();
     try {
       observer.disconnect();
     } catch {}

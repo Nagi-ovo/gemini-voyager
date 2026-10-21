@@ -26,8 +26,9 @@ import {
 } from './exportLocale';
 import { resolveExportLogoAnchor } from './exportLogoAnchor';
 import { createExportRunner } from './exportRun';
+import type { ExportEntryPoints } from './exportSite';
 import { ensureGeneratedUiScreenshotPermission } from './generatedUiScreenshots';
-import { mountLogoExportButton } from './logoExportButton';
+import { type LogoExportButton, mountLogoExportButton } from './logoExportButton';
 import { mountPersistentExportToolbar } from './persistentExportToolbar';
 import { startResponseCopyImageActions } from './responseCopyImageAction';
 import { openSidebarConversationForExport } from './sidebarConversationNavigation';
@@ -38,28 +39,33 @@ const exportSite = resolveExportSite();
 const exportRunner = createExportRunner({ site: exportSite });
 
 let activeExportDialog: ExportDialog | null = null;
+// A run cut by Gemini's preload reload resumes on the first mount of the page
+// only: a remount (the plugin switched off and on) must not restart a run the
+// switch abandoned.
+let pendingRunChecked = false;
 
 /**
  * Mount the export entry point for the current platform.
  *
- * The returned cleanup is intentionally platform-agnostic. Native plugins own
- * their lifecycle and retain this callback; Gemini's native caller may ignore it
- * because its content script owns the page lifetime.
+ * The returned cleanup is platform-agnostic: the official plugin that owns
+ * export on this host (ChatGPT's, Gemini's) calls it when it unmounts, and it
+ * also ends the active run. Gemini's resume of a reloaded run starts here.
  */
 export async function startExportButton(
   options: { signal?: AbortSignal } = {},
 ): Promise<() => void> {
-  const noCleanup = () => {};
-  if (options.signal?.aborted) return noCleanup;
+  if (options.signal?.aborted) return () => {};
   // Check for pending export immediately
-  if (exportSite.history) {
+  if (exportSite.history && !pendingRunChecked) {
+    pendingRunChecked = true;
     void exportRunner.resumePending();
   }
+  const cancelRun = () => exportRunner.cancel();
 
   const dict = await loadExportDictionaries();
-  if (options.signal?.aborted) return noCleanup;
+  if (options.signal?.aborted) return cancelRun;
   let lang = await readExportLanguage();
-  if (options.signal?.aborted) return noCleanup;
+  if (options.signal?.aborted) return cancelRun;
   const entryPoints = exportSite.entryPoints;
 
   if (entryPoints.kind === 'toolbar') {
@@ -107,137 +113,157 @@ export async function startExportButton(
     };
   }
 
-  // --- Gemini path: logo anchor + menu injection ---
+  return mountGeminiEntryPoints(entryPoints, dict, lang, options.signal);
+}
 
-  watchConversationMenusForExport({
-    label: () => translateExportOr(dict, lang, 'exportChatJson', 'Export conversation history'),
-    onExport: (context) => {
-      if (context.menuType === 'sidebar' && context.trigger) {
-        const trigger = context.trigger;
-        void (async () => {
-          const opened = await openSidebarConversationForExport(
-            trigger,
-            entryPoints.userSelectors,
-            createExportTranslator(dict, lang),
-          );
-          if (!opened) {
-            return;
-          }
-          await showExportDialog(dict, lang);
-        })();
-        return;
-      }
-      if (context.menuType === 'message') {
-        const initialSelectedMessageId = entryPoints.assistantMessageIdFor(context.trigger);
-        void showExportDialog(dict, lang, { initialSelectedMessageId });
-        return;
-      }
-      void showExportDialog(dict, lang);
-    },
-  });
+/**
+ * Gemini's entry points: the conversation / sidebar / response menu items, the
+ * copy-as-image buttons, and the logo dropdown or, where the logo is gone, the
+ * persistent toolbar. The returned stop removes all of them, ends the active
+ * run and closes the dialog; the official plugin calls it when it unmounts.
+ */
+async function mountGeminiEntryPoints(
+  entryPoints: Extract<ExportEntryPoints, { kind: 'gemini' }>,
+  dict: ExportDictionaries,
+  initialLang: AppLanguage,
+  signal: AbortSignal | undefined,
+): Promise<() => void> {
+  let lang = initialLang;
+  const stops: Array<() => void> = [];
+  let stopped = false;
+  const stop = () => {
+    if (stopped) return;
+    stopped = true;
+    exportRunner.cancel();
+    activeExportDialog?.hide();
+    activeExportDialog = null;
+    for (const stopOne of stops.splice(0).reverse()) stopOne();
+  };
+  const openDialog = (initialSelectedMessageId?: string | null) =>
+    showExportDialog(dict, lang, { initialSelectedMessageId, signal });
+
+  stops.push(
+    watchConversationMenusForExport({
+      label: () => translateExportOr(dict, lang, 'exportChatJson', 'Export conversation history'),
+      onExport: (context) => {
+        if (context.menuType === 'sidebar' && context.trigger) {
+          const trigger = context.trigger;
+          void (async () => {
+            const opened = await openSidebarConversationForExport(
+              trigger,
+              entryPoints.userSelectors,
+              createExportTranslator(dict, lang),
+            );
+            if (!opened) {
+              return;
+            }
+            await openDialog();
+          })();
+          return;
+        }
+        if (context.menuType === 'message') {
+          void openDialog(entryPoints.assistantMessageIdFor(context.trigger));
+          return;
+        }
+        void openDialog();
+      },
+    }),
+  );
   const copyImageActions = startResponseCopyImageActions({
     dict,
     language: () => lang,
     site: exportSite,
     assistantMessageIdFor: entryPoints.assistantMessageIdFor,
   });
+  stops.push(copyImageActions.stop);
+
+  let toolbarHandle: ReturnType<typeof mountPersistentExportToolbar> | null = null;
+  let logoButton: LogoExportButton | null = null;
+  stops.push(
+    watchExportLanguage((next) => {
+      lang = next;
+      const [label, title] = entryPointTexts(dict, next);
+      toolbarHandle?.setText(label, title);
+      logoButton?.relabel({ title, label });
+      copyImageActions.relabel();
+    }),
+  );
 
   // The lr26 UI removed the logo entirely; resolveExportLogoAnchor short-circuits
   // there instead of waiting out the full timeout (which delayed this fallback
   // toolbar by several seconds on every conversation load).
   const logo = await resolveExportLogoAnchor(waitForElement);
-  if (!logo) {
-    // Fallback for lr26+ Gemini UI where the logo has been removed: mount a
-    // persistent top-right toolbar so users still have an always-visible
-    // export entry point. Menu injection (conversation ⋮ / response ⋮) still
-    // runs in parallel via the observers above.
-    let toolbarHandle: ReturnType<typeof mountPersistentExportToolbar> | null = null;
-
-    const readToolbarEnabled = async (): Promise<boolean> => {
-      try {
-        const stored = await new Promise<Record<string, unknown>>((resolve) => {
-          try {
-            chrome.storage?.sync?.get([StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED], (items) =>
-              resolve(items || {}),
-            );
-          } catch {
-            resolve({});
-          }
-        });
-        const v = stored[StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED];
-        return v !== false;
-      } catch {
-        return true;
-      }
-    };
-
-    const ensureToolbarVisibility = (enabled: boolean) => {
-      if (enabled && !toolbarHandle) {
-        const [label, tooltip] = entryPointTexts(dict, lang);
-        toolbarHandle = mountPersistentExportToolbar({
-          label,
-          tooltip,
-          onClick: () => showExportDialog(dict, lang),
-        });
-      } else if (!enabled && toolbarHandle) {
-        toolbarHandle.remove();
-        toolbarHandle = null;
-      }
-    };
-
-    ensureToolbarVisibility(await readToolbarEnabled());
-
-    const stopLanguage = watchExportLanguage((next) => {
-      lang = next;
-      toolbarHandle?.setText(...entryPointTexts(dict, next));
-      copyImageActions.relabel();
-    });
-    const onToolbarSettingChange = (
-      changes: Record<string, chrome.storage.StorageChange>,
-      area: string,
-    ) => {
-      if (area !== 'sync') return;
-      const toolbarChange = changes[StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED];
-      if (toolbarChange && 'newValue' in toolbarChange) {
-        ensureToolbarVisibility(toolbarChange.newValue !== false);
-      }
-    };
-    try {
-      chrome.storage?.onChanged?.addListener(onToolbarSettingChange);
-    } catch {}
-    window.addEventListener(
-      'beforeunload',
-      () => {
-        stopLanguage();
-        try {
-          chrome.storage?.onChanged?.removeListener(onToolbarSettingChange);
-        } catch {}
+  if (signal?.aborted) return stop;
+  if (logo) {
+    logoButton = mountLogoExportButton(logo, {
+      texts: () => {
+        const [label, title] = entryPointTexts(dict, lang);
+        return { title, label };
       },
-      { once: true },
-    );
-    return () => {};
+      onClick: () => void openDialog(),
+    });
+    if (logoButton) stops.push(logoButton.remove);
+    return stop;
   }
-  const logoButton = mountLogoExportButton(logo, {
-    texts: () => {
-      const [label, title] = entryPointTexts(dict, lang);
-      return { title, label };
-    },
-    onClick: () => void showExportDialog(dict, lang),
-  });
-  if (!logoButton) return () => {};
 
-  const stopLanguage = watchExportLanguage((next) => {
-    lang = next;
-    const [label, title] = entryPointTexts(dict, next);
-    logoButton.relabel({ title, label });
-    copyImageActions.relabel();
-  });
-  window.addEventListener('beforeunload', stopLanguage, { once: true });
-
-  return () => {
-    logoButton.stop();
-    stopLanguage();
+  // Fallback for lr26+ Gemini UI where the logo has been removed: mount a
+  // persistent top-right toolbar so users still have an always-visible
+  // export entry point. Menu injection (conversation ⋮ / response ⋮) still
+  // runs in parallel via the observers above.
+  const ensureToolbarVisibility = (enabled: boolean) => {
+    if (enabled && !toolbarHandle) {
+      const [label, tooltip] = entryPointTexts(dict, lang);
+      toolbarHandle = mountPersistentExportToolbar({
+        label,
+        tooltip,
+        onClick: () => void openDialog(),
+      });
+    } else if (!enabled && toolbarHandle) {
+      toolbarHandle.remove();
+      toolbarHandle = null;
+    }
   };
+  stops.push(() => ensureToolbarVisibility(false));
+
+  const onToolbarSettingChange = (
+    changes: Record<string, chrome.storage.StorageChange>,
+    area: string,
+  ) => {
+    if (area !== 'sync') return;
+    const toolbarChange = changes[StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED];
+    if (toolbarChange && 'newValue' in toolbarChange) {
+      ensureToolbarVisibility(toolbarChange.newValue !== false);
+    }
+  };
+  const toolbarEnabled = await readToolbarEnabled();
+  if (signal?.aborted || stopped) return stop;
+  ensureToolbarVisibility(toolbarEnabled);
+  try {
+    chrome.storage?.onChanged?.addListener(onToolbarSettingChange);
+    stops.push(() => {
+      try {
+        chrome.storage?.onChanged?.removeListener(onToolbarSettingChange);
+      } catch {}
+    });
+  } catch {}
+  return stop;
+}
+
+async function readToolbarEnabled(): Promise<boolean> {
+  try {
+    const stored = await new Promise<Record<string, unknown>>((resolve) => {
+      try {
+        chrome.storage?.sync?.get([StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED], (items) =>
+          resolve(items || {}),
+        );
+      } catch {
+        resolve({});
+      }
+    });
+    return stored[StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED] !== false;
+  } catch {
+    return true;
+  }
 }
 
 /** The export entry point's label and tooltip. */

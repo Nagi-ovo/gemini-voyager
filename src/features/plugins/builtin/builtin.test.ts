@@ -298,6 +298,7 @@ describe('BUILTIN_PLUGINS', () => {
   it.each([
     ['Markdown rendering fix', 'voyager.gemini-markdown-fix'],
     ['Message timestamps', 'voyager.gemini-message-timestamps'],
+    ['conversation export', 'voyager.gemini-export'],
     ['canvas copy', 'voyager.gemini-canvas-copy'],
     ['Deep Research export', 'voyager.gemini-deep-research-export'],
     ['context sync', 'voyager.gemini-context-sync'],

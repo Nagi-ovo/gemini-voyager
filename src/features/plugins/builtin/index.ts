@@ -14,6 +14,7 @@ import { GEMINI_CONTEXT_SYNC_MANIFEST } from './geminiContextSyncManifest';
 import { GEMINI_DEEP_RESEARCH_EXPORT_MANIFEST } from './geminiDeepResearchExportManifest';
 import { GEMINI_DEFAULT_MODEL_MANIFEST } from './geminiDefaultModelManifest';
 import { GEMINI_EDIT_INPUT_WIDTH_MANIFEST } from './geminiEditInputWidthManifest';
+import { GEMINI_EXPORT_MANIFEST } from './geminiExportManifest';
 import { GEMINI_FORK_MANIFEST } from './geminiForkManifest';
 import { GEMINI_GEMS_SIDEBAR_MANIFEST } from './geminiGemsSidebarManifest';
 import { GEMINI_HIGHLIGHT_MANIFEST } from './geminiHighlightManifest';
@@ -325,6 +326,7 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   GEMINI_SIDEBAR_FULL_HIDE_MANIFEST,
   GEMINI_MARKDOWN_FIX_MANIFEST,
   GEMINI_MESSAGE_TIMESTAMPS_MANIFEST,
+  GEMINI_EXPORT_MANIFEST,
   GEMINI_CANVAS_COPY_MANIFEST,
   GEMINI_DEEP_RESEARCH_EXPORT_MANIFEST,
   GEMINI_WATERMARK_DOWNLOAD_MANIFEST,

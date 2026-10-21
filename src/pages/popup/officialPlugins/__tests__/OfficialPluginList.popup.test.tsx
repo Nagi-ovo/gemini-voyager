@@ -127,6 +127,7 @@ describe('the official plugin list in the popup', () => {
       {
         title: TRANSLATIONS.en.pluginTopicExport,
         rows: [
+          OFFICIAL_PLUGIN_IDS.geminiExport,
           OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
           OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
           OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload,
@@ -255,6 +256,7 @@ describe('the official plugin list in the popup', () => {
     ['宝石', OFFICIAL_PLUGIN_IDS.geminiGemsSidebar],
     ['notebook', OFFICIAL_PLUGIN_IDS.geminiGemsSidebar],
     ['canvas', OFFICIAL_PLUGIN_IDS.geminiCanvasCopy],
+    ['导出', OFFICIAL_PLUGIN_IDS.geminiExport],
     [TRANSLATIONS.en.visualEffectSakura, OFFICIAL_PLUGIN_IDS.visualEffects],
     ['樱花', OFFICIAL_PLUGIN_IDS.visualEffects],
     ['thinking', OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport],

@@ -291,6 +291,11 @@ export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding
     StorageKeys.DEEP_RESEARCH_EXPORT_ENABLED,
     onUnlessFalse,
   ),
+  [OFFICIAL_PLUGIN_IDS.geminiExport]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiExport,
+    StorageKeys.GEMINI_EXPORT_ENABLED,
+    onUnlessFalse,
+  ),
   [OFFICIAL_PLUGIN_IDS.geminiMarkdownFix]: binding(
     OFFICIAL_PLUGIN_IDS.geminiMarkdownFix,
     StorageKeys.MARKDOWN_FIX_ENABLED,

@@ -45,6 +45,8 @@ export const CONVERSATION_STORAGE_KEYS = {
   CANVAS_COPY_ENABLED: 'gvCanvasCopyEnabled',
   // Default on: controls only the Deep Research export menu entries.
   DEEP_RESEARCH_EXPORT_ENABLED: 'gvDeepResearchExportEnabled',
+  // Default on: Gemini's conversation export predates its sync switch.
+  GEMINI_EXPORT_ENABLED: 'gvGeminiExportEnabled',
   EXPORT_IMAGE_WIDTH: 'gvExportImageWidth',
   EXPORT_SPEAKER_LABELS: 'gvExportSpeakerLabels',
   // Fallback top-right export toolbar shown when Gemini's logo (the normal

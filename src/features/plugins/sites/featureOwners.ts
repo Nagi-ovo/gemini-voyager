@@ -32,6 +32,7 @@ export type OwnedFeatureId =
   | 'messageTimestamps'
   | 'canvasCopy'
   | 'deepResearchExport'
+  | 'conversationExport'
   | 'watermarkDownload'
   | 'watermarkPreview'
   | 'gemsSidebar'
@@ -78,6 +79,7 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiWatermarkDownload: 'voyager.gemini-watermark-download',
   geminiWatermarkPreview: 'voyager.gemini-watermark-preview',
   geminiDeepResearchExport: 'voyager.gemini-deep-research-export',
+  geminiExport: 'voyager.gemini-export',
   geminiSidebarWidth: 'voyager.gemini-sidebar-width',
   aistudioSidebarWidth: 'voyager.aistudio-sidebar-width',
   geminiSidebarAutoHide: 'voyager.gemini-sidebar-auto-hide',
@@ -299,6 +301,14 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     site: 'gemini',
     feature: 'deepResearchExport',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
+    handlers: [],
+    healthTracking: false,
+  },
+  // The menus, copy-as-image, logo dropdown and toolbar; export services stay native.
+  {
+    site: 'gemini',
+    feature: 'conversationExport',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiExport,
     handlers: [],
     healthTracking: false,
   },

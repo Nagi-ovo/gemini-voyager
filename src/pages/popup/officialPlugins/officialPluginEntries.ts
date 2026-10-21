@@ -307,6 +307,15 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     searchAliases: ['echarts chart diagram'],
   },
   {
+    id: OFFICIAL_PLUGIN_IDS.geminiExport,
+    topic: 'pluginsExport',
+    // Export never had a switch: no old row to remember, only the words someone would try.
+    searchKeys: [],
+    searchAliases: [
+      'export conversation chat history json markdown pdf image copy reply 导出 对话 记录 图片 复制',
+    ],
+  },
+  {
     id: OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
     topic: 'pluginsExport',
     // New to the popup: no old row to remember, only the words someone would try.

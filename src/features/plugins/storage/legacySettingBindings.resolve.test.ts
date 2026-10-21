@@ -67,6 +67,18 @@ describe('resolveEffectiveEnabled', () => {
     },
   );
 
+  // Export never had a switch: a key that was never written keeps it on for everyone.
+  it.each([
+    ['missing', {}, true],
+    ['off', { [StorageKeys.GEMINI_EXPORT_ENABLED]: false }, false],
+    ['on', { [StorageKeys.GEMINI_EXPORT_ENABLED]: true }, true],
+    ['removed', { [StorageKeys.GEMINI_EXPORT_ENABLED]: undefined }, true],
+  ] as const)('keeps Gemini export %s authoritative over plugin state', (_label, snapshot, on) => {
+    const id = OFFICIAL_PLUGIN_IDS.geminiExport;
+    expect(resolveEffectiveEnabled({ [id]: { enabled: !on } }, snapshot, id)).toBe(on);
+    expect(legacyEnableWrite(id, on)).toEqual({ [StorageKeys.GEMINI_EXPORT_ENABLED]: on });
+  });
+
   it('uses the production default when the key is missing or was removed', () => {
     expect(resolveEffectiveEnabled({}, {}, FORMULA_G)).toBe(true);
     expect(

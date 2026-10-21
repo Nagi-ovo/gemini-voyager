@@ -360,3 +360,10 @@ export function injectResponseActionCopyImageButtons(
 
   return injected;
 }
+
+/** Remove every copy-as-image button injected under `root`. */
+export function removeResponseActionCopyImageButtons(root: ParentNode = document): void {
+  root
+    .querySelectorAll(`[data-test-id="${COPY_IMAGE_BUTTON_TEST_ID}"]`)
+    .forEach((button) => button.remove());
+}

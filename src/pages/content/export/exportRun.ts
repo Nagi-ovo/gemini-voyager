@@ -457,6 +457,7 @@ export function createExportRunner(deps: ExportRunnerDeps): ExportRunner {
    * Check if there is a pending export operation from a previous page load.
    */
   async function resumePending(): Promise<void> {
+    let controller: AbortController | null = null;
     try {
       const state = restorePendingExportState(sessionStorage, location.href);
       if (!state) return;
@@ -464,18 +465,28 @@ export function createExportRunner(deps: ExportRunnerDeps): ExportRunner {
       // If state exists, it means we clicked and page refreshed.
       // So we resume the sequence.
       logger.debug('[Gemini Voyager] Resuming pending export sequence...');
+      // The resumed run is the active one, so `cancel` (export switched off) ends it too.
+      controller = beginExportOperation();
 
       // We need i18n for final export/alert
       const dict = await loadExportDictionaries();
       const lang = await readExportLanguage();
+      throwIfExportCancelled(controller.signal);
 
       await executeExportSequenceWithProgress(
         { ...state, reloads: (state.reloads ?? 0) + 1 },
         { dict, lang },
       );
     } catch (e) {
+      // Cancelled like a fresh run: the stored run stays for a reload that cut it short.
+      if (isAbortError(e)) return;
       console.error('[Gemini Voyager] Failed to resume pending export:', e);
       clearPendingExportState(sessionStorage);
+    } finally {
+      if (controller && activeExportController === controller) {
+        activeExportController = null;
+        activeExportSelectionCleanup = null;
+      }
     }
   }
 

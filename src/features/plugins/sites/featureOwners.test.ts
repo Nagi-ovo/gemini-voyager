@@ -74,6 +74,7 @@ describe('feature owners', () => {
       ['markdownFix', 'voyager.gemini-markdown-fix'],
       ['messageTimestamps', 'voyager.gemini-message-timestamps'],
       ['deepResearchExport', 'voyager.gemini-deep-research-export'],
+      ['conversationExport', 'voyager.gemini-export'],
     ] as const) {
       expect(isPackagedOfficialPluginId(id)).toBe(true);
       expect(ownedFeatureByPluginId(id)).toMatchObject({ site: 'gemini', feature, handlers: [] });

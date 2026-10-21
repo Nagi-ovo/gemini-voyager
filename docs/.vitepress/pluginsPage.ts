@@ -110,13 +110,12 @@ const SKIPPED_PLUGIN_IDS: ReadonlySet<string> = new Set([
 
 /**
  * Features Voyager still runs natively (no plugin) on Gemini and AI Studio, ticked
- * only on rows a plugin already gives the table. Both are on without any setup:
- * folders read `geminiFolderEnabled` as on unless it is `false` (on AI Studio too,
- * behind its on-by-default master switch), and Gemini's export has no switch.
+ * only on rows a plugin already gives the table. Folders are on without any setup:
+ * they read `geminiFolderEnabled` as on unless it is `false` (on AI Studio too,
+ * behind its on-by-default master switch).
  */
 const NATIVE_FEATURES: Readonly<Record<string, readonly PluginSite[]>> = {
   folders: ['gemini', 'aistudio'],
-  export: ['gemini'],
 };
 
 /**
@@ -129,6 +128,7 @@ export const FRESH_INSTALL_ON: ReadonlySet<string> = new Set([
   OFFICIAL_PLUGIN_IDS.aistudioBatchDelete,
   OFFICIAL_PLUGIN_IDS.geminiTimeline,
   OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
+  OFFICIAL_PLUGIN_IDS.geminiExport,
   OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
   OFFICIAL_PLUGIN_IDS.geminiMarkdownFix,
   OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,

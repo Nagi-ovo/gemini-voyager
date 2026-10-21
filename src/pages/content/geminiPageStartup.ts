@@ -12,7 +12,6 @@ import type { OfficialAdmissionController } from '@/features/plugins/runtime/off
 import { startGeminiChatAppearance } from './appearanceStartup';
 import { admitBatchDelete } from './batchDeleteStartup';
 import { startChangelog } from './changelog/index';
-import { startExportButton } from './export/index';
 import type { NativeFeature, StopNativeFeature } from './featureLifecycle';
 import { startFolderManager } from './folder/index';
 import { startFolderItemFontSizeAdjuster } from './folderItemFontSize/index';
@@ -117,7 +116,7 @@ export async function startGeminiPage(deps: GeminiPageStartupDeps): Promise<void
   await settle(builtins.startMarkdownFix());
   await settle(renderers.startCodeBlockCollapse());
   await settle(builtins.startDefaultModel());
-  startExportButton();
+  await settle(builtins.startExport());
   await settle(builtins.startCanvasCopy());
   await delay(LIGHT_FEATURE_INIT_DELAY);
 

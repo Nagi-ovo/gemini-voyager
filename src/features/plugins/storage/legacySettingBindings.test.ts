@@ -131,6 +131,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.MARKDOWN_FIX_ENABLED,
         StorageKeys.CANVAS_COPY_ENABLED,
         StorageKeys.DEEP_RESEARCH_EXPORT_ENABLED,
+        StorageKeys.GEMINI_EXPORT_ENABLED,
         StorageKeys.GV_GEMS_SIDEBAR_ENABLED,
         StorageKeys.GV_GEMS_SIDEBAR_COUNT,
         StorageKeys.CONTEXT_SYNC_ENABLED,

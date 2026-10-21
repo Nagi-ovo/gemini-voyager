@@ -111,6 +111,11 @@ export const MOVED_SWITCHES = [
     missing: true,
   },
   {
+    id: OFFICIAL_PLUGIN_IDS.geminiExport,
+    key: StorageKeys.GEMINI_EXPORT_ENABLED,
+    missing: true,
+  },
+  {
     id: OFFICIAL_PLUGIN_IDS.geminiContextSync,
     key: StorageKeys.CONTEXT_SYNC_ENABLED,
     missing: false,

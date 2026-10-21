@@ -60,6 +60,7 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   watermarkPreview: 'Remove watermark in preview',
   canvasCopy: 'Canvas copy as Markdown',
   deepResearchExport: 'Deep Research export',
+  conversationExport: 'Conversation export',
   gemsSidebar: 'Recent Gems in sidebar',
   contextSync: 'Context Sync',
   userLatex: 'Render LaTeX in my messages',
