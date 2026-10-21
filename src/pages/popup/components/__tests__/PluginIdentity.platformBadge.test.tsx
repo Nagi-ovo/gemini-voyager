@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import type { PluginManifest } from '@/features/plugins/types';
 
 import { platformBadge } from '../PluginIdentity';
-import { IconDeepSeek } from '../WebsiteLogos';
+import { IconAIStudio, IconDeepSeek, IconGemini } from '../WebsiteLogos';
 
 describe('platformBadge', () => {
   const formulaCopy: PluginManifest = {
@@ -95,8 +95,21 @@ describe('platformBadge', () => {
     expect(platformBadge({ ...formulaCopy, matches: [pattern] })?.color).toBe(color);
   });
 
-  it('falls back to the first matched host when the current site is unknown', () => {
-    // No currentSiteId → infer from matches (claude is listed first).
-    expect(platformBadge(formulaCopy, undefined)?.color).toBe('#d97757');
+  it("shows Gemini's logo, not Claude's, for a multi-site plugin opened on Gemini", () => {
+    const plugin = {
+      ...formulaCopy,
+      matches: ['https://gemini.google.com/*', ...formulaCopy.matches],
+    };
+    const badge = platformBadge(plugin, 'gemini', 'https://gemini.google.com/app/abc');
+    expect(React.isValidElement(badge?.icon) && badge.icon.type).toBe(IconGemini);
+  });
+
+  it('infers the site of a single-site plugin before the current site is known', () => {
+    const badge = platformBadge({ ...formulaCopy, matches: ['https://aistudio.google.com/*'] });
+    expect(React.isValidElement(badge?.icon) && badge.icon.type).toBe(IconAIStudio);
+  });
+
+  it('shows no logo for a multi-site plugin when the current site is unknown', () => {
+    expect(platformBadge(formulaCopy, undefined)).toBeNull();
   });
 });

@@ -7,7 +7,7 @@ import type { PluginManifest, SettingField } from '@/features/plugins/types';
 import type { TranslationKey } from '@/utils/translations';
 
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { IconChatGPT, IconClaude, IconDeepSeek } from './WebsiteLogos';
+import { IconAIStudio, IconChatGPT, IconClaude, IconDeepSeek, IconGemini } from './WebsiteLogos';
 
 /**
  * Where a listed plugin came from. Anything else (an unknown source id, or a
@@ -21,8 +21,10 @@ const SOURCE_LABEL_KEYS: Readonly<Record<string, TranslationKey>> = {
   local: 'pluginSourceLocal',
 };
 
-/** Logo + default accent per known site id. */
+/** Logo + default accent for every site id the registry knows. */
 const SITE_BADGES: Record<string, { Icon: typeof IconClaude; color: string }> = {
+  gemini: { Icon: IconGemini, color: '#4285f4' },
+  aistudio: { Icon: IconAIStudio, color: '#1a73e8' },
   claude: { Icon: IconClaude, color: '#d97757' },
   chatgpt: { Icon: IconChatGPT, color: '#0ea5e9' },
   deepseek: { Icon: IconDeepSeek, color: '#4d6bfe' },
@@ -32,8 +34,9 @@ const SITE_BADGES: Record<string, { Icon: typeof IconClaude; color: string }> = 
  * Platform logo + brand color for a plugin. Prefers the site the popup is
  * actually open on (`currentSiteId`) so a multi-site plugin (e.g. formula-copy
  * matching both Claude and ChatGPT) shows the CURRENT site's logo — not whichever
- * match string happens to be first. Falls back to inferring from the plugin's
- * match hosts. Colour prefers the plugin's declared `theme.brand`.
+ * match string happens to be first. Without a current site, a plugin whose
+ * matches all belong to one site shows that site; anything else shows no logo.
+ * Colour prefers the plugin's declared `theme.brand`.
  */
 export function platformBadge(
   plugin: PluginManifest,
@@ -42,19 +45,24 @@ export function platformBadge(
 ): { icon: ReactNode; color: string } | null {
   const brand = plugin.theme?.brand;
   if (activeUrl && !matchesAnyPattern(activeUrl, plugin.matches)) return null;
-  const current = currentSiteId ? SITE_BADGES[currentSiteId] : undefined;
-  if (current) return { icon: <current.Icon />, color: brand ?? current.color };
-  const hosts = plugin.matches.flatMap((pattern) => {
-    const match = /^(?:https?|\*):\/\/([^/]+)\//i.exec(pattern);
-    return match ? [match[1]] : [];
-  });
-  if (hosts.includes('claude.ai'))
-    return { icon: <IconClaude />, color: brand ?? SITE_BADGES.claude.color };
-  if (hosts.includes('chatgpt.com') || hosts.includes('chat.openai.com'))
-    return { icon: <IconChatGPT />, color: brand ?? SITE_BADGES.chatgpt.color };
-  if (hosts.includes('chat.deepseek.com'))
-    return { icon: <IconDeepSeek />, color: brand ?? SITE_BADGES.deepseek.color };
-  return null;
+  // Only the open page, or a plugin's single site, names the logo: a multi-site
+  // plugin opened on Gemini once borrowed Claude's because it was listed first.
+  const siteId = currentSiteId ?? soleMatchedSiteId(plugin.matches);
+  const badge = siteId ? SITE_BADGES[siteId] : undefined;
+  return badge ? { icon: <badge.Icon />, color: brand ?? badge.color } : null;
+}
+
+const BADGE_REGISTRY = SiteRegistry.createDefault();
+
+/** The one site every concrete host in `matches` belongs to, or undefined. */
+function soleMatchedSiteId(matches: readonly string[]): string | undefined {
+  const ids = new Set<string>();
+  for (const pattern of matches) {
+    const host = /^(?:https?|\*):\/\/([^/*]+)\//i.exec(pattern)?.[1];
+    const site = host ? BADGE_REGISTRY.resolveByUrl(`https://${host}/`) : null;
+    if (site) ids.add(site.id);
+  }
+  return ids.size === 1 ? [...ids][0] : undefined;
 }
 
 /** Strip a redundant site prefix ("Claude · ", "Gemini · "): the logo or the list already says it. */
