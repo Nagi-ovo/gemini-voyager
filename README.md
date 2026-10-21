@@ -84,7 +84,7 @@ This is the core of a plugin that blurs the sidebar before you take a screenshot
 
 `sidebar` is a name, not a selector. Each site's file says what it means there.
 
-Voyager's own features are built the same way. The timeline, formula copy, quote reply, reading width and nearly everything else ship as official plugins on top of the same primitives. Folders on Gemini and AI Studio and Gemini's export are the last pieces still running as built-in code, and they are moving over.
+Voyager's own features are built the same way. The timeline, formula copy, quote reply, reading width and nearly everything else ship as official plugins on top of the same primitives. Folders on Gemini and AI Studio are the last piece still running as built-in code, and they are moving over too.
 
 ## What you get
 
