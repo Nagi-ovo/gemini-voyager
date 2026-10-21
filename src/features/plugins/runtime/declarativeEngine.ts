@@ -31,31 +31,27 @@ import {
   PLUGIN_MARKER_ATTR,
   PLUGIN_STYLE_ID_PREFIX,
 } from '../constants';
-import { hasNativeParamTemplates, renderNativeParams } from '../manifest/nativeParamSettings';
-import {
-  attributeIssue,
-  renderSettingTemplate,
-  styleSheetIssue,
-  styleValueIssue,
-} from '../manifest/sinkGuards';
+import { renderSettingTemplate, styleSheetIssue } from '../manifest/sinkGuards';
 import type {
   DomOperation,
-  NativeOperation,
   PluginManifest,
   PluginSettings,
   SelectorRef,
   SiteAdapter,
 } from '../types';
-import { getPrimitive } from '../verbs/registry';
-import type { PrimitiveHandle } from '../verbs/types';
+import { DomEffectLedger } from './domEffectLedger';
 import { HealthMonitor } from './healthMonitor';
-import { InlineStyleParser } from './inlineStyleDeclarations';
-import { InlineStyleLedger } from './inlineStyleLedger';
 import { type NativeHandler, getNativeHandler } from './nativeHandlers';
 import { PluginScope } from './pluginScope';
+import {
+  type PrimitiveEnv,
+  type PrimitiveSlot,
+  activatePrimitives,
+  updatePrimitiveSettings,
+} from './primitiveLifecycle';
+import { applyOpToElement, isTargetedOp } from './targetedOps';
 
-interface ActivePlugin {
-  readonly manifest: PluginManifest;
+interface ActivePlugin extends PrimitiveSlot {
   styleEl: HTMLStyleElement | null;
   /** Current resolved setting values for CSS, DOM operations and native params. */
   settings: PluginSettings;
@@ -65,40 +61,6 @@ interface ActivePlugin {
   scope?: PluginScope;
   /** Serializes settings-driven scope restarts (dispose → re-activate). */
   scopeRestart?: Promise<void>;
-  /** Side-effect ledger shared by the plugin's `native` op primitives. */
-  primitiveScope?: PluginScope;
-  /** Serializes settings-driven primitive restarts. */
-  primitiveRestart?: Promise<void>;
-  /** Target counters registered by primitives (health signal, plan D12). */
-  targetCounters: Array<() => number>;
-  /** Handles of successfully activated primitives (settings updates in place). */
-  primitiveHandles: PrimitiveHandle[];
-  /** Number of native ops that activated (handles may still be arriving). */
-  primitiveActivations: number;
-}
-
-/** DOM ops that address page elements (everything but `native`). */
-type TargetedOperation = Exclude<DomOperation, NativeOperation>;
-
-function isTargetedOp(op: DomOperation): op is TargetedOperation {
-  return op.op !== 'native';
-}
-
-function nativeOps(manifest: PluginManifest): NativeOperation[] {
-  return (manifest.contributes.domOps ?? []).filter(
-    (op): op is NativeOperation => op.op === 'native',
-  );
-}
-
-/**
- * One overwritten attribute. `original` is the value *before any
- * plugin touched it* (captured once): `null` = attribute was absent.
- * `stack` holds each active plugin's desired value; the
- * top entry is the one currently written to the DOM (last writer wins).
- */
-interface OverrideLayer {
-  readonly original: string | null;
-  readonly stack: Array<{ id: string; value: string }>;
 }
 
 export interface DeclarativeEngineOptions {
@@ -132,15 +94,9 @@ export class DeclarativeEngine {
   private readonly shouldTrackHealth: (manifest: PluginManifest) => boolean;
   private readonly onRelease?: (manifest: PluginManifest, released: Promise<void>) => void;
 
-  // Engine-level, ref-counted ledgers shared across plugins (see class doc).
-  /** element → className → set of plugin ids that requested the class. */
-  private readonly classOwners = new Map<Element, Map<string, Set<string>>>();
-  /** element → attribute name → layer. */
-  private readonly attrLayers = new Map<Element, Map<string, OverrideLayer>>();
-  /** Shared original longhands and ordered declarations, including variable shorthands. */
-  private readonly styleLayers = new Map<HTMLElement, InlineStyleLedger>();
-  /** Expands `style` attribute values and `setStyle` entries into longhands. */
-  private styleParser: InlineStyleParser | null = null;
+  /** Engine-level, ref-counted ledgers shared across plugins (see class doc). */
+  private readonly ledger: DomEffectLedger;
+  private readonly primitiveEnv: PrimitiveEnv;
 
   private observer: MutationObserver | null = null;
   private reapplyScheduled = false;
@@ -150,6 +106,12 @@ export class DeclarativeEngine {
     this.adapter = options.adapter ?? null;
     this.shouldTrackHealth = options.shouldTrackHealth ?? (() => true);
     this.onRelease = options.onRelease;
+    this.ledger = new DomEffectLedger(this.doc);
+    this.primitiveEnv = {
+      doc: this.doc,
+      adapter: this.adapter,
+      isCurrent: (slot) => this.active.get(slot.manifest.id) === slot,
+    };
     this.health = new HealthMonitor({
       countUserTurns: () => this.countUserTurns(),
       onChange: options.onHealthChange,
@@ -214,96 +176,10 @@ export class DeclarativeEngine {
       entry.nativeHandler?.start?.(settings);
     }
     // `native` ops invoke first-party primitives by name with validated params.
-    this.activatePrimitives(entry, settings);
+    activatePrimitives(entry, settings, this.primitiveEnv);
     this.trackHealth(entry);
     this.syncObserver();
     logger.info('Plugin mounted', { id: manifest.id });
-  }
-
-  /**
-   * Run every `native` op of the plugin under one shared scope. An unknown
-   * handler or invalid params are skipped with a warning; the status machine
-   * has normally already reported them as needs-handler, so this is defence
-   * in depth, never a crash.
-   */
-  private activatePrimitives(entry: ActivePlugin, settings: PluginSettings): void {
-    const ops = nativeOps(entry.manifest);
-    if (ops.length === 0) return;
-    const scope = new PluginScope();
-    entry.primitiveScope = scope;
-    entry.targetCounters = [];
-    entry.primitiveHandles = [];
-    entry.primitiveActivations = 0;
-    const context = {
-      doc: this.doc,
-      adapter: this.adapter,
-      pluginId: entry.manifest.id,
-      settings,
-      setTargetCounter: (count: () => number) => {
-        entry.targetCounters.push(count);
-      },
-    };
-    for (const op of ops) {
-      const primitive = getPrimitive(op.handler);
-      if (!primitive) {
-        logger.warn('Unknown primitive', { id: entry.manifest.id, handler: op.handler });
-        continue;
-      }
-      const rendered = renderNativeParams(op.params, entry.manifest.contributes.settings, settings);
-      const params = rendered.success ? primitive.validateParams(rendered.data) : rendered;
-      if (!params.success) {
-        logger.warn('Invalid primitive params', {
-          id: entry.manifest.id,
-          handler: op.handler,
-          issues: params.error,
-        });
-        continue;
-      }
-      try {
-        const result = primitive.activate(scope, params.data, context);
-        entry.primitiveActivations += 1;
-        const adopt = (handle: void | PrimitiveHandle): void => {
-          if (handle && entry.primitiveScope === scope) entry.primitiveHandles.push(handle);
-        };
-        if (result instanceof Promise) {
-          result.then(adopt).catch((error) => {
-            logger.error('Primitive activation failed', {
-              id: entry.manifest.id,
-              handler: op.handler,
-              error: String(error),
-            });
-          });
-        } else {
-          adopt(result);
-        }
-      } catch (error) {
-        logger.error('Primitive activation failed', {
-          id: entry.manifest.id,
-          handler: op.handler,
-          error: String(error),
-        });
-      }
-    }
-  }
-
-  /**
-   * Dispose the primitives' scope, then re-activate under the new settings
-   * (serialized). Always chain: while a restart is still disposing there is no
-   * scope to take, but the newer settings must still get their activation once
-   * the queue drains — otherwise the stale restart bails on them and the plugin
-   * ends up with no primitives at all.
-   */
-  private restartPrimitives(entry: ActivePlugin, settings: PluginSettings): void {
-    const previous = entry.primitiveScope;
-    entry.primitiveScope = undefined;
-    entry.primitiveRestart = (entry.primitiveRestart ?? Promise.resolve()).then(async () => {
-      if (previous) await previous.dispose();
-      if (this.active.get(entry.manifest.id) !== entry) return;
-      if (entry.settings !== settings) return;
-      this.activatePrimitives(entry, settings);
-    });
-    // Begin teardown now: an immediate unmount cannot reach the scope held by this queue.
-    void previous?.dispose();
   }
 
   /** Plugins that address the page (DOM ops or primitives) get a health verdict. */
@@ -360,27 +236,7 @@ export class DeclarativeEngine {
     // Primitives read settings through their context at activation. Those
     // that can absorb the change in place do so; otherwise restart them under
     // the new values (same safety argument as above).
-    this.updatePrimitiveSettings(entry, settings);
-  }
-
-  private updatePrimitiveSettings(entry: ActivePlugin, settings: PluginSettings): void {
-    if (!entry.primitiveScope) {
-      // No live scope: either the plugin has no primitives, or a restart is
-      // still disposing and these settings must queue behind it.
-      if (entry.primitiveRestart) this.restartPrimitives(entry, settings);
-      return;
-    }
-    const handles = entry.primitiveHandles;
-    const allInPlace =
-      // An updater receives settings, not new params; templates need fresh activation.
-      !nativeOps(entry.manifest).some((op) => hasNativeParamTemplates(op.params)) &&
-      handles.length === entry.primitiveActivations &&
-      handles.every((handle) => typeof handle.updateSettings === 'function');
-    if (allInPlace && handles.length > 0) {
-      for (const handle of handles) handle.updateSettings?.(settings);
-      return;
-    }
-    this.restartPrimitives(entry, settings);
+    updatePrimitiveSettings(entry, settings, this.primitiveEnv);
   }
 
   /** Create a fresh scope for a scope-based handler and run its activation.
@@ -462,34 +318,8 @@ export class DeclarativeEngine {
   /** Re-apply all active plugins' dom ops immediately (exposed for tests + the
    *  rAF scheduler). Idempotent. */
   reapplyNow(): void {
-    this.restoreDetachedLedgerEntries();
+    this.ledger.restoreDetached();
     for (const entry of this.active.values()) this.applyDomOps(entry);
-  }
-
-  /** Restore detached elements before dropping their ledger entries. This
-   *  prevents the ledgers from pinning replaced SPA subtrees while preserving
-   *  reversibility if a framework later reattaches the same element. */
-  private restoreDetachedLedgerEntries(): void {
-    for (const [el, perEl] of this.classOwners) {
-      if (this.doc.contains(el)) continue;
-      for (const className of perEl.keys()) el.classList.remove(className);
-      this.classOwners.delete(el);
-    }
-
-    for (const [el, perEl] of this.attrLayers) {
-      if (this.doc.contains(el)) continue;
-      for (const [name, layer] of perEl) {
-        if (layer.original === null) el.removeAttribute(name);
-        else el.setAttribute(name, layer.original);
-      }
-      this.attrLayers.delete(el);
-    }
-
-    for (const [el, ledger] of this.styleLayers) {
-      if (this.doc.contains(el)) continue;
-      ledger.restore();
-      this.styleLayers.delete(el);
-    }
   }
 
   // --- internals -----------------------------------------------------------
@@ -574,115 +404,15 @@ export class DeclarativeEngine {
 
   private applyOp(entry: ActivePlugin, op: DomOperation): void {
     if (!isTargetedOp(op)) return; // primitives run through activatePrimitives
-    const id = entry.manifest.id;
+    const render = (value: string): string => this.renderTemplate(entry, value);
     for (const el of this.queryAll(op.target)) {
-      switch (op.op) {
-        case 'addClass':
-          this.applyAddClass(id, el, op.className);
-          break;
-        case 'hide':
-          this.applyAddClass(id, el, PLUGIN_HIDDEN_CLASS);
-          break;
-        case 'setAttribute': {
-          const value = this.renderTemplate(entry, op.value);
-          const issue = attributeIssue(op.name, value);
-          if (issue) {
-            logger.warn('Rendered plugin attribute rejected', { id, name: op.name, issue });
-            return;
-          }
-          // A whole `style` write joins the per-property layers: kept in a ledger of
-          // its own, restoring it would wipe another live plugin's setStyle values.
-          if (op.name === 'style' && el instanceof HTMLElement) {
-            for (const [prop, declared, priority] of this.styles().parse(value)) {
-              this.applySetStyle(id, el, prop, declared, priority);
-            }
-          } else {
-            this.applySetAttribute(id, el, op.name, value);
-          }
-          break;
-        }
-        case 'setStyle':
-          if (el instanceof HTMLElement) {
-            for (const [prop, raw] of Object.entries(op.styles)) {
-              const value = this.renderTemplate(entry, raw);
-              const issue = styleValueIssue(value);
-              if (issue) {
-                logger.warn('Rendered plugin style rejected', { id, prop, issue });
-                continue;
-              }
-              // Literal shorthands expand; variable shorthands retain their declaration
-              // while the ledger captures every longhand they cover before writing it.
-              for (const [longhand, declared, priority] of this.styles().property(prop, value)) {
-                this.applySetStyle(id, el, longhand, declared, priority);
-              }
-            }
-          }
-          break;
-      }
+      if (!applyOpToElement(this.ledger, entry.manifest.id, el, op, render)) return;
     }
   }
 
-  private applyAddClass(id: string, el: Element, className: string): void {
-    const perEl = mapGet(this.classOwners, el, () => new Map<string, Set<string>>());
-    const owners = mapGet(perEl, className, () => new Set<string>());
-    owners.add(id);
-    // (Re)assert the class — also re-heals an SPA re-render that stripped it.
-    if (!el.classList.contains(className)) el.classList.add(className);
-  }
-
-  private applySetAttribute(id: string, el: Element, name: string, value: string): void {
-    const perEl = mapGet(this.attrLayers, el, () => new Map<string, OverrideLayer>());
-    const layer = mapGet(perEl, name, () => ({ original: el.getAttribute(name), stack: [] }));
-    pushLayerValue(layer, id, value);
-    el.setAttribute(name, topValue(layer));
-  }
-
-  private applySetStyle(
-    id: string,
-    el: HTMLElement,
-    prop: string,
-    value: string,
-    priority = '',
-  ): void {
-    const ledger = mapGet(this.styleLayers, el, () => new InlineStyleLedger(el));
-    ledger.set(id, [prop, value, priority], this.styles().properties(prop));
-  }
-
-  private styles(): InlineStyleParser {
-    this.styleParser ??= new InlineStyleParser(this.doc);
-    return this.styleParser;
-  }
-
-  /** Remove every contribution of `id` from the shared ledgers, restoring the
-   *  next-highest plugin's value (or the captured original when it was last). */
+  /** Remove every contribution of `id` from the shared ledgers. */
   private releasePlugin(id: string): void {
-    for (const [el, perEl] of this.classOwners) {
-      for (const [className, owners] of perEl) {
-        if (owners.delete(id) && owners.size === 0) {
-          el.classList.remove(className);
-          perEl.delete(className);
-        }
-      }
-      if (perEl.size === 0) this.classOwners.delete(el);
-    }
-
-    for (const [el, perEl] of this.attrLayers) {
-      for (const [name, layer] of perEl) {
-        if (!removeLayerValue(layer, id)) continue;
-        if (layer.stack.length === 0) {
-          if (layer.original === null) el.removeAttribute(name);
-          else el.setAttribute(name, layer.original);
-          perEl.delete(name);
-        } else {
-          el.setAttribute(name, topValue(layer));
-        }
-      }
-      if (perEl.size === 0) this.attrLayers.delete(el);
-    }
-
-    for (const [el, ledger] of this.styleLayers) {
-      if (ledger.release(id)) this.styleLayers.delete(el);
-    }
+    this.ledger.release(id);
   }
 
   /** Observe only while some active plugin actually has domOps or awaits a
@@ -727,31 +457,4 @@ export class DeclarativeEngine {
     if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
     else setTimeout(run, 16);
   }
-}
-
-function mapGet<K, V>(map: Map<K, V>, key: K, create: () => V): V {
-  let value = map.get(key);
-  if (value === undefined) {
-    value = create();
-    map.set(key, value);
-  }
-  return value;
-}
-
-/** Update-or-insert a plugin's desired value, moving it to the top of the stack. */
-function pushLayerValue(layer: OverrideLayer, id: string, value: string): void {
-  removeLayerValue(layer, id);
-  layer.stack.push({ id, value });
-}
-
-/** Remove a plugin's entry from the stack. Returns true if one was present. */
-function removeLayerValue(layer: OverrideLayer, id: string): boolean {
-  const index = layer.stack.findIndex((entry) => entry.id === id);
-  if (index < 0) return false;
-  layer.stack.splice(index, 1);
-  return true;
-}
-
-function topValue(layer: OverrideLayer): string {
-  return layer.stack[layer.stack.length - 1].value;
 }

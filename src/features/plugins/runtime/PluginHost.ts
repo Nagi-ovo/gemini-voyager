@@ -38,97 +38,45 @@ import {
   resolveSiteAdapterForUrl,
   resolveSiteOverride,
 } from '../remote/siteOverride';
-import { OFFICIAL_PLUGIN_IDS, tracksPluginHealth } from '../sites/featureOwners';
-import { hostPolicyRefusal, packagedSiteForUrl } from '../sites/hostPolicy';
-import { matchesAnyPattern } from '../sites/matchPattern';
+import { tracksPluginHealth } from '../sites/featureOwners';
+import { packagedSiteForUrl } from '../sites/hostPolicy';
 import { SiteRegistry } from '../sites/registry';
-import { sharedTimelineAdmissionId } from '../sites/sharedTimelinePolicy';
 import { createDefaultPluginSources, listPluginManifests } from '../sources/defaultSources';
-import {
-  type LegacySettingSnapshot,
-  resolveEffectiveSettings,
-} from '../storage/legacySettingBindings';
 import { type PluginStateMap, loadPluginState, subscribePluginState } from '../storage/pluginState';
-import {
-  type EntitlementProvider,
-  type PluginManifest,
-  type PluginSettings,
-  type PluginSource,
-  type PluginSourceContext,
-  type SiteAdapter,
-  hasNativeOps,
+import type {
+  EntitlementProvider,
+  PluginManifest,
+  PluginSource,
+  PluginSourceContext,
+  SiteAdapter,
 } from '../types';
-import { hasPrimitive } from '../verbs/registry';
+import { type FrozenVersions, freezeUpdatedPrimitives, staleMountedIds } from './catalogReloadPlan';
 import { DeclarativeEngine } from './declarativeEngine';
 import {
   DEFAULT_LEGACY_SETTINGS,
   DEFAULT_VISUAL_EFFECT_SETTINGS,
   type LegacySettingsSource,
   type LegacySnapshotFeed,
-  legacyBoundSettings,
   openLegacySnapshotFeed,
 } from './legacySnapshotFeed';
-import { PLUGIN_CATALOG_REFRESH_MESSAGE } from './messages';
+import { mountOrUpdate, unmountWhere } from './mountedSettings';
 import { CLOSED_ADMISSION, type OfficialAdmission } from './officialAdmission';
-import { type PluginStatus, findIncompatibility } from './pluginStatus';
+import { OpChain } from './opChain';
+import { evaluatePlugin, resolveRunSettings, targetsPage } from './pluginEligibility';
 import {
-  type PluginBlock,
-  type WishInput,
-  type WishVerdict,
-  blockedStatus,
-  wishVerdict,
-} from './reconcileArbitration';
+  type PluginHostOptions,
+  detectTopFrame,
+  sendCatalogRefreshRequest,
+} from './pluginHostOptions';
+import type { PluginStatus } from './pluginStatus';
+import { collectPluginStatuses } from './pluginStatuses';
+import type { PluginBlock, WishVerdict } from './reconcileArbitration';
 import { ReleaseLedger } from './releaseLedger';
-import { arbitrate } from './resourceArbiter';
-import { claimedResources, duplicateResourceClaims } from './resourceClaims';
+import { arbitrate, nextHolders } from './resourceArbiter';
+import { claimedResources } from './resourceClaims';
 import { type SurfaceSwitch, surfaceSwitchForUrl } from './surfaceSwitch';
 
-export interface PluginHostOptions {
-  readonly url?: string;
-  readonly registry?: SiteRegistry;
-  readonly sources?: readonly PluginSource[];
-  readonly entitlement?: EntitlementProvider;
-  readonly doc?: Document;
-  /** Injectable for tests; defaults to a runtime message to the background. */
-  readonly requestCatalogRefresh?: (host: string) => void;
-  /** Injectable for tests; defaults to `window.top === window`. */
-  readonly isTopFrame?: boolean;
-  /**
-   * The site's master switch (AI Studio's "Voyager on AI Studio"); while it is
-   * off only the shared visual effects may mount, preserving their early native
-   * lifetime. Defaults to `surfaceSwitchForUrl(url)`.
-   */
-  readonly surfaceSwitch?: SurfaceSwitch | null;
-  /**
-   * When the content script lets each packaged official plugin start
-   * (`officialAdmission.ts`). Defaults to `CLOSED_ADMISSION`: none ever does.
-   */
-  readonly admission?: OfficialAdmission;
-  /** Injectable for tests; native surfaces read every binding, other pages only shared visual keys. */
-  readonly legacySettings?: LegacySettingsSource;
-}
-
-/** Fire-and-forget: the background decides whether a network request is due. */
-function sendCatalogRefreshRequest(host: string): void {
-  const runtime = (globalThis as { chrome?: typeof chrome }).chrome?.runtime;
-  if (!runtime?.sendMessage) return;
-  try {
-    runtime.sendMessage({ type: PLUGIN_CATALOG_REFRESH_MESSAGE, payload: { host } }, () => {
-      // Read lastError so a missing receiver never logs "Unchecked runtime.lastError".
-      void runtime.lastError;
-    });
-  } catch {
-    // Extension context gone; nothing to refresh.
-  }
-}
-
-function detectTopFrame(): boolean {
-  try {
-    return typeof window === 'undefined' || window.top === window;
-  } catch {
-    return false;
-  }
-}
+export type { PluginHostOptions };
 
 export class PluginHost {
   private readonly url: string;
@@ -148,7 +96,7 @@ export class PluginHost {
    * version (plan D7): primitive-backed contributions switch only on the next
    * full page load, so the mounted manifest is pinned here until then.
    */
-  private readonly frozen = new Map<string, { mounted: PluginManifest; pendingVersion: string }>();
+  private readonly frozen: FrozenVersions = new Map();
   private state: PluginStateMap = {};
   private unsubscribeState: (() => void) | null = null;
   private unsubscribeCatalog: (() => void) | null = null;
@@ -171,8 +119,7 @@ export class PluginHost {
    * read true again — the ABA case).
    */
   private generation = 0;
-  /** Serializes reconcile/reload work so async passes never interleave. */
-  private opChain: Promise<void> = Promise.resolve();
+  private readonly opChain = new OpChain();
   /** Last settings pushed per plugin id, for change detection. */
   private readonly pushedSettings = new Map<string, string>();
   /**
@@ -326,74 +273,22 @@ export class PluginHost {
     this.blocked = new Map();
   }
 
-  /**
-   * Status of every plugin whose `matches` cover this page (plan §4.2).
-   * Incompatible and blocked plugins are reported with their reason instead
-   * of being hidden; the popup renders these and adds its own permission
-   * check.
-   */
+  /** Status of every plugin whose `matches` cover this page (`pluginStatuses.ts`). */
   getStatuses(): readonly PluginStatus[] {
-    const engine = this.engine;
-    const statuses: PluginStatus[] = [];
-    for (const listed of this.manifests) {
-      if (!matchesAnyPattern(this.url, listed.matches)) continue;
-      const pinned = this.frozen.get(listed.id);
-      const manifest = pinned?.mounted ?? listed;
-      const pending = pinned ? { pendingVersion: pinned.pendingVersion } : {};
-      if (hostPolicyRefusal(this.url, listed) !== null) {
-        statuses.push(blockedStatus(manifest, { reason: 'host-policy' }, pending));
-        continue;
-      }
-      const incompatibility = findIncompatibility({
-        manifest,
-        adapter: this.adapter,
-        hasPrimitive,
-      });
-      if (incompatibility) {
-        statuses.push({ ...incompatibility, ...pending });
-        continue;
-      }
-      if (duplicateResourceClaims(manifest).length > 0) {
-        statuses.push(blockedStatus(manifest, { reason: 'duplicate-claim' }, pending));
-        continue;
-      }
-      const admissionId = sharedTimelineAdmissionId(this.url, manifest);
-      const admissionState = admissionId ? this.admission.stateOf(admissionId) : null;
-      if (admissionState === 'denied') {
-        statuses.push(blockedStatus(manifest, { reason: 'host-policy' }, pending));
-        continue;
-      }
-      if (
-        admissionId &&
-        admissionState === 'pending' &&
-        wishVerdict(
-          {
-            state: this.state,
-            legacy: this.legacy?.current() ?? null,
-            legacyPhase: this.legacy?.phase() ?? 'none',
-            admission: this.admission,
-            admissionId,
-          },
-          manifest.id,
-        ) === 'reserve'
-      ) {
-        statuses.push(blockedStatus(manifest, { reason: 'pending', by: admissionId }, pending));
-        continue;
-      }
-      const base = { id: manifest.id, version: manifest.version, ...pending };
-      const block = this.blocked.get(manifest.id);
-      if (engine?.isActive(manifest.id)) {
-        statuses.push({
-          ...base,
-          kind: engine.getHealth(manifest.id) === true ? 'no-effect' : 'mounted',
-        });
-      } else if (block) {
-        statuses.push(blockedStatus(manifest, block, pending));
-      } else {
-        statuses.push({ ...base, kind: 'ready' });
-      }
-    }
-    return statuses;
+    return collectPluginStatuses({
+      url: this.url,
+      manifests: this.manifests,
+      frozen: this.frozen,
+      adapter: this.adapter,
+      wish: {
+        state: this.state,
+        legacy: this.legacy?.current() ?? null,
+        legacyPhase: this.legacy?.phase() ?? 'none',
+        admission: this.admission,
+      },
+      blocked: this.blocked,
+      engine: this.engine,
+    });
   }
 
   private createEngine(adapter: SiteAdapter | null): DeclarativeEngine {
@@ -412,67 +307,29 @@ export class PluginHost {
     });
   }
 
-  /**
-   * Append work to the host's single operation chain. Reconcile and catalog
-   * reloads are async (entitlement/storage awaits); running two passes
-   * concurrently lets a stale pass mount what a newer pass just unmounted.
-   *
-   * Returns the RAW operation promise so awaiting callers (start) observe the
-   * pass's own failure; the chain itself continues through a caught tail, so
-   * one failed pass never poisons ordering and fire-and-forget callers never
-   * leak an unhandled rejection (the tail's catch is attached to the same
-   * promise they discard).
-   */
+  /** Serialize reconcile/reload work so async passes never interleave (`opChain.ts`). */
   private enqueue(work: () => Promise<void>): Promise<void> {
-    const op = this.opChain.then(work);
-    this.opChain = op.catch((error) => {
-      if (isExtensionContextInvalidatedError(error)) return;
-      logger.error('PluginHost operation failed', { error: String(error) });
-    });
-    return op;
+    return this.opChain.enqueue(work);
   }
 
   /**
    * Reload manifests from the (refreshed) catalog and re-mount so new CSS
    * applies. A changed site adapter (remote override arrived or was
    * withdrawn) rebuilds the engine so semantic selectors resolve against it.
-   *
-   * Plan D7: a mounted plugin whose contributions run first-party code (a
-   * `native` op) keeps the version it started with; its update is recorded
-   * as pending and applies on the next full page load. Declarative plugins
-   * remount immediately when their version or contributions changed; a
-   * re-listed plugin that did not change keeps running untouched, so an
-   * unrelated import or catalog write never restarts it. A user-imported
-   * (`local.*`) plugin follows the same rules.
+   * Which plugins keep, freeze or restart: `catalogReloadPlan.ts` (plan D7).
    */
   private async reloadCatalog(gen: number): Promise<void> {
     const engine = this.engine;
     if (!engine || this.generation !== gen) return;
     const [manifests, adapter] = await Promise.all([this.loadManifests(), this.resolveAdapter()]);
     if (this.generation !== gen) return;
-    const previous = new Map(this.manifests.map((manifest) => [manifest.id, manifest]));
+    const listing = {
+      previous: new Map(this.manifests.map((manifest) => [manifest.id, manifest])),
+      next: manifests,
+      isActive: (id: string) => engine.isActive(id),
+    };
     const adapterChanged = !isSameSiteAdapter(adapter, this.adapter);
-    for (const next of manifests) {
-      const mounted = this.frozen.get(next.id)?.mounted ?? previous.get(next.id);
-      if (!mounted || !engine.isActive(next.id)) continue;
-      // An update that drops this page from its `matches` is a removal for
-      // this page, never a pending version: unfreeze so the unmount below
-      // sees it and reconcile() cannot revive it from the frozen manifest.
-      if (!this.targetsThisPage(next)) {
-        this.frozen.delete(next.id);
-        continue;
-      }
-      if (!hasNativeOps(mounted) && !hasNativeOps(next)) continue;
-      if (mounted.version === next.version && sameContributions(mounted, next)) {
-        this.frozen.delete(next.id);
-        continue;
-      }
-      this.frozen.set(next.id, { mounted, pendingVersion: next.version });
-    }
-    // oxlint-disable-next-line unicorn/no-useless-spread -- snapshot: the loop body mutates the collection
-    for (const id of [...this.frozen.keys()]) {
-      if (!manifests.some((manifest) => manifest.id === id)) this.frozen.delete(id);
-    }
+    freezeUpdatedPrimitives(this.frozen, listing, (manifest) => this.targetsThisPage(manifest));
     this.manifests = manifests;
     if (adapterChanged) {
       engine.unmountAll();
@@ -480,25 +337,9 @@ export class PluginHost {
       this.adapter = adapter;
       this.engine = this.createEngine(adapter);
     } else {
-      // A plugin the refreshed catalog no longer lists (an authoritative
-      // delisting is the kill switch) leaves the page now: reconcile() only
-      // walks the new list, so it would otherwise run until teardown.
-      const listed = new Set(manifests.map((manifest) => manifest.id));
-      for (const id of previous.keys()) {
-        if (!listed.has(id) && engine.isActive(id)) {
-          void engine.unmount(id);
-          this.pushedSettings.delete(id);
-        }
-      }
-      // Remount only what changed: an unrelated import or a catalog write that
-      // re-lists the same plugin must not restart a running one (a primitive
-      // would lose its state, e.g. the turn navigator or Vim mode).
-      for (const manifest of manifests) {
-        if (this.frozen.has(manifest.id) || !engine.isActive(manifest.id)) continue;
-        const mounted = previous.get(manifest.id);
-        if (mounted && isSameMountedPlugin(mounted, manifest)) continue;
-        void engine.unmount(manifest.id);
-        this.pushedSettings.delete(manifest.id);
+      for (const id of staleMountedIds(listing, this.frozen)) {
+        void engine.unmount(id);
+        this.pushedSettings.delete(id);
       }
     }
     await this.reconcile(gen);
@@ -528,7 +369,17 @@ export class PluginHost {
     };
     for (const manifest of manifests) {
       if (this.generation !== gen) return;
-      const verdict = await this.evaluate(manifest, { state, legacy, legacyPhase, wasChangedLive });
+      const verdict = await evaluatePlugin(
+        manifest,
+        { state, legacy, legacyPhase, wasChangedLive },
+        {
+          url: this.url,
+          surfaceOn: this.surfaceOn,
+          admission: this.admission,
+          adapter: this.adapter,
+          entitlement: this.entitlement,
+        },
+      );
       if (verdict !== 'skip') verdicts[verdict].push(manifest);
     }
     if (this.generation !== gen) return;
@@ -537,52 +388,23 @@ export class PluginHost {
     // Release what is no longer wanted first, so arbitration below already
     // sees a runtime handed over in this very pass as shutting down.
     const wantedIds = new Set(wanted.map((manifest) => manifest.id));
-    this.unmountWhere(manifests, (id) => !wantedIds.has(id));
+    unmountWhere(engine, this.pushedSettings, manifests, (id) => !wantedIds.has(id));
     const { granted, blocked } = arbitrate(wanted, verdicts.reserve, this.holders, {
       awaiting: verdicts.await,
       releasingBy: (resource) => this.releases.releasing(resource)?.pluginId ?? null,
     });
     // A running plugin arbitration kept off anyway (a holder never is, so normally none).
-    this.unmountWhere(manifests, (id) => !granted.has(id));
+    unmountWhere(engine, this.pushedSettings, manifests, (id) => !granted.has(id));
     for (const block of blocked.values()) {
       if (block.reason === 'releasing') this.wakeWhenReleased(block.resources, gen);
     }
     for (const manifest of wanted) {
       if (!granted.has(manifest.id)) continue;
-      const settings = this.resolveSettings(manifest, state, legacy);
-      if (engine.isActive(manifest.id)) {
-        // Already active + still should run: push setting changes, but only to
-        // the plugin whose settings actually changed — a state write for
-        // plugin A must not re-render every other active plugin.
-        const serialized = JSON.stringify(settings);
-        if (this.pushedSettings.get(manifest.id) !== serialized) {
-          engine.updateSettings(manifest.id, settings);
-          this.pushedSettings.set(manifest.id, serialized);
-        }
-        continue;
-      }
-      engine.mount(manifest, settings);
-      this.pushedSettings.set(manifest.id, JSON.stringify(settings));
+      const settings = resolveRunSettings(manifest, state, legacy);
+      mountOrUpdate(engine, this.pushedSettings, manifest, settings);
     }
-    // A holder is a plugin that runs, or held before and waits on its own
-    // release (an engine rebuild); a plugin that has never run displaces nobody.
-    const previousHolders = this.holders;
-    const waiting = [...blocked].filter(([, block]) => block.reason === 'releasing');
-    this.holders = new Set(
-      [...granted, ...waiting.map(([id]) => id)].filter(
-        (id) => engine.isActive(id) || previousHolders.has(id),
-      ),
-    );
+    this.holders = nextHolders({ granted, blocked }, this.holders, (id) => engine.isActive(id));
     this.blocked = blocked;
-  }
-
-  private unmountWhere(manifests: readonly PluginManifest[], drop: (id: string) => boolean): void {
-    const engine = this.engine;
-    for (const manifest of manifests) {
-      if (!engine?.isActive(manifest.id) || !drop(manifest.id)) continue;
-      void engine.unmount(manifest.id);
-      this.pushedSettings.delete(manifest.id);
-    }
   }
 
   /**
@@ -599,70 +421,8 @@ export class PluginHost {
     }
   }
 
-  /**
-   * Declared defaults merged with stored values; an official plugin bound to a
-   * legacy switch reads only its legacy value keys (`{}` without any). A bound
-   * plugin only reaches this once the snapshot has landed.
-   */
-  private resolveSettings(
-    manifest: PluginManifest,
-    state: PluginStateMap,
-    legacy: LegacySettingSnapshot | null,
-  ): PluginSettings {
-    return (
-      legacyBoundSettings(manifest.id, legacy ?? {}) ?? resolveEffectiveSettings(manifest, state)
-    );
-  }
-
-  /**
-   * The plugin's `matches` cover this page, and the page's host policy
-   * refuses nothing it brings (theme, native ops), judged by the page's real
-   * host rather than by its patterns.
-   */
   private targetsThisPage(manifest: PluginManifest): boolean {
-    if (!matchesAnyPattern(this.url, manifest.matches)) return false;
-    return hostPolicyRefusal(this.url, manifest) === null;
-  }
-
-  /**
-   * Whether the plugin runs (`run`), would run but awaits its admission
-   * (`reserve`) or its legacy switch (`await`, see `resourceArbiter.ts`), or
-   * stays off. Arbitration over page-wide runtimes comes after this.
-   */
-  private async evaluate(
-    manifest: PluginManifest,
-    wishInput: Omit<WishInput, 'admission'>,
-  ): Promise<WishVerdict> {
-    // Visual effects already ran before AI Studio's master gate in native startup.
-    if (!this.surfaceOn && manifest.id !== OFFICIAL_PLUGIN_IDS.visualEffects) return 'skip';
-    if (!this.targetsThisPage(manifest)) return 'skip';
-    const wish = wishVerdict(
-      {
-        ...wishInput,
-        admission: this.admission,
-        admissionId: sharedTimelineAdmissionId(this.url, manifest),
-      },
-      manifest.id,
-    );
-    if (wish === 'skip') return 'skip';
-    if (duplicateResourceClaims(manifest).length > 0) return 'skip';
-    const incompatibility = findIncompatibility({
-      manifest,
-      adapter: this.adapter,
-      hasPrimitive,
-    });
-    if (incompatibility) {
-      logger.warn('Plugin skipped: incompatible with this build or site', {
-        id: manifest.id,
-        status: incompatibility.kind,
-        requiredEngine: incompatibility.requiredEngine,
-        missingHandlers: incompatibility.missingHandlers,
-        missingSemantic: incompatibility.missingSemantic,
-      });
-      return 'skip';
-    }
-    const entitlement = await this.entitlement.getState(manifest.id);
-    return entitlement === 'locked' ? 'skip' : wish;
+    return targetsPage(this.url, manifest);
   }
 
   private async loadManifests(): Promise<readonly PluginManifest[]> {
@@ -680,13 +440,4 @@ export class PluginHost {
     if (!hasEnabledPluginForUrl(this.manifests, this.state, this.url)) return;
     this.requestCatalogRefresh(host);
   }
-}
-
-function sameContributions(a: PluginManifest, b: PluginManifest): boolean {
-  return JSON.stringify(a.contributes) === JSON.stringify(b.contributes);
-}
-
-/** A re-listed plugin the engine can keep running as mounted. */
-function isSameMountedPlugin(mounted: PluginManifest, next: PluginManifest): boolean {
-  return mounted.version === next.version && sameContributions(mounted, next);
 }

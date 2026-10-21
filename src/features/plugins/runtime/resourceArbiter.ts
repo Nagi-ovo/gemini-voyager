@@ -154,3 +154,19 @@ export function arbitrate(
 
   return { granted, blocked };
 }
+
+/**
+ * The incumbents of the next pass. A holder is a plugin that runs, or held
+ * before and waits on its own release (an engine rebuild); a plugin that has
+ * never run displaces nobody.
+ */
+export function nextHolders(
+  { granted, blocked }: ArbitrationResult,
+  previous: ReadonlySet<string>,
+  isRunning: (id: string) => boolean,
+): ReadonlySet<string> {
+  const waiting = [...blocked].filter(([, block]) => block.reason === 'releasing');
+  return new Set(
+    [...granted, ...waiting.map(([id]) => id)].filter((id) => isRunning(id) || previous.has(id)),
+  );
+}
