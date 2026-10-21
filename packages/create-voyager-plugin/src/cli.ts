@@ -4,21 +4,19 @@
  * `check` applies the popup's import rules after resolving contributor
  * engine notation.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
-
 import { renderWriteVoyagerPluginSkill } from '../../../src/features/plugins/local/authoring/authoringDocs';
 import { WRITE_PLUGIN_SKILL_URL } from '../../../src/features/plugins/local/authoring/skillLink';
 import { DEFAULT_ADAPTERS } from '../../../src/features/plugins/sites/registry';
 import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '../../../src/features/plugins/verbs/contracts';
 import { checkPluginDir, formatIssue } from './check';
 import { initPluginDir } from './init';
+import { writeSkillDir } from './skill';
 
 const USAGE = `Usage: create-voyager-plugin <command>
 
   init [dir] --site <site> [--force]  Write plugin.json, style.css and AGENTS.md
   check [dir] [--json]                Run the popup's import checks (exit 0 = imports)
-  skill [--out <file>]                Print the write-voyager-plugin skill
+  skill [--out <dir>]                 Print the write-voyager-plugin skill, or write its files
   --version                           Print the Voyager and plugin engine versions
 
 Sites: ${DEFAULT_ADAPTERS.map((site) => site.id).join(', ')}
@@ -91,14 +89,12 @@ function runInit(args: ParsedArgs): number {
 }
 
 function runSkill(args: ParsedArgs): number {
-  const text = renderWriteVoyagerPluginSkill(DEFAULT_ADAPTERS);
   const out = stringFlag(args, '--out');
   if (!out) {
-    process.stdout.write(text);
+    process.stdout.write(renderWriteVoyagerPluginSkill(DEFAULT_ADAPTERS));
     return 0;
   }
-  mkdirSync(dirname(out), { recursive: true });
-  writeFileSync(out, text);
+  writeSkillDir(out, DEFAULT_ADAPTERS);
   return 0;
 }
 

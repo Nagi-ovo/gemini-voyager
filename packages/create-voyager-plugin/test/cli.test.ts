@@ -16,11 +16,12 @@ import type { ManifestIssue } from '@/features/plugins/manifest/validate';
 import { DEFAULT_ADAPTERS } from '@/features/plugins/sites/registry';
 import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '@/features/plugins/verbs/contracts';
 
+import { listSkillMarkdown } from '../src/skill';
 import { CORPUS, type CorpusCase } from './corpus';
 
 const PACKAGE_DIR = resolve(__dirname, '..');
 const ROOT = resolve(PACKAGE_DIR, '../..');
-const SKILL_FILE = join(ROOT, 'docs/public/skills/write-voyager-plugin/SKILL.md');
+const SKILL_DIR = join(ROOT, 'docs/public/skills/write-voyager-plugin');
 
 let work = '';
 let cli = '';
@@ -163,9 +164,24 @@ describe('create-voyager-plugin bundle', () => {
     for (const specifier of imports) expect(specifier).toMatch(/^node:/);
   });
 
-  it('prints the committed write-voyager-plugin skill', () => {
+  it('writes the committed write-voyager-plugin skill folder with --out', () => {
+    const out = join(work, 'skill');
+    expect(run('skill', '--out', out).code).toBe(0);
+    const committed = listSkillMarkdown(SKILL_DIR);
+    expect(listSkillMarkdown(out)).toEqual(committed);
+    for (const path of committed) {
+      expect(readFileSync(join(out, path), 'utf8'), path).toBe(
+        readFileSync(join(SKILL_DIR, path), 'utf8'),
+      );
+    }
+  });
+
+  it('prints every skill file, SKILL.md first, without --out', () => {
     const result = run('skill');
     expect(result.code).toBe(0);
-    expect(result.stdout).toBe(readFileSync(SKILL_FILE, 'utf8'));
+    expect(result.stdout.startsWith(readFileSync(join(SKILL_DIR, 'SKILL.md'), 'utf8'))).toBe(true);
+    for (const path of listSkillMarkdown(SKILL_DIR)) {
+      expect(result.stdout).toContain(readFileSync(join(SKILL_DIR, path), 'utf8'));
+    }
   });
 });

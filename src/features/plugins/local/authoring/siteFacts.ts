@@ -1,7 +1,9 @@
 /**
  * What an author needs to know about one target site, read from its adapter:
- * the URL patterns `matches` may use, the semantic anchors it declares with
- * today's selectors, and what a local plugin may and may not bring there.
+ * the URL patterns `matches` may use, the semantic anchors it declares, and
+ * what a local plugin may and may not bring there. Anchors are listed by
+ * meaning only: the selectors behind them change with every site fix, and a
+ * plugin names the anchor, not its selector.
  */
 import { handlerResources } from '../../runtime/resourceClaims';
 import { FEATURE_OWNERS, type OwnedFeatureId } from '../../sites/featureOwners';
@@ -17,8 +19,6 @@ import {
 } from '../../sites/semanticKeys';
 import type { SiteAdapter } from '../../types';
 
-const SELECTOR_PREVIEW_CHARS = 240;
-
 /**
  * Caveats no adapter field carries. Keyed by site id; a site without notes
  * needs none.
@@ -26,8 +26,7 @@ const SELECTOR_PREVIEW_CHARS = 240;
 const SITE_NOTES: Readonly<Record<string, readonly string[]>> = {
   gemini: [
     'The `sidebar` anchor also matches Voyager’s own folder panel (`.gv-folder-container`). To change only Gemini’s navigation rail, target `bard-sidenav` with a CSS selector.',
-    'On Gemini, `draftSave` shares the native drafts: keys are `gvDraft_` plus the full pathname, including `/u/<index>/` and Gem routes. Different account slots have different keys; changing email within the same slot still shares stored drafts.',
-    'A confirmed first send clears the source new-chat draft. Leaving without sending keeps it. Restore waits check the current route, account and input edits; page unload only makes a best-effort final save.',
+    '`draftSave` keys drafts as `gvDraft_` plus the full pathname, including `/u/<index>/` and Gem routes. Different account slots have different keys; changing email within the same slot still shares stored drafts.',
     'On consumer gemini.google.com, `turnNavigator` requires literal `params: { "dataBackend": "shared" }` and the engine version shown in its primitive reference. All matches must stay on that host: no Business or mixed catalog sites. It shares Voyager’s existing stars, levels, collapse state and native account/turn identity; do not set turn, turnItem, conversationIdPattern, conversationIdAttribute or accountIdAttributes. Enterprise and custom-website coverage still refuse this rail at the native start point.',
   ],
   aistudio: [
@@ -81,13 +80,31 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   timeline: 'Show Timeline',
 };
 
+type SharedRuntimePolicy = 'onePerPage' | 'perElement' | 'sharedDrafts';
+
+const SHARED_RUNTIME_POLICY_TEXT: Readonly<Record<SharedRuntimePolicy, string>> = {
+  onePerPage:
+    'only the setting or the plugin runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, the plugin stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.',
+  perElement:
+    'both can run on one page: each claims the elements it works on, and an element the other already holds is left to it.',
+  sharedDrafts:
+    'the official and a local draft plugin may run together and share the same `gvDraft_` full-path data. Their writes and pruning are coordinated on this page. Turning either off keeps stored drafts.',
+};
+
+const SHARED_RUNTIME_ORDER: readonly SharedRuntimePolicy[] = [
+  'onePerPage',
+  'perElement',
+  'sharedDrafts',
+];
+
 /**
- * On a site where only some primitives are open, one line per open primitive
- * that also runs one of Voyager's own settings. A primitive with an exclusive
- * runtime (`runtime/resourceClaims.ts`) runs once per page: the setting goes
- * first on a fresh page or a free runtime, and a running one keeps it
- * (`runtime/resourceArbiter.ts`). Drafts instead share page-coordinated data;
- * element primitives claim each element, so the setting and a plugin run side by side.
+ * On a site where only some primitives are open, the ones that also run one
+ * of Voyager's own settings, grouped by how the two share a page. A primitive
+ * with an exclusive runtime (`runtime/resourceClaims.ts`) runs once per page:
+ * the setting goes first on a fresh page or a free runtime, and a running one
+ * keeps it (`runtime/resourceArbiter.ts`). Gemini drafts instead share
+ * page-coordinated data; element primitives claim each element, so the
+ * setting and a plugin run side by side.
  */
 function sharedRuntimeLines(site: SiteAdapter, open: ReadonlySet<string>): string[] {
   const packaged = new Set<string>(packagedSitesForPatterns(site.matches));
@@ -98,13 +115,25 @@ function sharedRuntimeLines(site: SiteAdapter, open: ReadonlySet<string>): strin
       if (open.has(handler)) settings.set(handler, OWNED_FEATURE_SETTINGS[owned.feature]);
     }
   }
-  return [...settings].map(([handler, setting]) =>
+  if (settings.size === 0) return [];
+  const policyOf = (handler: string): SharedRuntimePolicy =>
     handler === 'draftSave' && site.id === 'gemini'
-      ? `- \`draftSave\` runs the same code as Voyager’s own ${setting} setting. Official and local draft plugins may run together and share the same \`gvDraft_\` full-path data. Their writes and pruning are coordinated on this page. Turning either plugin off keeps stored drafts.`
+      ? 'sharedDrafts'
       : handlerResources(handler).length > 0
-        ? `- \`${handler}\` runs the same code as Voyager’s own ${setting} setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling \`${handler}\` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.`
-        : `- \`${handler}\` runs the same code as Voyager’s own ${setting} setting. Both can run on one page: each claims the elements it works on, and an element the other already holds is left to it.`,
-  );
+        ? 'onePerPage'
+        : 'perElement';
+  const groups = SHARED_RUNTIME_ORDER.map((policy) => ({
+    policy,
+    entries: [...settings].filter(([handler]) => policyOf(handler) === policy),
+  })).filter((group) => group.entries.length > 0);
+  return [
+    '',
+    'These primitives run the same code as one of Voyager’s own settings (named in parentheses):',
+    ...groups.map(
+      ({ policy, entries }) =>
+        `- ${entries.map(([handler, setting]) => `\`${handler}\` (${setting})`).join(', ')}: ${SHARED_RUNTIME_POLICY_TEXT[policy]}`,
+    ),
+  ];
 }
 
 /** Semantic keys the site declares, in vocabulary order. */
@@ -129,25 +158,21 @@ export function allowsPrimitive(site: SiteAdapter, handler: string): boolean {
   return allowed === 'all' || allowed.has(handler);
 }
 
+/** Whether a plugin on `site` may call only some primitives (or none). */
+export function restrictsPrimitives(site: SiteAdapter): boolean {
+  return allowedPrimitivesForSite(site) !== 'all';
+}
+
 /** A site with no restriction from the packaged host policy: any primitive, and a theme. */
 export function isUnrestrictedSite(site: SiteAdapter): boolean {
   return !forbidsTheme(site) && allowedPrimitivesForSite(site) === 'all';
 }
 
-function clip(selector: string): string {
-  return selector.length > SELECTOR_PREVIEW_CHARS
-    ? `${selector.slice(0, SELECTOR_PREVIEW_CHARS - 1)}…`
-    : selector;
-}
-
-/** One bullet per declared anchor: what it names and the selector behind it today. */
+/** One bullet per declared anchor: what it names. */
 export function anchorLines(site: SiteAdapter): string[] {
   const anchors = siteAnchors(site);
   if (anchors.length === 0) return ['- (none: use a CSS selector string as the target)'];
-  return anchors.map(
-    (key) =>
-      `- ${key}: ${SEMANTIC_KEY_DESCRIPTIONS[key]} (today it matches \`${clip(site.selectors[key] ?? '')}\`)`,
-  );
+  return anchors.map((key) => `- ${key}: ${SEMANTIC_KEY_DESCRIPTIONS[key]}`);
 }
 
 /** The facts section body for one site. */
@@ -185,7 +210,6 @@ export function siteFactLines(
               options.theme
                 ? `Primitives (native ops) and an optional "theme" accent are allowed on ${site.label}.`
                 : `Primitives (native ops) are allowed on ${site.label}.`,
-              '- `sendShortcut` claims one composer send mode for this entire page. While one plugin holds it, another reports a conflict and stays paused; turn the holder off to hand the mode over.',
             ]
           : []),
     ...(notes.length > 0 ? ['', ...notes.map((note) => `- ${note}`)] : []),

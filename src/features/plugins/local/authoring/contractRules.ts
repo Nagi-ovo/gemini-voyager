@@ -1,26 +1,23 @@
 /**
  * The site-independent rules of a local plugin, as text sections. Required
- * fields, op kinds, the attribute allowlist, setting kinds and primitives are
- * read from the gate's own exports, so this text cannot offer something the
- * import refuses. `audience` picks how the reader works: `chat` is an AI in a
+ * fields, op kinds, the attribute allowlist and setting kinds are read from
+ * the gate's own exports (primitives likewise, in `primitivesSection.ts`), so
+ * this text cannot offer something the import refuses. `audience` picks how the reader works: `chat` is an AI in a
  * chat tab whose reply the user pastes (CSS inlined, no "theme"), `agent` is a
  * coding agent with a file system that runs `create-voyager-plugin check`.
  * Primitives depend on the site, not the audience: both get them wherever the
  * gate accepts a `native` op.
  */
 
-import { NATIVE_PARAM_SETTINGS_SINCE_ENGINE } from '../../manifest/nativeParamSettings';
 import { ALLOWED_ATTRIBUTE_NAMES, ALLOWED_ATTRIBUTE_PREFIXES } from '../../manifest/sinkGuards';
 import { REQUIRED_STRINGS } from '../../manifest/validate';
 import type { SemanticSelectorKey } from '../../sites/semanticKeys';
-import { PLUGIN_CATEGORIES, type SiteAdapter } from '../../types';
+import { PLUGIN_CATEGORIES } from '../../types';
 import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '../../verbs/contracts';
 import { LOCAL_PLUGIN_ID_PREFIX } from '../localPluginId';
 import { LOCAL_SETTING_TYPES } from '../localPluginRules';
 import { inlineJson } from './jsonText';
 import { AUTHORING_OP_KINDS, AUTHORING_OP_TEMPLATES } from './pluginExamples';
-import { listPrimitiveReferences } from './primitiveReference';
-import { allowsPrimitive } from './siteFacts';
 
 export type ContractAudience = 'chat' | 'agent';
 
@@ -28,6 +25,21 @@ export interface ContractSection {
   readonly title: string;
   readonly lines: readonly string[];
 }
+
+/**
+ * Where the rules point the reader for per-site facts and the primitive list.
+ * One document (chat prompt, scaffold AGENTS.md) has both as sections; the
+ * public skill keeps them in files beside SKILL.md.
+ */
+export interface ContractRefs {
+  readonly sites: string;
+  readonly primitives: string;
+}
+
+export const IN_DOCUMENT_REFS: ContractRefs = {
+  sites: 'the target site section',
+  primitives: 'the Primitives list above',
+};
 
 /** The setAttribute names the gate allows, as the text lists them. */
 export function allowedAttributeText(): string {
@@ -37,11 +49,14 @@ export function allowedAttributeText(): string {
   ].join(', ');
 }
 
-export function manifestSection(audience: ContractAudience): ContractSection {
+export function manifestSection(
+  audience: ContractAudience,
+  refs: ContractRefs = IN_DOCUMENT_REFS,
+): ContractSection {
   return {
     title: 'Manifest contract',
     lines: [
-      `- Required non-empty string fields: ${REQUIRED_STRINGS.join(', ')}. Also "tier": "declarative", "matches" (see the target site) and "contributes".`,
+      `- Required non-empty string fields: ${REQUIRED_STRINGS.join(', ')}. Also "tier": "declarative", "matches" (see ${refs.sites}) and "contributes".`,
       `- "id": a short lowercase reverse-dotted slug such as "me.short-name" (a-z, 0-9, ".", "_", "-"). Voyager stores it as "${LOCAL_PLUGIN_ID_PREFIX}<id>"; you do not add that prefix.`,
       '- "version": "1.0.0"; raise it when you change the plugin. "author": "me". "license": "MIT".',
       `- "engine": ">=1.0.0", or ">=" the sinceEngine of every primitive the plugin uses. This build's plugin engine is ${EFFECTIVE_PLUGIN_ENGINE_VERSION}.`,
@@ -62,8 +77,7 @@ export function stylesSection(audience: ContractAudience): ContractSection {
     lines: [
       ...(audience === 'agent'
         ? [
-            '- "contributes.styles": [{ "file": "style.css" }] with the CSS in style.css beside plugin.json. The popup’s Import files reads plugin.json plus the .css files picked with it; Paste JSON only takes inlined CSS ([{ "css": "..." }]).',
-            '- Import files takes exactly one .json file: the user picks plugin.json and its .css files, nothing else.',
+            '- "contributes.styles": [{ "file": "style.css" }] with the CSS in style.css beside plugin.json. The popup’s Import files takes exactly one .json file: the user picks plugin.json and its .css files, nothing else. Paste JSON only takes inlined CSS ([{ "css": "..." }]).',
           ]
         : ['- "contributes.styles": a list of { "css": "..." } with the CSS inlined as a string.']),
       '- CSS may not load anything, not even from the same site: no @import, image-set(), image(), cross-fade() or src(), and url() only with a #fragment or a png, jpeg, gif, webp or avif data: URI (never SVG). No web fonts, no remote images.',
@@ -89,7 +103,7 @@ export function pageChangesSection(
       '- "target": prefer { "kind": "semantic", "key": <anchor> } with an anchor the target site declares. Use a plain CSS selector string only for something no anchor names; it breaks on a redesign.',
       '- addClass "className": exactly one class that starts with "gv-"; use "gv-plugin-<plugin-name>". Then style that class in "contributes.styles".',
       `- setAttribute "name" must be one of: ${allowedAttributeText()}. Never href, src, on*, class or id. Values may not contain an external URL.`,
-      '- setStyle "styles": CSS property -> value, custom properties (--gv-…) included; values may not load anything either. A value may end in !important; engines before 1.9.0 drop such a value, so require engine ">=1.9.0" when the plugin relies on it. Shorthands such as margin are owned per longhand, so turning one plugin off never clears another plugin\'s margin-top.',
+      '- setStyle "styles": CSS property -> value, custom properties (--gv-…) included; values may not load anything either. A value may end in !important; engines before 1.9.0 drop such a value, so require engine ">=1.9.0" when the plugin relies on it.',
     ],
   };
 }
@@ -101,7 +115,7 @@ export function settingsSection(): ContractSection {
       `- "contributes.settings": { "<key>": { "type", "label", "default", … } }. Types: ${LOCAL_SETTING_TYPES.join(', ')}. string and color settings are refused: the popup has no control for them yet.`,
       '- number: the popup shows a slider from "min" to "max" (0 and 100 when omitted), with optional "minLabel" and "maxLabel" at its ends.',
       '- select: "options": [{ "value": "…", "label": "…" }] with at least one option and unique values, and a "default" that is one of the values.',
-      '- Optional "enabledBy": "<booleanKey>" keeps a number, select or boolean control visible but disabled unless that boolean setting resolves to true; its value is retained. The key must be non-empty and name another boolean in the same plugin. Its target must have no enabledBy of its own (one level only). This changes only the popup control; gate page behavior separately with the boolean. Engine 1.7.0 ignores enabledBy and leaves the control enabled, so no higher engine floor is needed.',
+      '- Optional "enabledBy": "<booleanKey>" keeps a number, select or boolean control visible but disabled unless that other boolean setting of the same plugin resolves to true. That boolean has no enabledBy of its own (one level only). It changes only the popup control, so gate page behavior with the boolean too. It needs no higher engine floor: engine 1.7.0 just leaves the control enabled.',
       '- Use a setting through a {{key}} token in CSS text, a setStyle value or a setAttribute value; Voyager substitutes the current value (the default until the user changes it). A common pattern: setStyle sets a custom property from the setting, and the CSS reads var(...).',
       '- A boolean renders as "true" or "false": set data-gv-… to "{{key}}" with setAttribute and style [data-gv-…=\'true\'].',
     ],
@@ -110,12 +124,12 @@ export function settingsSection(): ContractSection {
 
 export function localRulesSection(
   audience: ContractAudience,
-  { primitives }: { primitives: boolean },
+  { primitives, refs = IN_DOCUMENT_REFS }: { primitives: boolean; refs?: ContractRefs },
 ): ContractSection {
   return {
     title: 'Local plugin rules',
     lines: [
-      '- "matches" may only use patterns inside a site Voyager supports (listed per site).',
+      `- "matches" may only use the URL patterns of a site Voyager supports (see ${refs.sites}).`,
       '- Every semantic key the plugin relies on must be declared by every site its "matches" cover.',
       '- On Gemini and AI Studio: no "theme", and a "native" op only for the primitives listed for that site (Voyager runs its other features there itself).',
       ...(audience === 'agent'
@@ -130,40 +144,6 @@ export function localRulesSection(
       '- An import lands switched off; the user reviews it and turns it on in the popup.',
     ],
   };
-}
-
-/** The primitives a plugin on `site` may call, with their params. */
-export function primitivesSection(site: SiteAdapter): ContractSection {
-  const offered = listPrimitiveReferences().filter((primitive) =>
-    allowsPrimitive(site, primitive.name),
-  );
-  const offeredNames = new Set(offered.map((primitive) => primitive.name));
-  const lines: string[] = [
-    `A primitive is behavior Voyager ships as code; a plugin can only call it by name and configure it: { "op": "native", "handler": "<name>", "params": { … } }. A param marked required must be set; every other param is optional. A semanticKey param names a semantic key (only the listed ones when it says "one of"); every matched site must declare it, as with the keys a primitive reads, so it need not be repeated in "requires.semantic". Set "engine" to ">=" the primitive’s sinceEngine (and any param’s). ${offered.length < listPrimitiveReferences().length ? `Only the primitives below run on ${site.label}` : 'On Gemini and AI Studio only the primitives listed for that site'}, and only on a site that declares the semantic keys the primitive reads.`,
-    `- To pass a setting into params, use "{{key}}" in a string value, recursively inside objects and arrays. Parameter names and object keys stay literal. A whole-value token preserves the setting's number, boolean or string type; embedded "a{{key}}b" produces a string. Expansion runs once: tokens inside setting values remain literal. Set "engine" to ">=${NATIVE_PARAM_SETTINGS_SINCE_ENGINE}" or any higher primitive/param floor; this capability's floor stays ${NATIVE_PARAM_SETTINGS_SINCE_ENGINE} in later releases.`,
-    '- Every referenced key must exist in contributes.settings and its type must fit the primitive contract wherever statically knowable. Manifest loading checks substituted defaults. Each activation substitutes resolved stored values and runs the primitive’s validateParams; an invalid result skips the op with the same diagnostic as invalid static params. Setting changes dispose then reactivate templated primitive ops in order; static params keep the existing in-place update path.',
-    ...(offeredNames.has('turnNavigator')
-      ? [
-          '- Example: turnNavigator params { "position": "{{side}}" } with a select setting side whose options are left and right.',
-        ]
-      : []),
-    '',
-  ];
-  for (const primitive of offered) {
-    const reads = primitive.semantic.length > 0 ? ` Reads: ${primitive.semantic.join(', ')}.` : '';
-    lines.push(
-      `- ${primitive.name} (sinceEngine ${primitive.sinceEngine}): ${primitive.description}${reads}`,
-    );
-    for (const param of primitive.params) {
-      const since = param.sinceEngine ? `, since ${param.sinceEngine}` : '';
-      const required = param.required ? ', required' : '';
-      const keys = param.allowedKeys ? `, one of ${param.allowedKeys.join(', ')}` : '';
-      lines.push(
-        `  - ${param.name} (${param.type}${required}${keys}${since}): ${param.description}`,
-      );
-    }
-  }
-  return { title: 'Primitives', lines };
 }
 
 export function selectorsSection(): ContractSection {
@@ -189,7 +169,7 @@ const IMPOSSIBLE = [
 
 export function impossibleSection(
   audience: ContractAudience,
-  { primitives }: { primitives: boolean },
+  { primitives, refs = IN_DOCUMENT_REFS }: { primitives: boolean; refs?: ContractRefs },
 ): ContractSection {
   return {
     title: 'What a plugin cannot do',
@@ -199,7 +179,7 @@ export function impossibleSection(
       // Without this, an agent reading the list answers NOT POSSIBLE for a copy button or count badge a primitive ships.
       ...(primitives
         ? [
-            'These limits are on the plugin’s own fields and CSS. A primitive in the list above runs Voyager’s code and may provide one of them (a copy button, a count, a saved draft, a quote into the composer…): read that list before answering NOT POSSIBLE, and use the primitive when the target site declares the keys it reads.',
+            `These limits are on the plugin’s own fields and CSS. A primitive in ${refs.primitives} runs Voyager’s code and may provide one of them (a copy button, a count, a saved draft, a quote into the composer…): read that list before answering NOT POSSIBLE, and use the primitive when the target site declares the keys it reads.`,
           ]
         : []),
       'If the request needs any of this, do not invent fields or ops: the import refuses them. Start your reply with one line "NOT POSSIBLE: <what and why>", then build the closest version this contract allows and say what it leaves out.',

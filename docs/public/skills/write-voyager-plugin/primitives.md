@@ -1,0 +1,55 @@
+# Voyager primitives
+
+Part of the write-voyager-plugin skill: the manifest rules and examples are in [SKILL.md](SKILL.md). On Gemini and AI Studio, only the primitives that site’s file lists run; every other site runs all of them.
+
+A primitive is behavior Voyager ships as code; a plugin can only call it by name and configure it: { "op": "native", "handler": "<name>", "params": { … } }. A param marked required must be set; every other param is optional. A semanticKey param names a semantic key (only the listed ones when it says "one of"); every matched site must declare it, as with the keys a primitive reads, so it need not be repeated in "requires.semantic". Set "engine" to ">=" the primitive’s sinceEngine (and any param’s).
+- To pass a setting into params, write "{{key}}" in a string value, also inside objects and arrays; param names and object keys stay literal. A whole-value token keeps the setting's number, boolean or string type; embedded "a{{key}}b" produces a string. Set "engine" to ">=1.8.0", or higher when a primitive or param needs it.
+- Every referenced key must exist in contributes.settings with a type that fits the param; the import checks the params with each default substituted. Keep a setting’s range or options inside what the param accepts: a stored value the primitive refuses skips the op.
+- Example: turnNavigator params { "position": "{{side}}" } with a select setting side whose options are left and right.
+
+- codeCollapse (sinceEngine 1.8.0): Collapses long code blocks in replies with Gemini's code block collapse: a toggle per block plus expand all / collapse all, with the code and the host's copy controls left intact. Long blocks start collapsed, the user's choice holds while a reply streams, and turning the plugin off restores every block. A block another code collapse already holds is left to it. On Gemini it is Gemini's own collapse and ignores params: every code block on the page, long ones expanded until the user folds them, no expand all bar, diagram blocks skipped. Reads: assistantTurn, codeBlock.
+  - code (selector): Element inside the code block holding the code, measured for length and clipped while collapsed; defaults to pre, else the block itself.
+  - action (selector): A native control inside the code block, such as its copy button; the toggle joins that control's row. Without it the toggle goes at the end of the block.
+- collapse (sinceEngine 1.8.0): Caps the visible height of long semantic content with an expand/collapse toggle outside the clipped element. Streaming content is measured incrementally, and an expanded element stays expanded while it survives host re-renders. Turning the plugin off restores its native layout.
+  - target (semanticKey, required, one of userTurn, assistantTurn, thinkingBlock): Semantic content key to collapse: userTurn, assistantTurn or thinkingBlock. Do not target content the host already collapses.
+  - maxPx (number): Collapsed height in pixels, from 80 to 2000; defaults to 320. Content must exceed this height by more than 16 pixels to get a toggle.
+  - startCollapsed (boolean): Whether long content starts collapsed; defaults to true.
+- copyButton (sinceEngine 1.8.0): A small copy button above each element the site adapter names by `target` (a thinking block, a message, a reply, a code block) copies that element's visible text, without Voyager's own controls inside it, and confirms with a toast. The element stays untouched; turning the plugin off removes the buttons.
+  - target (semanticKey, required, one of userTurn, assistantTurn, thinkingBlock, codeBlock): Semantic key whose elements each get a copy button. Every matched site must declare it.
+  - format (string): What the button copies: "text" (default), the element's visible plain text.
+- counterBadge (sinceEngine 1.8.0): A small read-only badge with a live count of the composer draft or of each assistant reply. The badge is pointer-transparent and outside the text, so copying and export never include it; turning the plugin off removes every badge.
+  - target (semanticKey, required, one of composer, assistantTurn): What is counted: "composer" (the draft, one badge above the composer) or "assistantTurn" (one badge at the end of each reply).
+  - metric (string): What the badge counts: "chars" (default; Unicode code points without line breaks), "words" (whitespace-separated words, each CJK character one word), "cjkChars" (Han, kana and Hangul characters only) or "lines".
+- draftSave (sinceEngine 1.8.0): Saves unsent text in the main composer to this device and puts it back when the same conversation (or the new-chat page) opens again, only into an empty composer. Drafts are keyed by the site and the conversation id from the adapter's conversationIdPattern, and a draft is dropped once its message is sent. Turning the plugin off keeps saved drafts. On Gemini it shares the native gvDraft_ full-path records, preserving account-slot and Gem routes. Reads: composer, sendButton.
+- echarts (sinceEngine 1.7.0): Renders ECharts option code blocks in replies as interactive charts with a Diagram / Code toggle, using the parser, sanitizer and renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the charts. Reads: assistantTurn, codeBlock.
+  - turn (selector): Reply elements whose code blocks are rendered; defaults to the site adapter's assistantTurn.
+  - codeBlock (selector): One code block inside a reply. The diagram goes right before it, and it is hidden while the diagram shows. Defaults to the site adapter's codeBlock, else pre.
+  - code (selector): Element inside the code block holding the source text; defaults to code, else the block itself.
+  - codeLine (selector): Line elements inside the source element, joined with newlines, for hosts that render one element per line without newline characters.
+  - language (selector): Element inside the code block whose text is the language label; defaults to a language-* class on the source element or the block.
+  - copyButton (boolean, since 1.9.0): Adds a Copy button to the diagram's toolbar that copies the block's source, for a host whose own copy button is inside the code block the diagram view hides. Default false.
+  - exportImage (boolean, since 1.9.0): Lets Voyager's PNG and PDF export show the drawn diagram (Mermaid in its light theme) instead of the block's source; Markdown keeps the source, and a block still drawing or shown as code exports its source. Default false.
+- formulaCopy (sinceEngine 1.3.0): Click an inline or block formula to copy its LaTeX; hover shows it is clickable. Reads KaTeX / MathJax markup on the page.
+- mermaid (sinceEngine 1.7.0): Renders Mermaid code blocks in replies as diagrams with a Diagram / Code toggle, using the renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the diagrams. Reads: assistantTurn, codeBlock.
+  Takes the same params as echarts.
+- quoteReply (sinceEngine 1.8.0): Quote selected text wholly inside one assistant reply into the composer, preserving LaTeX and existing drafts. Excludes user turns and adapter thinking blocks; never sends. Reads: assistantTurn, composer.
+- sendShortcut (sinceEngine 1.8.0): Enter inserts a newline in the composer; Ctrl/Cmd+Enter clicks its enabled send button when no attachment is uploading. Shift+Enter and IME composition keep the host behavior. Reads: composer, composerRoot, sendButton. It claims one composer send mode for the entire page: while one plugin holds it, another reports a conflict and stays paused; turn the holder off to hand the mode over.
+  - mode (string, since 1.9.0): Which Enter chord sends (default ctrlEnterSends). Gemini accepts only ctrlEnterSends; AI Studio accepts only enterSends.
+- tableCopy (sinceEngine 1.8.0): A toolbar above each table in a reply copies it as Markdown (formulas kept as LaTeX, the same table conversation export writes) or as TSV for spreadsheets. The table stays untouched; turning the plugin off removes the toolbars. Reads: assistantTurn.
+- turnNavigator (sinceEngine 1.4.0): A compact conversation timeline with starred messages and search, built on the same code as the Claude timeline. Reads: userTurn.
+  - dataBackend (string, since 1.9.0): "shared" uses Voyager’s native stars and hierarchy on consumer gemini.google.com only. Required on Gemini; omit on catalog sites. Shared mode rejects turn, turnItem, conversationIdPattern, conversationIdAttribute and accountIdAttributes overrides; native route, account and canonical turn identity remain authoritative.
+  - turn (selector): User-turn elements to index; defaults to the site adapter's userTurn.
+  - conversationIdAttribute (string, since 1.5.0): Attribute holding the conversation id that conversationIdPattern captures from the URL, on an ancestor of each turn or inside its turnItem. When set, it is the only thing that lets a turn be starred: the id must name the current conversation; a turn without one stays unstarrable.
+  - accountIdAttributes (string[], since 1.5.0): Ordered attributes on document.documentElement identifying the loaded account. Stars hash their values together; missing values leave the star untagged.
+  - turnItem (selector, since 1.5.0): Element wrapping one exchange (prompt and reply). conversationIdAttribute is looked up inside it when no ancestor of the turn carries it.
+  - conversationIdPattern (string): Path regular expression whose first group is the conversation id; defaults to the site adapter's conversationIdPattern.
+  - scrollContainer (selector): Element that scrolls the conversation; defaults to the site adapter's scrollContainer, else auto-detected.
+  - yieldWhen (selector): While this matches (an open side panel, an artifact frame), the onboarding guide stays closed.
+  - position (string): Rail side: "right" (default) or "left".
+- userLatex (sinceEngine 1.7.0): Renders $…$ and $$…$$ LaTeX the user typed in their own messages, keeping the source for export and copy; turning it off restores the text it rendered and nothing another renderer drew. Reads: userTurn.
+  - turn (selector): User-message elements to render LaTeX in; defaults to the site adapter's userTurn.
+  - unit (string, since 1.9.0): What is rendered as one piece: 'leaf' (default) renders each text-only element inside a turn; 'turn' renders each matched turn element whole, child elements and Voyager's own markers included, for a turn selector that names one line of text.
+- vimInput (sinceEngine 1.4.0): Vim-style modal editing and cursor navigation in the prompt composer. Reads: composer.
+  - composer (selector): Prompt input to attach Vim modal editing to; defaults to the site adapter's composer.
+- wavedrom (sinceEngine 1.7.0): Renders WaveDrom (WaveJSON) code blocks in replies as timing diagrams with a Diagram / Code toggle, using the renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the diagrams. Reads: assistantTurn, codeBlock.
+  Takes the same params as echarts.

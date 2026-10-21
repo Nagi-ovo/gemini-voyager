@@ -10,22 +10,25 @@ import type { SiteAdapter } from '../../types';
 import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '../../verbs/contracts';
 import {
   type ContractAudience,
+  type ContractRefs,
   type ContractSection,
   impossibleSection,
   localRulesSection,
   manifestSection,
   pageChangesSection,
-  primitivesSection,
   selectorsSection,
   settingsSection,
   stylesSection,
 } from './contractRules';
 import { formatJson } from './jsonText';
 import { type PluginExample, buildPluginExamples } from './pluginExamples';
+import { primitivesSection } from './primitivesSection';
 import { allowsAnyPrimitive, siteAnchors, siteFactLines } from './siteFacts';
 
 export interface PluginContractOptions {
   readonly audience: ContractAudience;
+  /** Where the rules send the reader for site facts and primitives; defaults to sections of the same document. */
+  readonly refs?: ContractRefs;
 }
 
 export interface PluginContract {
@@ -58,7 +61,7 @@ export function buildPluginContract(
   site: SiteAdapter,
   options: PluginContractOptions,
 ): PluginContract {
-  const { audience } = options;
+  const { audience, refs } = options;
   const primitives = offersPrimitives(site);
   const templateKey = siteAnchors(site)[0] ?? 'userTurn';
   return {
@@ -66,14 +69,14 @@ export function buildPluginContract(
     engineVersion: EFFECTIVE_PLUGIN_ENGINE_VERSION,
     sections: [
       siteSection(site, audience),
-      manifestSection(audience),
+      manifestSection(audience, refs),
       stylesSection(audience),
       pageChangesSection(templateKey, { primitives }),
       settingsSection(),
-      localRulesSection(audience, { primitives }),
+      localRulesSection(audience, { primitives, refs }),
       ...(primitives ? [primitivesSection(site)] : []),
       ...(audience === 'agent' ? [selectorsSection()] : []),
-      impossibleSection(audience, { primitives }),
+      impossibleSection(audience, { primitives, refs }),
     ],
     examples: buildPluginExamples(site, {
       styles: audience === 'agent' ? 'file' : 'inline',
