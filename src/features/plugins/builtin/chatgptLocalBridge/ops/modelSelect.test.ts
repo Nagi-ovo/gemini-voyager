@@ -331,6 +331,23 @@ describe('Local Bridge model.select: closing the menu', () => {
     expect(details()).toMatchObject({ applied: false, triggerText: '即时' });
     expect(details()).not.toHaveProperty('observed');
   });
+
+  it('does not report Pro as applied when a German picker reverts to Sofort on close', async () => {
+    // Neither "Sofort" nor the German status template is in the site data.
+    mount({
+      triggerLabel: 'ChatGPT-Modell auswählen',
+      stepLabels: ['Sofort', 'Mittel', 'Hoch', 'Sehr hoch', 'Pro'],
+      status: (label, position, count) => `${label}, ${position} von ${count}.`,
+      effort: 0,
+      discardsOnClose: true,
+    });
+    await select({ target: { preset: 'pro' } });
+
+    expect(errorCode(bridge.outcome())).toBe('unverified');
+    expect(details()).toMatchObject({ applied: false, triggerText: 'Sofort' });
+    expect(details()).not.toHaveProperty('observed');
+    expect(picker.state().committed).toBe(0);
+  });
 });
 
 describe('Local Bridge model.select: refusals', () => {

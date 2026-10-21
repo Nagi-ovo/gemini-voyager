@@ -271,6 +271,8 @@ export async function selectModel(
   }
 
   let steps = 0;
+  /** The status at the target step, confirmed while the menu was open. */
+  let targetStatus: PickerReading['status'] | null = null;
   if (target.effortIndex !== null) {
     const efforts = data.models[target.modelId].efforts ?? [];
     const goal = target.effortIndex;
@@ -333,6 +335,7 @@ export async function selectModel(
         valueNow: read().slider?.now ?? null,
       });
     }
+    targetStatus = confirmed!.status;
   }
 
   const after = read();
@@ -356,18 +359,26 @@ export async function selectModel(
     );
   }
   let shown = triggerText(menuTrigger);
-  if (target.effortIndex !== null) {
-    const named = stepNamer(data.models[target.modelId].efforts ?? [], target.effortIndex);
+  if (target.effortIndex !== null && targetStatus) {
+    const status = targetStatus;
+    const labels = mergedLabels(data.models[target.modelId].efforts![target.effortIndex].labels);
+    const named = stepNamer(data.models[target.modelId].efforts!, target.effortIndex);
+    // No slider backs the closed trigger, so a name is proof only as the step the status named
+    // at the target: a revert to a name the data lacks ("Sofort") must not pass as unknown.
+    const names = (text: string): boolean =>
+      text !== '' &&
+      named(text) &&
+      (status.label ? text === status.label || labels.has(text) : status.text.includes(text));
     // The closed trigger names the saved step; it may repaint a moment after `aria-expanded`.
     const settled = await ctx.waitFor(
       () => {
         const text = triggerText(menuTrigger);
-        return named(text) ? { text } : null;
+        return names(text) ? { text } : null;
       },
       { timeoutMs: budget(ctx, STATUS_TIMEOUT_MS), minGapMs: MIN_GAP_MS },
     );
     if (!settled) {
-      ctx.fail('unverified', 'ChatGPT names another effort after its model menu closed.', {
+      ctx.fail('unverified', 'ChatGPT does not name the requested effort after its menu closed.', {
         ...notApplied,
         triggerText: triggerText(menuTrigger),
       });
