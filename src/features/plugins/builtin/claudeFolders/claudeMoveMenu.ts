@@ -10,10 +10,10 @@
  * may reuse it, so an entry is kept only while it names that menu's row.
  */
 import type { ConversationReference } from '@/core/types/folder';
+import { CLAUDE_IDENTITY } from '@/features/folder/sites/claudeIdentity';
 
 import { MenuCloseWait, buildMenuEntry, wireMenuKeyboard } from '../siteFolders/moveMenuEntry';
 import type { SidebarConversation, SiteMoveMenu, SiteMoveMenuOptions } from '../siteFolders/types';
-import { CLAUDE_IDENTITY } from './claudeIdentity';
 import {
   closeMenu,
   findClaudeSidebar,

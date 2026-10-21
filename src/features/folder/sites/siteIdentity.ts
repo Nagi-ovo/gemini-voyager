@@ -8,8 +8,6 @@ import { parseSiteConversation } from '@/features/plugins/sites/siteConversation
 import type { SiteAdapter } from '@/features/plugins/types';
 import { siteConversationConfig } from '@/features/timeline/adapters/catalog/conversationId';
 
-import type { SidebarConversation } from './types';
-
 export interface SiteConversationRef {
   /** The bare conversation id from the route. */
   readonly id: string;
@@ -26,7 +24,7 @@ export interface SiteIdentity {
   /** The route id inside a stored id; any other id as is. */
   bareId(conversationId: string): string;
   /** The conversation a root-relative link names; no URL parsing, for sidebar passes. */
-  readPath(href: string | null): Pick<SidebarConversation, 'id' | 'path'> | null;
+  readPath(href: string | null): { readonly id: string; readonly path: string } | null;
   /** The conversation an absolute URL on the site's origin names, or `null`. */
   read(href: string): SiteConversationRef | null;
 }

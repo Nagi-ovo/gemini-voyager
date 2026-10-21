@@ -10,10 +10,10 @@
  * returns focus to the trigger.
  */
 import type { ConversationReference } from '@/core/types/folder';
+import { CHATGPT_CONVERSATION_ID_PREFIX } from '@/features/folder/sites/chatgptIdentity';
 
 import { MenuCloseWait, buildMenuEntry, wireMenuKeyboard } from '../siteFolders/moveMenuEntry';
 import type { SiteMoveMenu, SiteMoveMenuOptions } from '../siteFolders/types';
-import { CHATGPT_CONVERSATION_ID_PREFIX } from './chatgptIdentity';
 import {
   closeMenu,
   findMenuOf,

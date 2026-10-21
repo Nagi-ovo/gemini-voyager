@@ -2,11 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
+import { exportChatGptFolders } from '@/features/folder/sites/chatgptTransfer';
 import type { FolderData } from '@/pages/content/folder/types';
 
 import { ChatGptFolderStore } from '../ChatGptFolderStore';
 import { createLegacyChatGptCommands } from '../legacyChatGptCommands';
-import { exportChatGptFolders } from '../transfer';
 import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
 
 vi.mock('webextension-polyfill', () => ({

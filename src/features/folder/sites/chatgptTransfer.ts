@@ -1,13 +1,13 @@
 import type { FolderData } from '@/core/types/folder';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 
+import { readChatGptConversation } from './chatgptIdentity';
 import {
   type SiteExportRead,
   type SiteFolderExportPayload,
   type SiteImportOutcome,
   createSiteTransfer,
-} from '../siteFolders/siteTransfer';
-import { readChatGptConversation } from './chatgptIdentity';
+} from './siteTransfer';
 
 export const CHATGPT_EXPORT_PLATFORM = 'chatgpt';
 

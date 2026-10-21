@@ -3,8 +3,7 @@
  * origin, as `chatgptFolders/chatgptPage.ts` does for ChatGPT.
  */
 import type { ConversationReference } from '@/core/types/folder';
-
-import type { SiteIdentity } from './siteIdentity';
+import type { SiteIdentity } from '@/features/folder/sites/siteIdentity';
 
 /** `doc.title` without the site's ` - <Brand>` suffix, or `null` when it is a placeholder. */
 export function pageTitle(

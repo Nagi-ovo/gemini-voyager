@@ -1,3 +1,5 @@
+import { DEEPSEEK_IDENTITY } from '@/features/folder/sites/deepseekIdentity';
+
 /**
  * Reads DeepSeek's own sidebar. Its classes are build hashes, so only the
  * conversation links (`/a/chat/s/<id>`) and its design system's `ds-*` names
@@ -14,7 +16,6 @@
  * gets no "Move to folder" entry; a row is filed by dragging it onto a folder.
  */
 import type { SidebarConversation } from '../siteFolders/types';
-import { DEEPSEEK_IDENTITY } from './deepseekIdentity';
 
 export const DEEPSEEK_ROW_SELECTOR = 'a[href^="/a/chat/s/"]';
 const SCROLL_AREA = '.ds-scroll-area';

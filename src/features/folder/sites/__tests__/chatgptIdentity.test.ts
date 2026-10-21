@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { readChatGptConversation, readChatGptConversationPath } from './chatgptIdentity';
+import { readChatGptConversation, readChatGptConversationPath } from '../chatgptIdentity';
 
 const ID = '68a1f2c3-0b4d-8001-9e2f-1a2b3c4d5e6f';
 

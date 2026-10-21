@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import type { FolderData } from '@/core/types/folder';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 
-import { exportChatGptFolders } from '../../chatgptFolders/transfer';
-import { DEEPSEEK_TRANSFER } from '../../deepseekFolders/deepseekIdentity';
+import { exportChatGptFolders } from '../chatgptTransfer';
 import { CLAUDE_IDENTITY, CLAUDE_TRANSFER } from '../claudeIdentity';
+import { DEEPSEEK_TRANSFER } from '../deepseekIdentity';
 
 const ID = '7d33a785-f3df-4f6e-b536-f875148e3766';
 const OTHER = '42a21e95-5936-4ba5-926a-ad14973f9231';

@@ -5,11 +5,11 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { StorageKeys } from '@/core/types/common';
 import type { ConversationReference, FolderData } from '@/core/types/folder';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
+import { exportChatGptFolders } from '@/features/folder/sites/chatgptTransfer';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { initI18n } from '@/utils/i18n';
 
 import { activateChatGptFolders } from '../index';
-import { exportChatGptFolders } from '../transfer';
 import { type SidebarFixture, makeRows, mountSidebarFixture } from './chatgptSidebarFixture';
 import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
 import { transfer } from './sectionHeaderDriver';

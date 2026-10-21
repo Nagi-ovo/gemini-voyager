@@ -8,6 +8,7 @@ import { StorageKeys } from '@/core/types/common';
 import type { ConversationReference } from '@/core/types/folder';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
 import { FOLDER_PLATFORMS } from '@/features/folder/platforms';
+import { DEEPSEEK_IDENTITY, DEEPSEEK_TRANSFER } from '@/features/folder/sites/deepseekIdentity';
 
 import { siteSectionCss } from '../siteFolders/sectionCss';
 import { openSiteConversation, pageTitle, readSiteConversation } from '../siteFolders/sitePage';
@@ -17,7 +18,6 @@ import {
   pluginSiteFolderConfig,
 } from '../siteFolders/siteStore';
 import type { HideFiledDom, SiteFoldersAdapter } from '../siteFolders/types';
-import { DEEPSEEK_IDENTITY, DEEPSEEK_TRANSFER } from './deepseekIdentity';
 import tokensCss from './deepseekSectionTokens.css?raw';
 import {
   DEEPSEEK_ROW_SELECTOR,

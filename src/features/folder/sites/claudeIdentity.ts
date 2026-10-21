@@ -6,8 +6,8 @@
  */
 import { claudeAdapter } from '@/features/plugins/sites/adapters/claude';
 
-import { createSiteIdentity } from '../siteFolders/siteIdentity';
-import { createSiteTransfer } from '../siteFolders/siteTransfer';
+import { createSiteIdentity } from './siteIdentity';
+import { createSiteTransfer } from './siteTransfer';
 
 export const CLAUDE_ORIGIN = 'https://claude.ai';
 

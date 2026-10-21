@@ -5,6 +5,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
+import { exportChatGptFolders } from '@/features/folder/sites/chatgptTransfer';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { routeCatalogOutlineWrites } from '@/features/timeline/__tests__/catalogOutlineBackground';
 import { formatRelativeTime } from '@/pages/content/folder/syncTooltip';
@@ -12,7 +13,6 @@ import { toastDriver } from '@/tests/toastDriver';
 import { initI18n, getTranslationSyncUnsafe as t } from '@/utils/i18n';
 
 import { activateChatGptFolders } from '../index';
-import { exportChatGptFolders } from '../transfer';
 import { type SidebarFixture, makeRows, mountSidebarFixture } from './chatgptSidebarFixture';
 import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
 

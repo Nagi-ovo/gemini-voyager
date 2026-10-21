@@ -4,10 +4,10 @@
  */
 import type { FolderCommands } from '@/features/folder/commands/folderCommands';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
+import { importChatGptFolders } from '@/features/folder/sites/chatgptTransfer';
 
 import { createPluginSiteCommands } from '../siteFolders/siteStore';
 import type { ChatGptFolderStore } from './ChatGptFolderStore';
-import { importChatGptFolders } from './transfer';
 
 export function createLegacyChatGptCommands(store: ChatGptFolderStore): FolderCommands {
   return createPluginSiteCommands({

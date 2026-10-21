@@ -1,9 +1,9 @@
 import { StorageKeys } from '@/core/types/common';
 import type { FolderExportPlatform } from '@/core/types/sync';
+import { readChatGptFolderExport } from '@/features/folder/sites/chatgptTransfer';
+import { CLAUDE_TRANSFER } from '@/features/folder/sites/claudeIdentity';
+import { DEEPSEEK_TRANSFER } from '@/features/folder/sites/deepseekIdentity';
 import type { FolderExportPayload, ImportStrategy } from '@/features/folder/types/import-export';
-import { readChatGptFolderExport } from '@/features/plugins/builtin/chatgptFolders/transfer';
-import { CLAUDE_TRANSFER } from '@/features/plugins/builtin/claudeFolders/claudeIdentity';
-import { DEEPSEEK_TRANSFER } from '@/features/plugins/builtin/deepseekFolders/deepseekIdentity';
 
 /**
  * Sites that own a Voyager folder bucket. Every per-platform storage key, Drive file, sync

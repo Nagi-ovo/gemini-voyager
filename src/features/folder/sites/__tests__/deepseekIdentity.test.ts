@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { FolderData } from '@/core/types/folder';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 
-import { CLAUDE_TRANSFER } from '../../claudeFolders/claudeIdentity';
+import { CLAUDE_TRANSFER } from '../claudeIdentity';
 import { DEEPSEEK_IDENTITY, DEEPSEEK_TRANSFER } from '../deepseekIdentity';
 
 const ID = '08d7829d-6c6c-4ea9-b796-1274249b885b';

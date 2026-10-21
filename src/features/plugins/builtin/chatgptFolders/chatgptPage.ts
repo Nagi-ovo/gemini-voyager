@@ -1,6 +1,5 @@
 import type { ConversationReference } from '@/core/types/folder';
-
-import { readChatGptConversation } from './chatgptIdentity';
+import { readChatGptConversation } from '@/features/folder/sites/chatgptIdentity';
 
 /** ChatGPT's own sidebar; its conversation links are router links. */
 const SIDEBAR_SELECTOR = 'nav[aria-label], #stage-slideover-sidebar';

@@ -1,8 +1,8 @@
+import { bareConversationId } from '@/features/folder/sites/chatgptIdentity';
 import { SiteFolderStore, type SiteFolderNotify } from '@/pages/content/folder/SiteFolderStore';
 import type { IFolderStorageAdapter } from '@/pages/content/folder/storage/FolderStorageAdapter';
 
 import { filedIdsOf, filingsOf } from '../siteFolders/filings';
-import { bareConversationId } from './chatgptIdentity';
 import { CHATGPT_FOLDER_CONFIG } from './config';
 
 /**

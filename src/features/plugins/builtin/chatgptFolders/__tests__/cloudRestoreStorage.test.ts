@@ -7,12 +7,12 @@ import { DataBackupService } from '@/core/services/DataBackupService';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import { validateFolderData } from '@/features/folder/model/folderData';
+import { exportChatGptFolders } from '@/features/folder/sites/chatgptTransfer';
 import { applyCloudRestore } from '@/pages/popup/components/cloudRestore';
 import { useCloudSyncTransfer } from '@/pages/popup/components/useCloudSyncTransfer';
 
 import { ChatGptFolderStore } from '../ChatGptFolderStore';
 import { createLegacyChatGptCommands } from '../legacyChatGptCommands';
-import { exportChatGptFolders } from '../transfer';
 import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
 
 vi.mock('webextension-polyfill', () => ({

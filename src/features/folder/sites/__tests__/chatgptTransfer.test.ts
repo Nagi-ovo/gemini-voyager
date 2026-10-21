@@ -7,7 +7,7 @@ import {
   chatgptFolderExportFilename,
   exportChatGptFolders,
   importChatGptFolders,
-} from '../transfer';
+} from '../chatgptTransfer';
 
 const A = '68a1f2c3-0b4d-8001-9e2f-1a2b3c4d5e6f';
 const B = '68a1f2c3-0b4d-8001-9e2f-bbbbbbbbbbbb';

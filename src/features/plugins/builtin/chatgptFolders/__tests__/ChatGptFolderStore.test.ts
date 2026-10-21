@@ -3,12 +3,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderEditBody } from '@/features/folder/commands/folderCommands';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
+import {
+  exportChatGptFolders,
+  importChatGptFolders,
+} from '@/features/folder/sites/chatgptTransfer';
 import type { FolderData } from '@/pages/content/folder/types';
 
 import { ChatGptFolderStore } from '../ChatGptFolderStore';
 import { CHATGPT_FOLDER_CONFIG } from '../config';
 import { createLegacyChatGptCommands } from '../legacyChatGptCommands';
-import { exportChatGptFolders, importChatGptFolders } from '../transfer';
 import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
 
 vi.mock('webextension-polyfill', () => ({

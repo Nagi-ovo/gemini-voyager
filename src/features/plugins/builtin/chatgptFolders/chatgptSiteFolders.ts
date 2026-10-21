@@ -6,17 +6,21 @@
 import { StorageKeys } from '@/core/types/common';
 import type { ConversationReference } from '@/core/types/folder';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
+import {
+  CHATGPT_CONVERSATION_ID_PREFIX,
+  bareConversationId,
+  readChatGptConversation,
+} from '@/features/folder/sites/chatgptIdentity';
+import {
+  chatgptFolderExportFilename,
+  exportChatGptFolders,
+} from '@/features/folder/sites/chatgptTransfer';
 
 import { isTemporaryChat } from '../chatgptTemporaryHandoff/handoff';
 import { siteSectionCss } from '../siteFolders/sectionCss';
 import type { SectionSite, SiteFoldersAdapter } from '../siteFolders/types';
 import { ChatGptFolderStore } from './ChatGptFolderStore';
 import { CHATGPT_HIDE_FILED, FILED_ROW_ATTRIBUTE } from './chatgptHideFiled';
-import {
-  CHATGPT_CONVERSATION_ID_PREFIX,
-  bareConversationId,
-  readChatGptConversation,
-} from './chatgptIdentity';
 import { ChatGptMoveMenu } from './chatgptMoveMenu';
 import { openNativeRename } from './chatgptNativeRename';
 import {
@@ -33,7 +37,6 @@ import {
 } from './chatgptSidebarDom';
 import { CHATGPT_FOLDER_CONFIG } from './config';
 import { createLegacyChatGptCommands } from './legacyChatGptCommands';
-import { chatgptFolderExportFilename, exportChatGptFolders } from './transfer';
 
 export const CHATGPT_FOLDERS_GUIDE_ID = 'chatgpt-folders-sidebar-intro-v1';
 /** `document.dispatchEvent(new Event(...))` shows the guide again, seen or not. */

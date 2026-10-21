@@ -4,8 +4,8 @@
  */
 import { deepseekAdapter } from '@/features/plugins/sites/adapters/deepseek';
 
-import { createSiteIdentity } from '../siteFolders/siteIdentity';
-import { createSiteTransfer } from '../siteFolders/siteTransfer';
+import { createSiteIdentity } from './siteIdentity';
+import { createSiteTransfer } from './siteTransfer';
 
 export const DEEPSEEK_ORIGIN = 'https://chat.deepseek.com';
 

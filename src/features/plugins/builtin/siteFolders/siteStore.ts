@@ -10,6 +10,7 @@ import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 import { cloneFolderData, normalizeFolderData } from '@/features/folder/model/folderData';
 import { rejected } from '@/features/folder/owner/folderOps';
 import type { FolderSitePolicy } from '@/features/folder/owner/folderOwnerPolicy';
+import type { SiteImportOutcome } from '@/features/folder/sites/siteTransfer';
 import { SiteFolderStore, type SiteFolderNotify } from '@/pages/content/folder/SiteFolderStore';
 import type { PlatformFolderConfig } from '@/pages/content/folder/platformFolderConfig';
 import {
@@ -19,7 +20,6 @@ import {
 import type { IFolderStorageAdapter } from '@/pages/content/folder/storage/FolderStorageAdapter';
 
 import { filedIdsOf, filingsOf } from './filings';
-import type { SiteImportOutcome } from './siteTransfer';
 import type { FiledConversations } from './types';
 
 /**
