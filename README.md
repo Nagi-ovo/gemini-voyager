@@ -6,6 +6,7 @@
 
   <p>
     <img src="https://voyager.nagi.fun/badges/github-stars.svg" alt="GitHub stars">
+    <img src="https://voyager.nagi.fun/badges/github-forks.svg" alt="GitHub forks">
     <img src="https://voyager.nagi.fun/badges/github-release.svg" alt="Latest version">
     <img src="https://voyager.nagi.fun/badges/github-downloads.svg" alt="GitHub downloads">
     <a href="https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=readme&utm_campaign=organic_growth&utm_content=en" target="_blank"><img src="https://img.shields.io/chrome-web-store/users/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=googlechrome&label=chrome%20users" alt="Chrome Web Store users"></a>
