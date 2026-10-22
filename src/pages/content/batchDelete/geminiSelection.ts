@@ -6,7 +6,6 @@ import { startMachine, type Machine } from '@/features/plugins/runtime/stateMach
 import { getTranslationSyncUnsafe as t } from '@/utils/i18n';
 
 import type { FolderFeedback } from '../folder/FolderFeedback';
-import type { FolderSidebarRuntime } from '../folder/FolderSidebarRuntime';
 import type { NativeConversationMenus } from '../folder/NativeConversationMenus';
 import { deleteNativeConversations } from '../folder/nativeBatchDelete';
 import {
@@ -21,8 +20,14 @@ import { type AccountHints, isDifferentAccount } from '../selectionToolbar/pageI
 import { watchRouteChanges } from '../utils/routeWatcher';
 import { LONG_PRESS_MS, MAX_BATCH_DELETE_COUNT } from './constants';
 
+/**
+ * What Gemini's folders publish for batch delete while they are shown
+ * (`geminiBatchDeleteService.register`): where the panel and Gemini's sidebar
+ * are, the toolbar and notices, the native delete, and the account binding a
+ * confirmed run checks. Batch delete knows nothing else of the folders.
+ */
 export interface GeminiBatchDeleteOptions {
-  runtime: Pick<FolderSidebarRuntime, 'panel' | 'sidebar'>;
+  runtime: { readonly panel: HTMLElement | null; readonly sidebar: HTMLElement | null };
   toolbar: SelectionToolbarOptions;
   feedback: Pick<
     FolderFeedback,
