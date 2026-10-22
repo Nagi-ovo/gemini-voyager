@@ -18,8 +18,9 @@ The folder manager allows users to:
 Gemini's folder data is a session the page holds for its lifetime
 ([`session/geminiFolderSession.ts`](session/geminiFolderSession.ts), opened by
 [`geminiFolderStartup.ts`](../geminiFolderStartup.ts), which also admits the folders plugin): the
-store, its commands, the account's `/u/<n>/` route and account gate, the popup's cloud-sync and
-AI-structure answers and the legacy sync-mode migration, which run with folders off.
+store, its commands and account gate, the popup's cloud-sync and AI-structure answers and the
+legacy sync-mode migration, which run with folders off. It binds an account only once Gemini's
+account control names it, and follows the `/u/<n>/` route only while the plugin's view is attached.
 Folder-as-Project files chats through it (`ensureDataLoaded`, `getFolders`,
 `addConversationToFolderFromNative`). The packaged `voyager.gemini-folders` plugin shows it: its
 view ([`verbs/folders/gemini/view.ts`](../../../features/plugins/verbs/folders/gemini/view.ts))

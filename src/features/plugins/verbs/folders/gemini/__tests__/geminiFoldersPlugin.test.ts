@@ -18,9 +18,13 @@ import { PluginHost } from '@/features/plugins/runtime/PluginHost';
 import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCatalogPluginSource';
-import { showGeminiAccount } from '@/pages/content/folder/__tests__/geminiAccountControl';
+import {
+  hideGeminiAccount,
+  showGeminiAccount,
+} from '@/pages/content/folder/__tests__/geminiAccountControl';
 import { mountSidebar } from '@/pages/content/folder/__tests__/sidebarRuntimeHarness';
 import { sidebarTree } from '@/pages/content/folder/__tests__/sidebarTreeDriver';
+import type { GeminiFolderSession } from '@/pages/content/folder/session/geminiFolderSession';
 import { geminiFolderLeases } from '@/pages/content/folder/session/geminiFolderSessions';
 import { admitGeminiFolders } from '@/pages/content/geminiFolderStartup';
 import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
@@ -72,6 +76,7 @@ let memory: MemoryStorage;
 let host: PluginHost | null;
 let lifetime: AbortController;
 let cleanup: CleanupManager;
+let session: GeminiFolderSession | null;
 
 async function pass(): Promise<void> {
   await settle(20);
@@ -81,7 +86,7 @@ async function pass(): Promise<void> {
 
 async function openPage(options: { admit?: boolean } = {}): Promise<PluginHost> {
   const admission = createOfficialAdmission();
-  const session =
+  const admitted =
     options.admit === false
       ? null
       : admitGeminiFolders(admission, { cleanupManager: cleanup, lifetime: lifetime.signal });
@@ -95,7 +100,7 @@ async function openPage(options: { admit?: boolean } = {}): Promise<PluginHost> 
     isTopFrame: true,
   });
   await host.start();
-  await session;
+  session = await admitted;
   await pass();
   return host;
 }
@@ -115,11 +120,11 @@ function requestData(): unknown {
   return answer;
 }
 
-async function keyOf(account: string): Promise<string> {
+async function keyOf(account: string, routeUserId = '1'): Promise<string> {
   const scope = await accountIsolationService.resolveAccountScope({
-    pageUrl: location.href,
+    pageUrl: `https://gemini.google.com/u/${routeUserId}/app`,
     email: `${account}@example.com`,
-    routeUserId: '1',
+    routeUserId,
   });
   return buildScopedStorageKey(KEY, scope.accountKey);
 }
@@ -133,6 +138,7 @@ beforeEach(() => {
   lifetime = new AbortController();
   cleanup = new CleanupManager();
   host = null;
+  session = null;
   messageListeners.clear();
   vi.spyOn(console, 'log').mockImplementation(() => {});
   document.body.innerHTML = '';
@@ -150,6 +156,7 @@ afterEach(async () => {
   cleanup.executeCleanups();
   await pass();
   globalThis.chrome.storage = original;
+  window.history.replaceState({}, '', '/u/1/app');
   vi.useRealTimers();
   vi.restoreAllMocks();
   document.body.innerHTML = '';
@@ -297,6 +304,41 @@ describe("Gemini folders' account gate", () => {
     expect(memory.values.local.get(aKey)).toEqual(folder('Private a'));
     expect(folderWrites()).toEqual([]);
   });
+
+  it('writes nothing and claims no folders when the route switches to an unreadable account with the folders off', async () => {
+    window.history.replaceState({}, '', '/u/0/app');
+    const [aKey, bKey] = [await keyOf('a', '0'), await keyOf('b', '1')];
+    memory.values.local.set(aKey, folder('Private a'));
+    // Unscoped data from before isolation: a route slot alone must never claim it.
+    memory.values.local.set(KEY, folder('Legacy', ['cccccccccccccccc']));
+    memory.values.sync.set(StorageKeys.FOLDER_ENABLED, false);
+    showGeminiAccount('a@example.com');
+    await openPage();
+    memory.writes.length = 0;
+    const backups = () => Object.keys(localStorage).filter((key) => key.startsWith('gvBackup_'));
+    const backupsBefore = backups();
+
+    // Account b's page, before Gemini draws b's account button.
+    hideGeminiAccount();
+    window.history.pushState({}, '', '/u/1/app');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+    await pass();
+
+    expect(memory.writes).toEqual([]);
+    expect(backups()).toEqual(backupsBefore);
+    await session!.ensureDataLoaded();
+    expect(session!.getFolders()).toEqual([]);
+    expect(memory.writes).toEqual([]);
+
+    // Once b is known, b gets b's own folders; neither a's nor the legacy ones.
+    memory.values.local.set(bKey, folder('Private b'));
+    showGeminiAccount('b@example.com');
+    await session!.ensureDataLoaded();
+    expect(session!.getFolders().map((entry) => entry.name)).toEqual(['Private b']);
+    expect(memory.values.local.get(aKey)).toEqual(folder('Private a'));
+    expect(folderWrites()).toEqual([]);
+  }, 10_000);
 
   it("turning folders on right after an account switch opens the new account's folders", async () => {
     const [aKey, bKey] = [await keyOf('a'), await keyOf('b')];

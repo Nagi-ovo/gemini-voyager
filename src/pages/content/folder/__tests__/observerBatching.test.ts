@@ -7,6 +7,7 @@ import { startGeminiBatchDelete } from '../../batchDelete/gemini';
 import type { FolderSidebarRuntime } from '../FolderSidebarRuntime';
 import type { FolderStore } from '../FolderStore';
 import * as storageAdapters from '../storage/FolderStorageAdapter';
+import { showGeminiAccount } from './geminiAccountControl';
 import { FolderManager } from './geminiFolderManager';
 import { mountSidebar, setLayout } from './sidebarRuntimeHarness';
 
@@ -204,6 +205,8 @@ describe('FolderManager native sidebar integration', () => {
         routeUserId: '0',
         emailHash: null,
       });
+      // With isolation on, only a page whose account control reads binds a bucket.
+      showGeminiAccount('b@example.com');
       await owners.store.setAccountIsolationEnabled(true);
       expect(owners.store.storageKey).not.toBe(previousKey);
     }

@@ -161,6 +161,11 @@ export class FolderRepository extends FolderRepositoryLoads {
     this.activeStorageKey = '';
     this.hooks.onAccountReleased();
     this.hooks.onChange('account');
+    // An unknown account owns no bucket: resolving it now could claim another account's data.
+    if (this.isolationEnabled && this.hooks.canBindAccount?.() === false) {
+      this.debug('Account not known yet; nothing bound');
+      return;
+    }
     let storageKey: string | null = null;
     try {
       let resolvedScope: AccountScope | null = null;

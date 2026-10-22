@@ -17,3 +17,8 @@ export function showGeminiAccount(email: string): HTMLElement {
   control.setAttribute('aria-label', `Google Account: Test User (${email})`);
   return control;
 }
+
+/** Gemini has not drawn its account button (yet): the page's account is unknown. */
+export function hideGeminiAccount(): void {
+  document.getElementById(CONTROL_ID)?.remove();
+}

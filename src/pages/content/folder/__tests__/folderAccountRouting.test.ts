@@ -247,24 +247,6 @@ describe('FolderManager account routes across mounted surfaces', () => {
     expect(toastDriver.all().filter(({ tone }) => tone === 'success')).toEqual([]);
   });
 
-  it('follows the account route with the folders off, and shows that account when they turn on', async () => {
-    const instance = await initialize('sidebar');
-    setEnabled(false);
-    vi.mocked(accountIsolationService.resolveAccountScope).mockClear();
-
-    openRoute('/u/2/app');
-    await vi.advanceTimersByTimeAsync(1000);
-
-    // Folder-as-Project files into the page's account even while the folders are off.
-    expect(instance.getFolders().map((folder) => folder.name)).toEqual(['Private b']);
-    expect(accountIsolationService.resolveAccountScope).toHaveBeenCalledTimes(1);
-    expect(document.querySelector('.gv-folder-container')).toBeNull();
-
-    setEnabled(true);
-    await vi.advanceTimersByTimeAsync(0);
-    expect(sidebarFolders()).toEqual(['Private b']);
-  });
-
   it.each(['floating', 'fab'] as const)(
     '%s rebinds once after disable/re-enable and stops reacting after destroy',
     async (surface) => {

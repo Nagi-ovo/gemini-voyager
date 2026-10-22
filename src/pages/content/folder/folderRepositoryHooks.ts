@@ -36,6 +36,13 @@ export interface FolderRepositoryHooks {
   onPersistSettled?: () => void;
   /** A session was bound for `context`, which is `null` while isolation is off. */
   onAccountBound?: (context: AccountContext | null) => void;
+  /**
+   * With isolation on, whether the page's account is known well enough to bind
+   * it. While false a scope refresh releases the bound account and binds,
+   * loads, migrates and recovers nothing; the owner refreshes again once it can.
+   * Bindable when omitted.
+   */
+  canBindAccount?: () => boolean;
 }
 
 function isDebugEnabled(flag: string): boolean {

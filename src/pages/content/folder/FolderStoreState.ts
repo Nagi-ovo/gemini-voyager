@@ -34,6 +34,8 @@ export interface FolderStoreOptions {
    * page shows of another account is ever written. Open when omitted.
    */
   accountMatchesPage?: () => boolean;
+  /** With isolation on, whether the page's account is known enough to bind (see the repository hook). */
+  canBindAccount?: () => boolean;
 }
 
 export abstract class FolderStoreState {
@@ -51,6 +53,7 @@ export abstract class FolderStoreState {
       onAccountReleased: () => this.accountReleased(),
       isEnabled: () => this.options.getContext().enabled,
       onAccountBound: (context) => this.options.onAccountBound?.(context),
+      canBindAccount: () => this.options.canBindAccount?.() ?? true,
     });
   }
 

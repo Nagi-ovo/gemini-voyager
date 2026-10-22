@@ -1,11 +1,14 @@
 /**
  * Gemini's folder data for one page: the folder store on Gemini's bucket (its
  * repository, account scope and Gemini edits), the commands that edit it, the
- * popup's cloud-sync and AI-structure answers, the legacy sync-mode migration
- * and the account's `/u/<n>/` route. The content script's start point holds it
- * for the page's lifetime (`geminiFolderSessions.ts`), so all of that runs
- * with the folders off; Folder-as-Project files new chats through it, and the
- * folders plugin's view attaches while it runs.
+ * popup's cloud-sync and AI-structure answers and the legacy sync-mode
+ * migration. The content script's start point holds it for the page's lifetime
+ * (`geminiFolderSessions.ts`), so those run with the folders off, as they
+ * always did; Folder-as-Project files new chats through it, and the folders
+ * plugin's view attaches while it runs. Following the account's `/u/<n>/`
+ * route and polling the page's account run only while a view is attached;
+ * with the folders off the account is bound again when Folder-as-Project asks
+ * for the folders.
  *
  * One account gate (`accountMatchesPage`): with isolation on, the folders are
  * shown, edited, uploaded and answered to the popup only while the account
@@ -13,8 +16,9 @@
  * they differ, or the page's account cannot be read, `data` is empty,
  * `canEdit` false, `accountScope` and `dataSession` null, and every command
  * and store edit is refused before it runs; nothing reads that empty view to
- * write it back. A route change, attaching a view and a poll rebind the
- * page's account, and the folders come back.
+ * write it back. Nor is any account bound, loaded, migrated or recovered while
+ * the page's account cannot be read (`canBindAccount`): a route slot alone
+ * never owns a bucket.
  */
 import type { AccountScope } from '@/core/services/AccountIsolationService';
 import { createToaster } from '@/core/ui/toast/toaster';
@@ -22,7 +26,6 @@ import { type FolderCommands, failed } from '@/features/folder/commands/folderCo
 import type { ConversationSortMode } from '@/features/folder/model/folderData';
 import { initI18n } from '@/utils/i18n';
 
-import { watchRouteChanges } from '../../utils/routeWatcher';
 import type { FolderDataSession } from '../FolderDataSession';
 import { LEVEL_MS } from '../FolderFeedback';
 import { FolderStore, type FolderStoreChange } from '../FolderStore';
@@ -67,7 +70,6 @@ export class GeminiFolderSession implements GeminiFolderReads {
   private closed = false;
   private started = false;
   private stopListening: (() => void) | null = null;
-  private stopRouteWatch: (() => void) | null = null;
   private poll: number | null = null;
   /** The account the store bound (`geminiAccountFingerprint`); null while none is known. */
   private boundFingerprint: string | null = null;
@@ -87,6 +89,7 @@ export class GeminiFolderSession implements GeminiFolderReads {
       this.boundFingerprint = geminiAccountFingerprint(context);
     },
     accountMatchesPage: () => this.accountMatchesPage,
+    canBindAccount: () => geminiPageAccountFingerprint() !== null,
   });
   /** Every edit and import; each is refused, unwritten, while the account gate is closed. */
   readonly commands: FolderCommands = this.gated(createLegacyFolderCommands(this.store));
@@ -127,15 +130,13 @@ export class GeminiFolderSession implements GeminiFolderReads {
     return this.store.storageKey;
   }
 
-  /** Binds the account and loads the folders, then answers the popup and follows the route. */
+  /** Binds the page's account, when known, and loads its folders; then answers the popup. */
   async init(): Promise<void> {
     // Notices shown while the folders load speak the page's language.
     void initI18n().catch(() => {});
     await this.store.init();
     if (this.closed) return;
     this.listen();
-    // The account follows the route with the folders off too: Folder-as-Project files into it.
-    this.stopRouteWatch = watchRouteChanges(() => void this.followRoute());
     this.started = true;
     this.syncPoll();
     void migrateLegacySyncMode();
@@ -150,6 +151,7 @@ export class GeminiFolderSession implements GeminiFolderReads {
     if (this.closed || this.view === view) return;
     this.view = view;
     this.shownGateOpen = this.accountMatchesPage;
+    this.syncPoll();
     // Before start-up finished, `init` binds the account itself.
     if (!this.started) return;
     // A resolution binds the account it started for, though the page may have moved on.
@@ -160,7 +162,9 @@ export class GeminiFolderSession implements GeminiFolderReads {
   }
 
   detach(view: GeminiFolderView): void {
-    if (this.view === view) this.view = null;
+    if (this.view !== view) return;
+    this.view = null;
+    this.syncPoll();
   }
 
   /** Answers the popup's cloud sync and AI-structure requests; once. */
@@ -181,7 +185,10 @@ export class GeminiFolderSession implements GeminiFolderReads {
     return this.store.loadData();
   }
 
-  /** Follows the page's `/u/<n>/` route, then makes sure the page's account is the bound one. */
+  /**
+   * Follows the page's `/u/<n>/` route, then makes sure the page's account is
+   * the bound one. The attached view's navigation calls it on route changes.
+   */
   async followRoute(): Promise<void> {
     if (this.closed) return;
     this.tellIfGateMoved();
@@ -214,8 +221,10 @@ export class GeminiFolderSession implements GeminiFolderReads {
 
   // Folder-as-Project's port: the folders to pick from, and filing the new chat.
 
-  ensureDataLoaded(): Promise<void> {
-    return this.store.ensureDataLoaded();
+  /** Binds the page's account first if it changed while nothing followed it (folders off). */
+  async ensureDataLoaded(): Promise<void> {
+    if (!this.accountMatchesPage) await this.rebind();
+    if (this.accountMatchesPage) await this.store.ensureDataLoaded();
   }
 
   getFolders(): Folder[] {
@@ -245,8 +254,6 @@ export class GeminiFolderSession implements GeminiFolderReads {
     this.view = null;
     this.stopListening?.();
     this.stopListening = null;
-    this.stopRouteWatch?.();
-    this.stopRouteWatch = null;
     this.syncPoll();
     this.toaster?.destroy();
     this.toaster = null;
@@ -290,9 +297,10 @@ export class GeminiFolderSession implements GeminiFolderReads {
     this.view?.onChange('account');
   }
 
-  /** Polls the page's account while isolation is on; stops with isolation off or on close. */
+  /** Polls the page's account while a view shows the folders with isolation on. */
   private syncPoll(): void {
-    const wanted = this.started && !this.closed && this.store.accountIsolationEnabled;
+    const wanted =
+      this.started && !this.closed && this.view !== null && this.store.accountIsolationEnabled;
     if (wanted && this.poll === null) {
       this.poll = window.setInterval(() => {
         this.tellIfGateMoved();
