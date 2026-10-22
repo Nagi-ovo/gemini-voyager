@@ -15,10 +15,15 @@ import {
   readSiteConversation,
 } from '@/features/folder/sites/sitePage';
 import { PluginSiteFolderStore, createPluginSiteCommands } from '@/features/folder/sites/siteStore';
-import type { FoldersSection } from '@/features/plugins/sites/sections/foldersData';
+import { isEphemeralChat } from '@/features/plugins/sends/trackUserSends';
+import type {
+  FoldersPlaceholderTitles,
+  FoldersSection,
+} from '@/features/plugins/sites/sections/foldersData';
 import type { SiteAdapter } from '@/features/plugins/types';
 
 import { createRowMenu } from './rowMenu';
+import { createRowRename } from './rowRename';
 import { siteSectionCss } from './sectionCss';
 import { createSectionDom } from './sectionDom';
 import claudeSkin from './skins/claude.css?raw';
@@ -53,6 +58,33 @@ function hideFiledDom(section: FoldersSection, site: string): HideFiledDom {
   };
 }
 
+/**
+ * Whether `title` is one the site shows before it names a conversation: any of
+ * `any`, or one of the page's UI language (its full tag, then its primary
+ * subtag, else `fallbackLanguage`). Only the page's own language counts: a chat
+ * on an English page may really be titled "新聊天", and keeps that title.
+ */
+function placeholderCheck(
+  titles: FoldersPlaceholderTitles,
+  doc: Document,
+): (title: string) => boolean {
+  const any = new Set(titles.any ?? []);
+  const byLanguage = new Map(
+    Object.entries(titles.byLanguage ?? {}).map(([tag, list]) => [tag.toLowerCase(), list]),
+  );
+  const fallback = titles.fallbackLanguage?.toLowerCase();
+  const ofPage = (): readonly string[] => {
+    const tag = doc.documentElement.lang.trim().toLowerCase().replace(/_/g, '-');
+    return (
+      byLanguage.get(tag) ??
+      byLanguage.get(tag.split('-')[0]) ??
+      (fallback ? byLanguage.get(fallback) : undefined) ??
+      []
+    );
+  };
+  return (title) => any.has(title) || (byLanguage.size > 0 && ofPage().includes(title));
+}
+
 /** The site's folders from its `site.json` and the core table, or `null` where it has none. */
 export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAdapter | null {
   const section = adapter?.folders;
@@ -64,9 +96,8 @@ export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAda
   const { identity, transfer, overrides } = route;
   const { site, policy, config, messages } = row;
   const dom = createSectionDom(section, identity);
-  const placeholders = new Set(section.page.placeholderTitles.any ?? []);
   const suffix = section.page.titleSuffix ? new RegExp(section.page.titleSuffix) : null;
-  const isPlaceholderTitle = (title: string): boolean => placeholders.has(title);
+  const isPlaceholderTitle = placeholderCheck(section.page.placeholderTitles, document);
   /** The open conversation's title from the tab, which without the site's suffix is the site's own page. */
   const tabTitle = (): string | null => {
     if (!suffix) return pageTitle(document, /$^/, isPlaceholderTitle);
@@ -74,6 +105,7 @@ export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAda
   };
   const hideFiled = hideFiledDom(section, site);
   const { rowMenu } = section;
+  const entryAttribute = `data-gv-${site}-move-to-folder`;
   const className = `gv-${site}-folder-section`;
   const conversationHref = (conversation: ConversationReference): string =>
     identity.read(conversation.url)?.url ?? '';
@@ -109,7 +141,9 @@ export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAda
       href: conversationHref,
     },
     page: {
-      current: (untitled) => readSiteConversation(identity, shownTitle, untitled),
+      // A chat the site keeps nowhere (ChatGPT's temporary chats) is never filed.
+      current: (untitled) =>
+        isEphemeralChat(site) ? null : readSiteConversation(identity, shownTitle, untitled),
       open: (conversation) =>
         void openSiteConversation(identity, (id) => dom.link(id), conversation),
       isPlaceholderTitle,
@@ -144,14 +178,13 @@ export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAda
             createMoveMenu: (options) =>
               createRowMenu(
                 rowMenu,
-                {
-                  dom,
-                  entryAttribute: `data-gv-${site}-move-to-folder`,
-                  storedId: (id) => `${identity.prefix}${id}`,
-                },
+                { dom, entryAttribute, storedId: (id) => `${identity.prefix}${id}` },
                 options,
               ),
           }
+        : {}),
+      ...(rowMenu?.rename
+        ? { rename: createRowRename(rowMenu, rowMenu.rename.plainItem, { dom, entryAttribute }) }
         : {}),
     },
   };
