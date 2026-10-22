@@ -21,7 +21,7 @@ Once you turn it on and pair, Voyager offers a set of ChatGPT page actions to lo
 
 **Its own tab.** Each job runs in a ChatGPT tab Voyager opens, and the tab closes when it's done.
 
-**One job at a time.** Only one job runs at once.
+**One job at a time, unless you allow more.** Jobs run one after another by default. Turn on **Run jobs in parallel** in the popup's **Local bridge** card and up to ten run side by side, each in its own tab; typing and clicking still take turns.
 
 **Sign-ins and challenges are yours.** If ChatGPT asks you to sign in or solve a challenge, the bridge stops and says so. It never works around it.
 

@@ -11,7 +11,7 @@ describe('bridge dispatcher: conversation tabs and their mode', () => {
     await t.dispatcher.onTask(task('conversation.open', 'T1'));
     const created = vi.mocked(t.page.api.create).mock.calls[0][0];
     expect(created.url).toBe('https://chatgpt.com/');
-    const tabId = (await t.store.getTab())!.tabId;
+    const tabId = (await t.store.listTabs())[0]!.tabId;
 
     expect(await t.dispatcher.onHello(contentSender(tabId + 5), 'stranger')).toBe(false);
     expect(t.page.starts()).toHaveLength(0);
@@ -46,7 +46,7 @@ describe('bridge dispatcher: conversation tabs and their mode', () => {
   it('names the tab a failed open left behind, so the CLI can close it', async () => {
     const t = setup();
     await t.dispatcher.onTask(task('conversation.open', 'T1'));
-    const tabId = (await t.store.getTab())!.tabId;
+    const tabId = (await t.store.listTabs())[0]!.tabId;
     await t.dispatcher.onHello(contentSender(tabId, 'DOC'), 'doc-9');
     await t.dispatcher.onDone(contentSender(tabId, 'DOC'), {
       taskId: 'T1',
@@ -74,8 +74,8 @@ describe('bridge dispatcher: conversation tabs and their mode', () => {
     const startedAt = t.now();
     t.policy.refreshIfOld.mockImplementationOnce(async () => t.advance(15_000));
     await t.dispatcher.onTask(task('conversation.open', 'T1'));
-    expect((await t.dispatcher.current())?.deadline).toBe(startedAt + 60_000);
-    const tabId = (await t.store.getTab())!.tabId;
+    expect((await t.dispatcher.tasks())[0]?.deadline).toBe(startedAt + 60_000);
+    const tabId = (await t.store.listTabs())[0]!.tabId;
 
     t.advance(25_000);
     await t.dispatcher.onHello(contentSender(tabId), 'doc-9');
@@ -112,7 +112,7 @@ describe('bridge dispatcher: conversation tabs and their mode', () => {
     const t = setup();
     const dispatcher = t.make(t.policy.checkOp, { restoreSwitchedMode: true });
     await dispatcher.onTask(task('conversation.open', 'T1'));
-    const tabId = (await t.store.getTab())!.tabId;
+    const tabId = (await t.store.listTabs())[0]!.tabId;
     await dispatcher.onHello(contentSender(tabId), 'doc-9');
     const open = t.page.starts()[0].message;
     expect(open.task).toMatchObject({ params: { ensureMode: 'chat' } });
@@ -148,7 +148,7 @@ describe('bridge dispatcher: conversation tabs and their mode', () => {
   it('leaves the account in chat when it closes a tab it moved out of work mode', async () => {
     const t = setup();
     await t.dispatcher.onTask(task('conversation.open', 'T1'));
-    const tabId = (await t.store.getTab())!.tabId;
+    const tabId = (await t.store.listTabs())[0]!.tabId;
     await t.dispatcher.onHello(contentSender(tabId), 'doc-9');
     await t.dispatcher.onDone(contentSender(tabId), {
       taskId: 'T1',

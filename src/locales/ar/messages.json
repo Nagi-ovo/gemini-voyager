@@ -4305,6 +4305,14 @@
     "message": "جارٍ تنفيذ {op} للمهمة {job}",
     "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
   },
+  "bridgeParallelLabel": {
+    "message": "تشغيل المهام بالتوازي",
+    "description": "Switch in the ChatGPT bridge card that lets jobs run side by side"
+  },
+  "bridgeParallelHint": {
+    "message": "حتى 10 مهام في الوقت نفسه، كلٌّ في علامة تبويب ChatGPT خاصة بها؛ وتبقى الكتابة والنقر بالتناوب. عند الإيقاف: مهمة واحدة في كل مرة.",
+    "description": "Explains the parallel jobs switch in the ChatGPT bridge card"
+  },
   "bridgeUnsupportedSafari": {
     "message": "الجسر المحلي غير متاح في Safari بعد.",
     "description": "Shown in Safari, which the local bridge does not support yet"

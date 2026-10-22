@@ -4,6 +4,7 @@ import { StorageKeys } from '@/core/types/common';
 import { bridgeError } from '@/features/bridge/protocol';
 import { BUNDLED_SITE_ADAPTERS } from '@/features/plugins/catalog/sites';
 
+import { MAX_BRIDGE_TASKS } from '../bridgeDispatcher';
 import { BRIDGE_PLUGIN_ID } from '../bridgePolicy';
 import { BRIDGE_SESSION_KEYS } from '../bridgeTaskStore';
 import { PAIRING, json, setup } from './ownerTestKit';
@@ -146,6 +147,24 @@ describe('bridge owner: polling and pairings', () => {
     });
   });
 
+  it('tells the server with each poll how many jobs it runs side by side: one until allowed', async () => {
+    const local = {
+      [StorageKeys.BRIDGE_PAIRING]: PAIRING,
+      [StorageKeys.PLUGINS_STATE]: { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } },
+    };
+    const polled = async (extra: Record<string, unknown>) => {
+      const t = setup({ local: { ...local, ...extra } });
+      t.origins.add('http://127.0.0.1/*');
+      t.routes['/v1/ext/poll'] = () => json({ ok: true, data: { kind: 'unpaired' } });
+      await t.owner.wake();
+      return t.requests.find((r) => r.path === '/v1/ext/poll')?.body;
+    };
+    expect(await polled({})).toMatchObject({ maxTasks: 1 });
+    expect(await polled({ [StorageKeys.BRIDGE_PARALLEL]: true })).toMatchObject({
+      maxTasks: MAX_BRIDGE_TASKS,
+    });
+  });
+
   it('stops the task of a pairing another server replaced and runs nothing its old poll brings', async () => {
     const t = setup({
       local: {
@@ -153,17 +172,19 @@ describe('bridge owner: polling and pairings', () => {
         [StorageKeys.PLUGINS_STATE]: { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } },
       },
       session: {
-        [BRIDGE_SESSION_KEYS.task]: {
-          taskId: 'T1',
-          jobId: 'J1',
-          op: 'turns.read',
-          state: 'running',
-          startedAt: 1,
-          deadline: Number.MAX_SAFE_INTEGER,
-          lastProgressAt: 1,
-          progressSeq: 0,
-          serverId: 'srv1',
-        },
+        [BRIDGE_SESSION_KEYS.tasks]: [
+          {
+            taskId: 'T1',
+            jobId: 'J1',
+            op: 'turns.read',
+            state: 'running',
+            startedAt: 1,
+            deadline: Number.MAX_SAFE_INTEGER,
+            lastProgressAt: 1,
+            progressSeq: 0,
+            serverId: 'srv1',
+          },
+        ],
       },
     });
     t.origins.add('http://127.0.0.1/*');
@@ -256,10 +277,10 @@ describe('bridge owner: polling and pairings', () => {
   it('still frees the page when a bridge tab closes while it is on and paired', async () => {
     const t = setup({
       local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING, [StorageKeys.PLUGINS_STATE]: ON },
-      session: { [BRIDGE_SESSION_KEYS.tab]: { tabId: 5, jobId: 'J1', openedAt: 1 } },
+      session: { [BRIDGE_SESSION_KEYS.tabs]: [{ tabId: 5, jobId: 'J1', openedAt: 1 }] },
     });
     t.owner.onTabRemoved(5);
-    await vi.waitFor(() => expect(t.session.values[BRIDGE_SESSION_KEYS.tab]).toBeUndefined());
+    await vi.waitFor(() => expect(t.session.values[BRIDGE_SESSION_KEYS.tabs]).toBeUndefined());
   });
 
   it('does not contact the server while the builtin is off', async () => {

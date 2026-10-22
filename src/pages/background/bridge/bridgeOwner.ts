@@ -20,14 +20,11 @@ import { EXTENSION_VERSION } from '@/core/utils/version';
 import { currentAccountPlan, readAccountPlanStore } from '@/features/bridge/accountPlanStore';
 import {
   type BridgeBrowser,
-  type BridgeError,
   type ErrorCode,
   OP_VERSIONS,
   bridgeError,
   type OpCapability,
   type OpName,
-  type PolicyState,
-  type UpgradeSide,
   isPolicyExemptOp,
 } from '@/features/bridge/protocol';
 import { BUNDLED_SITE_ADAPTERS } from '@/features/plugins/catalog/sites';
@@ -43,13 +40,14 @@ import { createBlobUploadRelay } from './bridgeBlobUpload';
 import { createBridgeClient } from './bridgeClient';
 import { SUPPORTED_BRIDGE_OPS, createBridgeDispatcher } from './bridgeDispatcher';
 import { createBridgePairing, parsePairing } from './bridgePairing';
+import { readBridgeParallel, writeBridgeParallel } from './bridgeParallel';
 import {
   BRIDGE_PLUGIN_ID,
   BRIDGE_POLICY_HOST,
   LOOPBACK_ORIGIN_PATTERN,
-  type PolicyVerdict,
   createBridgePolicy,
 } from './bridgePolicy';
+import { isUpgradeSide, policyLabel, refusedOps } from './bridgePollReplies';
 import {
   type BridgeMessageOwner,
   type BridgeStatusData,
@@ -102,28 +100,6 @@ export interface BridgeOwner {
   idle(): Promise<void>;
 }
 
-const policyLabel = (verdict: PolicyVerdict): PolicyState =>
-  verdict.state === 'allowed' ? 'allowed' : verdict.code === 'policy-stale' ? 'stale' : 'denied';
-
-function isUpgradeSide(value: unknown): value is UpgradeSide {
-  return value === 'extension' || value === 'cli';
-}
-
-/** The offered ops a serve's `bad-request` names as invalid, by their place in the poll. */
-function refusedOps(error: BridgeError, offered: readonly OpCapability[]): OpName[] {
-  if (error.code !== 'bad-request') return [];
-  const issues = error.details?.issues;
-  if (!Array.isArray(issues)) return [];
-  return issues.flatMap((issue: unknown) => {
-    const path =
-      typeof issue === 'object' && issue !== null ? (issue as { path?: unknown }).path : null;
-    const index =
-      typeof path === 'string' ? /^capabilities\.ops\[(\d+)\]/.exec(path)?.[1] : undefined;
-    const op = index === undefined ? undefined : offered[Number(index)];
-    return op ? [op.name] : [];
-  });
-}
-
 export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
   const now = env.now ?? (() => Date.now());
   const sleep = env.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
@@ -131,7 +107,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
   const client = createBridgeClient(env.fetch);
   const tabs = createBridgeTabs({ store, api: env.tabs, now });
   // Hydrate: read the session state back before any handler acts on it.
-  const ready = Promise.all([store.getTask(), store.getTab()]).then(
+  const ready = Promise.all([store.listTasks(), store.listTabs()]).then(
     () => undefined,
     (error: unknown) => logger.warn('Bridge session state unreadable', { error: String(error) }),
   );
@@ -202,6 +178,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       loadEntry: loadHostCatalogCache,
       extensionVersion: EXTENSION_VERSION,
     }),
+    parallelAllowed: () => readBridgeParallel(env.local),
     now,
   });
   const blobRelay = createBlobRelay({ store, client, connection, ready: awaitReady, now });
@@ -265,6 +242,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
           inflight: await dispatcher.inflight(),
           policy: { revision: verdict.revision ?? 0, state: policyLabel(verdict) },
           account: await readAccount(),
+          maxTasks: await dispatcher.capacity(),
         },
         pollAbort.signal,
       );
@@ -298,7 +276,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       const message = reply.data;
       if (!message) continue;
       if (message.kind === 'unpaired') {
-        await dispatcher.stopCurrent('not-paired', 'voyager serve dropped this pairing.');
+        await dispatcher.stopAll('not-paired', 'voyager serve dropped this pairing.');
         await pairing.forget();
         await store.clearOutbox();
         return;
@@ -327,18 +305,20 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
   const shutDown = async (code: 'bridge-disabled' | 'not-paired', message: string) => {
     stop();
     clearAlarm();
-    // The stopped task's result gets its one delivery try first.
-    await dispatcher.stopCurrent(code, message);
+    // The stopped tasks' results get their one delivery try first.
+    await dispatcher.stopAll(code, message);
     // Results wait only for the server they belong to; reply text must not outlive the pairing.
     await store.clearOutbox();
   };
 
   const status = async (): Promise<BridgeStatusData> => {
-    const [record, gate, task] = await Promise.all([
+    const [record, gate, tasks, parallel] = await Promise.all([
       pairing.load(),
       policy.status(),
-      dispatcher.current(),
+      dispatcher.tasks(),
+      readBridgeParallel(env.local),
     ]);
+    const task = tasks[0];
     return {
       permission: gate.permissions.loopback,
       paired: record
@@ -348,6 +328,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       ...(lastPollAt !== undefined ? { lastPollAt } : {}),
       policy: policyLabel(gate.verdict),
       onlineUpdatesEnabled: gate.onlineUpdatesEnabled,
+      parallel,
       ...(task ? { activeTask: { jobId: task.jobId, op: task.op } } : {}),
       ...(lastError ? { lastError } : {}),
     };
@@ -375,6 +356,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
             server: 'unknown',
             policy: 'unknown',
             onlineUpdatesEnabled: true,
+            parallel: false,
           },
         };
       }
@@ -406,6 +388,16 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       await policy.refresh();
       void wake();
       return { ok: true, data: { policy: policyLabel((await policy.status()).verdict) } };
+    },
+    setParallel: async (enabled) => {
+      if (typeof enabled !== 'boolean') {
+        return { ok: false, error: bridgeError('bad-request', 'enabled must be a boolean.') };
+      }
+      await writeBridgeParallel(env.local, enabled);
+      // Poll again now, so the server hears the new capacity instead of after its hold.
+      stop();
+      void wake();
+      return { ok: true, data: { parallel: enabled } };
     },
     hello: (sender, docNonce) => dispatcher.onHello(sender, docNonce),
     progress: (sender, message) => dispatcher.onProgress(sender, message),

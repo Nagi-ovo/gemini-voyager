@@ -1,9 +1,10 @@
 /**
- * The ChatGPT tab the bridge works in (spec §3.1). Only the background opens
- * and closes it, so the page itself never navigates with `location.*`. One tab
- * is recorded at a time (`gvBridgeTab` in session storage); its document is
- * identified by the `docNonce` its content script reports in `gv.bridge.hello`,
- * plus Chrome's `documentId` where the browser has one.
+ * The ChatGPT tabs the bridge works in (spec §3.1). Only the background opens
+ * and closes them, so the page itself never navigates with `location.*`. Each
+ * job works in the tab its own `conversation.open` created (`gvBridgeTabs` in
+ * session storage), so jobs that run side by side never share a page; a tab's
+ * document is identified by the `docNonce` its content script reports in
+ * `gv.bridge.hello`, plus Chrome's `documentId` where the browser has one.
  */
 import type { BridgeTabRecord, BridgeTaskStore } from './bridgeTaskStore';
 
@@ -64,7 +65,7 @@ export function senderIsHolder(
 }
 
 export interface BridgeTabs {
-  /** Open a fresh tab for `jobId` and record it as the bridge tab. */
+  /** Open a fresh tab for `jobId` and record it as that job's bridge tab. */
   open(jobId: string, url: string, active: boolean): Promise<number>;
   /** False when the tab was already gone. */
   close(tabId: number): Promise<boolean>;
@@ -75,8 +76,8 @@ export interface BridgeTabs {
   /** Ask whatever document the tab holds to say hello again; never throws. */
   requestHello(tabId: number): Promise<void>;
   /**
-   * A hello from the recorded bridge tab: store its document identity. Returns
-   * the record as it was before, or null when the sender is not the bridge tab.
+   * A hello from a recorded bridge tab: store its document identity. Returns
+   * the record as it was before, or null when the sender is not a bridge tab.
    */
   acceptHello(
     sender: chrome.runtime.MessageSender,
@@ -132,9 +133,10 @@ export function createBridgeTabs(deps: {
       }
     },
     acceptHello: async (sender, docNonce) => {
-      if (!isBridgeContentSender(sender)) return null;
-      const previous = await store.getTab();
-      if (!previous || previous.tabId !== sender.tab?.id) return null;
+      const tabId = sender.tab?.id;
+      if (!isBridgeContentSender(sender) || tabId === undefined) return null;
+      const previous = await store.getTab(tabId);
+      if (!previous) return null;
       const documentId = (sender as { documentId?: string }).documentId;
       // Only the document identity changes; the tab's own state (restoreMode) outlives a
       // remount's hello, or the close would skip switching the mode back.

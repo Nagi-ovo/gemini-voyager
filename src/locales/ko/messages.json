@@ -4305,6 +4305,14 @@
     "message": "작업 {job}의 {op} 실행 중",
     "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
   },
+  "bridgeParallelLabel": {
+    "message": "작업 병렬 실행",
+    "description": "Switch in the ChatGPT bridge card that lets jobs run side by side"
+  },
+  "bridgeParallelHint": {
+    "message": "최대 10개 작업을 동시에, 각각 자기 ChatGPT 탭에서 실행합니다. 입력과 클릭은 여전히 차례로 진행됩니다. 끄면 한 번에 하나씩 실행합니다.",
+    "description": "Explains the parallel jobs switch in the ChatGPT bridge card"
+  },
   "bridgeUnsupportedSafari": {
     "message": "Safari에서는 아직 로컬 브리지를 사용할 수 없습니다.",
     "description": "Shown in Safari, which the local bridge does not support yet"

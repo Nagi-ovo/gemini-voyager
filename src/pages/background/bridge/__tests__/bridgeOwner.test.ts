@@ -11,19 +11,21 @@ describe('bridge owner', () => {
     const t = setup({
       local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING },
       session: {
-        [BRIDGE_SESSION_KEYS.task]: {
-          taskId: 'T1',
-          jobId: 'J1',
-          op: 'turns.read',
-          state: 'running',
-          startedAt: 1,
-          deadline: Number.MAX_SAFE_INTEGER,
-          lastProgressAt: 1,
-          progressSeq: 0,
-          tabId: 100,
-          docNonce: 'doc-1',
-          serverId: 'srv1',
-        },
+        [BRIDGE_SESSION_KEYS.tasks]: [
+          {
+            taskId: 'T1',
+            jobId: 'J1',
+            op: 'turns.read',
+            state: 'running',
+            startedAt: 1,
+            deadline: Number.MAX_SAFE_INTEGER,
+            lastProgressAt: 1,
+            progressSeq: 0,
+            tabId: 100,
+            docNonce: 'doc-1',
+            serverId: 'srv1',
+          },
+        ],
       },
     });
     let hydrate!: () => void;
@@ -51,20 +53,22 @@ describe('bridge owner', () => {
     const t = setup({
       local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING },
       session: {
-        [BRIDGE_SESSION_KEYS.task]: {
-          taskId: 'T1',
-          jobId: 'J1',
-          op: 'composer.attach',
-          state: 'running',
-          startedAt: 1,
-          deadline: Number.MAX_SAFE_INTEGER,
-          lastProgressAt: 1,
-          progressSeq: 0,
-          tabId: 100,
-          docNonce: 'doc-1',
-          serverId: 'srv1',
-          blobs: [{ blobId: 'b1', size: 6 }],
-        },
+        [BRIDGE_SESSION_KEYS.tasks]: [
+          {
+            taskId: 'T1',
+            jobId: 'J1',
+            op: 'composer.attach',
+            state: 'running',
+            startedAt: 1,
+            deadline: Number.MAX_SAFE_INTEGER,
+            lastProgressAt: 1,
+            progressSeq: 0,
+            tabId: 100,
+            docNonce: 'doc-1',
+            serverId: 'srv1',
+            blobs: [{ blobId: 'b1', size: 6 }],
+          },
+        ],
       },
     });
     t.routes['/v1/ext/blobs/b1/read'] = () =>
@@ -181,7 +185,25 @@ describe('bridge owner', () => {
         server: 'unknown',
         policy: 'allowed', // unstamped test build: the packaged chatgpt policy applies
         onlineUpdatesEnabled: true,
+        parallel: false,
       },
     });
+  });
+
+  it('keeps the parallel switch the popup sets, and refuses anything but a boolean', async () => {
+    const t = setup({ local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING } });
+    expect(await t.send({ type: 'gv.bridge.setParallel', enabled: 'yes' })).toMatchObject({
+      ok: false,
+      error: { code: 'bad-request' },
+    });
+    expect(await t.send({ type: 'gv.bridge.setParallel', enabled: true })).toEqual({
+      ok: true,
+      data: { parallel: true },
+    });
+    expect(t.local.values[StorageKeys.BRIDGE_PARALLEL]).toBe(true);
+    expect(await t.send({ type: 'gv.bridge.status' })).toMatchObject({ data: { parallel: true } });
+
+    await t.send({ type: 'gv.bridge.setParallel', enabled: false });
+    expect(t.local.values[StorageKeys.BRIDGE_PARALLEL]).toBeUndefined();
   });
 });

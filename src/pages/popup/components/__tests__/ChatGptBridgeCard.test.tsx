@@ -369,6 +369,27 @@ describe('ChatGptBridgeCard paired status', () => {
     expect(sent('gv.bridge.enableRefresh')).toEqual([{ type: 'gv.bridge.enableRefresh' }]);
   });
 
+  it('lets the person allow parallel jobs, off until they do', async () => {
+    status = pairedStatus();
+    await render();
+    const toggle = container.querySelector<HTMLInputElement>('#gv-bridge-parallel');
+    expect(toggle?.checked).toBe(false);
+    expect(card()?.textContent).toContain('bridgeParallelHint');
+
+    replies['gv.bridge.setParallel'] = { ok: true, data: { parallel: true } };
+    mocks.sendMessage.mockClear();
+    status = pairedStatus({ parallel: true });
+    await act(async () => {
+      toggle?.click();
+    });
+    await flush();
+
+    expect(sent('gv.bridge.setParallel')).toEqual([
+      { type: 'gv.bridge.setParallel', enabled: true },
+    ]);
+    expect(container.querySelector<HTMLInputElement>('#gv-bridge-parallel')?.checked).toBe(true);
+  });
+
   it('keeps the pairing when the unpair confirm is cancelled', async () => {
     status = pairedStatus();
     mocks.askConfirm.mockResolvedValue(null);

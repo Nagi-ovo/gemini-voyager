@@ -70,6 +70,8 @@ export function setup(options: SetupOptions = {}) {
   });
   const tabs = createBridgeTabs({ store, api: page.api, now });
   const pairing = { current: SERVER_A as typeof SERVER_A | null };
+  /** The person's popup switch; off, as in a fresh install. */
+  const parallel = { allowed: false };
   const make = (
     checkOp: (op: OpName) => Promise<{ code: ErrorCode; message: string } | null> = policy.checkOp,
     config?: Partial<DispatcherConfig>,
@@ -82,14 +84,15 @@ export function setup(options: SetupOptions = {}) {
       client: server.client,
       connection: async () => pairing.current,
       ready: async () => {},
+      parallelAllowed: async () => parallel.allowed,
       now,
       ...(config ? { config } : {}),
     });
   const dispatcher = make();
   /** A loaded bridge tab whose document said hello. */
-  const bridgeTab = async (docNonce = 'doc-1', active = true) => {
+  const bridgeTab = async (docNonce = 'doc-1', active = true, jobId = 'J1') => {
     const tab = page.addTab({ active });
-    await store.setTab({ tabId: tab.id, jobId: 'J1', openedAt: clock, docNonce });
+    await store.setTab({ tabId: tab.id, jobId, openedAt: clock, docNonce });
     return tab.id;
   };
   const resultOf = (taskId: string) =>
@@ -107,6 +110,7 @@ export function setup(options: SetupOptions = {}) {
     dispatcher,
     make,
     pairing,
+    parallel,
     bridgeTab,
     resultOf,
     advance: (ms: number) => {

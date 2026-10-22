@@ -7,6 +7,7 @@ import type {
   BridgeEnableRefreshMessage,
   BridgePairIntentMessage,
   BridgePairMessage,
+  BridgeSetParallelMessage,
   BridgeStatusMessage,
   BridgeUnpairMessage,
 } from '@/features/bridge/runtimeMessages';
@@ -45,6 +46,8 @@ export interface BridgeStatus {
   readonly policy: BridgePolicyState;
   /** `gvPluginOnlineUpdatesEnabled`; a stale policy cannot refresh while it is off. */
   readonly onlineUpdatesEnabled: boolean;
+  /** `gvBridgeParallel`: jobs may run side by side, each in its own tab. */
+  readonly parallel: boolean;
   readonly activeTask?: { readonly jobId: string; readonly op: OpName };
   /** The last pairing or connection failure, kept until the next success. */
   readonly lastError?: { readonly code: ErrorCode; readonly upgrade?: BridgeUpgradeSide };
@@ -108,6 +111,7 @@ export function parseBridgeStatus(response: unknown): BridgeStatus | null {
     server,
     policy,
     onlineUpdatesEnabled: data.onlineUpdatesEnabled === true,
+    parallel: data.parallel === true,
     ...(lastPollAt !== undefined ? { lastPollAt } : {}),
     ...(activeTask ? { activeTask } : {}),
     ...(lastError ? { lastError } : {}),
@@ -124,7 +128,11 @@ function parseActionResult(response: unknown): BridgeActionResult {
 }
 
 async function sendAction(
-  message: BridgePairMessage | BridgeUnpairMessage | BridgeEnableRefreshMessage,
+  message:
+    | BridgePairMessage
+    | BridgeUnpairMessage
+    | BridgeEnableRefreshMessage
+    | BridgeSetParallelMessage,
 ): Promise<BridgeActionResult> {
   try {
     return parseActionResult(await browser.runtime.sendMessage(message));
@@ -168,6 +176,11 @@ export function unpairBridge(): Promise<BridgeActionResult> {
 
 export function enableBridgeRefresh(): Promise<BridgeActionResult> {
   return sendAction({ type: 'gv.bridge.enableRefresh' });
+}
+
+/** Allow or stop jobs running side by side; the background keeps the switch. */
+export function setBridgeParallel(enabled: boolean): Promise<BridgeActionResult> {
+  return sendAction({ type: 'gv.bridge.setParallel', enabled });
 }
 
 /** Whether the bridge builtin is on, following later toggles in the plugin list. */

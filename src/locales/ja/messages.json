@@ -4305,6 +4305,14 @@
     "message": "ジョブ {job} の {op} を実行中",
     "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
   },
+  "bridgeParallelLabel": {
+    "message": "ジョブを並行実行",
+    "description": "Switch in the ChatGPT bridge card that lets jobs run side by side"
+  },
+  "bridgeParallelHint": {
+    "message": "最大 10 個のジョブを同時に、それぞれ専用の ChatGPT タブで実行します。入力やクリックは引き続き順番に行います。オフのときは一度に 1 ジョブです。",
+    "description": "Explains the parallel jobs switch in the ChatGPT bridge card"
+  },
   "bridgeUnsupportedSafari": {
     "message": "Safari ではまだローカルブリッジを使えません。",
     "description": "Shown in Safari, which the local bridge does not support yet"

@@ -37,6 +37,11 @@ export interface BridgeStatusMessage {
 export interface BridgeEnableRefreshMessage {
   type: 'gv.bridge.enableRefresh';
 }
+/** Allow or stop jobs running side by side, each in its own tab. */
+export interface BridgeSetParallelMessage {
+  type: 'gv.bridge.setParallel';
+  enabled: boolean;
+}
 
 // content → background (sender must be the current task holder's top frame)
 export interface BridgeHelloMessage {
@@ -154,7 +159,8 @@ export type BridgePopupMessage =
   | BridgePairMessage
   | BridgeUnpairMessage
   | BridgeStatusMessage
-  | BridgeEnableRefreshMessage;
+  | BridgeEnableRefreshMessage
+  | BridgeSetParallelMessage;
 export type BridgeContentToBackgroundMessage =
   | BridgeHelloMessage
   | BridgeOpProgressMessage

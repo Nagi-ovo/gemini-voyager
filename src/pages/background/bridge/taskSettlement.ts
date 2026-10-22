@@ -67,8 +67,8 @@ export function createTaskSettlement({ deps, config, now }: DispatchContext) {
     result: TaskResultRequest,
     options: { releaseLease: boolean },
   ): Promise<boolean> => {
-    const record = await store.getTask();
-    if (!record || record.taskId !== taskId) return false;
+    const record = await store.getTask(taskId);
+    if (!record) return false;
     const owner = record.serverId;
     // A failed open never hands the CLI its tab, so the error names it: the CLI can close it.
     if (!result.ok && record.op === 'conversation.open' && record.tabId !== undefined) {

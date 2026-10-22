@@ -20,7 +20,7 @@ describe('bridge dispatcher', () => {
     const done = { taskId: 'T1', docNonce: 'doc-1', outcome: { ok: true, data: READ } };
     expect(await t.dispatcher.onDone(contentSender(tabId), done)).toBe(true);
     expect(t.resultOf('T1')).toEqual({ ok: true, data: READ });
-    expect(await t.dispatcher.current()).toBeNull();
+    expect(await t.dispatcher.tasks()).toEqual([]);
 
     // The page retries a report it thinks was lost: only the first one counts.
     expect(await t.dispatcher.onDone(contentSender(tabId), done)).toBe(false);
@@ -35,7 +35,7 @@ describe('bridge dispatcher', () => {
 
     expect(t.page.starts()).toHaveLength(1);
     expect(t.resultOf('T2')).toMatchObject({ ok: false, error: { code: 'busy' } });
-    expect((await t.dispatcher.current())?.taskId).toBe('T1');
+    expect((await t.dispatcher.tasks())[0]?.taskId).toBe('T1');
   });
 
   it('never runs a redelivered task twice', async () => {
@@ -107,7 +107,7 @@ describe('bridge dispatcher', () => {
 
     expect(t.server.results()).toEqual([]);
     expect(probes()).toHaveLength(0);
-    expect((await t.dispatcher.current())?.taskId).toBe('T1');
+    expect((await t.dispatcher.tasks())[0]?.taskId).toBe('T1');
     expect(info).toHaveBeenCalledWith(expect.any(String), {
       taskId: 'T1',
       reason: 'tab-frozen',
@@ -180,7 +180,7 @@ describe('bridge dispatcher', () => {
     await t.dispatcher.onTabRemoved(tabId);
     expect(t.resultOf('T1')?.error?.code).toBe('tab-closed');
     expect(await t.lease.current()).toBeNull();
-    expect(await t.store.getTab()).toBeNull();
+    expect(await t.store.listTabs()).toEqual([]);
   });
 
   it('keeps the page closed to a new op while an expired holder stays silent, and lets its late report free it', async () => {

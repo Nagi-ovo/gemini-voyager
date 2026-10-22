@@ -16,6 +16,12 @@ import type { BridgeTaskRecord, BridgeTaskStore } from './bridgeTaskStore';
 import type { CatalogRefreshRunner } from './catalogRefreshOp';
 import { LEASE_PROBE_TIMEOUT_MS, type PageLeaseArbiter } from './pageLease';
 
+/**
+ * Tasks of different jobs that run at once, each job in its own ChatGPT tab (a
+ * tab costs a few hundred MB), once the person allows parallel jobs; one until then.
+ */
+export const MAX_BRIDGE_TASKS = 10;
+
 /** Ops this build can run: the service worker's own plus what the content runtime implements. */
 export const SUPPORTED_BRIDGE_OPS: ReadonlySet<OpName> = new Set<OpName>([
   'conversation.open',
@@ -59,6 +65,8 @@ export interface DispatcherConfig {
    * person uses chat and asked that the bridge never switch their account to Work.
    */
   readonly restoreSwitchedMode: boolean;
+  /** Tasks in flight at once, each of another job, while parallel jobs are allowed. */
+  readonly maxTasks: number;
   readonly supportedOps: ReadonlySet<OpName>;
 }
 
@@ -70,6 +78,7 @@ export const DEFAULT_DISPATCHER_CONFIG: DispatcherConfig = {
   cancelReplyTimeoutMs: LEASE_PROBE_TIMEOUT_MS,
   leftRestorePollMs: 250,
   restoreSwitchedMode: false,
+  maxTasks: MAX_BRIDGE_TASKS,
   supportedOps: SUPPORTED_BRIDGE_OPS,
 };
 
@@ -83,6 +92,8 @@ export interface DispatcherDeps {
   readonly ready: () => Promise<void>;
   /** Runs `catalog.refresh` in the service worker; without it the op is unsupported. */
   readonly refreshCatalog?: CatalogRefreshRunner;
+  /** The person allows jobs side by side; without it one task runs at a time. */
+  readonly parallelAllowed?: () => Promise<boolean>;
   readonly now?: () => number;
   readonly config?: Partial<DispatcherConfig>;
 }
@@ -103,15 +114,18 @@ export interface BridgeDispatcher {
   onProgress(sender: chrome.runtime.MessageSender, message: ContentReport): Promise<boolean>;
   onDone(sender: chrome.runtime.MessageSender, message: ContentDone): Promise<boolean>;
   onTabRemoved(tabId: number): Promise<void>;
-  /** Builtin off, unpaired or policy flipped: stop the current task with `code`. */
-  stopCurrent(code: ErrorCode, message: string): Promise<void>;
-  /** Policy inputs changed: stop the current task if its op is no longer allowed. */
+  /** Builtin off or unpaired: stop every task with `code`. */
+  stopAll(code: ErrorCode, message: string): Promise<void>;
+  /** Policy inputs changed: stop each task whose op is no longer allowed. */
   recheckPolicy(): Promise<void>;
   /** Periodic watchdog (alarm): deadlines, silent documents, vanished tabs, pending stops. */
   tick(): Promise<void>;
   inflight(): Promise<{ taskId: string; state: InflightState }[]>;
   drainOutbox(): Promise<boolean>;
-  current(): Promise<BridgeTaskRecord | null>;
+  /** The tasks in flight, oldest first. */
+  tasks(): Promise<BridgeTaskRecord[]>;
+  /** Tasks it takes at once now: `maxTasks` while parallel jobs are allowed, else one. */
+  capacity(): Promise<number>;
 }
 
 export interface ContentReport {

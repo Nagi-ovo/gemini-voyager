@@ -9,12 +9,14 @@ import { Button } from '../../../components/ui/button';
 import { Card, CardContent } from '../../../components/ui/card';
 import { fieldVariants } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
+import { Switch } from '../../../components/ui/switch';
 import {
   type BridgeActionResult,
   type BridgeStatus,
   enableBridgeRefresh,
   pairBridge,
   requestBridgeAccess,
+  setBridgeParallel,
   unpairBridge,
   useBridgePluginEnabled,
   useBridgeStatus,
@@ -97,6 +99,8 @@ export function ChatGptBridgeCard({ t }: ChatGptBridgeCardProps) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<TranslationKey | null>(null);
+  // Shown at once; the next status read takes over once the background has kept it.
+  const [parallelShown, setParallelShown] = useState<boolean | null>(null);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -152,6 +156,16 @@ export function ChatGptBridgeCard({ t }: ChatGptBridgeCardProps) {
     void enableBridgeRefresh().then((result) => finish(result, 'bridgeErrorAction'));
   };
 
+  const changeParallel = (enabled: boolean): void => {
+    setNote(null);
+    setParallelShown(enabled);
+    setBusy(true);
+    void setBridgeParallel(enabled).then((result) => {
+      if (mounted.current) setParallelShown(null);
+      finish(result, 'bridgeErrorAction');
+    });
+  };
+
   const unpair = async (anchor: HTMLElement): Promise<void> => {
     setNote(null);
     const answer = await askConfirm({
@@ -188,6 +202,8 @@ export function ChatGptBridgeCard({ t }: ChatGptBridgeCardProps) {
             status={status}
             serverId={status.paired.serverId}
             busy={busy}
+            parallel={parallelShown ?? status.parallel}
+            onParallelChange={changeParallel}
             onAllowAccess={allowAccess}
             onTurnOnUpdates={turnOnUpdates}
             onUnpair={(event) => void unpair(event.currentTarget)}
@@ -258,6 +274,8 @@ function PairedDetails({
   status,
   serverId,
   busy,
+  parallel,
+  onParallelChange,
   onAllowAccess,
   onTurnOnUpdates,
   onUnpair,
@@ -266,6 +284,8 @@ function PairedDetails({
   status: BridgeStatus;
   serverId: string;
   busy: boolean;
+  parallel: boolean;
+  onParallelChange: (enabled: boolean) => void;
   onAllowAccess: () => void;
   onTurnOnUpdates: () => void;
   onUnpair: (event: MouseEvent<HTMLButtonElement>) => void;
@@ -323,6 +343,27 @@ function PairedDetails({
           <p className="min-w-0 flex-1">{t(policyKey)}</p>
         </div>
       )}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <Label htmlFor="gv-bridge-parallel" className="cursor-pointer text-xs font-medium">
+            {t('bridgeParallelLabel')}
+          </Label>
+          <p
+            id="gv-bridge-parallel-hint"
+            className="text-muted-foreground mt-0.5 text-[11px] leading-snug"
+          >
+            {t('bridgeParallelHint')}
+          </p>
+        </div>
+        <Switch
+          id="gv-bridge-parallel"
+          size="sm"
+          checked={parallel}
+          disabled={busy}
+          aria-describedby="gv-bridge-parallel-hint"
+          onChange={(event) => onParallelChange(event.target.checked)}
+        />
+      </div>
       <div className="flex flex-wrap justify-end gap-2">
         {!status.permission && (
           <Button type="button" size="sm" onClick={onAllowAccess}>

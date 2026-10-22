@@ -21,7 +21,7 @@ Cuando lo activas y lo vinculas, Voyager pone a disposición de los programas lo
 
 **Su propia pestaña.** Cada tarea se ejecuta en una pestaña de ChatGPT que abre Voyager, y la pestaña se cierra al terminar.
 
-**Una tarea a la vez.** Solo se ejecuta una tarea a la vez.
+**Una tarea a la vez, salvo que permitas más.** Por defecto las tareas se ejecutan una tras otra. Activa **Ejecutar tareas en paralelo** en la tarjeta **Puente local** de la ventana emergente y hasta diez se ejecutan a la par, cada una en su propia pestaña; escribir y hacer clic sigue siendo por turnos.
 
 **El inicio de sesión y las verificaciones son cosa tuya.** Si ChatGPT te pide iniciar sesión o resolver una verificación, el puente se detiene y te avisa. Nunca intenta saltársela.
 

@@ -195,7 +195,7 @@ describe('bridge dispatcher: results, stops and pairings', () => {
       expect(t.page.starts()).toEqual([]);
       expect(t.page.api.create).not.toHaveBeenCalled();
       expect(await t.lease.current()).toBeNull();
-      expect(await t.dispatcher.current()).toBeNull();
+      expect(await t.dispatcher.tasks()).toEqual([]);
       expect(t.policy.checkOp).not.toHaveBeenCalled();
     }
   });

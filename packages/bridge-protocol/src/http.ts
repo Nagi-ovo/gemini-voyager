@@ -19,6 +19,12 @@ export const TASK_ACK_DEADLINE_MS = 10_000;
 /** No poll for this long and the server reports `extension-offline`. */
 export const EXTENSION_OFFLINE_MS = 90_000;
 export const MAX_JSON_BODY_BYTES = 1024 * 1024;
+/**
+ * Most tasks a poll's `inflight` lists, and so most an extension runs at once (`maxTasks`).
+ * Serve 0.4.0 and older refuse a poll listing more than 8, but never run more than one task,
+ * so an extension lists at most that one plus its outbox to them.
+ */
+export const MAX_INFLIGHT_TASKS = 16;
 export const MAX_BLOB_CHUNK_BYTES = 4 * 1024 * 1024;
 
 /** Allowed `Origin` of a paired extension (spec §2.3). */
@@ -144,6 +150,11 @@ export interface PollRequest {
   readonly policy: PolicyReport;
   /** The plan the ChatGPT pages last showed; null when none was seen yet. */
   readonly account?: AccountPlan | null;
+  /**
+   * How many tasks, each of another job and in that job's own tab, the extension runs at
+   * once. Absent: one, as every extension before this field.
+   */
+  readonly maxTasks?: number;
 }
 
 /** Wire form of a task; `params` is checked against `op` on arrival. */
@@ -256,6 +267,10 @@ export interface StatusResponse {
     readonly account?: AccountPlan | null;
   };
   readonly activeJob?: { readonly jobId: string; readonly op?: OpName };
+  /** Every running job, `activeJob` first; more than one only while the extension allows parallel jobs. */
+  readonly activeJobs?: readonly { readonly jobId: string; readonly op?: OpName }[];
+  /** Jobs that may run at once now: 1 until the extension allows parallel jobs. */
+  readonly maxJobs?: number;
   readonly serverVersion: string;
 }
 

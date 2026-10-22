@@ -4305,6 +4305,14 @@
     "message": "Running {op} for job {job}",
     "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
   },
+  "bridgeParallelLabel": {
+    "message": "Run jobs in parallel",
+    "description": "Switch in the ChatGPT bridge card that lets jobs run side by side"
+  },
+  "bridgeParallelHint": {
+    "message": "Up to 10 jobs at once, each in its own ChatGPT tab; typing and clicking still take turns. Off: one job at a time.",
+    "description": "Explains the parallel jobs switch in the ChatGPT bridge card"
+  },
   "bridgeUnsupportedSafari": {
     "message": "The local bridge isn’t available in Safari yet.",
     "description": "Shown in Safari, which the local bridge does not support yet"

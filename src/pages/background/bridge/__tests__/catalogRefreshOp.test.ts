@@ -137,7 +137,7 @@ describe('catalog.refresh', () => {
         extensionVersion: 'test',
       },
     });
-    expect(await t.dispatcher.current()).toBeNull();
+    expect(await t.dispatcher.tasks()).toEqual([]);
   });
 
   it('refuses to refresh while the bridge is turned off', async () => {

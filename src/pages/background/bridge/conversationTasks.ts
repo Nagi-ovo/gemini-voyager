@@ -32,12 +32,13 @@ export function createConversationTasks(
   /**
    * After the job gave an op up (timeout, abort), switch its tab back to the mode a
    * bridge op moved it from: a failed job leaves the tab open and may never send the
-   * close that would. Once, untracked, in a background tab too; a refusal is final.
+   * close that would. Once, untracked, in a background tab too, and only while no task
+   * runs: its lease is one no job knows of. A refusal is final.
    */
   const restoreLeftMode = async (ended: BridgeTaskRecord): Promise<void> => {
-    if (ended.op === 'conversation.close' || (await store.getTask())) return;
-    const tab = await store.getTab();
-    if (!tab?.restoreMode || tab.jobId !== ended.jobId) return;
+    if (ended.op === 'conversation.close' || (await store.listTasks()).length > 0) return;
+    const tab = (await store.listTabs()).find((entry) => entry.jobId === ended.jobId);
+    if (!tab?.restoreMode) return;
     const holder = holderOf(tab);
     if (!holder || !(await tabs.exists(tab.tabId))) return;
     if (await deps.policy.checkOp('conversation.ready')) return;
@@ -71,8 +72,8 @@ export function createConversationTasks(
   const openConversation = async (
     task: Extract<ValidatedBridgeTask, { op: 'conversation.open' }>,
   ) => {
-    const current = await store.getTask();
-    if (current?.taskId !== task.taskId || current.cancelling) return; // stopped meanwhile
+    const current = await store.getTask(task.taskId);
+    if (!current || current.cancelling) return; // stopped meanwhile
     const conversationId = 'conversationId' in task.params ? task.params.conversationId : undefined;
     let tabId: number;
     try {
@@ -162,8 +163,8 @@ export function createConversationTasks(
     tab: BridgeTabRecord,
   ): Promise<boolean> => {
     const holder = holderOf(tab);
-    const record = await store.getTask();
-    if (!holder || !tab.restoreMode || !record || record.taskId !== task.taskId) return false;
+    const record = await store.getTask(task.taskId);
+    if (!holder || !tab.restoreMode || !record) return false;
     if (!(await tabs.exists(tab.tabId))) return false;
     const until = record.deadline - config.closeMarginMs;
     if (until <= now()) return false;
@@ -197,8 +198,8 @@ export function createConversationTasks(
   const closeConversation = async (
     task: Extract<ValidatedBridgeTask, { op: 'conversation.close' }>,
   ) => {
-    const tab = await store.getTab();
-    if (!tab || tab.tabId !== task.params.tabId || tab.jobId !== task.jobId) {
+    const tab = await store.getTab(task.params.tabId);
+    if (!tab || tab.jobId !== task.jobId) {
       return finish(
         task.taskId,
         fail('bad-request', 'Only the tab this job opened can be closed.'),
@@ -214,8 +215,8 @@ export function createConversationTasks(
 
   /** Remember the mode a ready step switched the tab from, until it is back in it. */
   const noteMode = async (tabId: number, ready: ConversationReadyResult): Promise<void> => {
-    const tab = await store.getTab();
-    if (!tab || tab.tabId !== tabId) return;
+    const tab = await store.getTab(tabId);
+    if (!tab) return;
     if (ready.switchedMode && !tab.restoreMode && config.restoreSwitchedMode) {
       await store.updateTab(tabId, { restoreMode: ready.switchedMode.from });
     } else if (tab.restoreMode && ready.mode === tab.restoreMode) {

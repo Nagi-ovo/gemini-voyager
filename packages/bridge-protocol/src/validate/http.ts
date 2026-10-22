@@ -10,6 +10,7 @@ import {
   PAIRING_TOKEN_PATTERN,
   MAX_BLOB_CHUNK_BASE64,
   MAX_BLOB_CHUNK_BYTES,
+  MAX_INFLIGHT_TASKS,
   base64DecodedLength,
   POLICY_STATES,
   type BlobChunk,
@@ -97,6 +98,15 @@ export function envelopeReader<T>(data: Reader<T>): Reader<Envelope<T>> {
 }
 
 const anyData: Reader<unknown> = (raw) => raw;
+
+/**
+ * Lenient, like `account`: a value this side cannot use counts as one task, and a newer
+ * extension that offers more than `inflight` can list is held to what fits.
+ */
+function readMaxTasks(raw: unknown): number {
+  if (typeof raw !== 'number' || !Number.isSafeInteger(raw) || raw < 1) return 1;
+  return Math.min(raw, MAX_INFLIGHT_TASKS);
+}
 
 const readOpCapability: Reader<OpCapability> = (raw, path, issues) => {
   const rec = readObject(raw, path, issues);
@@ -218,7 +228,7 @@ const READERS: { readonly [K in MessageKind]: Reader<MessageMap[K]> } = {
             state: requireLiteral(entry, 'state', itemPath, list, ['acked', 'running'] as const),
           };
         },
-        { max: 8 },
+        { max: MAX_INFLIGHT_TASKS },
       ),
       policy: {
         revision: requireInt(policy, 'revision', policyPath, issues),
@@ -226,6 +236,7 @@ const READERS: { readonly [K in MessageKind]: Reader<MessageMap[K]> } = {
       },
       // Lenient: an odd plan field is dropped and never fails the poll.
       ...(rec.account === undefined ? {} : { account: readAccountPlan(rec.account) }),
+      ...(rec.maxTasks === undefined ? {} : { maxTasks: readMaxTasks(rec.maxTasks) }),
     };
   },
 
