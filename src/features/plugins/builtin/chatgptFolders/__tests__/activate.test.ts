@@ -444,8 +444,14 @@ describe('ChatGPT folders plugin', () => {
       await vi.waitFor(() => expect(bucketRequested).toBe(true));
       expect(document.querySelector(PANEL)).not.toBeNull();
 
-      await scope.dispose();
+      // Turning off waits for the load in flight, so nothing of it lands afterwards.
+      let off = false;
+      const turningOff = scope.dispose().then(() => (off = true));
+      await vi.waitFor(() => expect(document.querySelector(PANEL)).toBeNull());
+      await settle(20);
+      expect(off).toBe(false);
       release();
+      await turningOff;
       await activation;
       await settle(20);
 

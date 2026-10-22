@@ -196,6 +196,11 @@ export class SiteFoldersView {
     if (this.prefs.open) this.mountPanel();
   }
 
+  /** Whether the folders are on screen: the section in the sidebar, or the floating button. */
+  onScreen(): boolean {
+    return !!this.section?.element.isConnected || this.fab !== null;
+  }
+
   /** The section's header while the section is in the page, for the one-time guide. */
   guideAnchor(): HTMLElement | null {
     return this.section?.element.isConnected ? this.section.header : null;
