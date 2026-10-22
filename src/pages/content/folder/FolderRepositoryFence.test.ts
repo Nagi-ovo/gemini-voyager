@@ -1,7 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+/**
+ * The legacy folder authority fence on a repository's writes: the reload notice,
+ * refused saves, deletions and migrations, and the queued snapshots, backups and
+ * unload copies a fenced tab must not write. Loads and account binding under the
+ * fence live in `FolderRepositoryFenceReads.test.ts`.
+ */
+import { describe, expect, it, vi } from 'vitest';
 import browser from 'webextension-polyfill';
 
-import { buildScopedFolderStorageKey } from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
 import { isVoyagerLayerEvent } from '@/core/ui/layer';
 import { createToaster } from '@/core/ui/toast/toaster';
@@ -10,20 +15,27 @@ import {
   LegacyFolderFence,
   LegacyFolderWriteRefusedError,
 } from '@/features/folder/owner/legacyFolderFence';
-import { CHATGPT_FOLDER_CONFIG } from '@/features/plugins/builtin/chatgptFolders/config';
+import { CHATGPT_FOLDER_CONFIG } from '@/pages/content/folder/pluginSiteFolderConfigs';
 import { toastDriver } from '@/tests/toastDriver';
 
-import { FolderRepository } from './FolderRepository';
 import {
-  AISTUDIO_FOLDER_CONFIG,
-  GEMINI_FOLDER_CONFIG,
-  type PlatformFolderConfig,
-} from './platformFolderConfig';
+  change,
+  clone,
+  deferred,
+  fence,
+  initial,
+  installFolderRepositoryFence,
+  onRecovery,
+  onSaveFailed,
+  pageBackups,
+  ready,
+  repository,
+  settle,
+  stored,
+} from './__tests__/folderRepositoryFenceHarness';
+import { AISTUDIO_FOLDER_CONFIG, GEMINI_FOLDER_CONFIG } from './platformFolderConfig';
 import { AIStudioFolderStorageAdapter } from './storage/AIStudioFolderStorageAdapter';
-import {
-  LocalStorageFolderAdapter,
-  type IFolderStorageAdapter,
-} from './storage/FolderStorageAdapter';
+import { LocalStorageFolderAdapter } from './storage/FolderStorageAdapter';
 import type { FolderData } from './types';
 
 vi.mock('webextension-polyfill', () => ({
@@ -37,123 +49,7 @@ vi.mock('webextension-polyfill', () => ({
   },
 }));
 
-type Listener = (changes: Record<string, { newValue?: unknown }>, area: string) => void;
-const initial: FolderData = {
-  folders: [
-    {
-      id: 'f',
-      name: 'Stored',
-      parentId: null,
-      isExpanded: true,
-      createdAt: 1,
-      updatedAt: 1,
-      sortIndex: 0,
-    },
-  ],
-  folderContents: { f: [] },
-};
-const fence = (site: string, authority = 'owner') => ({
-  build: 'test',
-  sites: { [site]: authority },
-});
-const clone = <T>(value: T): T => (value === undefined ? value : structuredClone(value));
-const deferred = <T>() => {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((done) => {
-    resolve = done;
-  });
-  return { promise, resolve };
-};
-async function settle() {
-  for (let i = 0; i < 40; i++) await Promise.resolve();
-}
-function pageBackups(namespace = 'chatgpt-folders') {
-  return Object.fromEntries(
-    ['primary', 'emergency', 'beforeUnload', 'metadata'].map((slot) => {
-      const key = `gvBackup_${namespace}_${slot}`;
-      return [key, localStorage.getItem(key)];
-    }),
-  );
-}
-
-let stored: Record<string, unknown>;
-let listeners: Set<Listener>;
-let originalStorage: typeof chrome.storage;
-let originalPageUrl: string;
-const repos: FolderRepository[] = [];
-const onChange = vi.fn();
-const onRecovery = vi.fn();
-const onSaveFailed = vi.fn();
-
-function change(value: unknown, area = 'local') {
-  if (area === 'local') stored[AUTHORITY_FENCE_KEY] = value;
-  for (const listener of listeners) listener({ [AUTHORITY_FENCE_KEY]: { newValue: value } }, area);
-}
-function repository(
-  config: PlatformFolderConfig = CHATGPT_FOLDER_CONFIG,
-  adapter: IFolderStorageAdapter = new AIStudioFolderStorageAdapter(),
-) {
-  const repo = new FolderRepository(config, adapter, {
-    onChange,
-    onRecovery,
-    onSaveFailed,
-    onExternalChange: () => void repo.loadData(),
-    onAccountReleased: () => {},
-    isEnabled: () => true,
-  });
-  repos.push(repo);
-  return repo;
-}
-async function ready(adapter?: IFolderStorageAdapter) {
-  stored[StorageKeys.FOLDER_DATA_CHATGPT] = clone(initial);
-  const repo = repository(CHATGPT_FOLDER_CONFIG, adapter);
-  await repo.init();
-  await settle();
-  return repo;
-}
-
-beforeEach(() => {
-  stored = {};
-  listeners = new Set();
-  originalStorage = chrome.storage;
-  originalPageUrl = window.location.href;
-  chrome.storage = {
-    local: {
-      get: vi.fn(async (keys: string | string[]) =>
-        Object.fromEntries(
-          (Array.isArray(keys) ? keys : [keys]).map((key) => [key, clone(stored[key])]),
-        ),
-      ),
-      set: vi.fn(async (items: Record<string, unknown>) => {
-        Object.assign(stored, clone(items));
-      }),
-      remove: vi.fn(async (keys: string | string[]) => {
-        for (const key of Array.isArray(keys) ? keys : [keys]) delete stored[key];
-      }),
-    },
-    sync: { get: vi.fn(async () => ({})), set: vi.fn(async () => {}) },
-    onChanged: {
-      addListener: (listener: Listener) => listeners.add(listener),
-      removeListener: (listener: Listener) => listeners.delete(listener),
-    },
-  } as unknown as typeof chrome.storage;
-  localStorage.clear();
-  document.body.replaceChildren();
-  onChange.mockClear();
-  onRecovery.mockClear();
-  onSaveFailed.mockClear();
-  vi.spyOn(console, 'log').mockImplementation(() => {});
-  vi.spyOn(console, 'warn').mockImplementation(() => {});
-  vi.spyOn(console, 'error').mockImplementation(() => {});
-});
-
-afterEach(() => {
-  for (const repo of repos.splice(0)) repo.destroy();
-  chrome.storage = originalStorage;
-  window.history.replaceState({}, '', originalPageUrl);
-  vi.restoreAllMocks();
-  vi.useRealTimers();
-});
+installFolderRepositoryFence();
 
 describe('legacy folder authority fence', () => {
   it('keeps one persistent reload toast beside other feedback until the user dismisses it', async () => {
@@ -310,155 +206,6 @@ describe('legacy folder authority fence', () => {
     expect(toastDriver.all().some(({ role }) => role === 'alert')).toBe(false);
   });
 
-  it.each([GEMINI_FOLDER_CONFIG, AISTUDIO_FOLDER_CONFIG, CHATGPT_FOLDER_CONFIG])(
-    'keeps a failed rename through unreadable rebind retries and corrupt recovery for $storageKey',
-    async (config) => {
-      vi.useFakeTimers();
-      stored[config.storageKey] = clone(initial);
-      const repo = repository(
-        config,
-        config.platform === 'gemini'
-          ? new LocalStorageFolderAdapter()
-          : new AIStudioFolderStorageAdapter(),
-      );
-      await repo.init();
-      await settle();
-      const writes = browser.storage.local.set;
-      vi.mocked(writes).mockRejectedValue(new Error('Rename failed'));
-      repo.data.folders[0].name = 'Mine';
-      expect(await repo.saveData()).toBe(false);
-      await settle();
-      vi.mocked(writes).mockImplementation(async (items) => {
-        Object.assign(stored, clone(items));
-      });
-      const backups = pageBackups(config.backupNamespace);
-      const get = vi.mocked(browser.storage.local.get).getMockImplementation()!;
-      vi.mocked(browser.storage.local.get).mockRejectedValue(new Error('Unreadable'));
-      await repo.refreshAccountScope();
-      expect(repo.data.folders[0]?.name).toBe('Mine');
-      expect(repo.canEdit).toBe(false);
-      expect(repo.storageKey).toBe('');
-      await vi.advanceTimersByTimeAsync(1600);
-      expect(repo.data.folders[0]?.name).toBe('Mine');
-      expect(await repo.saveData()).toBe(false);
-      window.dispatchEvent(new Event('beforeunload'));
-      expect(stored[config.storageKey]).toEqual(initial);
-      expect(pageBackups(config.backupNamespace)).toEqual(backups);
-      const reading = deferred<Record<string, unknown>>();
-      vi.mocked(browser.storage.local.get).mockImplementation(async (keys) => {
-        if (keys === config.storageKey) return reading.promise;
-        return get(keys);
-      });
-      await vi.advanceTimersByTimeAsync(3000);
-      expect(repo.data.folders[0]?.name).toBe('Mine');
-      expect(repo.canEdit).toBe(false);
-      stored[config.storageKey] = { corrupted: true };
-      reading.resolve({ [config.storageKey]: stored[config.storageKey] });
-      await settle();
-      expect(repo.canEdit).toBe(true);
-      expect(repo.data.folders[0]?.name).toBe('Mine');
-      expect((stored[config.storageKey] as FolderData).folders[0].name).toBe('Mine');
-    },
-  );
-
-  it('hides released account edits when a different account has an unreadable fence', async () => {
-    vi.useFakeTimers();
-    window.history.replaceState({}, '', '/');
-    vi.mocked(browser.storage.sync.get).mockResolvedValue({
-      [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: true,
-    });
-    const firstKey = buildScopedFolderStorageKey('default');
-    const secondKey = buildScopedFolderStorageKey('route:1');
-    stored[firstKey] = clone(initial);
-    stored[secondKey] = {
-      ...clone(initial),
-      folders: [{ ...initial.folders[0], name: 'Account B' }],
-    };
-    const repo = repository(GEMINI_FOLDER_CONFIG, new LocalStorageFolderAdapter());
-    await repo.init();
-    await settle();
-    expect(repo.storageKey).toBe(firstKey);
-    repo.data.folders[0].name = 'Private account A edit';
-    window.history.replaceState({}, '', '/u/1/app');
-    const get = vi.mocked(browser.storage.local.get).getMockImplementation()!;
-    vi.mocked(browser.storage.local.get).mockImplementation(async (keys) => {
-      if (keys === AUTHORITY_FENCE_KEY) throw new Error('Fence unreadable');
-      return get(keys);
-    });
-    await repo.refreshAccountScope();
-    expect(repo.canEdit).toBe(false);
-    expect(repo.storageKey).toBe('');
-    expect(repo.data).toEqual({ folders: [], folderContents: {} });
-    vi.mocked(browser.storage.local.get).mockImplementation(get);
-    await vi.advanceTimersByTimeAsync(1000);
-    expect(repo.canEdit).toBe(true);
-    expect(repo.storageKey).toBe(secondKey);
-    expect(repo.data.folders[0]?.name).toBe('Account B');
-    expect(stored[firstKey]).toEqual(initial);
-  });
-
-  it('finishes account binding after a failed startup fence read', async () => {
-    vi.useFakeTimers();
-    window.history.replaceState({}, '', '/u/1/app');
-    vi.mocked(browser.storage.sync.get).mockResolvedValue({
-      [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: true,
-    });
-    const scopedKey = buildScopedFolderStorageKey('route:1');
-    stored[StorageKeys.FOLDER_DATA] = clone(initial);
-    stored[scopedKey] = { ...initial, folders: [{ ...initial.folders[0], name: 'Account' }] };
-    const get = vi.mocked(browser.storage.local.get).getMockImplementation()!;
-    let failedFenceReads = 0;
-    vi.mocked(browser.storage.local.get).mockImplementation(async (keys) => {
-      if (keys === AUTHORITY_FENCE_KEY && failedFenceReads++ < 2)
-        throw new Error('fence unavailable');
-      return get(keys);
-    });
-    const repo = repository(GEMINI_FOLDER_CONFIG);
-    await repo.init();
-    expect(repo.canEdit).toBe(false);
-    await vi.advanceTimersByTimeAsync(3000);
-    expect(repo.storageKey).toBe(scopedKey);
-    expect(repo.data.folders[0]?.name).toBe('Account');
-    expect(repo.canEdit).toBe(true);
-    repo.data.folders[0].name = 'Saved account';
-    expect(await repo.saveData()).toBe(true);
-    expect(stored[StorageKeys.FOLDER_DATA]).toEqual(initial);
-    expect((stored[scopedKey] as FolderData).folders[0].name).toBe('Saved account');
-  });
-
-  it('retains unsaved memory when an account refresh discovers the owner fence', async () => {
-    const repo = await ready();
-    repo.data.folders[0].name = 'Unsaved';
-    stored[AUTHORITY_FENCE_KEY] = fence('chatgpt');
-    await repo.refreshAccountScope();
-    expect(repo.data.folders[0]?.name).toBe('Unsaved');
-    expect(repo.canEdit).toBe(false);
-    expect(stored[StorageKeys.FOLDER_DATA_CHATGPT]).toEqual(initial);
-  });
-
-  it('retains the released session when authority changes during account binding', async () => {
-    const repo = await ready();
-    repo.data.folders[0].name = 'Unsaved';
-    const gate = deferred<Record<string, unknown>>();
-    const started = deferred<void>();
-    vi.mocked(browser.storage.local.get).mockImplementation(async (keys) => {
-      if (keys === AUTHORITY_FENCE_KEY) {
-        started.resolve();
-        return gate.promise;
-      }
-      return { [keys as string]: clone(stored[keys as string]) };
-    });
-    const binding = repo.refreshAccountScope();
-    await started.promise;
-    change(fence('chatgpt'));
-    gate.resolve({});
-    await binding;
-    expect(repo.data.folders[0]?.name).toBe('Unsaved');
-    expect(repo.storageKey).toBe(StorageKeys.FOLDER_DATA_CHATGPT);
-    expect(repo.canEdit).toBe(false);
-    expect(stored[StorageKeys.FOLDER_DATA_CHATGPT]).toEqual(initial);
-  });
-
   it('fences the empty-save diagnostic before its adapter can mirror storage', async () => {
     const repo = await ready(new LocalStorageFolderAdapter());
     const pageData = localStorage.getItem(StorageKeys.FOLDER_DATA_CHATGPT);
@@ -474,83 +221,6 @@ describe('legacy folder authority fence', () => {
       'Owner data',
     );
     expect(repo.data).toEqual({ folders: [], folderContents: {} });
-  });
-
-  it('does not replace unsaved memory or create a mirror when load finds an owner fence', async () => {
-    const repo = await ready(new LocalStorageFolderAdapter());
-    repo.data.folders[0].name = 'Unsaved';
-    const pageData = localStorage.getItem(StorageKeys.FOLDER_DATA_CHATGPT);
-    stored[StorageKeys.FOLDER_DATA_CHATGPT] = {
-      ...initial,
-      folders: [{ ...initial.folders[0], name: 'Owner data' }],
-    };
-    stored[AUTHORITY_FENCE_KEY] = fence('chatgpt');
-    await repo.loadData();
-    expect(repo.data.folders[0]?.name).toBe('Unsaved');
-    expect(localStorage.getItem(StorageKeys.FOLDER_DATA_CHATGPT)).toBe(pageData);
-  });
-
-  it('does not apply a read that finishes after the owner fence', async () => {
-    const repo = await ready();
-    repo.data.folders[0].name = 'Unsaved';
-    const gate = deferred<Record<string, unknown>>();
-    const started = deferred<void>();
-    const get = browser.storage.local.get;
-    vi.mocked(get).mockImplementation(async (keys) => {
-      if (keys === StorageKeys.FOLDER_DATA_CHATGPT) {
-        started.resolve();
-        return gate.promise;
-      }
-      return { [AUTHORITY_FENCE_KEY]: stored[AUTHORITY_FENCE_KEY] };
-    });
-    const loading = repo.loadData();
-    await started.promise;
-    change(fence('chatgpt'));
-    gate.resolve({ [StorageKeys.FOLDER_DATA_CHATGPT]: initial });
-    await loading;
-    expect(repo.data.folders[0]?.name).toBe('Unsaved');
-    expect(repo.canEdit).toBe(false);
-  });
-
-  it('checks authority again before corrupt-data recovery replaces memory', async () => {
-    const repo = await ready();
-    repo.data.folders[0].name = 'Unsaved';
-    stored[StorageKeys.FOLDER_DATA_CHATGPT] = 'broken';
-    vi.mocked(browser.storage.local.get).mockImplementation(async (keys) => {
-      if (keys === StorageKeys.FOLDER_DATA_CHATGPT) {
-        stored[AUTHORITY_FENCE_KEY] = fence('chatgpt');
-        return { [StorageKeys.FOLDER_DATA_CHATGPT]: 'broken' };
-      }
-      return { [AUTHORITY_FENCE_KEY]: stored[AUTHORITY_FENCE_KEY] };
-    });
-    await repo.loadData();
-    expect(repo.data.folders[0]?.name).toBe('Unsaved');
-    expect(stored[StorageKeys.FOLDER_DATA_CHATGPT]).toBe('broken');
-    expect(repo.canEdit).toBe(false);
-    expect(toastDriver.all().some(({ role }) => role === 'alert')).toBe(true);
-  });
-
-  it('retains memory when the owner fence arrives during backup hydration', async () => {
-    const repo = await ready();
-    repo.data.folders[0].name = 'Unsaved';
-    stored[StorageKeys.FOLDER_DATA_CHATGPT] = 'broken';
-    const gate = deferred<Record<string, unknown>>();
-    const started = deferred<void>();
-    vi.mocked(browser.storage.local.get).mockImplementation(async (keys) => {
-      if (Array.isArray(keys)) {
-        started.resolve();
-        return gate.promise;
-      }
-      return { [keys as string]: clone(stored[keys as string]) };
-    });
-    const loading = repo.loadData();
-    await started.promise;
-    change(fence('chatgpt'));
-    gate.resolve({});
-    await loading;
-    expect(repo.data.folders[0]?.name).toBe('Unsaved');
-    expect(stored[StorageKeys.FOLDER_DATA_CHATGPT]).toBe('broken');
-    expect(repo.canEdit).toBe(false);
   });
 
   it('checks again before retrying an adapter failure', async () => {

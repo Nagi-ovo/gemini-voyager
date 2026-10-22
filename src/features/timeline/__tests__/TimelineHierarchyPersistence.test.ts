@@ -2,12 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildScopedStorageKey } from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
-import {
-  type MemoryStorage,
-  createMemoryStorage,
-  settle,
-} from '@/features/plugins/builtin/chatgptFolders/__tests__/memoryStorage';
 import { createGeminiTimelineStoragePolicy } from '@/pages/content/timeline/GeminiTimelineStorage';
+import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 
 import { TimelineState } from '../TimelineState';
 import type { TimelineStoragePolicy } from '../TimelineStoragePolicy';

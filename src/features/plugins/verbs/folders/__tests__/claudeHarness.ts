@@ -11,14 +11,10 @@
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
-import {
-  type MemoryStorage,
-  createMemoryStorage,
-  settle,
-} from '@/features/plugins/builtin/chatgptFolders/__tests__/memoryStorage';
 import { PluginHost } from '@/features/plugins/runtime/PluginHost';
 import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCatalogPluginSource';
 import type { PluginSettings } from '@/features/plugins/types';
+import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 
 export const PLUGIN_ID = 'voyager.claude-folders';
 export const GUIDE_ID = 'claude-folders-sidebar-intro-v1';

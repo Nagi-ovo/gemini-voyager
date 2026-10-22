@@ -6,9 +6,9 @@
  */
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { settle } from '@/features/plugins/builtin/chatgptFolders/__tests__/memoryStorage';
 import { VOYAGER_DRAG_MIME } from '@/pages/content/folder/dragPayload';
 import { fakeTransfer } from '@/pages/content/folder/floatingTree/__tests__/treeDriver';
+import { settle } from '@/tests/memoryStorage';
 import { initI18n } from '@/utils/i18n';
 
 import { siteFolderLeases } from '../siteSession';

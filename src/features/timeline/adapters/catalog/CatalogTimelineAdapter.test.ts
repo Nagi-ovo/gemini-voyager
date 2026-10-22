@@ -1,10 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  type MemoryStorage,
-  createMemoryStorage,
-  settle,
-} from '@/features/plugins/builtin/chatgptFolders/__tests__/memoryStorage';
+import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 
 import { TimelineHierarchyGeometry } from '../../TimelineHierarchyGeometry';
 import { TimelineState } from '../../TimelineState';

@@ -1,16 +1,13 @@
 import './testSetup';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  type MemoryStorage,
-  createMemoryStorage,
-} from '@/features/plugins/builtin/chatgptFolders/__tests__/memoryStorage';
 import { requireBundledSiteAdapter } from '@/features/plugins/catalog/sites';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import type { PluginSettings } from '@/features/plugins/types';
 import { turnNavigatorPrimitive } from '@/features/plugins/verbs/turnNavigator';
 import type { PrimitiveHandle } from '@/features/plugins/verbs/types';
 import { showTimelineStyleCoachmark } from '@/features/timeline/timelineStyleCoachmark';
+import { type MemoryStorage, createMemoryStorage } from '@/tests/memoryStorage';
 
 import { routeCatalogOutlineWrites } from '../../__tests__/catalogOutlineBackground';
 

@@ -11,14 +11,10 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
-import {
-  type MemoryStorage,
-  createMemoryStorage,
-  settle,
-} from '@/features/plugins/builtin/chatgptFolders/__tests__/memoryStorage';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { validateSiteAdapterData } from '@/features/plugins/sites/siteAdapterData';
 import type { SiteAdapter } from '@/features/plugins/types';
+import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 import { initI18n } from '@/utils/i18n';
 
 import { foldersPrimitive } from '../index';

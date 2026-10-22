@@ -7,8 +7,8 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
-import { settle } from '@/features/plugins/builtin/chatgptFolders/__tests__/memoryStorage';
 import { fakeTransfer } from '@/pages/content/folder/floatingTree/__tests__/treeDriver';
+import { settle } from '@/tests/memoryStorage';
 import { initI18n } from '@/utils/i18n';
 
 import { siteFolderLeases } from '../siteSession';

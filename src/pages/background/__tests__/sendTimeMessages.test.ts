@@ -4,10 +4,6 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  type MemoryStorage,
-  createMemoryStorage,
-} from '@/features/plugins/builtin/chatgptFolders/__tests__/memoryStorage';
 import { parseSiteConversation } from '@/features/plugins/sites/siteConversation';
 import {
   SEND_TIME_RECORD_MESSAGE,
@@ -18,6 +14,7 @@ import {
   readConversationTimes,
   sendTimeOf,
 } from '@/features/timeline/adapters/catalog/sendTimesStore';
+import { type MemoryStorage, createMemoryStorage } from '@/tests/memoryStorage';
 
 import { createSendTimeMessageHandler } from '../sendTimeMessages';
 

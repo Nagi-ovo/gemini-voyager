@@ -1,12 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  type MemoryStorage,
-  createMemoryStorage,
-  settle,
-} from '@/features/plugins/builtin/chatgptFolders/__tests__/memoryStorage';
 import { StarredMessagesService } from '@/features/savedLibrary/StarredMessagesService';
 import type { StarredMessage } from '@/features/savedLibrary/starTypes';
+import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 
 import { TimelineState } from '../../TimelineState';
 import { routeCatalogOutlineWrites } from '../../__tests__/catalogOutlineBackground';

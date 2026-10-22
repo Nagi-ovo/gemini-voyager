@@ -6,12 +6,8 @@ import {
   buildScopedStorageKey,
 } from '@/core/services/AccountIsolationService';
 import type { FolderData } from '@/core/types/folder';
-import {
-  type MemoryStorage,
-  createMemoryStorage,
-  settle,
-} from '@/features/plugins/builtin/chatgptFolders/__tests__/memoryStorage';
 import { CHATGPT_FOLDER_CONFIG } from '@/pages/content/folder/pluginSiteFolderConfigs';
+import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 
 import { FolderRepository } from '../../FolderRepository';
 import { SiteFolderStore } from '../../SiteFolderStore';
