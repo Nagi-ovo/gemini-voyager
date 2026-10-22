@@ -256,4 +256,66 @@ describe('AI Studio folders as an official plugin', () => {
     );
     expect(memory.values.local.get(aKey)).toEqual(folder('Private a'));
   });
+
+  it("a B → C switch during the awaited account refresh still opens C's folders and never writes B", async () => {
+    const folder = (name: string): FolderData => ({
+      folders: [{ id: name, name, parentId: null, isExpanded: true, createdAt: 1, updatedAt: 1 }],
+      folderContents: { [name]: [], [AISTUDIO_ROOT_BUCKET_ID]: [] },
+    });
+    const keyOf = async (account: string) => {
+      const scope = await accountIsolationService.resolveAccountScope({
+        pageUrl: location.href,
+        email: `${account}@example.com`,
+      });
+      return buildScopedStorageKey(KEY, scope.accountKey);
+    };
+    const [aKey, bKey, cKey] = [await keyOf('a'), await keyOf('b'), await keyOf('c')];
+    for (const [key, name] of [
+      [aKey, 'Private a'],
+      [bKey, 'Private b'],
+      [cKey, 'Private c'],
+    ]) {
+      memory.values.local.set(key, folder(name));
+    }
+    memory.values.sync.set(StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED, true);
+    memory.values.sync.set(StorageKeys.FOLDER_ENABLED, false);
+    // No account poll: only the enable may notice the switches.
+    vi.spyOn(window, 'setInterval').mockReturnValue(0 as unknown as ReturnType<typeof setInterval>);
+    await openPage();
+    const signIn = (account: string) => {
+      const indicator = document.querySelector('.account-switcher-text')!;
+      indicator.setAttribute('data-email', `${account}@example.com`);
+      indicator.textContent = `${account}@example.com`;
+    };
+    // B's scope resolves only once the page already shows C.
+    const resolve = accountIsolationService.resolveAccountScope.bind(accountIsolationService);
+    let release!: () => void;
+    const held = new Promise<void>((done) => (release = done));
+    const resolving = vi
+      .spyOn(accountIsolationService, 'resolveAccountScope')
+      .mockImplementationOnce(async (input) => {
+        const scope = await resolve(input);
+        await held;
+        return scope;
+      });
+
+    signIn('b');
+    await memory.api.sync.set({ [StorageKeys.FOLDER_ENABLED]: true });
+    await vi.waitFor(() => expect(resolving).toHaveBeenCalled());
+    signIn('c');
+    release();
+
+    await vi.waitFor(() => expect(outline()).toEqual(['Private c']));
+    document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')!.click();
+    const input = nameInput()!;
+    input.value = 'Made on c';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await vi.waitFor(() =>
+      expect((memory.values.local.get(cKey) as FolderData).folders.map((f) => f.name)).toContain(
+        'Made on c',
+      ),
+    );
+    expect(memory.values.local.get(bKey)).toEqual(folder('Private b'));
+    expect(memory.values.local.get(aKey)).toEqual(folder('Private a'));
+  });
 });
