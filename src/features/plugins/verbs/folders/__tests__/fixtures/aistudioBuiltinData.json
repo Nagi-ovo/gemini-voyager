@@ -1,0 +1,195 @@
+{
+  "_about": "Written by the AI Studio folder manager before the folders primitive (8be56b6d9), driven in jsdom on aistudio.google.com: folders made, filed, starred and pinned in its sidebar tree, a coloured subfolder merged from a Drive sync, then uploaded; ids and titles are placeholders. 2026-10-22.",
+  "stored": {
+    "folderContents": {
+      "__uncategorized__": [
+        {
+          "addedAt": 1792659840000,
+          "conversationId": "1VoyagerTestPromptC00000000000000",
+          "title": "Voyager 测试 提示 C",
+          "url": "https://aistudio.google.com/prompts/1VoyagerTestPromptC00000000000000"
+        }
+      ],
+      "a76ul49sphzkmwg7u7sq": [
+        {
+          "addedAt": 1792659720000,
+          "conversationId": "1VoyagerTestPromptA00000000000000",
+          "starred": true,
+          "title": "Voyager 测试 提示 A",
+          "url": "https://aistudio.google.com/prompts/1VoyagerTestPromptA00000000000000"
+        }
+      ],
+      "voyagerCloudFolder000000": [
+        {
+          "addedAt": 1792648800000,
+          "conversationId": "1VoyagerTestPromptD00000000000000",
+          "title": "Voyager 测试 提示 D",
+          "url": "https://aistudio.google.com/prompts/1VoyagerTestPromptD00000000000000"
+        }
+      ],
+      "w5eo05bbalbxrcgi0ucnfj": [
+        {
+          "addedAt": 1792659780000,
+          "conversationId": "1VoyagerTestPromptB00000000000000",
+          "title": "Untitled",
+          "url": "https://aistudio.google.com/u/1/prompts/1VoyagerTestPromptB00000000000000"
+        }
+      ]
+    },
+    "folders": [
+      {
+        "createdAt": 1792659600000,
+        "id": "a76ul49sphzkmwg7u7sq",
+        "isExpanded": true,
+        "name": "Voyager 测试",
+        "parentId": null,
+        "pinned": true,
+        "updatedAt": 1792659600000
+      },
+      {
+        "createdAt": 1792659660000,
+        "id": "w5eo05bbalbxrcgi0ucnfj",
+        "isExpanded": true,
+        "name": "Voyager 测试 子",
+        "parentId": "a76ul49sphzkmwg7u7sq",
+        "updatedAt": 1792659660000
+      },
+      {
+        "color": "blue",
+        "createdAt": 1792648800000,
+        "id": "voyagerCloudFolder000000",
+        "isExpanded": false,
+        "name": "Voyager 测试 云",
+        "parentId": "a76ul49sphzkmwg7u7sq",
+        "updatedAt": 1792648800000
+      }
+    ]
+  },
+  "exported": {
+    "data": {
+      "folderContents": {
+        "__uncategorized__": [
+          {
+            "addedAt": 1792659840000,
+            "conversationId": "1VoyagerTestPromptC00000000000000",
+            "title": "Voyager 测试 提示 C",
+            "url": "https://aistudio.google.com/prompts/1VoyagerTestPromptC00000000000000"
+          }
+        ],
+        "a76ul49sphzkmwg7u7sq": [
+          {
+            "addedAt": 1792659720000,
+            "conversationId": "1VoyagerTestPromptA00000000000000",
+            "starred": true,
+            "title": "Voyager 测试 提示 A",
+            "url": "https://aistudio.google.com/prompts/1VoyagerTestPromptA00000000000000"
+          }
+        ],
+        "voyagerCloudFolder000000": [
+          {
+            "addedAt": 1792648800000,
+            "conversationId": "1VoyagerTestPromptD00000000000000",
+            "title": "Voyager 测试 提示 D",
+            "url": "https://aistudio.google.com/prompts/1VoyagerTestPromptD00000000000000"
+          }
+        ],
+        "w5eo05bbalbxrcgi0ucnfj": [
+          {
+            "addedAt": 1792659780000,
+            "conversationId": "1VoyagerTestPromptB00000000000000",
+            "title": "Untitled",
+            "url": "https://aistudio.google.com/u/1/prompts/1VoyagerTestPromptB00000000000000"
+          }
+        ]
+      },
+      "folders": [
+        {
+          "createdAt": 1792659600000,
+          "id": "a76ul49sphzkmwg7u7sq",
+          "isExpanded": true,
+          "name": "Voyager 测试",
+          "parentId": null,
+          "pinned": true,
+          "updatedAt": 1792659600000
+        },
+        {
+          "createdAt": 1792659660000,
+          "id": "w5eo05bbalbxrcgi0ucnfj",
+          "isExpanded": true,
+          "name": "Voyager 测试 子",
+          "parentId": "a76ul49sphzkmwg7u7sq",
+          "updatedAt": 1792659660000
+        },
+        {
+          "color": "blue",
+          "createdAt": 1792648800000,
+          "id": "voyagerCloudFolder000000",
+          "isExpanded": false,
+          "name": "Voyager 测试 云",
+          "parentId": "a76ul49sphzkmwg7u7sq",
+          "updatedAt": 1792648800000
+        }
+      ]
+    },
+    "exportedAt": "2026-10-22T09:05:00.000Z",
+    "format": "gemini-voyager.folders.v1",
+    "version": "2.2.0"
+  },
+  "imported": {
+    "folderContents": {
+      "a76ul49sphzkmwg7u7sq": [
+        {
+          "addedAt": 1792659720000,
+          "conversationId": "1VoyagerTestPromptA00000000000000",
+          "starred": true,
+          "title": "Voyager 测试 提示 A",
+          "url": "https://aistudio.google.com/prompts/1VoyagerTestPromptA00000000000000"
+        }
+      ],
+      "voyagerCloudFolder000000": [
+        {
+          "addedAt": 1792648800000,
+          "conversationId": "1VoyagerTestPromptD00000000000000",
+          "title": "Voyager 测试 提示 D",
+          "url": "https://aistudio.google.com/prompts/1VoyagerTestPromptD00000000000000"
+        }
+      ],
+      "w5eo05bbalbxrcgi0ucnfj": [
+        {
+          "addedAt": 1792659780000,
+          "conversationId": "1VoyagerTestPromptB00000000000000",
+          "title": "Untitled",
+          "url": "https://aistudio.google.com/u/1/prompts/1VoyagerTestPromptB00000000000000"
+        }
+      ]
+    },
+    "folders": [
+      {
+        "createdAt": 1792659600000,
+        "id": "a76ul49sphzkmwg7u7sq",
+        "isExpanded": true,
+        "name": "Voyager 测试",
+        "parentId": null,
+        "pinned": true,
+        "updatedAt": 1792659600000
+      },
+      {
+        "createdAt": 1792659660000,
+        "id": "w5eo05bbalbxrcgi0ucnfj",
+        "isExpanded": true,
+        "name": "Voyager 测试 子",
+        "parentId": "a76ul49sphzkmwg7u7sq",
+        "updatedAt": 1792659660000
+      },
+      {
+        "color": "blue",
+        "createdAt": 1792648800000,
+        "id": "voyagerCloudFolder000000",
+        "isExpanded": false,
+        "name": "Voyager 测试 云",
+        "parentId": "a76ul49sphzkmwg7u7sq",
+        "updatedAt": 1792648800000
+      }
+    ]
+  }
+}
