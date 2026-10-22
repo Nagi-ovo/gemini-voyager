@@ -1,0 +1,412 @@
+{
+  "gemini": {
+    "platform": {
+      "hosts": ["gemini.google.com", "business.gemini.google"],
+      "folderStorageKey": "gvFolderData",
+      "accountIsolationStorageKey": "gvAccountIsolationEnabledGemini",
+      "syncsSharedData": true,
+      "driveFoldersFileName": "gemini-voyager-folders.json",
+      "syncsConversationExtras": true,
+      "backupNamespace": "gemini-folders",
+      "lastUploadTimeField": "lastUploadTime",
+      "lastUploadTimeStorageKey": "gvLastUploadTime",
+      "lastSyncTimeField": "lastSyncTime",
+      "lastSyncTimeStorageKey": "gvLastSyncTime",
+      "folderExport": null
+    },
+    "config": {
+      "platform": "gemini",
+      "storageKey": "gvFolderData",
+      "backupNamespace": "gemini-folders",
+      "rootBucketId": "__root_conversations__",
+      "isolationSettingKeys": ["gvAccountIsolationEnabled", "gvAccountIsolationEnabledGemini"],
+      "logPrefix": "[FolderStore]",
+      "debugFlag": "gvFolderDebug",
+      "pruneOrphanBuckets": true,
+      "recoverMissingData": false,
+      "retryFailedSave": true,
+      "checkEmptyOverwrite": true,
+      "normalizes": true,
+      "legacyMigration": "filter-by-route-user"
+    },
+    "policy": {
+      "site": "gemini",
+      "hosts": ["gemini.google.com", "business.gemini.google"],
+      "rootBucketId": "__root_conversations__",
+      "resetAddedAtOnMove": true,
+      "singleBucket": false,
+      "addPlacement": {
+        "native-menu": "top",
+        "project": "top",
+        "picker": "top",
+        "outside-drop": "append"
+      }
+    },
+    "storage": "local+pageMirror",
+    "identity": "gemini",
+    "tree": {
+      "folderOrder": "sorted",
+      "conversationOrder": "sorted",
+      "rootSectionLabel": null,
+      "refusedOps": ["placeAIStudioPrompt", "saveCurrentData", "ensureDefaultAIStudioFolder"]
+    },
+    "prefs": {
+      "codec": "split",
+      "keys": {
+        "collapsed": "gvFoldersCollapsed",
+        "viewMode": "gvFoldersViewMode",
+        "hidden": "gvFoldersHidden",
+        "anchor": "gvFoldersAnchor",
+        "filterUserOnly": "gvFolderFilterUserOnly",
+        "search": "gvFolderSearchEnabled",
+        "treeIndent": "gvFolderTreeIndent",
+        "project": "gvFolderProjectEnabled",
+        "conversationSortMode": "gvFolderConversationSortMode",
+        "floatingMode": "geminiFolderFloatingModeEnabled",
+        "floatingOpenOnStart": "geminiFolderFloatingOpenOnStart",
+        "floatingPos": "geminiFolderFloatingPos",
+        "floatingSize": "geminiFolderFloatingSize",
+        "floatingFabPos": "geminiFolderFloatingFabPos",
+        "hideFiled": "geminiFolderHideArchivedConversations"
+      }
+    },
+    "activity": "extension",
+    "messages": null,
+    "guideId": null,
+    "importStrategies": ["merge", "overwrite"],
+    "extension": "gemini"
+  },
+  "aistudio": {
+    "platform": {
+      "hosts": ["aistudio.google.com", "aistudio.google.cn"],
+      "folderStorageKey": "gvFolderDataAIStudio",
+      "accountIsolationStorageKey": "gvAccountIsolationEnabledAIStudio",
+      "syncsSharedData": true,
+      "driveFoldersFileName": "gemini-voyager-aistudio-folders.json",
+      "syncsConversationExtras": false,
+      "backupNamespace": "aistudio-folders",
+      "lastUploadTimeField": "lastUploadTimeAIStudio",
+      "lastUploadTimeStorageKey": "gvLastUploadTimeAIStudio",
+      "lastSyncTimeField": "lastSyncTimeAIStudio",
+      "lastSyncTimeStorageKey": "gvLastSyncTimeAIStudio",
+      "folderExport": null
+    },
+    "config": {
+      "platform": "aistudio",
+      "storageKey": "gvFolderDataAIStudio",
+      "backupNamespace": "aistudio-folders",
+      "rootBucketId": "__uncategorized__",
+      "isolationSettingKeys": [],
+      "logPrefix": "[AIStudioFolderManager]",
+      "debugFlag": "gvAIStudioFolderDebug",
+      "pruneOrphanBuckets": false,
+      "recoverMissingData": true,
+      "retryFailedSave": false,
+      "checkEmptyOverwrite": false,
+      "normalizes": false,
+      "legacyMigration": "copy"
+    },
+    "policy": {
+      "site": "aistudio",
+      "hosts": ["aistudio.google.com", "aistudio.google.cn"],
+      "rootBucketId": "__uncategorized__",
+      "resetAddedAtOnMove": false,
+      "singleBucket": true,
+      "addPlacement": {
+        "native-menu": "keep",
+        "project": "keep",
+        "picker": "keep",
+        "outside-drop": "keep"
+      }
+    },
+    "storage": "local",
+    "identity": "aistudio",
+    "tree": {
+      "folderOrder": "created",
+      "conversationOrder": "stored",
+      "rootSectionLabel": "folder_uncategorized",
+      "refusedOps": [
+        "moveFolder",
+        "setFolderColor",
+        "setFolderInstructions",
+        "addConversations",
+        "moveConversations",
+        "reorderConversations",
+        "removeConversationEverywhere",
+        "renameConversation",
+        "syncNativeTitles",
+        "restoreNativeTitle",
+        "setConversationGem",
+        "markConversationOpened",
+        "setConversationActivity",
+        "dropConversations",
+        "bufferNativeTitle",
+        "flushNativeTitles"
+      ]
+    },
+    "prefs": {
+      "codec": "split",
+      "keys": {
+        "hideFiled": "aistudioFolderHideArchivedConversations",
+        "hideFiledNudgeShown": "aistudioFolderHideArchivedNudgeShown"
+      }
+    },
+    "activity": "none",
+    "messages": null,
+    "guideId": null,
+    "importStrategies": ["merge"],
+    "extension": "aistudio"
+  },
+  "chatgpt": {
+    "platform": {
+      "hosts": ["chatgpt.com"],
+      "folderStorageKey": "gvFolderDataChatGPT",
+      "accountIsolationStorageKey": null,
+      "syncsSharedData": false,
+      "driveFoldersFileName": "gemini-voyager-chatgpt-folders.json",
+      "syncsConversationExtras": false,
+      "backupNamespace": "chatgpt-folders",
+      "lastUploadTimeField": "lastUploadTimeChatGPT",
+      "lastUploadTimeStorageKey": "gvLastUploadTimeChatGPT",
+      "lastSyncTimeField": "lastSyncTimeChatGPT",
+      "lastSyncTimeStorageKey": "gvLastSyncTimeChatGPT",
+      "folderExport": "chatgpt"
+    },
+    "config": {
+      "platform": null,
+      "storageKey": "gvFolderDataChatGPT",
+      "backupNamespace": "chatgpt-folders",
+      "rootBucketId": "__root_conversations__",
+      "isolationSettingKeys": [],
+      "logPrefix": "[ChatGptFolderStore]",
+      "debugFlag": "gvChatGptFolderDebug",
+      "pruneOrphanBuckets": true,
+      "recoverMissingData": false,
+      "retryFailedSave": true,
+      "checkEmptyOverwrite": true,
+      "normalizes": true,
+      "legacyMigration": "none"
+    },
+    "policy": {
+      "site": "chatgpt",
+      "hosts": ["chatgpt.com"],
+      "rootBucketId": "__root_conversations__",
+      "resetAddedAtOnMove": false,
+      "singleBucket": false,
+      "addPlacement": {
+        "native-menu": "top",
+        "project": "top",
+        "picker": "top",
+        "outside-drop": "append"
+      }
+    },
+    "storage": "local",
+    "identity": "route",
+    "tree": {
+      "folderOrder": "sorted",
+      "conversationOrder": "sorted",
+      "rootSectionLabel": null,
+      "refusedOps": [
+        "placeAIStudioPrompt",
+        "saveCurrentData",
+        "ensureDefaultAIStudioFolder",
+        "bufferNativeTitle",
+        "flushNativeTitles",
+        "syncNativeSidebarTitles",
+        "setFolderInstructions",
+        "reorderConversations",
+        "removeConversationEverywhere",
+        "renameConversation",
+        "setConversationGem"
+      ]
+    },
+    "prefs": {
+      "codec": "record",
+      "keys": {
+        "panel": "gvChatGptFolderPanel",
+        "section": "gvChatGptFolderSection"
+      }
+    },
+    "activity": "sends",
+    "messages": {
+      "hint": "chatgptFoldersHint",
+      "added": "chatgptFoldersAdded",
+      "alreadyFiled": "chatgptFoldersAlreadyFiled",
+      "untitled": "chatgptFoldersUntitled",
+      "noConversation": "chatgptFoldersNoConversation",
+      "guideTitle": "chatgptFoldersCoachmarkTitle",
+      "guideBody": "chatgptFoldersCoachmarkBody"
+    },
+    "guideId": "chatgpt-folders-sidebar-intro-v1",
+    "importStrategies": ["merge"],
+    "extension": null
+  },
+  "claude": {
+    "platform": {
+      "hosts": ["claude.ai"],
+      "folderStorageKey": "gvFolderDataClaude",
+      "accountIsolationStorageKey": null,
+      "syncsSharedData": false,
+      "driveFoldersFileName": "gemini-voyager-claude-folders.json",
+      "syncsConversationExtras": false,
+      "backupNamespace": "claude-folders",
+      "lastUploadTimeField": "lastUploadTimeClaude",
+      "lastUploadTimeStorageKey": "gvLastUploadTimeClaude",
+      "lastSyncTimeField": "lastSyncTimeClaude",
+      "lastSyncTimeStorageKey": "gvLastSyncTimeClaude",
+      "folderExport": "claude"
+    },
+    "config": {
+      "platform": null,
+      "storageKey": "gvFolderDataClaude",
+      "backupNamespace": "claude-folders",
+      "logPrefix": "[ClaudeFolderStore]",
+      "debugFlag": "gvClaudeFolderDebug",
+      "rootBucketId": "__root_conversations__",
+      "isolationSettingKeys": [],
+      "pruneOrphanBuckets": true,
+      "recoverMissingData": false,
+      "retryFailedSave": true,
+      "checkEmptyOverwrite": true,
+      "normalizes": true,
+      "legacyMigration": "none"
+    },
+    "policy": {
+      "site": "claude",
+      "hosts": ["claude.ai"],
+      "rootBucketId": "__root_conversations__",
+      "resetAddedAtOnMove": false,
+      "singleBucket": false,
+      "addPlacement": {
+        "native-menu": "top",
+        "project": "top",
+        "picker": "top",
+        "outside-drop": "append"
+      }
+    },
+    "storage": "local",
+    "identity": "route",
+    "tree": {
+      "folderOrder": "sorted",
+      "conversationOrder": "sorted",
+      "rootSectionLabel": null,
+      "refusedOps": [
+        "placeAIStudioPrompt",
+        "saveCurrentData",
+        "ensureDefaultAIStudioFolder",
+        "bufferNativeTitle",
+        "flushNativeTitles",
+        "syncNativeSidebarTitles",
+        "setFolderInstructions",
+        "reorderConversations",
+        "removeConversationEverywhere",
+        "renameConversation",
+        "setConversationGem"
+      ]
+    },
+    "prefs": {
+      "codec": "record",
+      "keys": {
+        "panel": "gvClaudeFolderPanel",
+        "section": "gvClaudeFolderSection"
+      }
+    },
+    "activity": "sends",
+    "messages": {
+      "hint": "chatgptFoldersHint",
+      "added": "chatgptFoldersAdded",
+      "alreadyFiled": "chatgptFoldersAlreadyFiled",
+      "untitled": "chatgptFoldersUntitled",
+      "noConversation": "siteFoldersNoConversation",
+      "guideTitle": "chatgptFoldersCoachmarkTitle",
+      "guideBody": "claudeFoldersCoachmarkBody"
+    },
+    "guideId": "claude-folders-sidebar-intro-v1",
+    "importStrategies": ["merge"],
+    "extension": null
+  },
+  "deepseek": {
+    "platform": {
+      "hosts": ["chat.deepseek.com"],
+      "folderStorageKey": "gvFolderDataDeepSeek",
+      "accountIsolationStorageKey": null,
+      "syncsSharedData": false,
+      "driveFoldersFileName": "gemini-voyager-deepseek-folders.json",
+      "syncsConversationExtras": false,
+      "backupNamespace": "deepseek-folders",
+      "lastUploadTimeField": "lastUploadTimeDeepSeek",
+      "lastUploadTimeStorageKey": "gvLastUploadTimeDeepSeek",
+      "lastSyncTimeField": "lastSyncTimeDeepSeek",
+      "lastSyncTimeStorageKey": "gvLastSyncTimeDeepSeek",
+      "folderExport": "deepseek"
+    },
+    "config": {
+      "platform": null,
+      "storageKey": "gvFolderDataDeepSeek",
+      "backupNamespace": "deepseek-folders",
+      "logPrefix": "[DeepSeekFolderStore]",
+      "debugFlag": "gvDeepSeekFolderDebug",
+      "rootBucketId": "__root_conversations__",
+      "isolationSettingKeys": [],
+      "pruneOrphanBuckets": true,
+      "recoverMissingData": false,
+      "retryFailedSave": true,
+      "checkEmptyOverwrite": true,
+      "normalizes": true,
+      "legacyMigration": "none"
+    },
+    "policy": {
+      "site": "deepseek",
+      "hosts": ["chat.deepseek.com"],
+      "rootBucketId": "__root_conversations__",
+      "resetAddedAtOnMove": false,
+      "singleBucket": false,
+      "addPlacement": {
+        "native-menu": "top",
+        "project": "top",
+        "picker": "top",
+        "outside-drop": "append"
+      }
+    },
+    "storage": "local",
+    "identity": "route",
+    "tree": {
+      "folderOrder": "sorted",
+      "conversationOrder": "sorted",
+      "rootSectionLabel": null,
+      "refusedOps": [
+        "placeAIStudioPrompt",
+        "saveCurrentData",
+        "ensureDefaultAIStudioFolder",
+        "bufferNativeTitle",
+        "flushNativeTitles",
+        "syncNativeSidebarTitles",
+        "setFolderInstructions",
+        "reorderConversations",
+        "removeConversationEverywhere",
+        "renameConversation",
+        "setConversationGem"
+      ]
+    },
+    "prefs": {
+      "codec": "record",
+      "keys": {
+        "panel": "gvDeepSeekFolderPanel",
+        "section": "gvDeepSeekFolderSection"
+      }
+    },
+    "activity": "sends",
+    "messages": {
+      "hint": "chatgptFoldersHint",
+      "added": "chatgptFoldersAdded",
+      "alreadyFiled": "chatgptFoldersAlreadyFiled",
+      "untitled": "chatgptFoldersUntitled",
+      "noConversation": "siteFoldersNoConversation",
+      "guideTitle": "chatgptFoldersCoachmarkTitle",
+      "guideBody": "deepseekFoldersCoachmarkBody"
+    },
+    "guideId": "deepseek-folders-sidebar-intro-v1",
+    "importStrategies": ["merge"],
+    "extension": null
+  }
+}
