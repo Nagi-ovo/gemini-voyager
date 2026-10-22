@@ -21,7 +21,12 @@ import { PRIMITIVE_CONTRACT_MODULES } from './contractModules';
 import type { PrimitiveContract } from './contractTypes';
 import { loadPrimitiveContracts } from './loadContracts';
 
-export type { PrimitiveContract, PrimitiveParamSpec, PrimitiveParamType } from './contractTypes';
+export type {
+  PrimitiveContract,
+  PrimitiveParamSpec,
+  PrimitiveParamType,
+  PrimitiveSiteSection,
+} from './contractTypes';
 export { PRIMITIVE_NAME_PATTERN } from './contractTypes';
 
 /** Source declarations retain `next` so release tooling and D9 can distinguish drafts. */

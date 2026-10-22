@@ -27,11 +27,16 @@
  *     `blocked: host-policy` by the page's real host. Defer skips only this
  *     site policy, never the CSS, DOM, params, namespace or other checks;
  *   - the local-only rules in `localPluginRules.ts`: `gv-` classes, semantic
- *     keys every targeted site declares, and settings the popup can render.
+ *     keys and `site.json` sections every targeted site declares, settings the
+ *     popup can render, and no `folders` on Gemini or AI Studio.
  */
 import type { Result } from '@/core/types/common';
 
-import { primitiveParamIssues, primitiveShippabilityIssues } from '../manifest/primitiveChecks';
+import {
+  primitiveParamIssues,
+  primitiveSettingIssues,
+  primitiveShippabilityIssues,
+} from '../manifest/primitiveChecks';
 import { type ManifestIssue, validateManifest } from '../manifest/validate';
 import { manifestHostPolicyIssues } from '../sites/hostPolicy';
 import { patternWithinAny } from '../sites/matchPattern';
@@ -101,7 +106,11 @@ export function validateLocalManifest(
   if (!result.success) return { success: false, error: [...issues, ...result.error] };
   const manifest = result.data;
 
-  issues.push(...primitiveShippabilityIssues(manifest), ...primitiveParamIssues(manifest));
+  issues.push(
+    ...primitiveShippabilityIssues(manifest),
+    ...primitiveParamIssues(manifest),
+    ...primitiveSettingIssues(manifest),
+  );
   const supported = sites.flatMap((site) => site.matches);
   manifest.matches.forEach((pattern, index) => {
     if (patternWithinAny(pattern, supported)) return;

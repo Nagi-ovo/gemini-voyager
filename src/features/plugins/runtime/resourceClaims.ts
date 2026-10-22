@@ -6,7 +6,9 @@
  * is a singleton with its own generation counter, and Vim input keeps its state
  * in module scope. Send shortcuts also claim the composer mode on every site, so conflicting
  * modes are visible instead of leaving the later listener silently inactive. A timeline rail
- * also owns page navigation and one visual surface, including the fixed-id Gemini builtin.
+ * also owns page navigation and one visual surface, including the fixed-id Gemini builtin. The
+ * folders runtime owns the site's folder data session and its sidebar surface: two runtimes
+ * would open two repositories on one bucket.
  */
 import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import type { PluginManifest } from '../types';
@@ -18,6 +20,7 @@ const HANDLER_RESOURCES: Readonly<Record<string, readonly ResourceId[]>> = {
   vimInput: ['vim-input-runtime'],
   sendShortcut: ['composer-send-key-mode'],
   turnNavigator: ['timeline-rail'],
+  folders: ['folders-surface'],
 };
 
 /** One resource claimed by one `native` op, kept per op so repeats stay visible. */

@@ -198,6 +198,55 @@ export function primitiveParamIssues(manifest: PluginManifest): ManifestIssue[] 
   );
 }
 
+/**
+ * A setting a primitive reads (`contract.settings`) must have the type it reads.
+ * When every primitive the plugin calls declares what it reads, a setting that
+ * none of them reads and that no `{{key}}` token or `enabledBy` rule uses is a
+ * misspelling: the primitive would quietly run on its default.
+ */
+export function primitiveSettingIssues(manifest: PluginManifest): ManifestIssue[] {
+  const handlers = requiredHandlers(manifest);
+  const contracts = handlers.flatMap((handler) => getPrimitiveContract(handler) ?? []);
+  const read = new Map<string, { type: string; primitive: string }>();
+  for (const contract of contracts) {
+    for (const [key, type] of Object.entries(contract.settings ?? {})) {
+      if (!read.has(key)) read.set(key, { type, primitive: contract.name });
+    }
+  }
+  const schema = manifest.contributes.settings ?? {};
+  const issues: ManifestIssue[] = [];
+  for (const [key, field] of Object.entries(schema)) {
+    const wanted = read.get(key);
+    if (wanted && field.type !== wanted.type) {
+      issues.push({
+        path: `contributes.settings.${key}.type`,
+        message: `primitive "${wanted.primitive}" reads "${key}" as a ${wanted.type} setting`,
+      });
+    }
+  }
+  const allDeclare =
+    contracts.length > 0 &&
+    contracts.length === handlers.length &&
+    contracts.every((contract) => contract.settings !== undefined);
+  if (!allDeclare) return issues;
+  const { settings: _settings, ...rest } = manifest.contributes;
+  const templated = JSON.stringify([rest, manifest.theme ?? null]);
+  const gating = new Set(Object.values(schema).flatMap((field) => field.enabledBy ?? []));
+  for (const key of Object.keys(schema)) {
+    if (read.has(key) || gating.has(key) || templated.includes(`{{${key}}}`)) continue;
+    issues.push({
+      path: `contributes.settings.${key}`,
+      message: `nothing reads this setting: ${contracts
+        .map(
+          (contract) =>
+            `"${contract.name}" reads ${Object.keys(contract.settings ?? {}).join(', ') || 'none'}`,
+        )
+        .join('; ')}, and no {{${key}}} token uses it`,
+    });
+  }
+  return issues;
+}
+
 /** Template references are load-time configuration errors, even without a primitive implementation. */
 export function nativeParamTemplateIssues(manifest: PluginManifest): ManifestIssue[] {
   const issues: ManifestIssue[] = [];

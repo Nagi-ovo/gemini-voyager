@@ -23,10 +23,14 @@ import {
 } from '../../src/features/plugins/local/localPluginId';
 import {
   primitiveParamIssues,
+  primitiveSettingIssues,
   primitiveShippabilityIssues,
 } from '../../src/features/plugins/manifest/primitiveChecks';
 import type { ManifestIssue } from '../../src/features/plugins/manifest/validate';
-import { requiredSemanticKeys } from '../../src/features/plugins/runtime/pluginStatus';
+import {
+  missingSiteSections,
+  requiredSemanticKeys,
+} from '../../src/features/plugins/runtime/pluginStatus';
 import { patternWithinAny } from '../../src/features/plugins/sites/matchPattern';
 import { validateSiteAdapterData } from '../../src/features/plugins/sites/siteAdapterData';
 import type { PluginManifest, SiteAdapter } from '../../src/features/plugins/types';
@@ -144,6 +148,33 @@ export function checkSemanticKeysExist(
 }
 
 /**
+ * Every `site.json` section the plugin's primitives read (`contract.sections`)
+ * must be in its site's adapter, in a format they read. Publishing without it
+ * would only produce a `needs-site-data` plugin on every client.
+ */
+export function checkSiteSectionsExist(
+  manifest: PluginManifest,
+  site: CatalogSiteRef,
+  manifestPath: string,
+): readonly string[] {
+  const missing = missingSiteSections(manifest, site.adapter);
+  if (missing.length === 0) return [];
+  return [
+    `${manifest.id} (${manifestPath}): site "${site.dir}" has no usable ${missing.map((section) => `"${section}"`).join(', ')} section in its site.json, which its primitives read`,
+  ];
+}
+
+/** Settings a primitive reads have its type; a setting nothing reads is a misspelling. */
+export function checkPrimitiveSettings(
+  manifest: PluginManifest,
+  manifestPath: string,
+): readonly string[] {
+  return primitiveSettingIssues(manifest).map(
+    (issue) => `${manifest.id} (${manifestPath}): ${issue.path}: ${issue.message}`,
+  );
+}
+
+/**
  * Every rule that relates a validated manifest to the site it ships under, in
  * the order the publisher applies them.
  */
@@ -157,7 +188,9 @@ export function checkManifestAgainstSite(
     ...checkMatchesStayInSite(manifest, site, manifestPath),
     ...checkPrimitivesAreShippable(manifest, manifestPath),
     ...checkPrimitiveParams(manifest, manifestPath),
+    ...checkPrimitiveSettings(manifest, manifestPath),
     ...checkSemanticKeysExist(manifest, site, manifestPath),
+    ...checkSiteSectionsExist(manifest, site, manifestPath),
   ];
 }
 
