@@ -7,7 +7,6 @@ import { getTranslationSyncUnsafe as t } from '@/utils/i18n';
 import type { FolderFeedback } from './FolderFeedback';
 import type { FolderNavigation } from './FolderNavigation';
 import type { FolderSelection } from './FolderSelection';
-import type { FolderStore } from './FolderStore';
 import { createFloatingTreeStoreActions } from './floatingPanelActions';
 import { FLOATING_PANEL_CSS as panelCss } from './floatingPanelCss';
 import {
@@ -24,6 +23,7 @@ import type { FolderDialogs } from './folderDialogs';
 import { FOLDER_INDENT_PROPERTY } from './folderDisplay';
 import { DEFAULT_CONVERSATION_ICON, getGemIcon } from './gemConfig';
 import { getCurrentHexIdFromLocation } from './nativeConversationIds';
+import type { GeminiFolderReads } from './session/geminiFolderSession';
 import { attachShadowSurface } from './shadowHost';
 import { type SidebarDropContext, acceptsSidebarDrag, dropOnSidebar } from './sidebarDrops';
 import { searchAndSortOptions } from './sidebarFilter';
@@ -52,7 +52,7 @@ export type SidebarTreeView = {
 };
 
 export type SidebarTreeOptions = {
-  store: FolderStore;
+  store: GeminiFolderReads;
   commands: FolderCommands;
   navigation: FolderNavigation;
   selection: FolderSelection;
@@ -78,7 +78,7 @@ export type SidebarTree = {
 };
 
 /** The folder a stored conversation record lives in, found by identity. */
-function bucketOf(store: FolderStore, conversation: ConversationReference): string | null {
+function bucketOf(store: GeminiFolderReads, conversation: ConversationReference): string | null {
   for (const [bucketId, list] of Object.entries(store.data.folderContents)) {
     if (list.includes(conversation)) return bucketId;
   }

@@ -6,8 +6,8 @@ import type { FolderData } from '@/core/types/folder';
 import { startGeminiBatchDelete } from '../../batchDelete/gemini';
 import type { FolderSidebarRuntime } from '../FolderSidebarRuntime';
 import type { FolderStore } from '../FolderStore';
-import { FolderManager } from '../manager';
 import * as storageAdapters from '../storage/FolderStorageAdapter';
+import { FolderManager } from './geminiFolderManager';
 import { mountSidebar, setLayout } from './sidebarRuntimeHarness';
 
 vi.mock('webextension-polyfill', () => ({ default: chrome }));

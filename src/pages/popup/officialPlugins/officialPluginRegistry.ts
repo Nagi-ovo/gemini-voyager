@@ -146,13 +146,12 @@ export interface OfficialPluginContext {
 export { OFFICIAL_PLUGIN_ENTRIES };
 
 /**
- * Official plugins whose switch is still an older settings card's, which a
- * native feature also reads: they get no row until that switch retires, so one
- * switch never shows twice. AI Studio's folders follow the Folders card
- * (`geminiFolderEnabled`, and AI Studio's hide-archived switch), which Gemini's
- * native folders read too.
+ * Official plugins whose switch is still an older settings card's: they get no
+ * row, so one switch never shows twice. Gemini's and AI Studio's folders follow
+ * the Folders card (`geminiFolderEnabled`, and each site's hide-archived switch).
  */
 export const SWITCHED_BY_SETTINGS_CARD: ReadonlySet<string> = new Set([
+  OFFICIAL_PLUGIN_IDS.geminiFolders,
   OFFICIAL_PLUGIN_IDS.aistudioFolders,
 ]);
 

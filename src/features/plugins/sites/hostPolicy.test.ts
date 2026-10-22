@@ -100,6 +100,7 @@ describe('packaged host policy', () => {
       'sendShortcut',
       'draftSave',
       'turnNavigator',
+      'folders',
     ]);
     const aistudioOpen = new Set(['formulaCopy', 'sendShortcut', 'folders']);
     const primitives = listPrimitiveNames();

@@ -7,7 +7,6 @@ import type { ConversationSortMode } from '@/features/folder/model/folderData';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
 
 import type { FolderNavigation } from './FolderNavigation';
-import type { FolderStore } from './FolderStore';
 import type { FolderTransferController } from './FolderTransferController';
 import { type FloatingFabPos, mountFloatingFab, unmountFloatingFab } from './floatingModeFab';
 import {
@@ -19,9 +18,10 @@ import {
 import { createFloatingTreeStoreActions } from './floatingPanelActions';
 import type { FolderDialogs } from './folderDialogs';
 import { folderDebugWarn } from './folderManagerDebug';
+import type { GeminiFolderReads } from './session/geminiFolderSession';
 
 type FloatingFolderUIOptions = {
-  store: FolderStore;
+  store: GeminiFolderReads;
   commands: FolderCommands;
   dialogs: FolderDialogs;
   transfer: FolderTransferController;

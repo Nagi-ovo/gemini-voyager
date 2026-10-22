@@ -16,9 +16,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
+import { FolderManager } from '@/pages/content/folder/__tests__/geminiFolderManager';
 import { mountSidebar } from '@/pages/content/folder/__tests__/sidebarRuntimeHarness';
 import { sidebarTree, sidebarTreeRoot } from '@/pages/content/folder/__tests__/sidebarTreeDriver';
-import { FolderManager } from '@/pages/content/folder/manager';
 import { historyTimestampStore } from '@/pages/content/timestamp/historyTimestamps';
 
 import fixture from './fixtures/geminiFolderData.json';

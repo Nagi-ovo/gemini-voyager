@@ -91,7 +91,11 @@ const PAGES: Readonly<Record<string, SitePage>> = {
   gemini: {
     siteId: 'gemini',
     url: 'https://gemini.google.com/app/abc123',
+    // The sidebar the folders mount into; without it they fall back to a floating panel later.
     markup:
+      '<chat-app class="side-nav-open"><div data-test-id="overflow-container"><div>' +
+      '<expandable-section storagekey="chats" data-test-id="chats-expandable-section">' +
+      '</expandable-section></div></div></chat-app>' +
       '<user-query><div class="user-query-container"><div class="user-query-bubble-with-background">' +
       `<p class="query-text-line">${QUESTION}</p></div></div></user-query>` +
       '<model-response><message-content><div class="markdown"><p>Answer</p>' +

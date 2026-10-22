@@ -18,11 +18,11 @@ import type { FolderSidebarRuntime } from '../FolderSidebarRuntime';
 import type { FolderSidebarView } from '../FolderSidebarView';
 import type { FolderStore } from '../FolderStore';
 import type { FolderTransferController } from '../FolderTransferController';
-import { FolderManager } from '../manager';
 import * as storageAdapters from '../storage/FolderStorageAdapter';
 import type { FolderData } from '../types';
 import { mockBrowser } from './accountScopedBackupMockBrowser';
 import { AIStudioFolderManager } from './aistudioFolderManager';
+import { FolderManager } from './geminiFolderManager';
 
 export type Platform = 'gemini' | 'aistudio';
 export type Internals = {

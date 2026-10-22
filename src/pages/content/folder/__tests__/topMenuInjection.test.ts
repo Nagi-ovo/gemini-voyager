@@ -5,9 +5,10 @@ import type { FolderData } from '@/core/types/folder';
 
 import type { FolderSidebarRuntime } from '../FolderSidebarRuntime';
 import type { FolderStore } from '../FolderStore';
-import { FolderManager } from '../manager';
 import { extractConversationInfoFromPage } from '../nativeConversationTitles';
 import * as storageAdapters from '../storage/FolderStorageAdapter';
+import { showGeminiAccount } from './geminiAccountControl';
+import { FolderManager } from './geminiFolderManager';
 import { mountSidebar, setLayout } from './sidebarRuntimeHarness';
 import { sidebarTree } from './sidebarTreeDriver';
 
@@ -139,6 +140,7 @@ describe('native move menu → folder command', () => {
     });
     manager = new FolderManager();
     owners = manager as unknown as ManagerOwners;
+    showGeminiAccount('a@example.com');
     await owners.store.setAccountIsolationEnabled(true);
     owners.store.data = {
       folders: [

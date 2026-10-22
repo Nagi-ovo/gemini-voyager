@@ -10,9 +10,9 @@ import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 import { confirmDriver } from '@/tests/confirmDriver';
 
 import { FolderStore } from '../FolderStore';
-import { FolderManager } from '../manager';
 import * as storageAdapters from '../storage/FolderStorageAdapter';
 import type { FolderData } from '../types';
+import { FolderManager } from './geminiFolderManager';
 import { mountSidebar } from './sidebarRuntimeHarness';
 
 vi.mock('webextension-polyfill', () => ({ default: chrome }));

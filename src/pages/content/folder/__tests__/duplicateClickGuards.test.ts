@@ -6,8 +6,8 @@ import { StorageKeys } from '@/core/types/common';
 
 import { startGeminiBatchDelete } from '../../batchDelete/gemini';
 import { deepActiveElement } from '../floatingTree/__tests__/treeDriver';
-import { FolderManager } from '../manager';
 import { createFolderViewHarness, resetFolderViewBrowserMocks } from './folderViewHarness';
+import { FolderManager } from './geminiFolderManager';
 import { mountSidebar } from './sidebarRuntimeHarness';
 import { sidebarTree, sidebarTreeRoot } from './sidebarTreeDriver';
 

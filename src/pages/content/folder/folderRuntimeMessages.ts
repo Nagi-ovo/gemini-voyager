@@ -14,6 +14,8 @@ export interface FolderRuntimeMessageStore {
   readonly canEdit: boolean;
   readonly data: FolderData;
   readonly accountScope: AccountScope | null;
+  /** False while the folders belong to another account than the page's: nothing is answered. */
+  readonly accountMatchesPage?: boolean;
   loadData(): Promise<void>;
 }
 
@@ -30,6 +32,11 @@ function respondWithStructureForAI(
 ): true {
   const { store } = options;
   folderDebug('Received AI structure request');
+  // Another account's folders, or none, must not seed a prompt whose answer is imported here.
+  if (store.accountMatchesPage === false) {
+    sendResponse({ ok: false });
+    return true;
+  }
   collectAllSidebarConversations(options.getSidebarContext)
     .then((sidebarConversations) => {
       sendResponse({ ok: true, sidebarConversations, folderData: store.data });

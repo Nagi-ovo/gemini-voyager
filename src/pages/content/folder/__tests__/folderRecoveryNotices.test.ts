@@ -6,7 +6,7 @@ import type { FolderData } from '@/core/types/folder';
 import { validateFolderData } from '@/features/folder/model/folderData';
 import { toastDriver } from '@/tests/toastDriver';
 
-import { FolderManager } from '../manager';
+import { FolderManager } from './geminiFolderManager';
 
 vi.mock('webextension-polyfill', () => ({ default: chrome }));
 

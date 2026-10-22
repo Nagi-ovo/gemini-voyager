@@ -104,23 +104,22 @@ describe('plugin table', () => {
     expect(rows).toEqual([]);
   });
 
-  it('ticks native folders on the row a plugin already has, and adds no row for them', () => {
-    const folders: SitePlugin = {
-      site: 'chatgpt',
+  it('ticks folders on each site whose plugin has them, on one row', () => {
+    const folders = (site: SitePlugin['site'], id: string, name: string): SitePlugin => ({
+      site,
       feature: 'folders',
-      manifest: manifest('voyager.chatgpt-folders', 'ChatGPT · Folders'),
-    };
+      manifest: manifest(id, name),
+    });
 
-    expect(ticked(featureRows([folders]))).toEqual([['folders', ['chatgpt', 'gemini']]]);
-    // AI Studio's folders are a plugin of their own on the same row.
-    const aistudio: SitePlugin = {
-      site: 'aistudio',
-      feature: 'folders',
-      manifest: manifest('voyager.aistudio-folders', 'AI Studio · Folders'),
-    };
-    expect(ticked(featureRows([folders, aistudio]))).toEqual([
-      ['folders', ['aistudio', 'chatgpt', 'gemini']],
-    ]);
+    expect(
+      ticked(
+        featureRows([
+          folders('chatgpt', 'voyager.chatgpt-folders', 'ChatGPT · Folders'),
+          folders('gemini', OFFICIAL_PLUGIN_IDS.geminiFolders, 'Gemini · Folders'),
+          folders('aistudio', OFFICIAL_PLUGIN_IDS.aistudioFolders, 'AI Studio · Folders'),
+        ]),
+      ),
+    ).toEqual([['folders', ['aistudio', 'chatgpt', 'gemini']]]);
     expect(featureRows([])).toEqual([]);
   });
 

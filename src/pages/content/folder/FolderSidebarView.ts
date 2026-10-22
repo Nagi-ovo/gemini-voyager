@@ -10,7 +10,6 @@ import type { FolderFeedback } from './FolderFeedback';
 import type { FolderNavigation } from './FolderNavigation';
 import type { FolderSelection } from './FolderSelection';
 import type { FolderSidebarRuntime } from './FolderSidebarRuntime';
-import type { FolderStore } from './FolderStore';
 import type { FolderTransferController } from './FolderTransferController';
 import type { FolderViewMode } from './activityView';
 import type { FolderDialogs } from './folderDialogs';
@@ -19,6 +18,7 @@ import {
   buildNativeConversationTitleMap,
   lookupNativeConversationTitle,
 } from './nativeConversationTitles';
+import type { GeminiFolderReads } from './session/geminiFolderSession';
 import { SidebarActivityList, ensureActivityListStyle } from './sidebarActivityList';
 import { type SidebarDropContext, bindRootDropZone } from './sidebarDrops';
 import { type FolderSearchCriteria, createSidebarFilter, searchCriteriaOf } from './sidebarFilter';
@@ -43,7 +43,7 @@ import { type SidebarTree, type SidebarTreeView, mountSidebarTree } from './side
 import type { ConversationReference } from './types';
 
 interface FolderSidebarViewOptions {
-  store: FolderStore;
+  store: GeminiFolderReads;
   commands: FolderCommands;
   runtime: FolderSidebarRuntime;
   selection: FolderSelection;

@@ -65,6 +65,7 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiBatchDelete: 'voyager.gemini-batch-delete',
   aistudioBatchDelete: 'voyager.aistudio-batch-delete',
   aistudioFolders: 'voyager.aistudio-folders',
+  geminiFolders: 'voyager.gemini-folders',
   geminiFormulaCopy: 'voyager.gemini-formula-copy',
   aistudioFormulaCopy: 'voyager.aistudio-formula-copy',
   geminiVimInput: 'voyager.gemini-vim-input',
@@ -146,6 +147,14 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     feature: 'batchDelete',
     officialPluginId: OFFICIAL_PLUGIN_IDS.aistudioBatchDelete,
     handlers: [],
+    healthTracking: false,
+  },
+  {
+    // Local plugins never get `folders` here (`packagedFoldersPolicy.ts`).
+    site: 'gemini',
+    feature: 'folders',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiFolders,
+    handlers: ['folders'],
     healthTracking: false,
   },
   {

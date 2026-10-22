@@ -87,7 +87,12 @@ export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding
   [OFFICIAL_PLUGIN_IDS.aistudioBatchDelete]: batchDeleteBinding(
     OFFICIAL_PLUGIN_IDS.aistudioBatchDelete,
   ),
-  // One folders switch for Gemini and AI Studio, on until turned off, as the native manager read it.
+  // One folders switch for Gemini and AI Studio, on until turned off, as the native managers read it.
+  [OFFICIAL_PLUGIN_IDS.geminiFolders]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiFolders,
+    StorageKeys.FOLDER_ENABLED,
+    onUnlessFalse,
+  ),
   [OFFICIAL_PLUGIN_IDS.aistudioFolders]: binding(
     OFFICIAL_PLUGIN_IDS.aistudioFolders,
     StorageKeys.FOLDER_ENABLED,

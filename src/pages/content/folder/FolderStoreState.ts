@@ -3,7 +3,7 @@
  * and what it says about the data, its session and the bound account.
  * `FolderStore` adds the edits on top.
  */
-import type { AccountScope } from '@/core/services/AccountIsolationService';
+import type { AccountContext, AccountScope } from '@/core/services/AccountIsolationService';
 import type { ConversationSortMode } from '@/features/folder/model/folderData';
 
 import type { FolderDataSession } from './FolderDataSession';
@@ -27,6 +27,13 @@ export interface FolderStoreOptions {
   onChange: (reason: FolderStoreChange) => void;
   onArchive: () => void;
   onRecovery: (result: 'recovered' | 'lost' | 'unreadable') => void;
+  /** A session was bound for `context` (`null` while isolation is off). */
+  onAccountBound?: (context: AccountContext | null) => void;
+  /**
+   * The owner's account gate: while it is false no edit runs, so nothing this
+   * page shows of another account is ever written. Open when omitted.
+   */
+  accountMatchesPage?: () => boolean;
 }
 
 export abstract class FolderStoreState {
@@ -43,6 +50,7 @@ export abstract class FolderStoreState {
       onExternalChange: () => void this.reloadFoldersFromStorage(),
       onAccountReleased: () => this.accountReleased(),
       isEnabled: () => this.options.getContext().enabled,
+      onAccountBound: (context) => this.options.onAccountBound?.(context),
     });
   }
 
@@ -60,8 +68,9 @@ export abstract class FolderStoreState {
   get session(): FolderDataSession | null {
     return this.repository.session;
   }
+  /** False while the owner's account gate is closed, whatever the repository says. */
   get canEdit(): boolean {
-    return this.repository.canEdit;
+    return this.repository.canEdit && (this.options.accountMatchesPage?.() ?? true);
   }
   get activation(): number {
     return this.repository.activation;

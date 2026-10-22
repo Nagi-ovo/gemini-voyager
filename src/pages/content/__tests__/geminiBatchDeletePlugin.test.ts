@@ -11,9 +11,9 @@ import { confirmDriver } from '@/tests/confirmDriver';
 
 import { admitBatchDelete } from '../batchDeleteStartup';
 import { NativeConversationMenus } from '../folder/NativeConversationMenus';
+import { FolderManager } from '../folder/__tests__/geminiFolderManager';
 import { mountSidebar } from '../folder/__tests__/sidebarRuntimeHarness';
 import { sidebarTree, sidebarTreeRoot } from '../folder/__tests__/sidebarTreeDriver';
-import { FolderManager } from '../folder/manager';
 import { registerBuiltinNativeHandlers } from '../pluginNativeRegistration';
 import { type LifecycleHarness, installLifecycleHarness } from './lifecycleHarness';
 

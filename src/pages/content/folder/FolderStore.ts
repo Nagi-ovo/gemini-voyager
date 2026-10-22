@@ -525,6 +525,15 @@ export class FolderStore extends FolderStoreState {
     this.options.onChange('title');
   }
 
+  /** Binds the page's account again, whatever the route says, and loads its folders. */
+  async rebindAccount(): Promise<void> {
+    await this.refreshAccountScope();
+    if (this.isDestroyed || !this.session) return;
+    await this.loadData();
+    this.backfillKnownConversationActivity();
+    this.options.onChange('title');
+  }
+
   async reloadScopedDataOnAccountRouteChange(): Promise<void> {
     if (!(await reloadForAccountRoute(this))) return;
     this.backfillKnownConversationActivity();

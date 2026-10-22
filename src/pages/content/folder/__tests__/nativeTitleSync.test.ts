@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { FolderSidebarRuntime } from '../FolderSidebarRuntime';
 import type { FolderStore } from '../FolderStore';
-import { FolderManager } from '../manager';
 import type { ConversationReference, FolderData } from '../types';
+import { FolderManager } from './geminiFolderManager';
 import { mountSidebar } from './sidebarRuntimeHarness';
 import { sidebarTree, sidebarTreeRoot } from './sidebarTreeDriver';
 

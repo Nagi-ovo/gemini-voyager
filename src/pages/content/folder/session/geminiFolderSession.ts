@@ -1,28 +1,37 @@
 /**
  * Gemini's folder data for one page: the folder store on Gemini's bucket (its
  * repository, account scope and Gemini edits), the commands that edit it, the
- * popup's cloud-sync and AI-structure answers, and the legacy sync-mode
- * migration. The content script's start point holds it for the page's
- * lifetime (`geminiFolderSessions.ts`), and Folder-as-Project files new chats
- * through it; the folder manager attaches as its view and draws the folders.
+ * popup's cloud-sync and AI-structure answers, the legacy sync-mode migration
+ * and the account's `/u/<n>/` route. The content script's start point holds it
+ * for the page's lifetime (`geminiFolderSessions.ts`), so all of that runs
+ * with the folders off; Folder-as-Project files new chats through it, and the
+ * folders plugin's view attaches while it runs.
  *
- * Every read and edit from outside the folder UI goes through this object
- * (`commands`, `canEdit`, `data`, the Folder-as-Project port and the popup's
- * answers), so a check that the bound account is still the page's can sit here
- * once.
+ * One account gate (`accountMatchesPage`): with isolation on, the folders are
+ * shown, edited, uploaded and answered to the popup only while the account
+ * the store bound is the one the page shows (`geminiAccountRoute.ts`). While
+ * they differ, or the page's account cannot be read, `data` is empty,
+ * `canEdit` false, `accountScope` and `dataSession` null, and every command
+ * and store edit is refused before it runs; nothing reads that empty view to
+ * write it back. A route change, attaching a view and a poll rebind the
+ * page's account, and the folders come back.
  */
 import type { AccountScope } from '@/core/services/AccountIsolationService';
 import { createToaster } from '@/core/ui/toast/toaster';
-import type { FolderCommands } from '@/features/folder/commands/folderCommands';
+import { type FolderCommands, failed } from '@/features/folder/commands/folderCommands';
 import type { ConversationSortMode } from '@/features/folder/model/folderData';
+import { initI18n } from '@/utils/i18n';
 
+import { watchRouteChanges } from '../../utils/routeWatcher';
+import type { FolderDataSession } from '../FolderDataSession';
 import { LEVEL_MS } from '../FolderFeedback';
 import { FolderStore, type FolderStoreChange } from '../FolderStore';
-import { migrateLegacySyncMode } from '../folderManagerSettings';
 import { getFolderRecoveryNotice } from '../folderRecoveryNotice';
 import { listenForFolderRuntimeMessages } from '../folderRuntimeMessages';
 import { createLegacyFolderCommands } from '../legacyFolderCommands';
+import { migrateLegacySyncMode } from '../legacySyncMode';
 import type { Folder, FolderData } from '../types';
+import { geminiAccountFingerprint, geminiPageAccountFingerprint } from './geminiAccountRoute';
 
 /** What the folders' view, while attached, tells the session and is told by it. */
 export interface GeminiFolderView {
@@ -36,44 +45,118 @@ export interface GeminiFolderView {
   refresh(): void;
 }
 
-const DETACHED = { enabled: false, sidebar: null, sortMode: 'manual' } as const;
+/** What the folder UI reads: the gated data, and whether it may edit now. */
+export interface GeminiFolderReads {
+  readonly data: FolderData;
+  readonly canEdit: boolean;
+  /** Changes on every account rebind, including a return to the same account. */
+  readonly activation: number;
+  readonly accountIsolationEnabled: boolean;
+}
 
-export class GeminiFolderSession {
+const DETACHED = { enabled: false, sidebar: null, sortMode: 'manual' } as const;
+/** How often a page with isolation on checks that the bound account is still the page's. */
+const ACCOUNT_POLL_MS = 1200;
+/** Rebinds `attach` tries while the page keeps switching; past them the poll takes over. */
+const MAX_BIND_ROUNDS = 3;
+
+const emptyData = (): FolderData => ({ folders: [], folderContents: {} });
+
+export class GeminiFolderSession implements GeminiFolderReads {
   private view: GeminiFolderView | null = null;
   private closed = false;
+  private started = false;
   private stopListening: (() => void) | null = null;
+  private stopRouteWatch: (() => void) | null = null;
+  private poll: number | null = null;
+  /** The account the store bound (`geminiAccountFingerprint`); null while none is known. */
+  private boundFingerprint: string | null = null;
+  /** The gate's state when the view was last told. */
+  private shownGateOpen = true;
+  private binding: Promise<void> | null = null;
   /** Shows notices while no view is attached; a view shows its own. */
   private toaster: ReturnType<typeof createToaster> | null = null;
 
+  /** The store itself; the folder UI and every outside reader go through the session. */
   readonly store = new FolderStore({
     getContext: () => this.view?.context() ?? DETACHED,
-    onChange: (reason) => this.view?.onChange(reason),
+    onChange: (reason) => this.changed(reason),
     onArchive: () => this.view?.onArchive(),
     onRecovery: (result) => this.recovered(result),
+    onAccountBound: (context) => {
+      this.boundFingerprint = geminiAccountFingerprint(context);
+    },
+    accountMatchesPage: () => this.accountMatchesPage,
   });
-  readonly commands: FolderCommands = createLegacyFolderCommands(this.store);
+  /** Every edit and import; each is refused, unwritten, while the account gate is closed. */
+  readonly commands: FolderCommands = this.gated(createLegacyFolderCommands(this.store));
 
+  /**
+   * The account gate: whether the account the store bound is the one the page
+   * shows now. Always open with isolation off, where one bucket serves every
+   * account.
+   */
+  get accountMatchesPage(): boolean {
+    if (!this.store.accountIsolationEnabled) return true;
+    if (!this.store.session || this.boundFingerprint === null) return false;
+    return this.boundFingerprint === geminiPageAccountFingerprint();
+  }
+
+  /** The folders to show; none while the account gate is closed. */
   get data(): FolderData {
-    return this.store.data;
+    return this.accountMatchesPage ? this.store.data : emptyData();
   }
   get canEdit(): boolean {
     return this.store.canEdit;
   }
   get accountScope(): AccountScope | null {
-    return this.store.accountScope;
+    return this.accountMatchesPage ? this.store.accountScope : null;
+  }
+  /** The bound data session, which transfers write through; null while the gate is closed. */
+  get dataSession(): FolderDataSession | null {
+    return this.accountMatchesPage ? this.store.session : null;
+  }
+  get activation(): number {
+    return this.store.activation;
+  }
+  get accountIsolationEnabled(): boolean {
+    return this.store.accountIsolationEnabled;
+  }
+  /** The active bucket's key, which pending native deletes check against. */
+  get storageKey(): string {
+    return this.store.storageKey;
   }
 
-  /** Binds the account and loads the folders, then answers the popup. */
+  /** Binds the account and loads the folders, then answers the popup and follows the route. */
   async init(): Promise<void> {
+    // Notices shown while the folders load speak the page's language.
+    void initI18n().catch(() => {});
     await this.store.init();
     if (this.closed) return;
     this.listen();
+    // The account follows the route with the folders off too: Folder-as-Project files into it.
+    this.stopRouteWatch = watchRouteChanges(() => void this.followRoute());
+    this.started = true;
+    this.syncPoll();
     void migrateLegacySyncMode();
   }
 
-  /** The view shows the folders from now on; the store reads its context. */
-  attach(view: GeminiFolderView): void {
-    if (!this.closed) this.view = view;
+  /**
+   * Shows the folders in `view` from now on, once the account they belong to
+   * is the page's: an account the page switched to while the folders were
+   * off, before anything rebound, is bound first.
+   */
+  async attach(view: GeminiFolderView): Promise<void> {
+    if (this.closed || this.view === view) return;
+    this.view = view;
+    this.shownGateOpen = this.accountMatchesPage;
+    // Before start-up finished, `init` binds the account itself.
+    if (!this.started) return;
+    // A resolution binds the account it started for, though the page may have moved on.
+    for (let round = 0; round < MAX_BIND_ROUNDS && !this.accountMatchesPage; round++) {
+      if (this.view !== view || this.closed) return;
+      if (!(await this.rebind())) return;
+    }
   }
 
   detach(view: GeminiFolderView): void {
@@ -98,9 +181,35 @@ export class GeminiFolderSession {
     return this.store.loadData();
   }
 
-  /** Follows the page's `/u/<n>/` route to that account's folders. */
-  reloadForAccountRoute(): Promise<void> {
-    return this.store.reloadScopedDataOnAccountRouteChange();
+  /** Follows the page's `/u/<n>/` route, then makes sure the page's account is the bound one. */
+  async followRoute(): Promise<void> {
+    if (this.closed) return;
+    this.tellIfGateMoved();
+    await this.store.reloadScopedDataOnAccountRouteChange();
+    await this.rebind();
+  }
+
+  // The folder view's reads and its activity tracking.
+
+  hasStoredConversations(): boolean {
+    return this.accountMatchesPage && this.store.hasStoredConversations();
+  }
+
+  isConversationInFolders(conversationId: string, revision?: object): boolean {
+    return this.accountMatchesPage && this.store.isConversationInFolders(conversationId, revision);
+  }
+
+  /** Lands an edit still waiting on the debounce. */
+  flush(): void {
+    this.store.flushPendingSaveData();
+  }
+
+  startActivity(): Promise<void> {
+    return this.store.initializeConversationActivityTracking();
+  }
+
+  stopActivity(): void {
+    this.store.teardownConversationActivityTracking();
   }
 
   // Folder-as-Project's port: the folders to pick from, and filing the new chat.
@@ -136,9 +245,63 @@ export class GeminiFolderSession {
     this.view = null;
     this.stopListening?.();
     this.stopListening = null;
+    this.stopRouteWatch?.();
+    this.stopRouteWatch = null;
+    this.syncPoll();
     this.toaster?.destroy();
     this.toaster = null;
     return this.store.destroy();
+  }
+
+  /**
+   * Binds the page's account when it is known and not the bound one. Resolves
+   * whether a bind ran; one runs at a time, and a page without a readable
+   * account binds nothing.
+   */
+  private async rebind(): Promise<boolean> {
+    if (this.binding) {
+      await this.binding;
+      return true;
+    }
+    if (this.closed || !this.store.accountIsolationEnabled) return false;
+    const page = geminiPageAccountFingerprint();
+    if (page === null || (this.store.session && page === this.boundFingerprint)) return false;
+    this.binding = this.store.rebindAccount().finally(() => {
+      this.binding = null;
+    });
+    await this.binding;
+    this.tellIfGateMoved();
+    return true;
+  }
+
+  private changed(reason: FolderStoreChange): void {
+    if (reason === 'account') this.syncPoll();
+    if (reason === 'account' || reason === 'loaded' || reason === 'data') {
+      this.shownGateOpen = this.accountMatchesPage;
+    }
+    this.view?.onChange(reason);
+  }
+
+  /** The gate opened or closed since the view was last told: it shows what the gate allows now. */
+  private tellIfGateMoved(): void {
+    const open = this.accountMatchesPage;
+    if (open === this.shownGateOpen) return;
+    this.shownGateOpen = open;
+    this.view?.onChange('account');
+  }
+
+  /** Polls the page's account while isolation is on; stops with isolation off or on close. */
+  private syncPoll(): void {
+    const wanted = this.started && !this.closed && this.store.accountIsolationEnabled;
+    if (wanted && this.poll === null) {
+      this.poll = window.setInterval(() => {
+        this.tellIfGateMoved();
+        if (!this.accountMatchesPage) void this.rebind();
+      }, ACCOUNT_POLL_MS);
+    } else if (!wanted && this.poll !== null) {
+      window.clearInterval(this.poll);
+      this.poll = null;
+    }
   }
 
   private recovered(result: 'recovered' | 'lost' | 'unreadable'): void {
@@ -149,5 +312,17 @@ export class GeminiFolderSession {
     const { message, tone } = getFolderRecoveryNotice(result);
     this.toaster ??= createToaster();
     this.toaster.show({ message, tone, durationMs: LEVEL_MS[tone] });
+  }
+
+  /** `commands` behind the account gate: a closed gate refuses every op before it runs. */
+  private gated(commands: FolderCommands): FolderCommands {
+    const refused = () => Promise.resolve(failed('read_only'));
+    return {
+      ...commands,
+      status: () => (this.accountMatchesPage ? commands.status() : 'read_only'),
+      view: () => this.data,
+      run: (body) => (this.accountMatchesPage ? commands.run(body) : refused()),
+      runBulk: (body) => (this.accountMatchesPage ? commands.runBulk(body) : refused()),
+    };
   }
 }

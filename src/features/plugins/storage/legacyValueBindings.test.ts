@@ -170,8 +170,22 @@ describe('legacy value bindings', () => {
         StorageKeys.GV_GEMS_SIDEBAR_COUNT,
         StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY,
         StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO,
+        StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS,
       ].sort(),
     );
+  });
+
+  it("hides Gemini's filed chats only with Gemini's own switch stored true", () => {
+    const id = 'voyager.gemini-folders';
+    const key = StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS;
+    expect(deriveLegacyValueSettings(id, {})).toEqual({ hideFiledChats: false });
+    expect(
+      deriveLegacyValueSettings(id, {
+        [StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO]: true,
+      }),
+    ).toEqual({ hideFiledChats: false });
+    expect(deriveLegacyValueSettings(id, { [key]: 'true' })).toEqual({ hideFiledChats: false });
+    expect(deriveLegacyValueSettings(id, { [key]: true })).toEqual({ hideFiledChats: true });
   });
 
   it("hides AI Studio's filed prompts only with AI Studio's own switch stored true", () => {

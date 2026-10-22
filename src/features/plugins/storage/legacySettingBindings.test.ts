@@ -76,6 +76,18 @@ describe('legacy enable bindings', () => {
       [StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED]: false,
     });
   });
+  it('keeps both folders plugins on the one Folders card switch, whatever the plugin state says', () => {
+    for (const id of [OFFICIAL_PLUGIN_IDS.geminiFolders, OFFICIAL_PLUGIN_IDS.aistudioFolders]) {
+      for (const stored of [undefined, true, false]) {
+        const snapshot = { [StorageKeys.FOLDER_ENABLED]: stored };
+        expect(resolveEffectiveEnabled({ [id]: { enabled: stored === false } }, snapshot, id)).toBe(
+          stored !== false,
+        );
+      }
+      expect(legacyEnableWrite(id, false)).toEqual({ [StorageKeys.FOLDER_ENABLED]: false });
+    }
+  });
+
   it('derives sidebar width only from a customized initial width and preserves explicit switches', () => {
     const id = OFFICIAL_PLUGIN_IDS.geminiSidebarWidth;
     const key = StorageKeys.SIDEBAR_WIDTH_ENABLED;
@@ -163,6 +175,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.CHAT_WIDTH,
         StorageKeys.EDIT_INPUT_WIDTH,
         StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO,
+        StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS,
       ].sort(),
     );
     expect(legacyBindingFor(FORMULA_G)?.key).toBe(legacyBindingFor(FORMULA_A)?.key);

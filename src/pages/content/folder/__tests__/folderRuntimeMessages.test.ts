@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { FolderStore } from '../FolderStore';
-import { FolderManager } from '../manager';
 import type { FolderData } from '../types';
+import { FolderManager } from './geminiFolderManager';
 
 const { mockBrowser } = vi.hoisted(() => ({
   mockBrowser: {
@@ -38,7 +38,6 @@ type TestableManager = {
   /** The page's folder session, which answers the popup. */
   session: { listen(): void };
   setupStorageListener(): void;
-  refresh(): void;
 };
 
 function makeManager(): { manager: FolderManager; internals: TestableManager } {
@@ -109,7 +108,9 @@ describe('folder runtime message lifecycle', () => {
       internals.setupStorageListener();
 
       const loadSpy = vi.spyOn(internals.store, 'loadData').mockResolvedValue(undefined);
-      const refreshSpy = vi.spyOn(internals, 'refresh').mockImplementation(() => {});
+      // The folders' view shows what the reload brought.
+      const view = m.view as unknown as { refresh(): void };
+      const refreshSpy = vi.spyOn(view, 'refresh').mockImplementation(() => {});
       const sendResponse = vi.fn();
 
       const listener = getMessageListener(internals);

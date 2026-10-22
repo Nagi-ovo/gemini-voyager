@@ -16,12 +16,16 @@ The folder manager allows users to:
 ## Change the owner of the behavior
 
 Gemini's folder data is a session the page holds for its lifetime
-([`session/geminiFolderSession.ts`](session/geminiFolderSession.ts), opened by `index.ts`): the
-store, its commands, the popup's cloud-sync and AI-structure answers and the legacy sync-mode
-migration, which run with folders off. Folder-as-Project files chats through it
-(`ensureDataLoaded`, `getFolders`, `addConversationToFolderFromNative`). `manager.ts` attaches to
-it as its view and composes the Gemini owners with native menus and the floating panel. Start
-changes at the owner below.
+([`session/geminiFolderSession.ts`](session/geminiFolderSession.ts), opened by
+[`geminiFolderStartup.ts`](../geminiFolderStartup.ts), which also admits the folders plugin): the
+store, its commands, the account's `/u/<n>/` route and account gate, the popup's cloud-sync and
+AI-structure answers and the legacy sync-mode migration, which run with folders off.
+Folder-as-Project files chats through it (`ensureDataLoaded`, `getFolders`,
+`addConversationToFolderFromNative`). The packaged `voyager.gemini-folders` plugin shows it: its
+view ([`verbs/folders/gemini/view.ts`](../../../features/plugins/verbs/folders/gemini/view.ts))
+attaches to the session and composes the Gemini owners below with native menus and the floating
+panel. The Folders card switch (`geminiFolderEnabled`) turns the plugin on and off. Start changes
+at the owner below.
 
 | Responsibility                   | Entry point                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -44,11 +48,12 @@ changes at the owner below.
 | Native menus and deletion        | [`NativeConversationMenus.ts`](NativeConversationMenus.ts): menu injection, confirmation identity and settlement checks; callbacks change data through the store.                                                                                                                                                                                                                                                                                                                                                                                                              |
 | Browser storage                  | [`storage/FolderStorageAdapter.ts`](storage/FolderStorageAdapter.ts): Safari durable storage and Chromium mirror behavior.                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | Other hosts and views            | [`aistudio.ts`](aistudio.ts) (see [AI Studio](#ai-studio)), [`floatingPanel.ts`](floatingPanel.ts); shared schema/session, separate host integration.                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Gem metadata and startup         | [`gemConfig.ts`](gemConfig.ts), [`index.ts`](index.ts).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Gem metadata and startup         | [`gemConfig.ts`](gemConfig.ts), [`geminiFolderStartup.ts`](../geminiFolderStartup.ts).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
-Test data invariants and scheduling at their owner. Keep account transitions and manager wiring in
-integration tests. UI tests can compose real owners with memory storage using
-[`folderViewHarness.ts`](__tests__/folderViewHarness.ts). Do not pass the entire manager into a
+Test data invariants and scheduling at their owner. Keep account transitions and view wiring in
+integration tests ([`geminiFolderManager.ts`](__tests__/geminiFolderManager.ts) composes the session
+and the view as the page does). UI tests can compose real owners with memory storage using
+[`folderViewHarness.ts`](__tests__/folderViewHarness.ts). Do not pass the entire view into a
 module or add production wrappers solely to preserve a private test interface.
 
 Account changes, sidebar remounts and destruction have different lifetimes:

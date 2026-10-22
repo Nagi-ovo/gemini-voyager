@@ -53,9 +53,10 @@ describe('feature owners', () => {
         'sendShortcut',
         'draftSave',
         'turnNavigator',
+        'folders',
       ]),
     );
-    // AI Studio's folders are its official plugin's; local plugins stay refused (packagedFoldersPolicy).
+    // Folders on both are their official plugins'; local plugins stay refused (packagedFoldersPolicy).
     expect(pluginOwnedHandlers('aistudio')).toEqual(
       new Set(['formulaCopy', 'sendShortcut', 'folders']),
     );
