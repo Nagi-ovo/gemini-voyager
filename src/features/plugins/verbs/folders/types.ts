@@ -11,6 +11,7 @@ import type { FolderCommands } from '@/features/folder/commands/folderCommands';
 import type { FolderSitePolicy } from '@/features/folder/owner/folderOwnerPolicy';
 import type { FolderPlatform } from '@/features/folder/platforms';
 import type { FiledConversations } from '@/features/folder/sites/filings';
+import type { FolderSiteTree } from '@/features/folder/sites/folderSiteTable';
 import type { FolderExportPayload } from '@/features/folder/types/import-export';
 import type { SiteFolderNotify, SiteFolderStore } from '@/pages/content/folder/SiteFolderStore';
 
@@ -56,6 +57,8 @@ export interface SectionSite {
   anchor(sidebar: HTMLElement): HTMLElement | null;
   conversationHref(conversation: ConversationReference): string;
   readonly policy: FolderSitePolicy;
+  /** The core table's orders, root heading and refused edits. */
+  readonly tree: FolderSiteTree;
 }
 
 /** Hiding filed chats from the site's history list. */

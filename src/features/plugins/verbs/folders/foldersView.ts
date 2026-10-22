@@ -35,6 +35,7 @@ import { type SiteFolderPanelPrefs, savePanelPrefs } from './panelPrefs';
 import type { DroppedConversation } from './rowDrag';
 import { mountSiteSection } from './sectionMount';
 import { type SiteFolderSectionPrefs, saveSectionPrefs } from './sectionPrefs';
+import { permittedTreeActions } from './treeSite';
 import type { SiteFoldersAdapter, SiteFoldersStore } from './types';
 
 export class SiteFoldersView {
@@ -315,13 +316,16 @@ export class SiteFoldersView {
 
   /** What both the panel and the sidebar section do on a tree gesture. */
   private treeActions(): TreeActions {
-    return {
-      ...createCommandTreeActions(this.commands),
-      onNavigate: (conversation) => this.site.page.open(conversation),
-      confirmFolderRemoval: this.dialogs.confirmFolderRemoval,
-      confirmConversationRemoval: this.dialogs.confirmConversationRemoval,
-      onAddCurrentConversation: (folderId) => this.addCurrent(folderId),
-    };
+    return permittedTreeActions(
+      {
+        ...createCommandTreeActions(this.commands),
+        onNavigate: (conversation) => this.site.page.open(conversation),
+        confirmFolderRemoval: this.dialogs.confirmFolderRemoval,
+        confirmConversationRemoval: this.dialogs.confirmConversationRemoval,
+        onAddCurrentConversation: (folderId) => this.addCurrent(folderId),
+      },
+      this.site.section.tree,
+    );
   }
 
   private unmountPanel(): void {

@@ -164,6 +164,7 @@ export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAda
       anchor: dom.anchor,
       conversationHref,
       policy,
+      tree: row.tree,
     },
     hideFiled,
     guide: {

@@ -52,6 +52,7 @@ import {
   showSectionHeaderPrefs,
 } from './sectionHeader';
 import type { SiteFolderSectionPrefs } from './sectionPrefs';
+import { treeSiteOf } from './treeSite';
 import type { SectionSite } from './types';
 
 /**
@@ -69,6 +70,7 @@ function baseTreeSite(site: SectionSite): TreeSiteOptions {
     conversationHref: site.conversationHref,
     folderToggleDelayMs: FOLDER_TOGGLE_DELAY_MS,
     conversationIdentity: site.policy,
+    ...treeSiteOf(site.tree),
   };
 }
 
