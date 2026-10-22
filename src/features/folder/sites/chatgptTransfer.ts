@@ -1,7 +1,7 @@
 import type { FolderData } from '@/core/types/folder';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
 
-import { readChatGptConversation } from './chatgptIdentity';
+import { CHATGPT_IDENTITY, CHATGPT_ORIGIN } from './chatgptIdentity';
 import {
   type SiteExportRead,
   type SiteFolderExportPayload,
@@ -16,19 +16,19 @@ export type ChatGptFolderExportPayload = SiteFolderExportPayload<typeof CHATGPT_
 
 export type ChatGptImportOutcome = SiteImportOutcome;
 
-const TRANSFER = createSiteTransfer({
+/** ChatGPT's folder file; imports require the canonical host, though navigation accepts the legacy one. */
+export const CHATGPT_TRANSFER = createSiteTransfer({
   platform: CHATGPT_EXPORT_PLATFORM,
-  // Imports require the canonical host, even though navigation accepts the legacy redirect.
-  origin: 'https://chatgpt.com',
-  read: readChatGptConversation,
+  origin: CHATGPT_ORIGIN,
+  read: CHATGPT_IDENTITY.read,
 });
 
 export function exportChatGptFolders(data: FolderData): ChatGptFolderExportPayload {
-  return TRANSFER.export(data);
+  return CHATGPT_TRANSFER.export(data);
 }
 
 export function chatgptFolderExportFilename(now: Date = new Date()): string {
-  return TRANSFER.filename(now);
+  return CHATGPT_TRANSFER.filename(now);
 }
 
 /** Validates a ChatGPT folder file before an import or cloud restore can write it. */
@@ -36,7 +36,7 @@ export function readChatGptFolderExport(
   raw: unknown,
   strategy: ImportStrategy = 'merge',
 ): SiteExportRead {
-  return TRANSFER.read(raw, strategy);
+  return CHATGPT_TRANSFER.read(raw, strategy);
 }
 
 /** Merges a folder file into `current`. Nothing is written here; the caller persists `data`. */
@@ -44,5 +44,5 @@ export function importChatGptFolders(
   raw: unknown,
   current: FolderData,
 ): Promise<ChatGptImportOutcome> {
-  return TRANSFER.importInto(raw, current);
+  return CHATGPT_TRANSFER.importInto(raw, current);
 }

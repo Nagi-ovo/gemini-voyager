@@ -61,7 +61,7 @@ export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAda
   const panel = row?.prefs.keys.panel;
   const sectionPrefs = row?.prefs.keys.section;
   if (!section || !row?.messages || !row.guideId || !route || !panel || !sectionPrefs) return null;
-  const { identity, transfer } = route;
+  const { identity, transfer, overrides } = route;
   const { site, policy, config, messages } = row;
   const dom = createSectionDom(section, identity);
   const placeholders = new Set(section.page.placeholderTitles.any ?? []);
@@ -96,6 +96,7 @@ export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAda
         store,
         policy,
         importInto: transfer.importInto,
+        overrides,
         readConversation: identity.read,
       });
       return { store, commands };
