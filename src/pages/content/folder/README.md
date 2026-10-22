@@ -65,23 +65,8 @@ file length alone is not a reason to add another layer.
 
 ### AI Studio
 
-[`aistudio.ts`](aistudio.ts) is the adapter: it binds `FolderRepository` (AI Studio config, chrome.storage
-adapter) to the page and owns the three lifetimes. Account release resets the tree, dialogs and library
-selection; a nav rebuild re-injects the panel; `destroy()` stops everything except the settings and
-runtime-message listeners. The other modules take explicit host callbacks, never the manager.
-
-| Responsibility                      | Module                                                                                                                                          |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Folder tree, edits and drops        | [`aistudioTree.ts`](aistudioTree.ts): the shared floating tree in the nav, `aistudioTreeActions`, `placePrompt`                                 |
-| Panel frame and mount               | [`aistudioPanel.ts`](aistudioPanel.ts): header actions, legacy/V2 insertion, remount watch                                                      |
-| Account scope                       | [`aistudioAccountScope.ts`](aistudioAccountScope.ts): isolation setting, `/u/<n>`+email fingerprint, 1200 ms poll                               |
-| Left-nav prompt history             | [`aistudioPromptHistory.ts`](aistudioPromptHistory.ts), [`aistudioPromptLinks.ts`](aistudioPromptLinks.ts): drag sources, titles, active prompt |
-| /library page                       | [`aistudioLibraryPage.ts`](aistudioLibraryPage.ts) over table, selection, batch delete and drop-zone modules                                    |
-| Hide archived                       | [`aistudioHideArchived.ts`](aistudioHideArchived.ts)                                                                                            |
-| Drive sync, import/export, messages | [`aistudioTransfer.ts`](aistudioTransfer.ts), [`aistudioImport.ts`](aistudioImport.ts)                                                          |
-
-Sidebar width is owned separately by the official [`aistudioSidebarWidth/pluginHandler.ts`](../aistudioSidebarWidth/pluginHandler.ts)
-plugin. Turning it off restores native nav layout and leaves the folder manager running.
+AI Studio's folders (the session the page holds, the plugin's view, and where each responsibility
+lives) are described in [`verbs/folders/aistudio/README.md`](../../../features/plugins/verbs/folders/aistudio/README.md).
 
 ## Adding Support for New Gems
 
