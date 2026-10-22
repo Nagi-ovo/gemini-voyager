@@ -6,8 +6,8 @@
  * their data with folders switched off; the folders primitive takes a second
  * lease for its UI. On catalog sites the primitive's lease is the only one.
  *
- * The last release closes the store and resolves only after its accepted writes
- * drained (`FolderRepository.destroy`). A site opened again meanwhile builds
+ * The last release closes the store and resolves only after its start-up settled
+ * and its accepted writes drained (`FolderRepository.destroy`). A site opened again meanwhile builds
  * its new store at once but starts it only after that drain, so two
  * repositories never read or write one bucket at the same time: an off/on of
  * the plugin cannot load stale data over a write still landing.
@@ -67,12 +67,18 @@ export function createFolderSessions<S extends FolderSessionStore>(
   function close(site: FolderPlatform, session: Session<S>): Promise<void> {
     session.closed = true;
     if (open.get(site) === session) open.delete(site);
-    const previous = draining.get(site) ?? Promise.resolve();
-    const drain = previous
-      .then(() => session.store.close())
-      .catch((error: unknown) => {
-        logger.warn('Folder session drain failed', { site, error: String(error) });
-      });
+    // Stop at once, so start-up bails at its next check, but admit a successor only once
+    // both settled: a migration in flight writes after the drain of accepted saves resolved.
+    // `ready` already waits for the drain before this session's.
+    const drain = Promise.allSettled([session.ready, session.store.close()]).then(
+      ([started, stopped]) => {
+        for (const result of [started, stopped]) {
+          if (result.status === 'rejected') {
+            logger.warn('Folder session drain failed', { site, error: String(result.reason) });
+          }
+        }
+      },
+    );
     draining.set(site, drain);
     void drain.then(() => {
       if (draining.get(site) === drain) draining.delete(site);

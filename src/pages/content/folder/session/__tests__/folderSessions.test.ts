@@ -214,3 +214,68 @@ describe('an account switch before the drain', () => {
     expect(memory.values.local.has(base)).toBe(false);
   });
 });
+
+describe('a release during start-up', () => {
+  it('a lease released mid-migration starts no successor until that migration settled', async () => {
+    vi.spyOn(accountIsolationService, 'isIsolationEnabled').mockResolvedValue(true);
+    vi.spyOn(accountIsolationService, 'resolveAccountScope').mockResolvedValue({
+      accountKey: 'a',
+      accountId: 0,
+      routeUserId: '0',
+      emailHash: null,
+    });
+    const base = GEMINI_FOLDER_CONFIG.storageKey;
+    // No account bucket yet: the first load migrates the legacy global bucket into it.
+    memory.values.local.set(base, data('Legacy'));
+    const get = memory.api.local.get.bind(memory.api.local) as (
+      keys: unknown,
+    ) => Promise<Record<string, unknown>>;
+    const heldReads: Array<() => void> = [];
+    let holdLegacyRead = true;
+    vi.spyOn(memory.api.local, 'get').mockImplementation(async (keys: unknown) => {
+      if (holdLegacyRead && keys === base) {
+        holdLegacyRead = false;
+        await new Promise<void>((resolve) => heldReads.push(resolve));
+      }
+      return get(keys);
+    });
+
+    const order: string[] = [];
+    let generation = 0;
+    const folders = createFolderSessions(() => {
+      const id = ++generation;
+      const repository = new FolderRepository(
+        GEMINI_FOLDER_CONFIG,
+        new AIStudioFolderStorageAdapter(),
+        {
+          onChange: () => {},
+          onRecovery: () => {},
+          onExternalChange: () => void repository.loadData(),
+          onAccountReleased: () => {},
+          isEnabled: () => true,
+        },
+      );
+      return {
+        init: async () => {
+          order.push(`init${id}`);
+          await repository.init();
+          order.push(`init${id} settled`);
+        },
+        close: () => repository.destroy(),
+      };
+    });
+
+    const first = folders.open('gemini');
+    await vi.waitFor(() => expect(heldReads).toHaveLength(1));
+    const released = first.release();
+    const second = folders.open('gemini');
+    await settle(30);
+    expect(order).toEqual(['init1']);
+
+    heldReads.shift()?.();
+    await released;
+    await second.ready;
+    expect(order).toEqual(['init1', 'init1 settled', 'init2', 'init2 settled']);
+    await second.release();
+  });
+});
