@@ -15,6 +15,7 @@
  * drop targets file it; the link drag itself goes on as before.
  */
 import type { ConversationReference } from '@/core/types/folder';
+import { isUserEvent } from '@/core/utils/userEvent';
 import type { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { VOYAGER_DRAG_MIME } from '@/pages/content/folder/dragPayload';
 import {
@@ -105,6 +106,11 @@ export function bindSidebarRowDrag(scope: PluginScope, options: RowDragOptions):
     transfer.setData(VOYAGER_DRAG_MIME, JSON.stringify({ type: 'conversation', ...conversation }));
   };
 
+  // ChatGPT dispatches its own pointercancel on every press, to end a drag it thinks is stuck.
+  const cancel = (event: PointerEvent): void => {
+    if (isUserEvent(event)) abort();
+  };
+
   const escape = (event: KeyboardEvent): void => {
     if (event.key === 'Escape') abort();
   };
@@ -112,7 +118,7 @@ export function bindSidebarRowDrag(scope: PluginScope, options: RowDragOptions):
   scope.on(window, 'pointerdown', press, { capture: true });
   scope.on(window, 'pointermove', move, { capture: true });
   scope.on(window, 'pointerup', release, { capture: true });
-  scope.on(window, 'pointercancel', abort, { capture: true });
+  scope.on(window, 'pointercancel', cancel, { capture: true });
   scope.on(window, 'dragstart', nativeDrag, { capture: true });
   scope.on(window, 'keydown', escape, { capture: true });
   scope.on(window, 'blur', abort);

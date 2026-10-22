@@ -20,6 +20,12 @@ import { initI18n } from '@/utils/i18n';
 import { type SidebarFixture, makeRows, mountSidebarFixture } from './chatgptSidebarFixture';
 import { activateChatGptFolders } from './chatgptSite';
 
+// Every event a test dispatches stands in for the browser's, except the page's own.
+const pageEvents = vi.hoisted(() => new WeakSet<Event>());
+vi.mock('@/core/utils/userEvent', () => ({
+  isUserEvent: (event: Event) => !pageEvents.has(event),
+}));
+
 vi.mock('webextension-polyfill', () => ({
   default: {
     get storage() {
@@ -249,6 +255,26 @@ describe('dragging a ChatGPT sidebar row onto a folder', () => {
     expect(stored().folderContents.work).toEqual([]);
     expect(view.outline()).toEqual(['Work', 'Trips', `  · ${TARGET.title}`]);
     expect(status()).toBe('Added to folder.');
+  });
+
+  it('still files a row when ChatGPT cancels a stale drag on the press', async () => {
+    const { view } = await activate();
+    // As ChatGPT does: on every press, a pointercancel of its own for that pointer.
+    const cancelStale = (event: PointerEvent): void => {
+      const stale = new PointerEvent('pointercancel', {
+        bubbles: true,
+        pointerId: event.pointerId,
+      });
+      pageEvents.add(stale);
+      document.dispatchEvent(stale);
+    };
+    document.addEventListener('pointerdown', cancelStale, true);
+
+    dragRowOnto(TARGET.id, view.folderNameElement('Trips'));
+    document.removeEventListener('pointerdown', cancelStale, true);
+    await nextPass();
+
+    expect(stored().folderContents.trips).toEqual([expect.objectContaining(FILED)]);
   });
 
   it('puts the row after what the folder already holds, as on Gemini', async () => {
