@@ -7,10 +7,10 @@ import {
   exportChatGptFolders,
   importChatGptFolders,
 } from '@/features/folder/sites/chatgptTransfer';
+import { CHATGPT_FOLDER_CONFIG } from '@/pages/content/folder/pluginSiteFolderConfigs';
 import type { FolderData } from '@/pages/content/folder/types';
 
 import { ChatGptFolderStore } from '../ChatGptFolderStore';
-import { CHATGPT_FOLDER_CONFIG } from '../config';
 import { createLegacyChatGptCommands } from '../legacyChatGptCommands';
 import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
 

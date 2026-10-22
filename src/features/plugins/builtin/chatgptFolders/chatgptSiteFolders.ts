@@ -15,6 +15,7 @@ import {
   chatgptFolderExportFilename,
   exportChatGptFolders,
 } from '@/features/folder/sites/chatgptTransfer';
+import { CHATGPT_FOLDER_CONFIG } from '@/pages/content/folder/pluginSiteFolderConfigs';
 
 import { isTemporaryChat } from '../chatgptTemporaryHandoff/handoff';
 import { siteSectionCss } from '../siteFolders/sectionCss';
@@ -35,7 +36,6 @@ import {
   readSidebarTitle,
   sidebarConversationAt,
 } from './chatgptSidebarDom';
-import { CHATGPT_FOLDER_CONFIG } from './config';
 import { createLegacyChatGptCommands } from './legacyChatGptCommands';
 
 export const CHATGPT_FOLDERS_GUIDE_ID = 'chatgpt-folders-sidebar-intro-v1';

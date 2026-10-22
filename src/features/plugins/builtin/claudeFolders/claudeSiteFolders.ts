@@ -6,16 +6,12 @@
 import { StorageKeys } from '@/core/types/common';
 import type { ConversationReference } from '@/core/types/folder';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
-import { FOLDER_PLATFORMS } from '@/features/folder/platforms';
 import { CLAUDE_IDENTITY, CLAUDE_TRANSFER } from '@/features/folder/sites/claudeIdentity';
+import { CLAUDE_FOLDER_CONFIG } from '@/pages/content/folder/pluginSiteFolderConfigs';
 
 import { siteSectionCss } from '../siteFolders/sectionCss';
 import { openSiteConversation, pageTitle, readSiteConversation } from '../siteFolders/sitePage';
-import {
-  PluginSiteFolderStore,
-  createPluginSiteCommands,
-  pluginSiteFolderConfig,
-} from '../siteFolders/siteStore';
+import { PluginSiteFolderStore, createPluginSiteCommands } from '../siteFolders/siteStore';
 import type { HideFiledDom, SiteFoldersAdapter } from '../siteFolders/types';
 import { ClaudeMoveMenu } from './claudeMoveMenu';
 import tokensCss from './claudeSectionTokens.css?raw';
@@ -33,13 +29,6 @@ export const CLAUDE_FOLDERS_GUIDE_ID = 'claude-folders-sidebar-intro-v1';
 export const CLAUDE_FOLDERS_GUIDE_DEBUG_EVENT = 'gv:debug:claudeFoldersCoachmark';
 const SECTION_CLASS = 'gv-claude-folder-section';
 const FILED_ROW_ATTRIBUTE = 'data-gv-claude-filed';
-
-export const CLAUDE_FOLDER_CONFIG = pluginSiteFolderConfig({
-  storageKey: StorageKeys.FOLDER_DATA_CLAUDE,
-  backupNamespace: FOLDER_PLATFORMS.claude.backupNamespace,
-  logPrefix: '[ClaudeFolderStore]',
-  debugFlag: 'gvClaudeFolderDebug',
-});
 
 /** What Claude calls a chat it has not named yet (its tab title on /new is "New session"). */
 const PLACEHOLDER_TITLES = new Set(['Claude', 'New chat', 'New session', 'Untitled']);

@@ -7,16 +7,12 @@
 import { StorageKeys } from '@/core/types/common';
 import type { ConversationReference } from '@/core/types/folder';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
-import { FOLDER_PLATFORMS } from '@/features/folder/platforms';
 import { DEEPSEEK_IDENTITY, DEEPSEEK_TRANSFER } from '@/features/folder/sites/deepseekIdentity';
+import { DEEPSEEK_FOLDER_CONFIG } from '@/pages/content/folder/pluginSiteFolderConfigs';
 
 import { siteSectionCss } from '../siteFolders/sectionCss';
 import { openSiteConversation, pageTitle, readSiteConversation } from '../siteFolders/sitePage';
-import {
-  PluginSiteFolderStore,
-  createPluginSiteCommands,
-  pluginSiteFolderConfig,
-} from '../siteFolders/siteStore';
+import { PluginSiteFolderStore, createPluginSiteCommands } from '../siteFolders/siteStore';
 import type { HideFiledDom, SiteFoldersAdapter } from '../siteFolders/types';
 import tokensCss from './deepseekSectionTokens.css?raw';
 import {
@@ -33,13 +29,6 @@ export const DEEPSEEK_FOLDERS_GUIDE_ID = 'deepseek-folders-sidebar-intro-v1';
 export const DEEPSEEK_FOLDERS_GUIDE_DEBUG_EVENT = 'gv:debug:deepseekFoldersCoachmark';
 const SECTION_CLASS = 'gv-deepseek-folder-section';
 const FILED_ROW_ATTRIBUTE = 'data-gv-deepseek-filed';
-
-export const DEEPSEEK_FOLDER_CONFIG = pluginSiteFolderConfig({
-  storageKey: StorageKeys.FOLDER_DATA_DEEPSEEK,
-  backupNamespace: FOLDER_PLATFORMS.deepseek.backupNamespace,
-  logPrefix: '[DeepSeekFolderStore]',
-  debugFlag: 'gvDeepSeekFolderDebug',
-});
 
 /** What DeepSeek calls a chat before it names it, and its home tab title ("DeepSeek - …"). */
 const PLACEHOLDER_TITLES = new Set(['New chat', '新对话', '新對話', '新しいチャット']);

@@ -11,7 +11,7 @@ import {
   createMemoryStorage,
   settle,
 } from '@/features/plugins/builtin/chatgptFolders/__tests__/memoryStorage';
-import { CHATGPT_FOLDER_CONFIG } from '@/features/plugins/builtin/chatgptFolders/config';
+import { CHATGPT_FOLDER_CONFIG } from '@/pages/content/folder/pluginSiteFolderConfigs';
 
 import { FolderRepository } from '../../FolderRepository';
 import { SiteFolderStore } from '../../SiteFolderStore';
