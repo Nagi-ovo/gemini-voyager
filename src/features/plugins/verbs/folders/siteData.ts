@@ -92,12 +92,15 @@ export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAda
   const route = row ? routeFolderSiteOf(row.site) : null;
   const panel = row?.prefs.keys.panel;
   const sectionPrefs = row?.prefs.keys.section;
-  if (!section || !row?.messages || !row.guideId || !route || !panel || !sectionPrefs) return null;
+  const page = section?.page;
+  if (!section || !page || !row?.messages || !row.guideId || !route || !panel || !sectionPrefs) {
+    return null;
+  }
   const { identity, transfer, overrides } = route;
   const { site, policy, config, messages } = row;
   const dom = createSectionDom(section, identity);
-  const suffix = section.page.titleSuffix ? new RegExp(section.page.titleSuffix) : null;
-  const isPlaceholderTitle = placeholderCheck(section.page.placeholderTitles, document);
+  const suffix = page.titleSuffix ? new RegExp(page.titleSuffix) : null;
+  const isPlaceholderTitle = placeholderCheck(page.placeholderTitles, document);
   /** The open conversation's title from the tab, which without the site's suffix is the site's own page. */
   const tabTitle = (): string | null => {
     if (!suffix) return pageTitle(document, /$^/, isPlaceholderTitle);

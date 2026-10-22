@@ -86,6 +86,13 @@ describe('site.json folders section', () => {
     expect(siteAdapterFromEntry(entry, '9.9.9')?.folders).toEqual(FOLDERS);
   });
 
+  it('keeps a section without page rules, as AI Studio, which titles prompts itself, has', () => {
+    const { page: _page, ...withoutPage } = FOLDERS;
+    const read = readSiteAdapterData({ ...SITE, folders: withoutPage });
+    expect(read.sectionIssues).toEqual([]);
+    expect(read.result.success && read.result.data.folders).toEqual(withoutPage);
+  });
+
   it.each([
     ['a format this build does not read', { ...FOLDERS, format: 2 }, 'folders.format'],
     ['an unknown key', { ...FOLDERS, storageKey: 'gvFolderData' }, 'folders.storageKey'],
@@ -121,7 +128,7 @@ describe('site.json folders section', () => {
       { ...FOLDERS, rowMenu: { ...FOLDERS.rowMenu, open: undefined } },
       'folders.rowMenu.open',
     ],
-    ['no page rules', { ...FOLDERS, page: undefined }, 'folders.page'],
+    ['page rules that are not an object', { ...FOLDERS, page: 'none' }, 'folders.page'],
   ])('drops a section with %s and still applies the site', (_label, folders, path) => {
     const read = readSiteAdapterData({ ...SITE, folders });
     expect(read.result.success).toBe(true);

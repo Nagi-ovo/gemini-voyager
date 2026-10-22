@@ -27,7 +27,8 @@
  *   look), where the entry goes, the attributes stripped from a cloned item,
  *   the element whose glyph becomes the folder icon and the native rename item;
  * - `page`: placeholder titles (any language or by UI language), a safe regex
- *   removed from `document.title`, and the site's own new-chat link.
+ *   removed from `document.title`, and the site's own new-chat link. Optional
+ *   here; the shared folder section of catalog sites has no folders without it.
  */
 import type { ManifestIssue } from '../../manifest/validate';
 import { isSafeRegexSource } from '../safeRegex';
@@ -115,7 +116,8 @@ export interface FoldersSection {
   readonly mount?: FoldersMount;
   readonly hideFiled?: FoldersHideFiled;
   readonly rowMenu?: FoldersRowMenu;
-  readonly page: FoldersPage;
+  /** Required by the shared folder section (`siteFoldersFromData`); AI Studio's own runtime reads none. */
+  readonly page?: FoldersPage;
 }
 
 export interface FoldersSectionRead {
@@ -442,7 +444,7 @@ export function readFoldersSection(
     ...(raw.rowMenu !== undefined
       ? { rowMenu: readRowMenu(reader, raw.rowMenu, `${path}.rowMenu`) }
       : {}),
-    page: readPage(reader, raw.page, `${path}.page`),
+    ...(raw.page !== undefined ? { page: readPage(reader, raw.page, `${path}.page`) } : {}),
   };
   if (reader.issues.length > 0) return { issues: reader.issues };
   return { folders: section, issues: [] };

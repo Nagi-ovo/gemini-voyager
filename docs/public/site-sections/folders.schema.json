@@ -4,7 +4,7 @@
   "title": "Voyager site adapter: folders",
   "type": "object",
   "description": "Where the `folders` primitive finds the site's sidebar, its conversation rows and the place its folder section goes. Page facts only: storage keys, buckets, account rules and Drive files stay in Voyager's per-site folder policy, so this section can never redirect folder data. A section that fails validation is dropped (the folders become unavailable) and `catalog:build` refuses to publish it.",
-  "required": ["format", "sidebar", "rows", "page"],
+  "required": ["format", "sidebar", "rows"],
   "additionalProperties": false,
   "properties": {
     "format": {
@@ -261,7 +261,7 @@
       "type": "object",
       "required": ["placeholderTitles"],
       "additionalProperties": false,
-      "description": "Title rules for the open conversation.",
+      "description": "Title rules for the open conversation. Required by the shared folder section on catalog sites; Voyager's own sites (AI Studio) title prompts from their own pages.",
       "properties": {
         "placeholderTitles": {
           "type": "object",
