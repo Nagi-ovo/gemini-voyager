@@ -5,13 +5,14 @@
  * Only the route identity names a row's conversation; the section says where
  * things are, never how they are stored.
  *
- * Read here and in `siteData.ts`: `sidebar`, `rows.row` / `link` / `title` /
- * `observe`, `mount.anchors` / `default` / `open`, `hideFiled`,
+ * Read here, in `siteData.ts` and in `rowMenu.ts`: `sidebar`, `rows.row` /
+ * `link` / `title` / `observe`, `mount.anchors` / `default` / `open`,
+ * `hideFiled`, `rowMenu` with `open: "press"` (Claude), and
  * `page.placeholderTitles.any` and `page.titleSuffix`. Not read yet:
  * `rows.idSources` and `rows.portaled` (Gemini and AI Studio rows), `rows.drag`
- * (every row is found from the press, `native.rowAt`), `rowMenu` (Claude and
- * ChatGPT), `page.placeholderTitles.byLanguage` / `fallbackLanguage` and
- * `page.newChat`.
+ * (every row is found from the press, `native.rowAt`), `rowMenu` with
+ * `open: "expanded"` and `rename` (ChatGPT), `page.placeholderTitles.byLanguage`
+ * / `fallbackLanguage` and `page.newChat`.
  */
 import type { SiteIdentity } from '@/features/folder/sites/siteIdentity';
 import type { FoldersAnchor, FoldersSection } from '@/features/plugins/sites/sections/foldersData';
@@ -25,8 +26,10 @@ export interface SectionDom {
   list(root: ParentNode): SidebarConversation[];
   /** A row's title as the site shows it; empty while it has none. */
   title(row: SidebarConversation): string;
-  /** The sidebar row a press landed on. */
+  /** The sidebar row a press landed on: on its link, where the row has one apart from itself. */
   rowAt(target: EventTarget | null, doc?: Document): SidebarConversation | null;
+  /** The sidebar row holding `element` anywhere inside it (its menu button, say). */
+  rowOf(element: Element, doc?: Document): SidebarConversation | null;
   /** The sidebar link of conversation `id`, or `null` while it is not listed. */
   link(id: string, doc?: Document): HTMLAnchorElement | null;
   /** The element the folder section is inserted before, inside `sidebar`. */
@@ -66,6 +69,11 @@ export function createSectionDom(section: FoldersSection, identity: SiteIdentity
     return [...found].flatMap((row) => conversationOf(row) ?? []);
   };
 
+  const rowOf = (element: Element, doc: Document = document): SidebarConversation | null => {
+    const row = element.closest(rows.row);
+    return row && find(doc)?.contains(row) ? conversationOf(row) : null;
+  };
+
   const anchors = mount?.anchors ?? [];
   const preferred = anchors.find((anchor) => anchor.id === mount?.default) ?? anchors[0];
 
@@ -82,10 +90,12 @@ export function createSectionDom(section: FoldersSection, identity: SiteIdentity
       return (row.link.textContent ?? '').trim();
     },
     rowAt: (target, doc = document) => {
-      const row = target instanceof Element ? target.closest(rows.row) : null;
-      if (!row || !find(doc)?.contains(row)) return null;
-      return conversationOf(row);
+      if (!(target instanceof Element)) return null;
+      const found = rowOf(target, doc);
+      // A press on the row's other controls (its menu button) is no drag of the row.
+      return found?.link.contains(target) ? found : null;
     },
+    rowOf,
     link: (id, doc = document) => {
       const sidebar = find(doc);
       return sidebar ? (list(sidebar).find((row) => row.id === id)?.link ?? null) : null;

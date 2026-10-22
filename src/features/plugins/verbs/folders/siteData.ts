@@ -18,6 +18,7 @@ import { PluginSiteFolderStore, createPluginSiteCommands } from '@/features/fold
 import type { FoldersSection } from '@/features/plugins/sites/sections/foldersData';
 import type { SiteAdapter } from '@/features/plugins/types';
 
+import { createRowMenu } from './rowMenu';
 import { siteSectionCss } from './sectionCss';
 import { createSectionDom } from './sectionDom';
 import deepseekSkin from './skins/deepseek.css?raw';
@@ -70,6 +71,7 @@ export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAda
     return suffix.test(document.title) ? pageTitle(document, suffix, isPlaceholderTitle) : null;
   };
   const hideFiled = hideFiledDom(section, site);
+  const { rowMenu } = section;
   const className = `gv-${site}-folder-section`;
   const conversationHref = (conversation: ConversationReference): string =>
     identity.read(conversation.url)?.url ?? '';
@@ -132,6 +134,22 @@ export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAda
     },
     messages,
     transfer: { export: transfer.export, filename: () => transfer.filename() },
-    native: { rowAt: (target) => dom.rowAt(target) },
+    native: {
+      rowAt: (target) => dom.rowAt(target),
+      ...(rowMenu
+        ? {
+            createMoveMenu: (options) =>
+              createRowMenu(
+                rowMenu,
+                {
+                  dom,
+                  entryAttribute: `data-gv-${site}-move-to-folder`,
+                  storedId: (id) => `${identity.prefix}${id}`,
+                },
+                options,
+              ),
+          }
+        : {}),
+    },
   };
 }

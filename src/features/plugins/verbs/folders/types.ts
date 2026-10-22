@@ -119,7 +119,8 @@ export interface NativeRenameOptions {
 export interface SiteNativeHooks {
   /** Opens the site's rename for bare id `id`; the title the row showed, or `null`. */
   rename?(id: string, options: NativeRenameOptions): Promise<string | null>;
-  createMoveMenu?(options: SiteMoveMenuOptions): SiteMoveMenu;
+  /** `null` where the site's menu opens in a way the folders cannot follow. */
+  createMoveMenu?(options: SiteMoveMenuOptions): SiteMoveMenu | null;
   /** The sidebar row a press landed on, which a drag onto a folder files. */
   rowAt?(target: EventTarget | null): SidebarConversation | null;
 }
