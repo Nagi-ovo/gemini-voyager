@@ -257,25 +257,35 @@ describe('dragging a ChatGPT sidebar row onto a folder', () => {
     expect(status()).toBe('Added to folder.');
   });
 
-  it('still files a row when ChatGPT cancels a stale drag on the press', async () => {
-    const { view } = await activate();
-    // As ChatGPT does: on every press, a pointercancel of its own for that pointer.
-    const cancelStale = (event: PointerEvent): void => {
-      const stale = new PointerEvent('pointercancel', {
-        bubbles: true,
-        pointerId: event.pointerId,
-      });
-      pageEvents.add(stale);
-      document.dispatchEvent(stale);
-    };
-    document.addEventListener('pointerdown', cancelStale, true);
+  it.each([
+    [
+      'a pointercancel',
+      (event: PointerEvent): Event =>
+        new PointerEvent('pointercancel', { bubbles: true, pointerId: event.pointerId }),
+    ],
+    [
+      'an Escape keydown',
+      (): Event => new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+    ],
+  ])(
+    'still files a row when ChatGPT ends a stale drag with %s of its own on the press',
+    async (_kind, stale) => {
+      const { view } = await activate();
+      // As ChatGPT does: on a press, its own event to end a drag of its own it thinks is stuck.
+      const endStale = (event: PointerEvent): void => {
+        const own = stale(event);
+        pageEvents.add(own);
+        document.dispatchEvent(own);
+      };
+      document.addEventListener('pointerdown', endStale, true);
 
-    dragRowOnto(TARGET.id, view.folderNameElement('Trips'));
-    document.removeEventListener('pointerdown', cancelStale, true);
-    await nextPass();
+      dragRowOnto(TARGET.id, view.folderNameElement('Trips'));
+      document.removeEventListener('pointerdown', endStale, true);
+      await nextPass();
 
-    expect(stored().folderContents.trips).toEqual([expect.objectContaining(FILED)]);
-  });
+      expect(stored().folderContents.trips).toEqual([expect.objectContaining(FILED)]);
+    },
+  );
 
   it('puts the row after what the folder already holds, as on Gemini', async () => {
     const other = ROWS[0];

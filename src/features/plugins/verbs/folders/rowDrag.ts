@@ -106,13 +106,14 @@ export function bindSidebarRowDrag(scope: PluginScope, options: RowDragOptions):
     transfer.setData(VOYAGER_DRAG_MIME, JSON.stringify({ type: 'conversation', ...conversation }));
   };
 
-  // ChatGPT dispatches its own pointercancel on every press, to end a drag it thinks is stuck.
+  // Only the person or the browser ends a drag: ChatGPT dispatches its own pointercancel on
+  // every press, and an Escape keydown on blur, to end a drag of its own it thinks is stuck.
   const cancel = (event: PointerEvent): void => {
     if (isUserEvent(event)) abort();
   };
 
   const escape = (event: KeyboardEvent): void => {
-    if (event.key === 'Escape') abort();
+    if (event.key === 'Escape' && isUserEvent(event)) abort();
   };
 
   scope.on(window, 'pointerdown', press, { capture: true });
