@@ -169,6 +169,10 @@ export class AIStudioFolderSession {
   get accountIsolationEnabled(): boolean {
     return this.repository.accountIsolationEnabled;
   }
+  /** Isolation is on and the page's account switcher names no account: nothing can bind. */
+  get accountUnknown(): boolean {
+    return this.repository.accountIsolationEnabled && !aistudioPageAccountKnown();
+  }
   /** Active folder data key; empty while no account is bound. */
   get activeStorageKey(): string {
     return this.repository.storageKey;

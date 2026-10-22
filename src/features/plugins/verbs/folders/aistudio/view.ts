@@ -33,6 +33,7 @@ import { readCloudTooltip } from '@/pages/content/folder/syncTooltip';
 import { watchRouteChanges } from '@/pages/content/utils/routeWatcher';
 
 import type { PanelSection } from '../panelSection';
+import { setAccountUnknownNotice } from './accountNotice';
 import { AIStudioTransfer } from './cloud';
 import {
   buildFolderPanel,
@@ -42,7 +43,7 @@ import {
   watchPanelMount,
 } from './panel';
 import { openPromptInApp } from './routes';
-import { aistudioTreeActions } from './tree';
+import { AISTUDIO_TREE_HOST_CLASS, aistudioTreeActions } from './tree';
 
 /** Where AI Studio's folders read the page, from its site.json `folders` section. */
 export interface AIStudioPageDom {
@@ -258,10 +259,16 @@ export class AIStudioFoldersView implements AIStudioFolderView {
   render(): void {
     const container = this.container;
     if (!container) return;
-    const { canEdit } = this.session;
-    container.inert = !canEdit;
-    container.setAttribute('aria-busy', String(!canEdit));
+    const { canEdit, accountUnknown } = this.session;
+    // An unreadable account switcher is no load in progress: say why the folders are hidden.
+    container.inert = !canEdit && !accountUnknown;
+    container.setAttribute('aria-busy', String(!canEdit && !accountUnknown));
     setFolderHeaderDisabled(container, !canEdit);
+    setAccountUnknownNotice(
+      container,
+      AISTUDIO_TREE_HOST_CLASS,
+      accountUnknown ? this.session.translate('folder_account_unknown') : null,
+    );
     this.panel?.update(this.session.data);
     this.highlightActiveConversation();
     this.syncNudge();

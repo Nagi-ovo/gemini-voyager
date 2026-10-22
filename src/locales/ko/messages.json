@@ -430,6 +430,10 @@
     "message": "폴더",
     "description": "Folder section title"
   },
+  "folder_account_unknown": {
+    "message": "이 페이지에 로그인된 계정을 확인할 수 없어 폴더를 숨겼습니다. 폴더는 그대로 저장되어 있습니다.",
+    "description": "Shown in the folder panel when account isolation cannot read which account the page is signed in to"
+  },
   "folder_activity_turn_on": {
     "message": "활동 보기 켜기",
     "description": "활동 보기를 켭니다"

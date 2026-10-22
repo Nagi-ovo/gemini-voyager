@@ -430,6 +430,10 @@
     "message": "Carpetas",
     "description": "Folder section title"
   },
+  "folder_account_unknown": {
+    "message": "No se puede confirmar con qué cuenta se ha iniciado sesión en esta página, así que las carpetas están ocultas. Siguen guardadas.",
+    "description": "Shown in the folder panel when account isolation cannot read which account the page is signed in to"
+  },
   "folder_activity_turn_on": {
     "message": "Activar vista de actividad",
     "description": "Activar la vista de actividad"

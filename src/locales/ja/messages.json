@@ -430,6 +430,10 @@
     "message": "フォルダ",
     "description": "Folder section title"
   },
+  "folder_account_unknown": {
+    "message": "このページでログイン中のアカウントを確認できないため、フォルダを非表示にしています。フォルダは保存されたままです。",
+    "description": "Shown in the folder panel when account isolation cannot read which account the page is signed in to"
+  },
   "folder_activity_turn_on": {
     "message": "アクティビティ表示をオン",
     "description": "アクティビティ表示を有効にする"

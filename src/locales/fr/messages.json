@@ -430,6 +430,10 @@
     "message": "Dossiers",
     "description": "Folder section title"
   },
+  "folder_account_unknown": {
+    "message": "Impossible de confirmer le compte connecté sur cette page : les dossiers sont donc masqués. Ils restent enregistrés.",
+    "description": "Shown in the folder panel when account isolation cannot read which account the page is signed in to"
+  },
   "folder_activity_turn_on": {
     "message": "Activer la vue Activité",
     "description": "Activer la vue Activité"

@@ -430,6 +430,10 @@
     "message": "المجلدات",
     "description": "Folder section title"
   },
+  "folder_account_unknown": {
+    "message": "تعذّر التأكد من الحساب المسجَّل دخوله في هذه الصفحة، لذا أُخفيت المجلدات. لا تزال محفوظة.",
+    "description": "Shown in the folder panel when account isolation cannot read which account the page is signed in to"
+  },
   "folder_activity_turn_on": {
     "message": "تشغيل عرض النشاط",
     "description": "تشغيل عرض النشاط"

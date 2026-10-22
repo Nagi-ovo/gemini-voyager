@@ -430,6 +430,10 @@
     "message": "Folders",
     "description": "Folder section title"
   },
+  "folder_account_unknown": {
+    "message": "Can't confirm which account this page is signed in to, so folders are hidden. They're still saved.",
+    "description": "Shown in the folder panel when account isolation cannot read which account the page is signed in to"
+  },
   "folder_activity_turn_on": {
     "message": "Turn on Activity view",
     "description": "Enable the attention-first Activity view"

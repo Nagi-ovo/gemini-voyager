@@ -277,4 +277,31 @@ describe("AI Studio folders behind the page's account", () => {
     await poll();
     await vi.waitFor(() => expect(outline()).toEqual(['Private a']));
   });
+
+  it('says why the folders are hidden instead of loading forever while the switcher is unreadable', async () => {
+    document.querySelector('.account-switcher-text')!.remove();
+    await openPage();
+    await vi.waitFor(() => expect(panel()).not.toBeNull());
+    await poll();
+
+    const notice = () => panel()!.querySelector('.gv-folder-account-notice');
+    const tree = () => panel()!.querySelector<HTMLElement>('.gv-aistudio-folder-tree')!;
+    expect(panel()!.getAttribute('aria-busy')).toBe('false');
+    expect(notice()?.textContent).toBe(
+      "Can't confirm which account this page is signed in to, so folders are hidden. They're still saved.",
+    );
+    expect(tree().inert).toBe(true);
+    expect(panel()!.querySelector<HTMLButtonElement>('.gv-folder-add-btn')!.disabled).toBe(true);
+    expect(outline()).toEqual([]);
+
+    document.body.insertAdjacentHTML(
+      'afterbegin',
+      '<span class="account-switcher-text" data-email="a@example.com">a@example.com</span>',
+    );
+    await poll();
+    await vi.waitFor(() => expect(outline()).toEqual(['Private a']));
+    expect(notice()).toBeNull();
+    expect(tree().inert).toBe(false);
+    expect(panel()!.getAttribute('aria-busy')).toBe('false');
+  });
 });
