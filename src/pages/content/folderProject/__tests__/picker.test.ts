@@ -181,6 +181,29 @@ describe('pending folder selection', () => {
     expect(pendingNewChatFolder()).toBeNull();
   });
 
+  it('takes a handed-off folder when the dropdown opens after the folders loaded late', async () => {
+    let shown: readonly Folder[] = [];
+    picker.remove();
+    picker = createFolderProjectPicker({
+      loadFolders: async () => shown,
+      canMount: () => true,
+      onSelect,
+    });
+    handOffNewChatFolder('folder-1');
+    addAnchor();
+    await picker.show();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(chip().textContent).toBe('folderAsProject_selectFolder');
+
+    shown = folders;
+    chip().click();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(chip().textContent).toBe('Work');
+    expect(onSelect).toHaveBeenCalledWith(folders[0], 'pending');
+    expect(pendingNewChatFolder()).toBeNull();
+  });
+
   it('takes a folder handed off while the picker is already shown on the new-chat page', async () => {
     addAnchor();
     await picker.show();

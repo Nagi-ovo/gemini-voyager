@@ -62,6 +62,8 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
   remove: () => void;
   /** Takes the folder this tab's "New chat in this folder" handed off, on the picker shown or one it shows. */
   applyPending: () => Promise<void>;
+  /** Tries a handoff the mounted picker could not take yet again; mounts nothing. */
+  retryPending: () => Promise<void>;
 } {
   let pickerContainer: HTMLElement | null = null;
   let pickerCleanup: (() => void) | null = null;
@@ -70,6 +72,13 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
   async function populateDropdown(dropdown: HTMLElement, chip: HTMLButtonElement): Promise<void> {
     dropdown.innerHTML = '';
     const allFolders = await options.loadFolders();
+    // A handoff the first mount could not take (its folders had not loaded) takes them now.
+    const pendingId = pendingNewChatFolder();
+    const pending = pendingId ? allFolders.find((folder) => folder.id === pendingId) : undefined;
+    if (pending && takeNewChatFolder(pending.id)) {
+      options.onSelect(pending, 'pending');
+      showSelectedFolder(chip, pending);
+    }
 
     if (allFolders.length === 0) {
       const empty = document.createElement('div');
@@ -318,10 +327,14 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
     void applyPendingFolderSelection(chip);
   }
 
+  async function retryPending(): Promise<void> {
+    if (pickerChip && pickerContainer?.isConnected) await applyPendingFolderSelection(pickerChip);
+  }
+
   async function applyPending(): Promise<void> {
     if (pickerChip && pickerContainer?.isConnected) await applyPendingFolderSelection(pickerChip);
     else await show();
   }
 
-  return { show, remove, applyPending };
+  return { show, remove, applyPending, retryPending };
 }

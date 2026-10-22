@@ -18,7 +18,7 @@ import {
   hasInstructionBlock,
   stripInstructionBlock,
 } from './instructionBlock';
-import { clearNewChatFolder, onNewChatFolder } from './pendingFolder';
+import { clearNewChatFolder, onNewChatFolder, pendingNewChatFolder } from './pendingFolder';
 import { createFolderProjectPicker } from './picker';
 
 /**
@@ -28,7 +28,8 @@ import { createFolderProjectPicker } from './picker';
 export type FolderProjectFolders = Pick<
   GeminiFolderSession,
   'ensureDataLoaded' | 'getFolders' | 'addConversationToFolderFromNative'
->;
+> &
+  Partial<Pick<GeminiFolderSession, 'onFoldersReady'>>;
 
 // ============================================================================
 // Module state (per-tab, reset on navigation)
@@ -418,6 +419,12 @@ export function startFolderProject(folders: FolderProjectFolders): void {
   // picker takes this tab's handoff here.
   onNewChatFolder(() => {
     if (featureInitialized && isNewChatPath(location.pathname)) void picker?.applyPending();
+  });
+  // A handoff whose folders had not loaded yet (the account was still unreadable) is taken
+  // once they have.
+  folders.onFoldersReady?.(() => {
+    if (!featureInitialized || !isNewChatPath(location.pathname) || !pendingNewChatFolder()) return;
+    void picker?.retryPending();
   });
 
   // React to toggle changes without a page reload

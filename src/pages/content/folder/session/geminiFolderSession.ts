@@ -76,6 +76,8 @@ export class GeminiFolderSession implements GeminiFolderReads {
   /** The gate's state when the view was last told. */
   private shownGateOpen = true;
   private binding: Promise<void> | null = null;
+  /** Told each time the page's folders are ready to read: bound, loaded and the gate open. */
+  private readonly readyListeners = new Set<() => void>();
   /** Shows notices while no view is attached; a view shows its own. */
   private toaster: ReturnType<typeof createToaster> | null = null;
 
@@ -231,6 +233,12 @@ export class GeminiFolderSession implements GeminiFolderReads {
     return this.data.folders;
   }
 
+  /** Calls `listener` whenever the page's folders become readable; returns its removal. */
+  onFoldersReady(listener: () => void): () => void {
+    this.readyListeners.add(listener);
+    return () => this.readyListeners.delete(listener);
+  }
+
   /**
    * Before answering the popup's cloud request: binds the page's account when
    * the gate is closed and that account can be read now, which with the folders
@@ -265,6 +273,7 @@ export class GeminiFolderSession implements GeminiFolderReads {
     this.view = null;
     this.stopListening?.();
     this.stopListening = null;
+    this.readyListeners.clear();
     this.syncPoll();
     this.toaster?.destroy();
     this.toaster = null;
@@ -298,6 +307,7 @@ export class GeminiFolderSession implements GeminiFolderReads {
       this.shownGateOpen = this.accountMatchesPage;
     }
     this.view?.onChange(reason);
+    if (reason === 'loaded' || reason === 'data') this.tellReady();
   }
 
   /** The gate opened or closed since the view was last told: it shows what the gate allows now. */
@@ -306,6 +316,12 @@ export class GeminiFolderSession implements GeminiFolderReads {
     if (open === this.shownGateOpen) return;
     this.shownGateOpen = open;
     this.view?.onChange('account');
+    this.tellReady();
+  }
+
+  private tellReady(): void {
+    if (this.closed || !this.accountMatchesPage || !this.store.session?.ready) return;
+    for (const listener of this.readyListeners) listener();
   }
 
   /** Polls the page's account while a view shows the folders with isolation on. */
