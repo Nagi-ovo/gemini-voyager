@@ -93,7 +93,8 @@ describe("a ChatGPT user's folders from the builtin plugin", () => {
 
   it('export as the same file', () => {
     const { exportedAt: _exportedAt, version: _version, ...file } = builtin.exported;
-    expect(CHATGPT_TRANSFER.export(STORED)).toMatchObject(file);
+    const { exportedAt: _now, version: _current, ...exported } = CHATGPT_TRANSFER.export(STORED);
+    expect(exported).toEqual(file);
   });
 
   it('import from its file into an empty store as the same folders', async () => {
