@@ -5,6 +5,7 @@ import { StorageKeys } from '@/core/types/common';
 import {
   AccountIsolationService,
   buildScopedFolderStorageKey,
+  buildScopedStorageKey,
   detectAccountContextFromDocument,
   detectAccountPlatformFromUrl,
   extractRouteUserIdFromUrl,
@@ -335,6 +336,41 @@ describe('AccountIsolationService', () => {
     expect(context.routeUserId).toBeNull();
     expect(context.email).toBe('someone@example.com');
   });
+
+  it('names no AI Studio account from page text while its switcher is unreadable', () => {
+    document.body.innerHTML = `
+      <a href="mailto:a@example.com">a@example.com</a>
+      <span title="a@example.com" data-email="a@example.com"></span>
+      <button aria-label="Share with a@example.com"></button>
+      <img alt="a@example.com" />
+    `;
+    const context = detectAccountContextFromDocument(
+      'https://aistudio.google.com/prompts',
+      document,
+    );
+    expect(context.email).toBeNull();
+  });
+
+  it('keeps the scoped AI Studio folder key of an account whose switcher is readable', async () => {
+    document.body.innerHTML = `
+      <a href="mailto:a@example.com">a@example.com</a>
+      <span class="account-switcher-text"> someone@example.com </span>
+    `;
+    const pageUrl = 'https://aistudio.google.com/prompts';
+    const context = detectAccountContextFromDocument(pageUrl, document);
+    const scope = await new AccountIsolationService().resolveAccountScope({ pageUrl, ...context });
+    expect(buildScopedStorageKey(StorageKeys.FOLDER_DATA_AISTUDIO, scope.accountKey)).toBe(
+      'gvFolderDataAIStudio:acct:yh1hyi',
+    );
+  });
+
+  it.each(['https://chatgpt.com/c/1', 'https://claude.ai/chat/1', 'https://chat.deepseek.com/'])(
+    'still reads a page-wide account email on %s',
+    (pageUrl) => {
+      document.body.innerHTML = '<a href="mailto:someone@example.com">Account</a>';
+      expect(detectAccountContextFromDocument(pageUrl, document).email).toBe('someone@example.com');
+    },
+  );
 
   it('detects account platform from url', () => {
     expect(detectAccountPlatformFromUrl('https://aistudio.google.com/prompts')).toBe('aistudio');

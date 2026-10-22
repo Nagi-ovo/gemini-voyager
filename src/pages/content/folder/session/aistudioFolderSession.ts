@@ -34,6 +34,7 @@ import {
   AIStudioAccountScope,
   aistudioAccountFingerprint,
   aistudioPageAccountFingerprint,
+  aistudioPageAccountKnown,
 } from '../aistudioAccountScope';
 import { migrateAIStudioLegacySync } from '../aistudioImport';
 import { getFolderRecoveryNotice } from '../folderRecoveryNotice';
@@ -121,6 +122,8 @@ export class AIStudioFolderSession {
         this.boundFingerprint = aistudioAccountFingerprint(context);
         this.account.bound(context);
       },
+      // An unread switcher leaves the gate closed; the account poll binds once it reads.
+      canBindAccount: aistudioPageAccountKnown,
     },
   );
   /** Every edit, save and import; each is refused, unwritten, while the account gate is closed. */

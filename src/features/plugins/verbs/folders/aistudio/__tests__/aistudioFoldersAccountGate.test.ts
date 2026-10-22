@@ -234,4 +234,47 @@ describe("AI Studio folders behind the page's account", () => {
     expect(reply.data).toEqual(folder('Private b'));
     expect(reply.accountScope).toBeTruthy();
   });
+
+  it("never binds the previous account from a mailto once the page's switcher is unreadable", async () => {
+    await openPage();
+    await vi.waitFor(() => expect(outline()).toEqual(['Private a']));
+    // B's page remounted its navbar without a readable switcher; A's address is only page text.
+    document.querySelector('.account-switcher-text')!.remove();
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<a href="mailto:a@example.com" title="a@example.com" aria-label="Mail a@example.com">a@example.com</a>',
+    );
+
+    await poll();
+    expect(outline()).toEqual([]);
+    expect(await requestData()).toEqual({ ok: false });
+
+    document.body.insertAdjacentHTML(
+      'afterbegin',
+      '<span class="account-switcher-text" data-email="b@example.com">b@example.com</span>',
+    );
+    await poll();
+    await vi.waitFor(() => expect(outline()).toEqual(['Private b']));
+    expect(scopedWrites()).toEqual([]);
+  });
+
+  it('opens no shared default bucket while the switcher is unreadable', async () => {
+    const shared = buildScopedStorageKey(KEY, 'default');
+    memory.values.local.set(shared, folder('Shared default'));
+    document.querySelector('.account-switcher-text')!.remove();
+    await openPage();
+    await vi.waitFor(() => expect(panel()).not.toBeNull());
+    await poll();
+
+    expect(outline()).toEqual([]);
+    expect(await requestData()).toEqual({ ok: false });
+    expect(memory.writes.filter((write) => write.key === shared)).toEqual([]);
+
+    document.body.insertAdjacentHTML(
+      'afterbegin',
+      '<span class="account-switcher-text" data-email="a@example.com">a@example.com</span>',
+    );
+    await poll();
+    await vi.waitFor(() => expect(outline()).toEqual(['Private a']));
+  });
 });

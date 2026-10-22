@@ -31,6 +31,14 @@ export function aistudioPageAccountFingerprint(): string | null {
   );
 }
 
+/**
+ * Whether the page's account switcher names its account. Isolation binds nothing until it
+ * does: a route slot or no hint at all would resolve to `route:<n>` or the shared `default`.
+ */
+export function aistudioPageAccountKnown(): boolean {
+  return detectAccountContextFromDocument(window.location.href, document).email !== null;
+}
+
 export class AIStudioAccountScope {
   private lastFingerprint: string | null = null;
   private resolvingFingerprint: string | null = null;

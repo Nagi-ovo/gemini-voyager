@@ -272,7 +272,9 @@ describe('AI Studio batch delete through the packaged source and PluginHost', ()
   });
 
   it('keeps confirmation and deletion current while the account header is temporarily absent', async () => {
+    // AI Studio reads its account only from the switcher, never from page text.
     const account = document.createElement('span');
+    account.className = 'account-switcher-text';
     account.title = 'first@example.com';
     document.body.append(account);
     let answer!: (value: 'confirm') => void;
@@ -388,10 +390,9 @@ describe('AI Studio batch delete through the packaged source and PluginHost', ()
     'retires a disabled drain when account %s evidence changes and returns',
     async (evidence) => {
       const account = document.createElement('span');
-      if (evidence === 'text') {
-        account.className = 'account-switcher-text';
-        account.append(document.createTextNode('first@example.com'));
-      } else account.setAttribute(evidence, 'first@example.com');
+      account.className = 'account-switcher-text';
+      if (evidence === 'text') account.append(document.createTextNode('first@example.com'));
+      else account.setAttribute(evidence, 'first@example.com');
       document.body.append(account);
       let finish!: (result: { successCount: number; failedCount: number }) => void;
       const run = vi.spyOn(LibraryBatchDeleter.prototype, 'run').mockImplementation(
