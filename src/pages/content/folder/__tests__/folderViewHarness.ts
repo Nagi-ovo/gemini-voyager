@@ -92,7 +92,6 @@ export async function createFolderViewHarness(data: FolderData) {
       isDestroyed: destroyed,
       accountIsolationEnabled: store.accountIsolationEnabled,
     }),
-    onRouteChange: () => {},
     onOpened: (id) => store.markConversationAsRecentlyOpened(id),
     onTitleChange: (id, title) => store.updateConversationTitle(id, title),
     onGemDetected: (id, gemId) => store.updateConversationGem(id, gemId),

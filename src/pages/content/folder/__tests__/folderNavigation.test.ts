@@ -80,7 +80,6 @@ describe('folder conversation navigation', () => {
     onTitleChange = vi.fn();
     navigation = new FolderNavigation({
       getContext: () => context,
-      onRouteChange: vi.fn(),
       onOpened,
       onTitleChange,
       onGemDetected: vi.fn(),

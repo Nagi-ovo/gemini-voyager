@@ -15,6 +15,13 @@ import { findNativeConversationLinkById, triggerNativeConversationClick } from '
 import type { ConversationReference } from './types';
 
 const FOLDER_NAVIGATION_CONFIRM_DELAY_MS = 1200;
+/** Gemini's own "New chat" control in its sidebar, an in-app route to the new-chat page. */
+const NATIVE_NEW_CHAT_SELECTOR = [
+  '[data-test-id="new-chat-button"] a[href]',
+  'a[data-test-id="new-chat-button"]',
+  '[data-test-id="new-chat-button"] button',
+  'button[data-test-id="new-chat-button"]',
+].join(', ');
 
 interface FolderNavigationOptions {
   getContext(): {
@@ -23,7 +30,8 @@ interface FolderNavigationOptions {
     isDestroyed: boolean;
     accountIsolationEnabled: boolean;
   };
-  onRouteChange(): void;
+  /** The route changed: an account route may now name another account. */
+  onRouteChange?(): void;
   onOpened(conversationId: string): void;
   onTitleChange(conversationId: string, title: string): void;
   onGemDetected(conversationId: string, gemId: string): void;
@@ -159,43 +167,45 @@ export class FolderNavigation {
     activeRow?.classList.add('gv-folder-conversation-selected');
   }
 
+  /**
+   * Opens a new chat that Folder-as-Project files into `folderId` on its first
+   * send, in this page: the folder goes to the picker as the pending folder,
+   * then Gemini's own new-chat link opens the page, or the History API when
+   * the link is missing or does not navigate. On the new-chat page already,
+   * the picker takes the folder from the pending folder's change. Never a full
+   * page load: if both routes fail, the folder stays pending for the next new chat.
+   */
   createNewChatInFolder(folderId: string): void {
-    const navigate = () => {
+    const open = () => {
       const userPrefix = window.location.pathname.match(/^\/u\/\d+/)?.[0] ?? '';
       const targetPath = `${userPrefix}/app`;
-      if (
-        window.location.pathname === targetPath ||
-        window.location.pathname === `${targetPath}/`
-      ) {
-        // Already on the new-chat page. The Folder-as-Project picker only
-        // consumes the pending folder id when it (re)injects, and its URL
-        // watcher cannot observe a same-URL pushState, so an SPA "navigation"
-        // here would be a silent no-op. A full reload is the only way to
-        // re-run picker injection — accepted as the explicit reload exception
-        // to the no-full-refresh navigation rule.
-        window.location.reload();
+      const onNewChat = () =>
+        window.location.pathname === targetPath || window.location.pathname === `${targetPath}/`;
+      if (onNewChat()) return;
+      const spaNavigate = () => {
+        if (!this.navigateWithSpaRoute(`${window.location.origin}${targetPath}`)) {
+          console.warn('[folder] could not open a new chat; the folder stays pending');
+        }
+      };
+      const link = document.querySelector<HTMLElement>(NATIVE_NEW_CHAT_SELECTOR);
+      if (!link) {
+        spaNavigate();
         return;
       }
-      // Preferred path: SPA route change (History API + popstate), same helper
-      // the folder conversation navigation uses. folderProject's URL watcher
-      // picks this up, re-injects the picker, and applies the pending folder.
-      if (this.navigateWithSpaRoute(`${window.location.origin}${targetPath}`)) {
-        return;
-      }
-      // Last-resort fallback: the History API path failed (pushState threw).
-      // A full page load is acceptable here because the alternative is a dead
-      // menu item — this mirrors the rule's History-API-then-fallback order.
-      window.location.href = `${window.location.origin}${targetPath}`;
+      triggerNativeConversationClick(link);
+      this.schedule(() => {
+        if (!onNewChat()) spaNavigate();
+      }, FOLDER_NAVIGATION_CONFIRM_DELAY_MS);
     };
 
     browser.storage.local
       .set({ [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: folderId })
-      .then(navigate)
+      .then(open)
       .catch((error) => {
         if (isExtensionContextInvalidatedError(error)) return;
         // storage failed — still navigate so the user isn't stranded; they can pick the folder manually
         console.warn('[folder] failed to set pending folder ID', error);
-        navigate();
+        open();
       });
   }
 
@@ -324,7 +334,7 @@ export class FolderNavigation {
     const update = () => {
       if (this.options.getContext().isDestroyed) return;
       this.schedule(() => {
-        void this.options.onRouteChange();
+        this.options.onRouteChange?.();
         this.highlightActiveConversation();
         const currentConversationId = getCurrentConversationId();
         if (currentConversationId) {
