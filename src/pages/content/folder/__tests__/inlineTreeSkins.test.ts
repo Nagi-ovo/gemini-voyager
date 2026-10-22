@@ -24,7 +24,7 @@ const FULL_SKINS = [
 const SITE_SKINS = [
   'src/pages/content/folder/aistudioTreeTokens.css',
   'src/features/plugins/builtin/claudeFolders/claudeSectionTokens.css',
-  'src/features/plugins/builtin/deepseekFolders/deepseekSectionTokens.css',
+  'src/features/plugins/verbs/folders/skins/deepseek.css',
 ] as const;
 
 /**

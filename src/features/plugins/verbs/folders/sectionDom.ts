@@ -5,10 +5,13 @@
  * Only the route identity names a row's conversation; the section says where
  * things are, never how they are stored.
  *
- * Read here: `sidebar`, `rows.row` / `link` / `title` / `observe`,
- * `mount.anchors` / `default` / `open`, `hideFiled`. Not read yet:
- * `rows.idSources` and `rows.portaled` (Gemini and AI Studio rows), `rowMenu`
- * (Claude and ChatGPT), `page.placeholderTitles.byLanguage` and `page.newChat`.
+ * Read here and in `siteData.ts`: `sidebar`, `rows.row` / `link` / `title` /
+ * `observe`, `mount.anchors` / `default` / `open`, `hideFiled`,
+ * `page.placeholderTitles.any` and `page.titleSuffix`. Not read yet:
+ * `rows.idSources` and `rows.portaled` (Gemini and AI Studio rows), `rows.drag`
+ * (every row is found from the press, `native.rowAt`), `rowMenu` (Claude and
+ * ChatGPT), `page.placeholderTitles.byLanguage` / `fallbackLanguage` and
+ * `page.newChat`.
  */
 import type { SiteIdentity } from '@/features/folder/sites/siteIdentity';
 import type { FoldersAnchor, FoldersSection } from '@/features/plugins/sites/sections/foldersData';

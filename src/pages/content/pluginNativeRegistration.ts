@@ -16,7 +16,6 @@ import { isChatGptProUsageSupported } from '@/features/plugins/builtin/chatgptPr
 import { activateChatGptResponseNotification } from '@/features/plugins/builtin/chatgptResponseNotification';
 import { activateChatGptTemporaryHandoff } from '@/features/plugins/builtin/chatgptTemporaryHandoff';
 import { activateClaudeFolders } from '@/features/plugins/builtin/claudeFolders';
-import { activateDeepSeekFolders } from '@/features/plugins/builtin/deepseekFolders';
 import {
   type NativeHandler,
   registerNativeHandler,
@@ -115,7 +114,6 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
     activate: activateChatGptFolders,
   },
   'voyager.claude-folders': { activate: activateClaudeFolders },
-  'voyager.deepseek-folders': { activate: activateDeepSeekFolders },
   'voyager.chatgpt-response-notification': {
     activate: activateChatGptResponseNotification,
   },

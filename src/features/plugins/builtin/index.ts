@@ -6,7 +6,6 @@ import { CHATGPT_LOCAL_BRIDGE_MANIFEST } from './chatgptLocalBridge/manifest';
 import { CHATGPT_PRO_USAGE_MANIFEST, isChatGptProUsageSupported } from './chatgptProUsage/manifest';
 import { CHATGPT_RESPONSE_NOTIFICATION_MANIFEST } from './chatgptResponseNotification/manifest';
 import { CLAUDE_FOLDERS_MANIFEST } from './claudeFolders/manifest';
-import { DEEPSEEK_FOLDERS_MANIFEST } from './deepseekFolders/manifest';
 import { GEMINI_BATCH_DELETE_MANIFEST } from './geminiBatchDeleteManifest';
 import { GEMINI_CANVAS_COPY_MANIFEST } from './geminiCanvasCopyManifest';
 import { GEMINI_CHAT_WIDTH_MANIFEST } from './geminiChatWidthManifest';
@@ -312,7 +311,6 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   },
   CHATGPT_FOLDERS_MANIFEST,
   CLAUDE_FOLDERS_MANIFEST,
-  DEEPSEEK_FOLDERS_MANIFEST,
   CHATGPT_RESPONSE_NOTIFICATION_MANIFEST,
   CHATGPT_LOCAL_BRIDGE_MANIFEST,
   // Not listed where it cannot run (Firefox, Safari), so no switch does nothing.

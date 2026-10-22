@@ -6,6 +6,7 @@
  * with no row, or one not keyed by its route alone, gets no folders here.
  */
 import type { ConversationReference } from '@/core/types/folder';
+import type { FolderPlatform } from '@/features/folder/platforms';
 import { folderSiteOf } from '@/features/folder/sites/folderSiteTable';
 import { routeFolderSiteOf } from '@/features/folder/sites/routeFolderSites';
 import {
@@ -19,7 +20,17 @@ import type { SiteAdapter } from '@/features/plugins/types';
 
 import { siteSectionCss } from './sectionCss';
 import { createSectionDom } from './sectionDom';
+import deepseekSkin from './skins/deepseek.css?raw';
 import type { HideFiledDom, SiteFoldersAdapter } from './types';
+
+/**
+ * Each site's colour and metric tokens for the section's shadow root, which a
+ * plugin stylesheet (page CSS) cannot reach; a site without one gets the
+ * shared defaults.
+ */
+const SECTION_SKINS: Partial<Readonly<Record<FolderPlatform, string>>> = {
+  deepseek: deepseekSkin,
+};
 
 /** Ids a hidden row may carry; anything else is never trusted. */
 const ROW_ID = /^[A-Za-z0-9_-]+$/;
@@ -50,8 +61,13 @@ export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAda
   const { site, policy, config, messages } = row;
   const dom = createSectionDom(section, identity);
   const placeholders = new Set(section.page.placeholderTitles.any ?? []);
-  const titleSuffix = section.page.titleSuffix ? new RegExp(section.page.titleSuffix) : /$^/;
+  const suffix = section.page.titleSuffix ? new RegExp(section.page.titleSuffix) : null;
   const isPlaceholderTitle = (title: string): boolean => placeholders.has(title);
+  /** The open conversation's title from the tab, which without the site's suffix is the site's own page. */
+  const tabTitle = (): string | null => {
+    if (!suffix) return pageTitle(document, /$^/, isPlaceholderTitle);
+    return suffix.test(document.title) ? pageTitle(document, suffix, isPlaceholderTitle) : null;
+  };
   const hideFiled = hideFiledDom(section, site);
   const className = `gv-${site}-folder-section`;
   const conversationHref = (conversation: ConversationReference): string =>
@@ -61,7 +77,7 @@ export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAda
     const link = dom.link(id);
     const shown = link ? dom.title({ id, path: '', link }) : '';
     if (shown && !isPlaceholderTitle(shown)) return shown;
-    return pageTitle(document, titleSuffix, isPlaceholderTitle);
+    return tabTitle();
   };
 
   return {
@@ -101,7 +117,7 @@ export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAda
     },
     section: {
       className,
-      css: siteSectionCss(className),
+      css: siteSectionCss(className, SECTION_SKINS[site]),
       anchor: dom.anchor,
       conversationHref,
       policy,

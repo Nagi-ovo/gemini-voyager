@@ -33,7 +33,7 @@ const STYLESHEETS = [
   'src/pages/content/folder/aistudioTreeTokens.css',
   'src/features/plugins/verbs/folders/sectionTree.css',
   'src/features/plugins/builtin/claudeFolders/claudeSectionTokens.css',
-  'src/features/plugins/builtin/deepseekFolders/deepseekSectionTokens.css',
+  'src/features/plugins/verbs/folders/skins/deepseek.css',
   'src/pages/content/folder/folderSettings/folderSettings.css',
   'src/pages/content/folder/sidebarActivityList.css',
   'src/features/plugins/catalog/sites/chatgpt/plugins/reading-width/style.css',

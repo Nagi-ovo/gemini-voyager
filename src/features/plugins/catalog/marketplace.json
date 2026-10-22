@@ -139,6 +139,11 @@
       "official": true
     },
     {
+      "name": "deepseek-folders",
+      "source": "sites/deepseek/plugins/folders/plugin.json",
+      "official": true
+    },
+    {
       "name": "chatgpt-user-latex",
       "source": "sites/chatgpt/plugins/user-latex/plugin.json",
       "official": true
