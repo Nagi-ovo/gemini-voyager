@@ -7,13 +7,11 @@ import type { FolderData } from '@/core/types/folder';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { HIDE_FILED_SETTING, SidebarHideFiled } from '@/features/plugins/verbs/folders/hideFiled';
+import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 import { initI18n } from '@/utils/i18n';
 
-import { FILED_ROW_ATTRIBUTE } from '../chatgptHideFiled';
-import { CHATGPT_SITE_FOLDERS } from '../chatgptSiteFolders';
-import { activateChatGptFolders } from '../index';
 import { type SidebarFixture, makeRows, mountSidebarFixture } from './chatgptSidebarFixture';
-import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
+import { FILED_ROW_ATTRIBUTE, activateChatGptFolders, chatgptSite } from './chatgptSite';
 
 vi.mock('webextension-polyfill', () => ({
   default: {
@@ -35,7 +33,7 @@ let sidebar: SidebarFixture;
 
 /** ChatGPT's hiding on its own, outside the plugin. */
 function chatgptHideFiled(scope: PluginScope): SidebarHideFiled {
-  const { hideFiled, sidebar, key } = CHATGPT_SITE_FOLDERS;
+  const { hideFiled, sidebar, key } = chatgptSite();
   return new SidebarHideFiled(scope, hideFiled, sidebar, key);
 }
 

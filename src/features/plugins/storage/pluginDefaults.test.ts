@@ -2,8 +2,10 @@ import { type Mock, beforeEach, describe, expect, it } from 'vitest';
 
 import { loadEnabledPlugins } from '@/pages/background/enabledPlugins';
 
-import { BUILTIN_PLUGINS } from '../builtin';
 import { hasEnabledPluginForUrl } from '../remote/hostCatalogPolicy';
+import { BuiltinPluginSource } from '../sources/BuiltinPluginSource';
+import { BundledCatalogPluginSource } from '../sources/BundledCatalogPluginSource';
+import { listPluginManifests } from '../sources/defaultSources';
 import { isPluginEnabled } from './pluginDefaults';
 import { setPluginSetting } from './pluginState';
 
@@ -21,8 +23,12 @@ function writtenState(): Record<string, { enabled: boolean; settings?: object }>
   const [[written]] = set().mock.calls;
   return written[STATE_KEY];
 }
+/** The plugins this build ships: its builtins and its bundled catalog, ChatGPT folders among them. */
+const shipped = () =>
+  listPluginManifests([new BuiltinPluginSource(), new BundledCatalogPluginSource()]);
+
 async function enabledIds(): Promise<string[]> {
-  const enabled = await loadEnabledPlugins(async () => BUILTIN_PLUGINS);
+  const enabled = await loadEnabledPlugins(shipped);
   return enabled.map((plugin) => plugin.id);
 }
 
@@ -74,8 +80,9 @@ describe('ChatGPT folders is on by default', () => {
   });
 
   // Whether it offers visual effects depends on granted access: see useSitePluginRuns.
-  it('never by itself makes Voyager contact the catalog host', () => {
-    const folders = BUILTIN_PLUGINS.filter((plugin) => plugin.id === FOLDERS);
+  it('never by itself makes Voyager contact the catalog host', async () => {
+    const folders = (await shipped()).filter((plugin) => plugin.id === FOLDERS);
+    expect(folders).toHaveLength(1);
     expect(hasEnabledPluginForUrl(folders, {}, 'https://chatgpt.com/')).toBe(false);
     expect(
       hasEnabledPluginForUrl(

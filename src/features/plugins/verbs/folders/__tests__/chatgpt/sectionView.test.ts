@@ -17,12 +17,12 @@ import {
   label,
   treeDriver,
 } from '@/pages/content/folder/floatingTree/__tests__/treeDriver';
+import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 import { toastDriver } from '@/tests/toastDriver';
 import { initI18n } from '@/utils/i18n';
 
-import { activateChatGptFolders } from '../index';
 import { type SidebarFixture, makeRows, mountSidebarFixture } from './chatgptSidebarFixture';
-import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
+import { activateChatGptFolders } from './chatgptSite';
 import { chooseSortMode, openSettings } from './sectionHeaderDriver';
 
 vi.mock('webextension-polyfill', () => ({

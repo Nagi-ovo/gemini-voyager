@@ -1,6 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { BUILTIN_PLUGINS } from '@/features/plugins/builtin';
+import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
+import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCatalogPluginSource';
+import { listPluginManifests } from '@/features/plugins/sources/defaultSources';
 import type { PluginManifest } from '@/features/plugins/types';
 
 import {
@@ -29,9 +31,19 @@ const MANIFEST = {
   ],
 } as chrome.runtime.Manifest;
 
+/** The plugins this build ships: its builtins and its bundled catalog. */
+let shipped: readonly PluginManifest[] = [];
+
+beforeAll(async () => {
+  shipped = await listPluginManifests([
+    new BuiltinPluginSource(),
+    new BundledCatalogPluginSource(),
+  ]);
+});
+
 function plugin(id: string): PluginManifest {
-  const manifest = BUILTIN_PLUGINS.find((candidate) => candidate.id === id);
-  if (!manifest) throw new Error(`no builtin ${id}`);
+  const manifest = shipped.find((candidate) => candidate.id === id);
+  if (!manifest) throw new Error(`no shipped plugin ${id}`);
   return manifest;
 }
 

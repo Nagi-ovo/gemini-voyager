@@ -9,10 +9,10 @@ import {
 } from '@/features/folder/sites/chatgptTransfer';
 import { CHATGPT_FOLDER_CONFIG } from '@/pages/content/folder/pluginSiteFolderConfigs';
 import type { FolderData } from '@/pages/content/folder/types';
+import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 
-import { ChatGptFolderStore } from '../ChatGptFolderStore';
-import { createLegacyChatGptCommands } from '../legacyChatGptCommands';
-import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
+import type { SiteFoldersStore } from '../../types';
+import { commandsOf, createChatGptStore } from './chatgptSite';
 
 vi.mock('webextension-polyfill', () => ({
   default: {
@@ -41,7 +41,7 @@ function conversation(id: string, title = id) {
 
 let memory: MemoryStorage;
 let originalStorage: typeof chrome.storage;
-let store: ChatGptFolderStore | null = null;
+let store: SiteFoldersStore | null = null;
 
 beforeEach(() => {
   memory = createMemoryStorage();
@@ -72,19 +72,19 @@ function add(target: string, id: string, title = id): FolderEditBody {
   };
 }
 
-async function ready(): Promise<ChatGptFolderStore> {
-  store = new ChatGptFolderStore();
+async function ready(): Promise<SiteFoldersStore> {
+  store = createChatGptStore();
   await store.init();
   await settle();
   return store;
 }
 
-describe('ChatGptFolderStore', () => {
+describe("ChatGPT's folder store", () => {
   it('writes only the ChatGPT bucket, whatever Gemini and the legacy switch hold', async () => {
     const migrate = vi.spyOn(CHATGPT_FOLDER_CONFIG, 'migrateLegacyData');
     const pageWrites = vi.spyOn(localStorage, 'setItem');
     const s = await ready();
-    const c = createLegacyChatGptCommands(s);
+    const c = commandsOf(s);
 
     await c.run({ kind: 'createFolder', folderId: 'x', name: 'Work', parentId: null });
     const folderId = s.data.folders[0].id;
@@ -142,7 +142,7 @@ describe('ChatGptFolderStore', () => {
 
   it('files edits in the stored bucket', async () => {
     const s = await ready();
-    const c = createLegacyChatGptCommands(s);
+    const c = commandsOf(s);
     await c.run({ kind: 'createFolder', folderId: 'x', name: 'Work', parentId: null });
     const folderId = s.data.folders[0].id;
     expect(folderId).toMatch(/^folder_\d+_[0-9a-z]+$/);
@@ -160,7 +160,7 @@ describe('ChatGptFolderStore', () => {
 
   it('files nothing into a folder that no longer exists', async () => {
     const s = await ready();
-    const c = createLegacyChatGptCommands(s);
+    const c = commandsOf(s);
     await c.run({ kind: 'createFolder', folderId: 'x', name: 'Work', parentId: null });
     await c.run({ kind: 'createFolder', folderId: 'y', name: 'Gone', parentId: null });
     const [work, gone] = s.data.folders.map((folder) => folder.id);
@@ -247,8 +247,8 @@ describe('ChatGptFolderStore', () => {
   });
 
   it('ignores edits until its bucket has loaded', async () => {
-    store = new ChatGptFolderStore();
-    const outcome = await createLegacyChatGptCommands(store).run({
+    store = createChatGptStore();
+    const outcome = await commandsOf(store).run({
       kind: 'createFolder',
       folderId: 'x',
       name: 'Too early',

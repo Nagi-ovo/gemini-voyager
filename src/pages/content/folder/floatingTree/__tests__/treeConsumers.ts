@@ -10,9 +10,10 @@
  * difference as data, so a rewrite of the tree's internals has to keep all of them.
  */
 import { AISTUDIO_ROOT_BUCKET_ID, ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
-import { CHATGPT_SECTION_SITE } from '@/features/plugins/builtin/chatgptFolders/chatgptSiteFolders';
+import { requireBundledSiteAdapter } from '@/features/plugins/catalog/sites';
 import { SiteFolderSection } from '@/features/plugins/verbs/folders/folderSection';
 import { DEFAULT_SECTION_PREFS } from '@/features/plugins/verbs/folders/sectionPrefs';
+import { siteFoldersFromData } from '@/features/plugins/verbs/folders/siteData';
 import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
 import { GEMINI_PANEL } from '../../__tests__/floatingPanelHarness';
@@ -102,7 +103,7 @@ function mountAIStudio(data: FolderData, actions: TreeActions, options: MountOpt
 
 function mountChatGpt(data: FolderData, actions: TreeActions): MountedTree {
   const section = new SiteFolderSection({
-    site: CHATGPT_SECTION_SITE,
+    site: siteFoldersFromData(requireBundledSiteAdapter('chatgpt'))!.section,
     data,
     rootBucketId: ROOT_CONVERSATIONS_ID,
     actions,

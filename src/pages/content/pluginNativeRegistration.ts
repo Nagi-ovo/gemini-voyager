@@ -9,7 +9,6 @@ import {
   startChatGptExportPlugin,
   stopChatGptExportPlugin,
 } from '@/features/plugins/builtin/chatgptExport/runtime';
-import { activateChatGptFolders } from '@/features/plugins/builtin/chatgptFolders';
 import { activateChatGptLocalBridge } from '@/features/plugins/builtin/chatgptLocalBridge';
 import { activateChatGptProUsage } from '@/features/plugins/builtin/chatgptProUsage';
 import { isChatGptProUsageSupported } from '@/features/plugins/builtin/chatgptProUsage/manifest';
@@ -108,9 +107,6 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   },
   'voyager.chatgpt-temporary-handoff': {
     activate: activateChatGptTemporaryHandoff,
-  },
-  'voyager.chatgpt-folders': {
-    activate: activateChatGptFolders,
   },
   'voyager.chatgpt-response-notification': {
     activate: activateChatGptResponseNotification,

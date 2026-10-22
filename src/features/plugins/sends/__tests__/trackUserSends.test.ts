@@ -4,7 +4,7 @@
  * The send tracker's pending send on its own, with fake timers and ChatGPT's
  * site.json: a send ChatGPT never shows is forgotten, and turning the
  * subscriber off forgets it too. Folder Activity's end-to-end cases live in
- * `chatgptFolders/__tests__/activityView.test.ts`.
+ * `verbs/folders/__tests__/chatgpt/activityView.test.ts`.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

@@ -23,11 +23,6 @@ export const CHATGPT_IDENTITY = createSiteIdentity(
   CHATGPT_LEGACY_ORIGINS,
 );
 
-export const CHATGPT_CONVERSATION_ID_PREFIX = CHATGPT_IDENTITY.prefix;
-
-/** The route id inside a stored `chatgpt:conv:<id>`; any other id is returned as is. */
-export const bareConversationId = CHATGPT_IDENTITY.bareId;
-
 /**
  * The conversation a root-relative link (`/c/<id>`, `/g/<project>/c/<id>`) names,
  * as its bare id and path; `null` for any other link. No URL parsing, so a pass

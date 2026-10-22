@@ -2,8 +2,8 @@
  * What a site gives the shared sidebar folders (`activateSiteFolders`): where
  * its sidebar and conversation rows are, how a conversation is named and
  * opened, and its stored names (keys, classes, guide id, message keys), which
- * are serialized user data or DOM output and so stay the site's own. ChatGPT's
- * is `builtin/chatgptFolders/chatgptSiteFolders.ts`.
+ * are serialized user data or DOM output and so stay the site's own. Every
+ * site's is built from data by `siteData.ts`.
  */
 import type { StorageKey } from '@/core/types/common';
 import type { ConversationReference, FolderData } from '@/core/types/folder';

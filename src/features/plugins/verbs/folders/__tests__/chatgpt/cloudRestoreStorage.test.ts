@@ -10,10 +10,10 @@ import { validateFolderData } from '@/features/folder/model/folderData';
 import { exportChatGptFolders } from '@/features/folder/sites/chatgptTransfer';
 import { applyCloudRestore } from '@/pages/popup/components/cloudRestore';
 import { useCloudSyncTransfer } from '@/pages/popup/components/useCloudSyncTransfer';
+import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 
-import { ChatGptFolderStore } from '../ChatGptFolderStore';
-import { createLegacyChatGptCommands } from '../legacyChatGptCommands';
-import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
+import type { SiteFoldersStore } from '../../types';
+import { commandsOf, createChatGptStore } from './chatgptSite';
 
 vi.mock('webextension-polyfill', () => ({
   default: {
@@ -64,7 +64,7 @@ async function restore(snapshot: FolderData, mode: 'merge' | 'overwrite' = 'over
 
 let memory: MemoryStorage;
 let originalStorage: typeof chrome.storage;
-let store: ChatGptFolderStore | null;
+let store: SiteFoldersStore | null;
 
 beforeEach(() => {
   memory = createMemoryStorage();
@@ -86,10 +86,10 @@ afterEach(() => {
 });
 
 async function ready() {
-  store = new ChatGptFolderStore();
+  store = createChatGptStore();
   await store.init();
   await settle();
-  return createLegacyChatGptCommands(store);
+  return commandsOf(store);
 }
 
 const stored = () => memory.values.local.get(StorageKeys.FOLDER_DATA_CHATGPT);

@@ -3,7 +3,7 @@
  *
  * `PLUGINS_STATE` records only explicit choices: an entry appears when the user
  * flips a plugin (or one of its settings). Every other plugin is off, except the
- * builtins listed here, which are on until the user turns them off. An explicit
+ * ones listed here, which are on until the user turns them off. An explicit
  * `enabled: false` always wins, so a default never overrides a choice.
  *
  * A default enables nothing by itself on a plugin site: the background still

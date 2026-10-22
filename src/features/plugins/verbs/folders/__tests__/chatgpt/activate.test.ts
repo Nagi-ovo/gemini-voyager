@@ -9,11 +9,11 @@ import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { openMenu } from '@/pages/content/folder/floatingTree/__tests__/treeDriver';
 import { CHATGPT_FOLDER_CONFIG } from '@/pages/content/folder/pluginSiteFolderConfigs';
 import { confirmDriver } from '@/tests/confirmDriver';
+import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 import { toastDriver } from '@/tests/toastDriver';
 import { initI18n } from '@/utils/i18n';
 
-import { activateChatGptFolders } from '../index';
-import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
+import { activateChatGptFolders } from './chatgptSite';
 
 vi.mock('webextension-polyfill', () => ({
   default: {

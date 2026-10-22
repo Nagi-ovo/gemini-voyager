@@ -1,7 +1,6 @@
 import { type PluginManifest, hasNativeOps } from '../types';
 import { AISTUDIO_BATCH_DELETE_MANIFEST } from './aistudioBatchDeleteManifest';
 import { AISTUDIO_SIDEBAR_WIDTH_MANIFEST } from './aistudioSidebarWidthManifest';
-import { CHATGPT_FOLDERS_MANIFEST } from './chatgptFolders/manifest';
 import { CHATGPT_LOCAL_BRIDGE_MANIFEST } from './chatgptLocalBridge/manifest';
 import { CHATGPT_PRO_USAGE_MANIFEST, isChatGptProUsageSupported } from './chatgptProUsage/manifest';
 import { CHATGPT_RESPONSE_NOTIFICATION_MANIFEST } from './chatgptResponseNotification/manifest';
@@ -308,7 +307,6 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
     matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*'],
     contributes: {},
   },
-  CHATGPT_FOLDERS_MANIFEST,
   CHATGPT_RESPONSE_NOTIFICATION_MANIFEST,
   CHATGPT_LOCAL_BRIDGE_MANIFEST,
   // Not listed where it cannot run (Firefox, Safari), so no switch does nothing.

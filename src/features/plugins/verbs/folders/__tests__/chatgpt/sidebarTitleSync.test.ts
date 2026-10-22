@@ -7,11 +7,11 @@ import type { ConversationReference, FolderData } from '@/core/types/folder';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 import { exportChatGptFolders } from '@/features/folder/sites/chatgptTransfer';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 import { initI18n } from '@/utils/i18n';
 
-import { activateChatGptFolders } from '../index';
 import { type SidebarFixture, makeRows, mountSidebarFixture } from './chatgptSidebarFixture';
-import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
+import { activateChatGptFolders } from './chatgptSite';
 import { transfer } from './sectionHeaderDriver';
 
 vi.mock('webextension-polyfill', () => ({

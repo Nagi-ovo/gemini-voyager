@@ -22,11 +22,15 @@ import {
   treeDriver,
 } from '@/pages/content/folder/floatingTree/__tests__/treeDriver';
 import { confirmDriver } from '@/tests/confirmDriver';
+import {
+  type MemoryStorage,
+  createMemoryStorage,
+  settle as settleStorage,
+} from '@/tests/memoryStorage';
 import { initI18n } from '@/utils/i18n';
 
-import { activateChatGptFolders } from '../index';
 import { type SidebarFixture, makeRows, mountSidebarFixture } from './chatgptSidebarFixture';
-import { type MemoryStorage, createMemoryStorage, settle as settleStorage } from './memoryStorage';
+import { activateChatGptFolders } from './chatgptSite';
 
 vi.mock('webextension-polyfill', () => ({
   default: {

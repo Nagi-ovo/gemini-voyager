@@ -4,10 +4,10 @@ import { StorageKeys } from '@/core/types/common';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 import { exportChatGptFolders } from '@/features/folder/sites/chatgptTransfer';
 import type { FolderData } from '@/pages/content/folder/types';
+import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 
-import { ChatGptFolderStore } from '../ChatGptFolderStore';
-import { createLegacyChatGptCommands } from '../legacyChatGptCommands';
-import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
+import type { SiteFoldersStore } from '../../types';
+import { commandsOf, createChatGptStore } from './chatgptSite';
 
 vi.mock('webextension-polyfill', () => ({
   default: {
@@ -44,13 +44,13 @@ const FILE: FolderData = {
 
 let memory: MemoryStorage;
 let originalStorage: typeof chrome.storage;
-let store: ChatGptFolderStore;
+let store: SiteFoldersStore;
 
 beforeEach(async () => {
   memory = createMemoryStorage();
   originalStorage = globalThis.chrome.storage;
   globalThis.chrome.storage = memory.api;
-  store = new ChatGptFolderStore();
+  store = createChatGptStore();
   await store.init();
   await settle();
 });
@@ -63,9 +63,9 @@ afterEach(() => {
 
 const stored = () => memory.values.local.get(StorageKeys.FOLDER_DATA_CHATGPT) as FolderData;
 
-describe('ChatGPT legacy FolderCommands import', () => {
+describe('ChatGPT folder commands: import', () => {
   it('saves a ChatGPT file with its stats', async () => {
-    const outcome = await createLegacyChatGptCommands(store).runBulk({
+    const outcome = await commandsOf(store).runBulk({
       kind: 'importFile',
       payload: JSON.parse(JSON.stringify(exportChatGptFolders(FILE))),
       strategy: 'merge',
@@ -81,7 +81,7 @@ describe('ChatGPT legacy FolderCommands import', () => {
 
   it('refuses another site’s file with the wrong-site notice and writes nothing', async () => {
     const before = memory.values.local.get(StorageKeys.FOLDER_DATA_CHATGPT);
-    const outcome = await createLegacyChatGptCommands(store).runBulk({
+    const outcome = await commandsOf(store).runBulk({
       kind: 'importFile',
       payload: { ...exportChatGptFolders(FILE), platform: 'gemini' },
       strategy: 'merge',
@@ -97,7 +97,7 @@ describe('ChatGPT legacy FolderCommands import', () => {
 
   it('refuses a replace import instead of merging it', async () => {
     const before = memory.values.local.get(StorageKeys.FOLDER_DATA_CHATGPT);
-    const outcome = await createLegacyChatGptCommands(store).runBulk({
+    const outcome = await commandsOf(store).runBulk({
       kind: 'importFile',
       payload: JSON.parse(JSON.stringify(exportChatGptFolders(FILE))),
       strategy: 'replace',
@@ -109,7 +109,7 @@ describe('ChatGPT legacy FolderCommands import', () => {
   });
 });
 
-describe('ChatGPT legacy FolderCommands folder moves', () => {
+describe('ChatGPT folder commands: folder moves', () => {
   /** Work › Notes › Archive, and Personal. */
   const NESTED: FolderData = {
     folders: [
@@ -133,7 +133,7 @@ describe('ChatGPT legacy FolderCommands folder moves', () => {
   });
 
   it('nests a folder with subfolders past the depth a new folder may have, as Gemini does', async () => {
-    const outcome = await createLegacyChatGptCommands(store).run({
+    const outcome = await commandsOf(store).run({
       kind: 'moveFolder',
       folderId: 'work',
       parentId: 'personal',
@@ -152,7 +152,7 @@ describe('ChatGPT legacy FolderCommands folder moves', () => {
   });
 
   it('creates a third level, then reports the depth limit below it and creates nothing', async () => {
-    const commands = createLegacyChatGptCommands(store);
+    const commands = commandsOf(store);
     await commands.run({
       kind: 'createFolder',
       folderId: 'ignored',
@@ -182,7 +182,7 @@ describe('ChatGPT legacy FolderCommands folder moves', () => {
   });
 
   it('refuses to nest a folder under one that is gone', async () => {
-    const outcome = await createLegacyChatGptCommands(store).run({
+    const outcome = await commandsOf(store).run({
       kind: 'moveFolder',
       folderId: 'personal',
       parentId: 'deleted-elsewhere',
@@ -190,5 +190,20 @@ describe('ChatGPT legacy FolderCommands folder moves', () => {
 
     expect(outcome).toMatchObject({ kind: 'rejected', reason: 'target_missing' });
     expect(store.data.folders.find((f) => f.id === 'personal')?.parentId).toBeNull();
+  });
+});
+
+describe('ChatGPT folder commands: colour', () => {
+  it("stores a cleared colour as ChatGPT's 'default', as it always has", async () => {
+    await store.replaceData({
+      folders: [{ ...folder('work', 'Work'), color: 'blue' }],
+      folderContents: { work: [], [ROOT_CONVERSATIONS_ID]: [] },
+    });
+    await settle();
+
+    await commandsOf(store).run({ kind: 'setFolderColor', folderId: 'work', color: null });
+    await settle();
+
+    expect(stored().folders[0].color).toBe('default');
   });
 });

@@ -157,6 +157,11 @@
       "name": "chatgpt-diagram-rendering",
       "source": "sites/chatgpt/plugins/diagram-rendering/plugin.json",
       "official": true
+    },
+    {
+      "name": "chatgpt-folders",
+      "source": "sites/chatgpt/plugins/folders/plugin.json",
+      "official": true
     }
   ]
 }

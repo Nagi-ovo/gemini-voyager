@@ -20,12 +20,11 @@ import {
   openMenu,
   treeDriver,
 } from '@/pages/content/folder/floatingTree/__tests__/treeDriver';
+import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 import { initI18n } from '@/utils/i18n';
 
-import { FILED_ROW_ATTRIBUTE } from '../chatgptHideFiled';
-import { activateChatGptFolders } from '../index';
 import { type SidebarFixture, makeRows, mountSidebarFixture } from './chatgptSidebarFixture';
-import { type MemoryStorage, createMemoryStorage, settle } from './memoryStorage';
+import { FILED_ROW_ATTRIBUTE, activateChatGptFolders } from './chatgptSite';
 
 vi.mock('webextension-polyfill', () => ({
   default: {
