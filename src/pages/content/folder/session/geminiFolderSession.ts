@@ -24,6 +24,7 @@ import type { AccountScope } from '@/core/services/AccountIsolationService';
 import { createToaster } from '@/core/ui/toast/toaster';
 import { type FolderCommands, failed } from '@/features/folder/commands/folderCommands';
 import type { ConversationSortMode } from '@/features/folder/model/folderData';
+import { createAccountNoticeDelay } from '@/features/plugins/verbs/folders/accountNotice';
 import { initI18n } from '@/utils/i18n';
 
 import type { FolderDataSession } from '../FolderDataSession';
@@ -55,7 +56,11 @@ export interface GeminiFolderReads {
   /** Changes on every account rebind, including a return to the same account. */
   readonly activation: number;
   readonly accountIsolationEnabled: boolean;
-  /** Isolation is on and the page names no account it can read: no folders can show. */
+  /**
+   * Isolation is on and the page has named no account it can read for the
+   * grace period (`ACCOUNT_NOTICE_GRACE_MS`): no folders can show, and the
+   * panel says why.
+   */
   readonly accountUnknown?: boolean;
 }
 
@@ -82,6 +87,10 @@ export class GeminiFolderSession implements GeminiFolderReads {
   private readonly readyListeners = new Set<() => void>();
   /** Told each time the account the page's folders belong to may have changed. */
   private readonly accountListeners = new Set<() => void>();
+  /** The grace before the panel says the account is unreadable; the view shows it then. */
+  private readonly accountNotice = createAccountNoticeDelay(() => {
+    if (!this.closed) this.view?.onChange('loaded');
+  });
   /** Shows notices while no view is attached; a view shows its own. */
   private toaster: ReturnType<typeof createToaster> | null = null;
 
@@ -132,10 +141,11 @@ export class GeminiFolderSession implements GeminiFolderReads {
     return this.store.accountIsolationEnabled;
   }
   get accountUnknown(): boolean {
-    return (
+    // Reading it starts the grace; an account read before it ends shows no notice.
+    return this.accountNotice.shown(
       this.store.accountIsolationEnabled &&
-      !this.accountMatchesPage &&
-      geminiPageAccountFingerprint() === null
+        !this.accountMatchesPage &&
+        geminiPageAccountFingerprint() === null,
     );
   }
   /** The active bucket's key, which pending native deletes check against. */
@@ -303,6 +313,7 @@ export class GeminiFolderSession implements GeminiFolderReads {
     this.stopListening = null;
     this.readyListeners.clear();
     this.accountListeners.clear();
+    this.accountNotice.stop();
     this.syncPoll();
     this.toaster?.destroy();
     this.toaster = null;

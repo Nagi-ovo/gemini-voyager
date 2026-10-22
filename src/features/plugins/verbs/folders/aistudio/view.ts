@@ -32,7 +32,7 @@ import {
 import { readCloudTooltip } from '@/pages/content/folder/syncTooltip';
 import { watchRouteChanges } from '@/pages/content/utils/routeWatcher';
 
-import { setAccountUnknownNotice } from '../accountNotice';
+import { createAccountNoticeDelay, setAccountUnknownNotice } from '../accountNotice';
 import type { PanelSection } from '../panelSection';
 import { AIStudioTransfer } from './cloud';
 import {
@@ -71,6 +71,8 @@ export class AIStudioFoldersView implements AIStudioFolderView {
   private readonly dialogs = createFolderDialogs();
   /** Aborted by `destroy`: a start-up still waiting for the nav stops there. */
   private readonly lifetime = new AbortController();
+  /** The grace before the panel says the account switcher is unreadable. */
+  private readonly accountNotice = createAccountNoticeDelay(() => this.render());
   private panel: PanelSection | null = null;
   private historyRoot: HTMLElement | null = null;
   /** Stops for what `initializeFolderUI` started once per mount. */
@@ -259,8 +261,10 @@ export class AIStudioFoldersView implements AIStudioFolderView {
   render(): void {
     const container = this.container;
     if (!container) return;
-    const { canEdit, accountUnknown } = this.session;
-    // An unreadable account switcher is no load in progress: say why the folders are hidden.
+    const { canEdit } = this.session;
+    // An unreadable account switcher is no load in progress: once it stays so, say why the
+    // folders are hidden.
+    const accountUnknown = this.accountNotice.shown(this.session.accountUnknown);
     container.inert = !canEdit && !accountUnknown;
     container.setAttribute('aria-busy', String(!canEdit && !accountUnknown));
     setFolderHeaderDisabled(container, !canEdit);
@@ -336,6 +340,7 @@ export class AIStudioFoldersView implements AIStudioFolderView {
 
   /** Removes everything this view attached to the page and detaches it from the session. */
   destroy(): void {
+    this.accountNotice.stop();
     this.lifetime.abort();
     this.session.detach(this);
     browser.storage.onChanged.removeListener(this.onStorage);

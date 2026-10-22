@@ -17,6 +17,7 @@ import { AISTUDIO_ROOT_BUCKET_ID } from '@/features/folder/constants';
 import { PluginHost } from '@/features/plugins/runtime/PluginHost';
 import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
 import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCatalogPluginSource';
+import { ACCOUNT_NOTICE_GRACE_MS } from '@/features/plugins/verbs/folders/accountNotice';
 import { admitAIStudioFolders } from '@/pages/content/aistudioFolderStartup';
 import { treeRoot } from '@/pages/content/folder/__tests__/aistudioTreeDriver';
 import { treeDriver } from '@/pages/content/folder/floatingTree/__tests__/treeDriver';
@@ -157,6 +158,7 @@ afterEach(async () => {
   lifetime.abort();
   await pass();
   globalThis.chrome.storage = original;
+  vi.useRealTimers();
   vi.restoreAllMocks();
   document.body.innerHTML = '';
   document.documentElement.className = '';
@@ -278,7 +280,8 @@ describe("AI Studio folders behind the page's account", () => {
     await vi.waitFor(() => expect(outline()).toEqual(['Private a']));
   });
 
-  it('says why the folders are hidden instead of loading forever while the switcher is unreadable', async () => {
+  it('says why the folders are hidden instead of loading forever while the switcher stays unreadable', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     document.querySelector('.account-switcher-text')!.remove();
     await openPage();
     await vi.waitFor(() => expect(panel()).not.toBeNull());
@@ -286,6 +289,11 @@ describe("AI Studio folders behind the page's account", () => {
 
     const notice = () => panel()!.querySelector('.gv-folder-account-notice');
     const tree = () => panel()!.querySelector<HTMLElement>('.gv-aistudio-folder-tree')!;
+    // A switcher is drawn a moment after the panel: no warning yet, only the quiet wait.
+    expect(notice()).toBeNull();
+    expect(panel()!.inert).toBe(true);
+    await vi.advanceTimersByTimeAsync(ACCOUNT_NOTICE_GRACE_MS);
+
     expect(panel()!.getAttribute('aria-busy')).toBe('false');
     expect(notice()?.textContent).toBe(
       "Can't confirm which account this page is signed in to, so folders are hidden. They're still saved.",
@@ -303,5 +311,21 @@ describe("AI Studio folders behind the page's account", () => {
     expect(notice()).toBeNull();
     expect(tree().inert).toBe(false);
     expect(panel()!.getAttribute('aria-busy')).toBe('false');
+  });
+
+  it('shows no account warning on a page whose switcher is drawn within the grace', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const switcher = document.querySelector('.account-switcher-text')!;
+    switcher.remove();
+    await openPage();
+    await vi.waitFor(() => expect(panel()).not.toBeNull());
+    await vi.advanceTimersByTimeAsync(ACCOUNT_NOTICE_GRACE_MS - 1000);
+
+    expect(panel()!.querySelector('.gv-folder-account-notice')).toBeNull();
+    document.body.prepend(switcher);
+    await poll();
+    await vi.waitFor(() => expect(outline()).toEqual(['Private a']));
+    await vi.advanceTimersByTimeAsync(ACCOUNT_NOTICE_GRACE_MS * 2);
+    expect(panel()!.querySelector('.gv-folder-account-notice')).toBeNull();
   });
 });

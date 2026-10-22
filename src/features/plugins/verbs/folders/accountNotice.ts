@@ -6,6 +6,52 @@
 const NOTICE_CLASS = 'gv-folder-account-notice';
 
 /**
+ * How long the account must stay unreadable before the panel says so. A page
+ * draws its account control a moment after the folders mount; a warning on
+ * every load would cry wolf.
+ */
+export const ACCOUNT_NOTICE_GRACE_MS = 3000;
+
+export interface AccountNoticeDelay {
+  /** Whether to show the notice now, given whether the account is unreadable now. */
+  shown(unknown: boolean): boolean;
+  /** Drops a pending wait; the next unreadable account waits the whole grace again. */
+  stop(): void;
+}
+
+/**
+ * Holds the notice back until the account has stayed unreadable for
+ * `ACCOUNT_NOTICE_GRACE_MS`; `onShow` is called then, to show it. An account
+ * read in between ends the wait.
+ */
+export function createAccountNoticeDelay(onShow: () => void): AccountNoticeDelay {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let elapsed = false;
+  const stop = (): void => {
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+    elapsed = false;
+  };
+  return {
+    shown(unknown) {
+      if (!unknown) {
+        stop();
+        return false;
+      }
+      if (!elapsed && timer === null) {
+        timer = setTimeout(() => {
+          timer = null;
+          elapsed = true;
+          onShow();
+        }, ACCOUNT_NOTICE_GRACE_MS);
+      }
+      return elapsed;
+    },
+    stop,
+  };
+}
+
+/**
  * Shows `message` before the container's `treeHostClass` child and makes that
  * child inert, or removes both when null. `container` may be a shadow root.
  */

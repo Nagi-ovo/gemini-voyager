@@ -18,6 +18,7 @@ import { PluginHost } from '@/features/plugins/runtime/PluginHost';
 import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCatalogPluginSource';
+import { ACCOUNT_NOTICE_GRACE_MS } from '@/features/plugins/verbs/folders/accountNotice';
 import {
   hideGeminiAccount,
   showGeminiAccount,
@@ -299,7 +300,8 @@ describe("Gemini folders' account gate", () => {
     expect(memory.values.local.get(KEY)).toEqual(STORED);
   });
 
-  it("says why the folders are hidden instead of loading forever while Gemini's account is unreadable", async () => {
+  it("says why the folders are hidden instead of loading forever while Gemini's account stays unreadable", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     memory.values.local.set(await keyOf('a'), structuredClone(STORED));
     await openPage();
     await vi.waitFor(() => expect(panel()).not.toBeNull());
@@ -307,6 +309,11 @@ describe("Gemini folders' account gate", () => {
     const container = () => panel() as HTMLElement;
     const notice = () => container().querySelector(':scope > .gv-folder-account-notice');
     const list = () => container().querySelector<HTMLElement>(':scope > .gv-folder-list')!;
+    // Gemini draws its account button a moment after the panel: no warning yet, only the wait.
+    expect(notice()).toBeNull();
+    expect(container().inert).toBe(true);
+    await vi.advanceTimersByTimeAsync(ACCOUNT_NOTICE_GRACE_MS);
+
     expect(container().getAttribute('aria-busy')).toBe('false');
     expect(notice()?.textContent).toBe(
       "Can't confirm which account this page is signed in to, so folders are hidden. They're still saved.",
@@ -324,6 +331,22 @@ describe("Gemini folders' account gate", () => {
     expect(list().inert).toBe(false);
     expect(container().inert).toBe(false);
     expect(container().getAttribute('aria-busy')).toBe('false');
+  });
+
+  it('shows no account warning on a page whose account button is drawn within the grace', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    memory.values.local.set(await keyOf('a'), structuredClone(STORED));
+    await openPage();
+    await vi.waitFor(() => expect(panel()).not.toBeNull());
+    await vi.advanceTimersByTimeAsync(ACCOUNT_NOTICE_GRACE_MS - 1000);
+
+    expect(panel()!.querySelector('.gv-folder-account-notice')).toBeNull();
+    showGeminiAccount('a@example.com');
+    await vi.waitFor(() => expect(outline()).toEqual(['Thesis', '  · Chat aa']), {
+      timeout: 4000,
+    });
+    await vi.advanceTimersByTimeAsync(ACCOUNT_NOTICE_GRACE_MS * 2);
+    expect(panel()!.querySelector('.gv-folder-account-notice')).toBeNull();
   });
 
   it("closes on another account's page and reopens on that account's folders", async () => {
