@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://voyager.nagi.fun/site-sections/page-hooks.schema.json",
+  "title": "Voyager site adapter: pageHooks",
+  "type": "object",
+  "description": "Page markers and text fallbacks for the Local Bridge and the model picker, so a ChatGPT change to one of them is fixed by publishing data. Structure comes first; text only stands in where the page has no structure for it. A section that fails validation is dropped (the code's measured defaults stand in where it has them, and every mode reads as unknown) and `catalog:build` refuses to publish it.",
+  "required": [
+    "format",
+    "modeSwitch",
+    "modes",
+    "modelPickerTrigger",
+    "effortControl",
+    "replyFailed",
+    "rateLimit",
+    "accountBlocked"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": 1,
+      "description": "Data format version; an unknown format drops the section."
+    },
+    "modeSwitch": {
+      "type": "object",
+      "required": ["group", "button", "pressedAttribute", "order"],
+      "additionalProperties": false,
+      "description": "The chat/Work pair on a new chat or project page.",
+      "properties": {
+        "group": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "CSS selector of the element holding exactly the two mode buttons."
+        },
+        "button": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "CSS selector, inside the group, of a mode button."
+        },
+        "pressedAttribute": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,63}$",
+          "description": "Attribute that is \"true\" on the pressed button."
+        },
+        "order": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["chat", "work"]
+          },
+          "description": "The modes of the two buttons, in page order."
+        }
+      }
+    },
+    "modes": {
+      "type": "object",
+      "required": ["chat", "work"],
+      "additionalProperties": false,
+      "description": "Text fallbacks per mode, from ChatGPT's own messages: read where the page has no switch (an existing conversation), or the switch is not found.",
+      "properties": {
+        "chat": {
+          "type": "object",
+          "required": ["composerLabels", "switchLabels"],
+          "additionalProperties": false,
+          "properties": {
+            "composerLabels": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "description": "The composer's placeholder in chat mode, per UI locale."
+            },
+            "switchLabels": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "description": "The exact text of the mode switch's chat button, per UI locale."
+            }
+          }
+        },
+        "work": {
+          "type": "object",
+          "required": ["composerLabels", "switchLabels"],
+          "additionalProperties": false,
+          "properties": {
+            "composerLabels": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "description": "The composer's placeholder in Work mode, per UI locale."
+            },
+            "switchLabels": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "description": "The exact text of the mode switch's Work button, per UI locale."
+            }
+          }
+        }
+      }
+    },
+    "modelPickerTrigger": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "CSS selector of the model picker button, in every UI language."
+    },
+    "effortControl": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "CSS selector of the effort row in the picker menu, which takes the arrow keys when its slider did not render."
+    },
+    "replyFailed": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "description": "Safe regular expressions (case-insensitive) over a failed reply's text."
+    },
+    "rateLimit": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "description": "Safe regular expressions (case-insensitive) over a page alert's text that mean a usage limit."
+    },
+    "accountBlocked": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 16,
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "description": "Groups of phrases a blocked account's page shows; all of one group must be present."
+    }
+  }
+}

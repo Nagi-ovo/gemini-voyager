@@ -23,15 +23,17 @@
  * The structural checker below is deliberately tiny and local: the repository
  * ships no JSON Schema validator (D17: no schema library), and adding ajv to
  * assert this would be a runtime dependency bought for one test file. It covers
- * exactly the keywords these two schemas use: $ref, type, const, enum, pattern,
- * minLength/maxLength, minimum/maximum, minItems/maxItems, items, properties,
- * additionalProperties, required, propertyNames, if/then/else, anyOf/oneOf, and
- * `format: "regex"` (the one format they assert). Annotations such as
- * description, default and examples carry no constraint.
+ * exactly the keywords these schemas use: $ref (within a file, or to a file
+ * beside it: the site schema keeps its large sections in `site-sections/`),
+ * type, const, enum, pattern, minLength/maxLength, minimum/maximum,
+ * minItems/maxItems, items, properties, additionalProperties, required,
+ * propertyNames, if/then/else, anyOf/oneOf, and `format: "regex"` (the one
+ * format they assert). Annotations such as description, default and examples
+ * carry no constraint. It lives in `__tests__/jsonSchemaCheck.ts`; the site
+ * schema's own cases are in `schema.site.test.ts`.
  */
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { MAX_DOM_OPS, MAX_STYLE_LENGTH, PLUGIN_MANIFEST_FORMAT } from '../constants';
@@ -40,218 +42,21 @@ import { buildPluginExample } from '../local/authoring/pluginExamples';
 import { validateLocalManifest } from '../local/validateLocalManifest';
 import { DEFAULT_ADAPTERS } from '../sites/registry';
 import { SEMANTIC_SELECTOR_KEYS } from '../sites/semanticKeys';
-import { siteAdapterToData, validateSiteAdapterData } from '../sites/siteAdapterData';
 import { resolveStyleFileContributions } from '../sources/styleFiles';
 import { PRIMITIVE_CONTRACTS, PRIMITIVE_NAME_PATTERN } from '../verbs/contracts';
+import {
+  type JsonSchema,
+  catalogSites,
+  check,
+  listDirs,
+  pluginSchema,
+  readJson,
+  repoRoot,
+  serialized,
+  siteSchema,
+} from './__tests__/jsonSchemaCheck';
 import { ALLOWED_ATTRIBUTE_NAMES, attributeNameIssue } from './sinkGuards';
 import { validateManifest } from './validate';
-
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
-const catalogSites = join(repoRoot, 'src/features/plugins/catalog/sites');
-
-type JsonSchema = Record<string, unknown>;
-
-function readJson(path: string): unknown {
-  return JSON.parse(readFileSync(path, 'utf8')) as unknown;
-}
-
-const pluginSchema = readJson(join(repoRoot, 'docs/public/plugin.schema.json')) as JsonSchema;
-const siteSchema = readJson(join(repoRoot, 'docs/public/site.schema.json')) as JsonSchema;
-
-// ---------------------------------------------------------------------------
-// A minimal JSON Schema (draft 2020-12) checker — only the keywords used here
-// ---------------------------------------------------------------------------
-
-interface CheckOptions {
-  /**
-   * Report every object property the schema does not name, as if each object
-   * schema carried `additionalProperties: false`. This is how "the schema
-   * documents every field the validator emits" is asserted; normal validation
-   * stays lenient, matching the validators, which ignore unknown keys.
-   */
-  readonly strictProperties?: boolean;
-}
-
-function jsonType(value: unknown): string {
-  if (value === null) return 'null';
-  if (Array.isArray(value)) return 'array';
-  return typeof value;
-}
-
-function typeMatches(value: unknown, type: string): boolean {
-  if (type === 'integer') return typeof value === 'number' && Number.isInteger(value);
-  return jsonType(value) === type;
-}
-
-function resolveRef(ref: string, root: JsonSchema): JsonSchema | null {
-  if (!ref.startsWith('#/')) return null;
-  let node: unknown = root;
-  for (const rawSegment of ref.slice(2).split('/')) {
-    const segment = rawSegment.replace(/~1/g, '/').replace(/~0/g, '~');
-    if (typeof node !== 'object' || node === null) return null;
-    node = (node as Record<string, unknown>)[segment];
-  }
-  return typeof node === 'object' && node !== null ? (node as JsonSchema) : null;
-}
-
-/** Own enumerable properties, treating an explicitly-undefined value as absent. */
-function definedEntries(value: Record<string, unknown>): [string, unknown][] {
-  return Object.entries(value).filter(([, item]) => item !== undefined);
-}
-
-function checkSchema(
-  value: unknown,
-  schema: JsonSchema | boolean,
-  root: JsonSchema,
-  options: CheckOptions,
-  path: string,
-): string[] {
-  if (typeof schema === 'boolean') return schema ? [] : [`${path}: no value is allowed here`];
-
-  if (typeof schema.$ref === 'string') {
-    const target = resolveRef(schema.$ref, root);
-    if (!target) return [`${path}: unresolvable $ref "${schema.$ref}"`];
-    return checkSchema(value, target, root, options, path);
-  }
-
-  const errors: string[] = [];
-
-  if (schema.type !== undefined) {
-    const types = Array.isArray(schema.type) ? (schema.type as string[]) : [schema.type as string];
-    if (!types.some((type) => typeMatches(value, type))) {
-      errors.push(`${path}: expected ${types.join(' | ')}, got ${jsonType(value)}`);
-      return errors;
-    }
-  }
-  if (schema.const !== undefined && value !== schema.const) {
-    errors.push(`${path}: expected const ${JSON.stringify(schema.const)}`);
-  }
-  if (Array.isArray(schema.enum) && !schema.enum.includes(value)) {
-    errors.push(`${path}: ${JSON.stringify(value)} is not one of ${JSON.stringify(schema.enum)}`);
-  }
-
-  if (typeof value === 'string') {
-    if (typeof schema.pattern === 'string' && !new RegExp(schema.pattern).test(value)) {
-      errors.push(`${path}: does not match /${schema.pattern}/`);
-    }
-    if (typeof schema.minLength === 'number' && value.length < schema.minLength) {
-      errors.push(`${path}: shorter than ${schema.minLength}`);
-    }
-    if (typeof schema.maxLength === 'number' && value.length > schema.maxLength) {
-      errors.push(`${path}: longer than ${schema.maxLength}`);
-    }
-    if (schema.format === 'regex') {
-      try {
-        new RegExp(value);
-      } catch {
-        errors.push(`${path}: not a valid regular expression`);
-      }
-    }
-  }
-
-  if (typeof value === 'number') {
-    if (typeof schema.minimum === 'number' && value < schema.minimum) {
-      errors.push(`${path}: below the minimum ${schema.minimum}`);
-    }
-    if (typeof schema.maximum === 'number' && value > schema.maximum) {
-      errors.push(`${path}: above the maximum ${schema.maximum}`);
-    }
-  }
-
-  if (Array.isArray(value)) {
-    if (typeof schema.minItems === 'number' && value.length < schema.minItems) {
-      errors.push(`${path}: fewer than ${schema.minItems} items`);
-    }
-    if (typeof schema.maxItems === 'number' && value.length > schema.maxItems) {
-      errors.push(`${path}: more than ${schema.maxItems} items`);
-    }
-    if (schema.items !== undefined) {
-      value.forEach((item, index) => {
-        errors.push(
-          ...checkSchema(
-            item,
-            schema.items as JsonSchema | boolean,
-            root,
-            options,
-            `${path}[${index}]`,
-          ),
-        );
-      });
-    }
-  }
-
-  if (jsonType(value) === 'object') {
-    const object = value as Record<string, unknown>;
-    const properties = (schema.properties ?? {}) as Record<string, JsonSchema>;
-    const additional = schema.additionalProperties;
-
-    for (const key of (schema.required ?? []) as string[]) {
-      if (object[key] === undefined) errors.push(`${path}: missing required "${key}"`);
-    }
-    for (const [key, item] of definedEntries(object)) {
-      const child = `${path}.${key}`;
-      if (schema.propertyNames !== undefined) {
-        errors.push(
-          ...checkSchema(key, schema.propertyNames as JsonSchema, root, options, `${child} (name)`),
-        );
-      }
-      if (properties[key] !== undefined) {
-        errors.push(...checkSchema(item, properties[key], root, options, child));
-        continue;
-      }
-      if (additional !== undefined && additional !== false && additional !== true) {
-        errors.push(...checkSchema(item, additional as JsonSchema, root, options, child));
-        continue;
-      }
-      // Only a schema that actually names properties can call a key
-      // undescribed. A composition wrapper (`anyOf` / `oneOf` with no
-      // `properties` of its own) describes nothing directly — its branches do,
-      // and one of them matching is what counts.
-      if (
-        additional === false ||
-        (options.strictProperties && schema.properties !== undefined && additional === undefined)
-      ) {
-        errors.push(`${child}: not described by the schema`);
-      }
-    }
-  }
-
-  if (schema.if !== undefined) {
-    const matches = checkSchema(value, schema.if as JsonSchema, root, {}, path).length === 0;
-    const branch = matches ? schema.then : schema.else;
-    // A conditional only adds constraints; the enclosing schema already
-    // describes (and strict-checks) every key, so the branch runs lenient.
-    if (branch !== undefined) {
-      errors.push(...checkSchema(value, branch as JsonSchema, root, {}, path));
-    }
-  }
-
-  for (const keyword of ['anyOf', 'oneOf'] as const) {
-    const branches = schema[keyword] as (JsonSchema | boolean)[] | undefined;
-    if (!Array.isArray(branches)) continue;
-    const failures = branches.map((branch) =>
-      checkSchema(value, branch, root, options, `${path}<${keyword}>`),
-    );
-    const passing = failures.filter((branch) => branch.length === 0).length;
-    if (keyword === 'anyOf' && passing === 0) {
-      errors.push(`${path}: matched no anyOf branch (${failures.flat().join('; ')})`);
-    }
-    if (keyword === 'oneOf' && passing !== 1) {
-      errors.push(`${path}: matched ${passing} oneOf branches, expected exactly 1`);
-    }
-  }
-
-  return errors;
-}
-
-function check(value: unknown, schema: JsonSchema, options: CheckOptions = {}): string[] {
-  return checkSchema(value, schema, schema, options, '$');
-}
-
-/** JSON round trip: drops `undefined`, mirroring what a published file carries. */
-function serialized(value: unknown): unknown {
-  return JSON.parse(JSON.stringify(value)) as unknown;
-}
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -276,21 +81,6 @@ function listBundledPlugins(): readonly BundledPlugin[] {
     }
   }
   return plugins;
-}
-
-function listDirs(dir: string): readonly string[] {
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
-    .sort();
-}
-
-function listBundledSites(): readonly { label: string; raw: Record<string, unknown> }[] {
-  return listDirs(catalogSites).map((site) => ({
-    label: `sites/${site}`,
-    raw: readJson(join(catalogSites, site, 'site.json')) as Record<string, unknown>,
-  }));
 }
 
 async function inlineStyles(plugin: BundledPlugin): Promise<unknown> {
@@ -607,58 +397,5 @@ describe('plugin.schema.json and the local plugin gate', () => {
     expect(check(manifest, pluginSchema)).not.toEqual([]);
     const result = validateLocalManifest(manifest);
     expect(result.success).toBe(false);
-  });
-});
-
-describe('site.schema.json', () => {
-  const sites = listBundledSites();
-
-  it('finds the bundled sites', () => {
-    expect(sites.length).toBeGreaterThan(0);
-  });
-
-  it.each(sites.map((site) => [site.label, site.raw] as const))(
-    'accepts %s, and so does validateSiteAdapterData',
-    (_label, raw) => {
-      expect(check(raw, siteSchema)).toEqual([]);
-      const result = validateSiteAdapterData(raw);
-      expect(result.success ? [] : result.error).toEqual([]);
-      if (!result.success) return;
-      // `capabilities` is a Set on the adapter; the published/serializable form
-      // is what a site.json actually looks like.
-      expect(check(siteAdapterToData(result.data), siteSchema, { strictProperties: true })).toEqual(
-        [],
-      );
-    },
-  );
-
-  it('rejects site documents the validator also rejects', () => {
-    const base = listBundledSites()[0].raw;
-
-    const noId = { ...base } as Record<string, unknown>;
-    delete noId.id;
-    expect(check(noId, siteSchema)).toContain('$: missing required "id"');
-
-    const badKey = { ...base, selectors: { ...(base.selectors as object), notAKey: 'div' } };
-    expect(check(badKey, siteSchema).join('\n')).toMatch(/notAKey/);
-
-    const badCapability = { ...base, capabilities: ['chat', 'teleport'] };
-    expect(check(badCapability, siteSchema).join('\n')).toMatch(/capabilities\[1\]/);
-
-    const badTheme = { ...base, theme: { hostSelector: 'html' } };
-    expect(check(badTheme, siteSchema).join('\n')).toMatch(/lightSelector/);
-
-    const negativeRevision = { ...base, catalogRevision: -1 };
-    expect(check(negativeRevision, siteSchema).join('\n')).toMatch(/catalogRevision.*minimum/);
-    const hugeRevision = { ...base, catalogRevision: Number.MAX_SAFE_INTEGER + 2 };
-    expect(check(hugeRevision, siteSchema).join('\n')).toMatch(/catalogRevision.*maximum/);
-    expect(check({ ...base, catalogRevision: 7 }, siteSchema)).toEqual([]);
-
-    const badPattern = { ...base, conversationIdPattern: '^/chat/(' };
-    expect(check(badPattern, siteSchema).join('\n')).toMatch(/conversationIdPattern.*regular/);
-
-    for (const broken of [noId, badKey, badCapability, badTheme, negativeRevision]) {
-      expect(validateSiteAdapterData(broken).success).toBe(false);
-    }
   });
 });
