@@ -2,10 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { AISTUDIO_ROOT_BUCKET_ID } from '@/features/folder/constants';
 import { validateFolderData } from '@/features/folder/model/folderData';
+import { FOLDER_SITE_TABLE } from '@/features/folder/sites/folderSiteTable';
 
-import { FolderDataSession } from './FolderDataSession';
-import { createLegacyAIStudioCommands } from './legacyAIStudioCommands';
-import type { FolderData } from './types';
+import { FolderDataSession } from '../../FolderDataSession';
+import type { FolderData } from '../../types';
+import { createAIStudioCommands } from '../aistudioCommands';
 
 function fixture(data: FolderData, canEdit = true) {
   const repository = {
@@ -16,7 +17,7 @@ function fixture(data: FolderData, canEdit = true) {
     replaceData: vi.fn().mockResolvedValue(true),
   };
   const hooks = { commit: vi.fn().mockResolvedValue(undefined), onDraftSettled: vi.fn() };
-  return { repository, hooks, commands: createLegacyAIStudioCommands(repository, hooks) };
+  return { repository, hooks, commands: createAIStudioCommands(repository, hooks) };
 }
 
 const folder = (id: string) => ({
@@ -37,7 +38,7 @@ const prompt = (title: string) => ({
   customTitle: true,
 });
 
-describe('legacy AI Studio command boundaries', () => {
+describe('AI Studio command boundaries', () => {
   it('edits synchronously and commits only changes, preserving caller-provided folder ids', async () => {
     const { commands, repository, hooks } = fixture({ folders: [], folderContents: {} });
     const creating = commands.run({
@@ -55,6 +56,25 @@ describe('legacy AI Studio command boundaries', () => {
     await commands.run({ kind: 'renameFolder', folderId: 'old-id-format', name: 'Other' });
     expect(repository.data.folders[0]?.name).toBe('First');
     expect(hooks.commit).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses, unchanged and unsaved, every edit the core folder table refuses on AI Studio', async () => {
+    const data: FolderData = { folders: [folder('a')], folderContents: { a: [prompt('Kept')] } };
+    const before = structuredClone(data);
+    const { commands, hooks } = fixture(data);
+    const bodies = {
+      moveFolder: { kind: 'moveFolder', folderId: 'a', parentId: null },
+      setFolderColor: { kind: 'setFolderColor', folderId: 'a', color: 'blue' },
+      moveConversations: { kind: 'moveConversations', ids: ['p1'], from: 'a', target: 'b' },
+      renameConversation: { kind: 'renameConversation', conversationId: 'p1', title: 'New' },
+    } as const;
+    for (const kind of Object.keys(bodies) as (keyof typeof bodies)[]) {
+      expect(FOLDER_SITE_TABLE.aistudio.tree.refusedOps).toContain(kind);
+      const outcome = await commands.run(bodies[kind] as never);
+      expect(outcome).toMatchObject({ kind: 'rejected', reason: 'unsupported' });
+    }
+    expect(data).toEqual(before);
+    expect(hooks.commit).not.toHaveBeenCalled();
   });
 
   it('stages the dragged stored copy without saving until the caller saves', async () => {

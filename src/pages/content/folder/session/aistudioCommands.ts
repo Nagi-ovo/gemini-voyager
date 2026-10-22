@@ -1,4 +1,9 @@
-/** AI Studio's legacy edits, preserving its live draft and caller-owned save boundaries. */
+/**
+ * AI Studio's folder edits as commands, preserving its live draft and
+ * caller-owned save boundaries. Every edit the core folder table refuses for AI
+ * Studio (`tree.refusedOps`) is rejected as unsupported: it would write what AI
+ * Studio never wrote.
+ */
 import {
   type EditOutcome,
   type FolderCommands,
@@ -11,9 +16,6 @@ import {
 import { applyFolderOp } from '@/features/folder/owner/applyFolderOp';
 import { rejected } from '@/features/folder/owner/folderOps';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
-
-import type { FolderRepository } from './FolderRepository';
-import { applyNativePromptTitles } from './aistudioPromptHistory';
 import {
   addFolder,
   deleteFolder,
@@ -22,12 +24,17 @@ import {
   renameFolder,
   toggleFolderExpanded,
   toggleFolderPinned,
-} from './aistudioTree';
+} from '@/features/folder/sites/aistudioEdits';
+import { FOLDER_SITE_TABLE } from '@/features/folder/sites/folderSiteTable';
+
+import type { FolderRepository } from '../FolderRepository';
+import { applyNativePromptTitles } from '../aistudioPromptHistory';
 
 type Kind = FolderEditBody['kind'];
+const REFUSED: ReadonlySet<Kind> = new Set(FOLDER_SITE_TABLE.aistudio.tree.refusedOps);
 type Handler<K extends Kind> = (body: OpOf<K>) => EditOutcome | Promise<EditOutcome>;
 
-export function createLegacyAIStudioCommands(
+export function createAIStudioCommands(
   repository: Pick<FolderRepository, 'data' | 'canEdit' | 'saveData' | 'replaceData' | 'session'>,
   hooks: {
     /** Existing tree save then render; no-op edits never call it. */
@@ -45,7 +52,8 @@ export function createLegacyAIStudioCommands(
   };
   const folderOf = (folderId: string) =>
     repository.data.folders.find((folder) => folder.id === folderId);
-  const handlers: { [K in Kind]: Handler<K> } = {
+  // Only the edits AI Studio has always made; any other kind is unsupported.
+  const handlers: { [K in Kind]?: Handler<K> } = {
     createFolder: ({ folderId, name, parentId }) =>
       edit(() => addFolder(repository.data, { id: folderId, name, parentId, at: Date.now() })),
     renameFolder: ({ folderId, name }) =>
@@ -81,10 +89,7 @@ export function createLegacyAIStudioCommands(
       }),
     placeAIStudioPrompt: ({ prompt, target, untitledTitle, at }) => {
       // The /library path stages even before save can check edit rights.
-      repository.data = placePrompt(repository.data, { ...prompt, type: 'conversation' }, target, {
-        untitledTitle,
-        at,
-      });
+      repository.data = placePrompt(repository.data, prompt, target, { untitledTitle, at });
       return UNCONFIRMED;
     },
     ensureDefaultAIStudioFolder: ({ folderId, name, at }) => {
@@ -100,29 +105,14 @@ export function createLegacyAIStudioCommands(
       await hooks.commit();
       return UNCONFIRMED;
     },
-    moveFolder: unsupported,
-    setFolderColor: unsupported,
-    setFolderInstructions: unsupported,
-    addConversations: unsupported,
-    moveConversations: unsupported,
-    reorderConversations: unsupported,
-    removeConversationEverywhere: unsupported,
-    renameConversation: unsupported,
-    syncNativeTitles: unsupported,
-    restoreNativeTitle: unsupported,
-    setConversationGem: unsupported,
-    markConversationOpened: unsupported,
-    setConversationActivity: unsupported,
-    dropConversations: unsupported,
-    bufferNativeTitle: unsupported,
-    flushNativeTitles: unsupported,
   };
 
   return {
     status: () => (repository.canEdit ? 'ready' : 'read_only'),
     view: () => repository.data,
     run: (body) => {
-      const handler = handlers[body.kind] as Handler<Kind>;
+      const handler = handlers[body.kind] as Handler<Kind> | undefined;
+      if (!handler || REFUSED.has(body.kind)) return Promise.resolve(unsupported());
       return Promise.resolve(handler(body as never));
     },
     runBulk: async (body) => {

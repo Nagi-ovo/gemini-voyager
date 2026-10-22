@@ -198,7 +198,7 @@ export const FOLDER_SITE_TABLE: Readonly<Record<FolderPlatform, FolderSiteRow>> 
       folderOrder: 'created',
       conversationOrder: 'stored',
       rootSectionLabel: 'folder_uncategorized',
-      // `legacyAIStudioCommands.ts`
+      // `session/aistudioCommands.ts` rejects each of these.
       refusedOps: [
         'moveFolder',
         'setFolderColor',

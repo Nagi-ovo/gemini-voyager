@@ -47,8 +47,8 @@ import type { TreeActions } from './floatingTree/shared';
 import { createFolderDialogs } from './folderDialogs';
 import { setFolderHeaderDisabled } from './folderHeader/folderHeader';
 import { getFolderRecoveryNotice } from './folderRecoveryNotice';
-import { createLegacyAIStudioCommands } from './legacyAIStudioCommands';
 import { AISTUDIO_FOLDER_CONFIG } from './platformFolderConfig';
+import { createAIStudioCommands } from './session/aistudioCommands';
 import { AIStudioFolderStorageAdapter } from './storage/AIStudioFolderStorageAdapter';
 import { createSyncMessageListener } from './syncMessageListener';
 import { readCloudTooltip } from './syncTooltip';
@@ -101,7 +101,7 @@ export class AIStudioFolderManager {
       onAccountBound: (context) => this.account.bound(context),
     },
   );
-  private readonly commands = createLegacyAIStudioCommands(this.repository, {
+  private readonly commands = createAIStudioCommands(this.repository, {
     commit: () => this.save().then(() => this.render()),
     onDraftSettled: () => {
       if (this.container) this.applyHideArchived();
