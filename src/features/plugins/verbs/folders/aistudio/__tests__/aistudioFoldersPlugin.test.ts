@@ -7,6 +7,10 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  accountIsolationService,
+  buildScopedStorageKey,
+} from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import { AISTUDIO_ROOT_BUCKET_ID } from '@/features/folder/constants';
@@ -15,7 +19,7 @@ import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmi
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCatalogPluginSource';
 import { admitAIStudioFolders } from '@/pages/content/aistudioFolderStartup';
-import { treeRoot } from '@/pages/content/folder/__tests__/aistudioTreeDriver';
+import { nameInput, treeRoot } from '@/pages/content/folder/__tests__/aistudioTreeDriver';
 import { treeDriver } from '@/pages/content/folder/floatingTree/__tests__/treeDriver';
 import { aistudioFolderLeases } from '@/pages/content/folder/session/aistudioFolderSessions';
 import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
@@ -212,5 +216,44 @@ describe('AI Studio folders as an official plugin', () => {
     } finally {
       window.history.replaceState({}, '', '/prompts/new_chat');
     }
+  });
+
+  it("turning folders on right after an account switch opens the new account's folders", async () => {
+    const folder = (name: string): FolderData => ({
+      folders: [{ id: name, name, parentId: null, isExpanded: true, createdAt: 1, updatedAt: 1 }],
+      folderContents: { [name]: [], [AISTUDIO_ROOT_BUCKET_ID]: [] },
+    });
+    const keyOf = async (account: string) => {
+      const scope = await accountIsolationService.resolveAccountScope({
+        pageUrl: location.href,
+        email: `${account}@example.com`,
+      });
+      return buildScopedStorageKey(KEY, scope.accountKey);
+    };
+    const [aKey, bKey] = [await keyOf('a'), await keyOf('b')];
+    memory.values.local.set(aKey, folder('Private a'));
+    memory.values.local.set(bKey, folder('Private b'));
+    memory.values.sync.set(StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED, true);
+    memory.values.sync.set(StorageKeys.FOLDER_ENABLED, false);
+    await openPage();
+    expect(panel()).toBeNull();
+
+    // Account b signs in, and folders go on before the account poll notices.
+    const indicator = document.querySelector('.account-switcher-text')!;
+    indicator.setAttribute('data-email', 'b@example.com');
+    indicator.textContent = 'b@example.com';
+    await memory.api.sync.set({ [StorageKeys.FOLDER_ENABLED]: true });
+
+    await vi.waitFor(() => expect(outline()).toEqual(['Private b']));
+    document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')!.click();
+    const input = nameInput()!;
+    input.value = 'Made on b';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await vi.waitFor(() =>
+      expect((memory.values.local.get(bKey) as FolderData).folders.map((f) => f.name)).toContain(
+        'Made on b',
+      ),
+    );
+    expect(memory.values.local.get(aKey)).toEqual(folder('Private a'));
   });
 });

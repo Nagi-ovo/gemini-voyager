@@ -60,6 +60,8 @@ export class AIStudioFolderSession {
   /** Shows notices while no view is attached; a view shows its own. */
   private readonly toaster = createToaster();
   private attachedBefore = false;
+  /** Set once `init` bound the account and started listening. */
+  private started = false;
   private closed = false;
   private stopListening: (() => void) | null = null;
 
@@ -155,17 +157,24 @@ export class AIStudioFolderSession {
     this.listen();
     this.repository.watchStorage(); // Else a stale tab's next save overwrites other writers.
     this.startAccountPolling();
+    this.started = true;
   }
 
   /**
-   * Shows the folders in `view` from now on. Attaching again after a detach
-   * rebinds the account, which the detach suspended, before the view loads.
+   * Shows the folders in `view` from now on, once the account they belong to
+   * is the page's. Attaching again after a detach rebinds the account, which
+   * the detach suspended, before the view loads.
    */
   async attach(view: AIStudioFolderView): Promise<void> {
     if (this.closed || this.view === view) return;
     this.view = view;
+    // Before start-up finished, `init` binds the account itself.
+    if (!this.started) return;
     if (!this.attachedBefore) {
       this.attachedBefore = true;
+      // An account switched while folders were off, before the poll saw it, would
+      // otherwise show and take edits into the previous account's folders.
+      await this.account.refresh(false);
       return;
     }
     // Re-enabling after a detach: restart the poller it stopped.

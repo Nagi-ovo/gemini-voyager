@@ -58,6 +58,7 @@ type ManagerInternals = {
   watchContainerMount: () => void;
   injectUI: () => void;
   destroy: () => void;
+  init: () => Promise<void>;
   /** The folders plugin turning on or off. */
   setFolders: (enabled: boolean) => void;
   initializeFolderUI: () => Promise<void>;
@@ -389,8 +390,8 @@ describe('M11 — folders-off lifecycle teardown', () => {
   it('tears down on folders off and, on folders on, binds the account before the panel returns', async () => {
     vi.useFakeTimers();
     const internals = mountLibraryPage();
-    internals.startAccountPolling();
-    await internals.initializeFolderUI();
+    // Started as the page starts it, so turning folders back on rebinds a running session.
+    await internals.init();
     const container = internals.container;
     expect(container).not.toBeNull();
 
