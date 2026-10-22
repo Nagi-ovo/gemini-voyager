@@ -218,7 +218,10 @@ export function startSiteFolders(
           () => store.subscribe(() => rows.update(store.filedIds())),
           `${key}:hide-filed-sync`,
         );
-        if (store.ready) rows.update(store.filedIds());
+        // Filed chats are known once the data loaded, editable or not (another tab may hold
+        // the folders), and the rows are marked now: a hidden tab runs no frame pass.
+        rows.update(store.filedIds());
+        rows.sync(site.sidebar.find());
         hidden = { rows, stop: scope.child({ destroy: () => own.dispose() }, `${key}:hide-filed`) };
       }
       sidebar.schedule();

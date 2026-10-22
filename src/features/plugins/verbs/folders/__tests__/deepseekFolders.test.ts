@@ -9,6 +9,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { StorageKeys } from '@/core/types/common';
 import { settle } from '@/features/plugins/builtin/chatgptFolders/__tests__/memoryStorage';
 import { deepseekAdapter } from '@/features/plugins/sites/adapters/deepseek';
+import { SiteFolderStore } from '@/pages/content/folder/SiteFolderStore';
 import { fakeTransfer } from '@/pages/content/folder/floatingTree/__tests__/treeDriver';
 import { initI18n } from '@/utils/i18n';
 
@@ -162,6 +163,60 @@ describe('DeepSeek folders', () => {
     expect(document.querySelector(`[${FILED_ATTRIBUTE}]`)).toBeNull();
     // Applied in place: the folders were not torn down and loaded again.
     expect(section()).toBe(placed);
+  });
+
+  it('hides filed rows again when hiding is turned off and back on in one page', async () => {
+    mountSidebar();
+    const { setPlugin } = await open(true, { hideFiledChats: true });
+    expect(shown(FILED.id)).toBe(false);
+
+    await setPlugin(true, { hideFiledChats: false });
+    await nextPass();
+    expect(shown(FILED.id)).toBe(true);
+
+    await setPlugin(true, { hideFiledChats: true });
+    await nextPass();
+    expect(shown(FILED.id)).toBe(false);
+    expect(shown(TARGET.id)).toBe(true);
+  });
+
+  it('hides filed rows when hiding is first turned on without a reload', async () => {
+    mountSidebar();
+    const { setPlugin } = await open(true);
+    expect(shown(FILED.id)).toBe(true);
+
+    await setPlugin(true, { hideFiledChats: true });
+    await nextPass();
+    expect(shown(FILED.id)).toBe(false);
+    expect(shown(TARGET.id)).toBe(true);
+  });
+
+  it('hides filed rows when hiding is turned on in a tab that draws no frames', async () => {
+    mountSidebar();
+    const { setPlugin } = await open(true);
+    // A hidden or covered tab runs no animation frames, but storage changes still arrive.
+    const frames = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 0);
+    try {
+      await setPlugin(true, { hideFiledChats: true });
+      for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(shown(FILED.id)).toBe(false);
+      expect(shown(TARGET.id)).toBe(true);
+    } finally {
+      frames.mockRestore();
+    }
+  });
+
+  it('hides filed rows when hiding is turned on while the folders cannot be edited', async () => {
+    mountSidebar();
+    const { setPlugin } = await open(true);
+    // Edits wait while another build or tab holds the folders; filed chats are still known.
+    vi.spyOn(SiteFolderStore.prototype, 'ready', 'get').mockReturnValue(false);
+    await setPlugin(true, { hideFiledChats: true });
+    await nextPass();
+
+    expect(shown(FILED.id)).toBe(false);
+    expect(shown(TARGET.id)).toBe(true);
   });
 
   it("opens a filed chat through DeepSeek's own sidebar link, without a full load", async () => {
