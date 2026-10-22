@@ -19,12 +19,23 @@ export const FOLDER_SETTINGS_STORAGE_DEFAULTS = {
   [StorageKeys.FOLDER_FLOATING_MODE_ENABLED]: false,
   [StorageKeys.FOLDER_FLOATING_OPEN_ON_START]: true,
   geminiFolderHideArchivedConversations: false,
+  [StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO]: false,
   [StorageKeys.FOLDER_SEARCH_ENABLED]: true,
   [StorageKeys.FOLDER_PROJECT_ENABLED]: false,
   [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: false,
   [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: null,
   [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO]: null,
 };
+
+/**
+ * Each site keeps its own "hide archived" switch: AI Studio's content script reads
+ * only its key, so the popup on an AI Studio tab reads and writes that one.
+ */
+function hideArchivedKey(platform: AccountPlatform | null): string {
+  return platform === 'aistudio'
+    ? StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO
+    : StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS;
+}
 
 export function useFolderPopupSettings({
   activeAccountPlatform,
@@ -37,7 +48,12 @@ export function useFolderPopupSettings({
   const [folderEnabled, setFolderEnabled] = useState(true);
   const [floatingModeEnabled, setFloatingModeEnabled] = useState(false);
   const [floatingOpenOnStart, setFloatingOpenOnStart] = useState(true);
-  const [hideArchivedConversations, setHideArchivedConversations] = useState(false);
+  const [hideArchivedByPlatform, setHideArchivedByPlatform] = useState<
+    Record<AccountPlatform, boolean>
+  >({ gemini: false, aistudio: false });
+  const hideArchivedPlatform: AccountPlatform =
+    activeAccountPlatform === 'aistudio' ? 'aistudio' : 'gemini';
+  const hideArchivedConversations = hideArchivedByPlatform[hideArchivedPlatform];
   const [folderSearchEnabled, setFolderSearchEnabled] = useState(true);
   const [folderProjectEnabled, setFolderProjectEnabled] = useState(false);
   const [accountIsolationByPlatform, setAccountIsolationByPlatform] = useState<
@@ -49,18 +65,22 @@ export function useFolderPopupSettings({
       folderEnabled: setFolderEnabled,
       floatingModeEnabled: setFloatingModeEnabled,
       floatingOpenOnStart: setFloatingOpenOnStart,
-      hideArchivedConversations: setHideArchivedConversations,
+      hideArchivedConversations: (hidden: boolean) =>
+        setHideArchivedByPlatform((prev) => ({ ...prev, [hideArchivedPlatform]: hidden })),
       folderSearchEnabled: setFolderSearchEnabled,
       folderProjectEnabled: setFolderProjectEnabled,
     }),
-    [],
+    [hideArchivedPlatform],
   );
 
   const hydrateFromStorage = useCallback((stored: Record<string, unknown>) => {
     setFolderEnabled(stored.geminiFolderEnabled !== false);
     setFloatingModeEnabled(stored[StorageKeys.FOLDER_FLOATING_MODE_ENABLED] === true);
     setFloatingOpenOnStart(stored[StorageKeys.FOLDER_FLOATING_OPEN_ON_START] !== false);
-    setHideArchivedConversations(!!stored.geminiFolderHideArchivedConversations);
+    setHideArchivedByPlatform({
+      gemini: !!stored[hideArchivedKey('gemini')],
+      aistudio: !!stored[hideArchivedKey('aistudio')],
+    });
     setFolderSearchEnabled(stored[StorageKeys.FOLDER_SEARCH_ENABLED] !== false);
     setFolderProjectEnabled(stored[StorageKeys.FOLDER_PROJECT_ENABLED] === true);
 
@@ -90,14 +110,14 @@ export function useFolderPopupSettings({
       if (typeof patch.floatingOpenOnStart === 'boolean')
         payload[StorageKeys.FOLDER_FLOATING_OPEN_ON_START] = patch.floatingOpenOnStart;
       if (typeof patch.hideArchivedConversations === 'boolean')
-        payload.geminiFolderHideArchivedConversations = patch.hideArchivedConversations;
+        payload[hideArchivedKey(activeAccountPlatform)] = patch.hideArchivedConversations;
       if (typeof patch.folderSearchEnabled === 'boolean')
         payload[StorageKeys.FOLDER_SEARCH_ENABLED] = patch.folderSearchEnabled;
       if (typeof patch.folderProjectEnabled === 'boolean')
         payload[StorageKeys.FOLDER_PROJECT_ENABLED] = patch.folderProjectEnabled;
       void writeSyncStorage(payload);
     },
-    [setters, writeSyncStorage],
+    [activeAccountPlatform, setters, writeSyncStorage],
   );
 
   const onAccountIsolationChange = useCallback(
