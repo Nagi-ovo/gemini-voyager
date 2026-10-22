@@ -19,7 +19,7 @@ import {
   stripInstructionBlock,
 } from './instructionBlock';
 import { clearNewChatFolder, onNewChatFolder, pendingNewChatFolder } from './pendingFolder';
-import { createFolderProjectPicker } from './picker';
+import { type FolderSnapshot, createFolderProjectPicker } from './picker';
 
 /**
  * Gemini's folder session as Folder-as-Project uses it: the folders to pick
@@ -29,7 +29,12 @@ export type FolderProjectFolders = Pick<
   GeminiFolderSession,
   'ensureDataLoaded' | 'getFolders' | 'addConversationToFolderFromNative'
 > &
-  Partial<Pick<GeminiFolderSession, 'onFoldersReady' | 'folderAccount' | 'onAccountChange'>>;
+  Partial<
+    Pick<
+      GeminiFolderSession,
+      'onFoldersReady' | 'folderAccount' | 'folderSnapshot' | 'onAccountChange'
+    >
+  >;
 
 // ============================================================================
 // Module state (per-tab, reset on navigation)
@@ -116,14 +121,18 @@ function clearPendingSendState(): void {
   pendingSend = false;
 }
 
-function clearPreparedInstructions(): void {
-  const input = findChatInput();
+function clearPreparedInstructions(input: HTMLElement | null = findChatInput()): void {
   if (!input) return;
 
   const currentText = readInputText(input);
   if (!hasInstructionBlock(currentText)) return;
 
   setInputText(input, stripInstructionBlock(currentText));
+}
+
+/** The folders to pick from, with the account they came from read in the same step. */
+function snapshotOf(folders: FolderProjectFolders): FolderSnapshot {
+  return folders.folderSnapshot?.() ?? { account: null, folders: folders.getFolders() };
 }
 
 function clearFolderSelection(): void {
@@ -151,6 +160,19 @@ function selectionBelongsToPage(): boolean {
   clearPendingSendState();
   clearPreparedInstructions();
   picker?.resetChoice();
+  return false;
+}
+
+/**
+ * Whether the choice may act on the send about to go out. One that may not
+ * (the page's account is unreadable now, or another one) leaves no
+ * instructions in the composer and no send pending: the message goes out
+ * plain and unfiled rather than carry a folder whose account is unconfirmed.
+ */
+function choiceMayActOnSend(input: HTMLElement | null): boolean {
+  if (selectionBelongsToPage()) return true;
+  clearPreparedInstructions(input);
+  clearPendingSendState();
   return false;
 }
 
@@ -249,16 +271,15 @@ function setupSendDetection(): void {
   sendClickListener = (e: Event) => {
     if (!selectedFolderId) return;
     const target = e.target as HTMLElement;
-    if (target.closest(SEND_BUTTON_SELECTOR) && selectionBelongsToPage()) {
-      markPendingSend(findChatInput());
-    }
+    if (!target.closest(SEND_BUTTON_SELECTOR)) return;
+    const input = findChatInput();
+    if (choiceMayActOnSend(input)) markPendingSend(input);
   };
 
   sendKeydownListener = (e: KeyboardEvent) => {
     if (!selectedFolderId || !isKeyboardSend(e) || !isEditableTarget(e.target)) return;
     if (handleEmptyInputEnter(e.target)) return;
-    if (!selectionBelongsToPage()) return;
-    markPendingSend(e.target);
+    if (choiceMayActOnSend(e.target)) markPendingSend(e.target);
   };
 
   // Cancel pendingSend when user clicks a sidebar conversation link, so the
@@ -380,9 +401,9 @@ function startURLWatcher(folders: FolderProjectFolders): void {
   picker ??= createFolderProjectPicker({
     loadFolders: async () => {
       await folders.ensureDataLoaded();
-      return folders.getFolders();
+      return snapshotOf(folders);
     },
-    loadedFolders: () => folders.getFolders(),
+    loadedFolders: () => snapshotOf(folders),
     currentAccount: folders.folderAccount ? () => folders.folderAccount?.() ?? null : undefined,
     canMount: () => featureInitialized && isNewChatPath(window.location.pathname),
     onSelect: (folder, source, account) => {

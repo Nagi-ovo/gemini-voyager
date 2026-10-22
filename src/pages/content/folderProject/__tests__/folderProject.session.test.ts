@@ -14,7 +14,7 @@ import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import { type MemoryStorage, createMemoryStorage, settle } from '@/tests/memoryStorage';
 
-import { showGeminiAccount } from '../../folder/__tests__/geminiAccountControl';
+import { hideGeminiAccount, showGeminiAccount } from '../../folder/__tests__/geminiAccountControl';
 import { GeminiFolderSession } from '../../folder/session/geminiFolderSession';
 
 vi.mock('webextension-polyfill', () => ({
@@ -244,4 +244,48 @@ it("never files another account's chat from options listed before the account sw
   expect(input.textContent).toBe('hello');
   expect(memory.writes.filter((write) => write.key.startsWith(KEY))).toEqual([]);
   expect(memory.values.local.get(bKey)).toEqual(folder('home', 'Home'));
+});
+
+it("never owns one account's options by the account that took the page while they loaded", async () => {
+  memory.values.sync.set(StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI, true);
+  memory.values.local.set(await keyOf('a'), folder('work', 'Work', 'Private to account a'));
+  memory.values.local.set(await keyOf('b'), folder('home', 'Home'));
+  showGeminiAccount('a@example.com');
+  const input = mountComposer();
+  await openNewChat();
+  // b takes the page the moment a's folders have been read for the dropdown.
+  const read = session!.getFolders.bind(session!);
+  vi.spyOn(session!, 'getFolders').mockImplementation(() => {
+    const listed = read();
+    showGeminiAccount('b@example.com');
+    return listed;
+  });
+
+  await pick('Work');
+  await send(input, 'hello');
+
+  expect(input.textContent).toBe('hello');
+  expect(chip()?.dataset.selected).toBeUndefined();
+});
+
+it("never sends one account's instructions when a retried send finds the account unreadable", async () => {
+  memory.values.sync.set(StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI, true);
+  memory.values.local.set(await keyOf('a'), folder('work', 'Work', 'Private to account a'));
+  showGeminiAccount('a@example.com');
+  const input = mountComposer();
+  await openNewChat();
+  await pick('Work');
+
+  // The first send fails: the page stays on the new chat with a's instructions in the composer.
+  input.textContent = 'hello';
+  input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  expect(input.textContent).toContain('Private to account a');
+
+  // The account control goes away, and the send is tried again.
+  hideGeminiAccount();
+  memory.writes.length = 0;
+  await send(input, input.textContent ?? '');
+
+  expect(input.textContent).toBe('hello');
+  expect(memory.writes.filter((write) => write.key.startsWith(KEY))).toEqual([]);
 });

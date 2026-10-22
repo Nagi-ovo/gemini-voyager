@@ -266,6 +266,12 @@ export class GeminiFolderSession implements GeminiFolderReads {
     return geminiPageAccountFingerprint();
   }
 
+  /** The folders to show with `folderAccount()`, read in one step so neither is another account's. */
+  folderSnapshot(): { account: string | null; folders: Folder[] } {
+    const account = this.folderAccount();
+    return { account, folders: this.getFolders() };
+  }
+
   /** Calls `listener` whenever `folderAccount()` may have changed; returns its removal. */
   onAccountChange(listener: () => void): () => void {
     this.accountListeners.add(listener);

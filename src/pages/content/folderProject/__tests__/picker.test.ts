@@ -59,7 +59,7 @@ beforeEach(() => {
     .mockResolvedValue({});
   vi.mocked(chrome.storage.local.remove).mockReset().mockResolvedValue(undefined);
   picker = createFolderProjectPicker({
-    loadFolders: async () => folders,
+    loadFolders: async () => ({ account: null, folders }),
     canMount: () => true,
     onSelect,
   });
@@ -163,7 +163,7 @@ describe('pending folder selection', () => {
     let shown: readonly Folder[] = [];
     picker.remove();
     picker = createFolderProjectPicker({
-      loadFolders: async () => shown,
+      loadFolders: async () => ({ account: null, folders: shown }),
       canMount: () => true,
       onSelect,
     });
@@ -185,7 +185,7 @@ describe('pending folder selection', () => {
     let shown: readonly Folder[] = [];
     picker.remove();
     picker = createFolderProjectPicker({
-      loadFolders: async () => shown,
+      loadFolders: async () => ({ account: null, folders: shown }),
       canMount: () => true,
       onSelect,
     });

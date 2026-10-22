@@ -5,10 +5,19 @@ import { getTranslationSyncUnsafe } from '@/utils/i18n';
 import { getFolderColor, isDarkMode } from '../folder/folderColors';
 import { newChatFolderIsFor, pendingNewChatFolder, takeNewChatFolder } from './pendingFolder';
 
+/**
+ * Folders and the account they belong to, read together in one step: an
+ * account read later may already be another one's.
+ */
+export interface FolderSnapshot {
+  readonly account: string | null;
+  readonly folders: readonly Folder[];
+}
+
 interface FolderProjectPickerOptions {
-  loadFolders: () => Promise<readonly Folder[]>;
+  loadFolders: () => Promise<FolderSnapshot>;
   /** The folders already loaded, read without loading again (a load may announce itself). */
-  loadedFolders?: () => readonly Folder[];
+  loadedFolders?: () => FolderSnapshot;
   /**
    * Whose folders the picker lists now. Options are listed for the account
    * read with them and picked only while the page still shows it; a handoff
@@ -16,7 +25,7 @@ interface FolderProjectPickerOptions {
    */
   currentAccount?: () => string | null;
   canMount: () => boolean;
-  /** `account`: whose folders `folder` came from (`currentAccount` when they were read). */
+  /** `account`: whose folders `folder` came from (its snapshot's). */
   onSelect: (folder: Folder | null, source: 'user' | 'pending', account: string | null) => void;
 }
 
@@ -108,10 +117,8 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
   async function populateDropdown(dropdown: HTMLElement, chip: HTMLButtonElement): Promise<void> {
     dropdown.innerHTML = '';
     const run = ++listing;
-    const allFolders = await options.loadFolders();
+    const { account, folders: allFolders } = await options.loadFolders();
     if (run !== listing) return;
-    // Read with the folders: the account they belong to.
-    const account = accountNow();
     listedAccount = account;
     // A handoff the first mount could not take (its folders had not loaded) takes them now.
     const pendingId = pendingFolderFor(account);
@@ -305,20 +312,17 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
    */
   function pendingFolderFor(account: string | null): string | null {
     const pendingId = pendingNewChatFolder();
-    if (!pendingId) return null;
-    return !options.currentAccount || newChatFolderIsFor(account) ? pendingId : null;
+    return pendingId && newChatFolderIsFor(account) ? pendingId : null;
   }
 
   async function applyPendingFolderSelection(
     chip: HTMLButtonElement,
-    folders: () => Promise<readonly Folder[]> | readonly Folder[] = options.loadFolders,
+    snapshot: () => Promise<FolderSnapshot> | FolderSnapshot = options.loadFolders,
   ): Promise<void> {
     if (!pendingFolderFor(accountNow())) return;
-    const loaded = await folders();
-    // Read with the folders: the account they belong to.
-    const account = accountNow();
+    const { account, folders } = await snapshot();
     const pendingId = pendingFolderFor(account);
-    const folder = pendingId ? loaded.find((f) => f.id === pendingId) : undefined;
+    const folder = pendingId ? folders.find((f) => f.id === pendingId) : undefined;
     if (!folder || !takeNewChatFolder(folder.id)) return;
 
     options.onSelect(folder, 'pending', account);
