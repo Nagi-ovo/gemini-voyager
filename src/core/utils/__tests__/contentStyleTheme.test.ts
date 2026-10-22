@@ -32,7 +32,7 @@ const STYLESHEETS = [
   'src/pages/content/folder/sidebarTreeTokens.css',
   'src/pages/content/folder/aistudioTreeTokens.css',
   'src/features/plugins/verbs/folders/sectionTree.css',
-  'src/features/plugins/builtin/claudeFolders/claudeSectionTokens.css',
+  'src/features/plugins/verbs/folders/skins/claude.css',
   'src/features/plugins/verbs/folders/skins/deepseek.css',
   'src/pages/content/folder/folderSettings/folderSettings.css',
   'src/pages/content/folder/sidebarActivityList.css',

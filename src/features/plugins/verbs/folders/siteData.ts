@@ -21,6 +21,7 @@ import type { SiteAdapter } from '@/features/plugins/types';
 import { createRowMenu } from './rowMenu';
 import { siteSectionCss } from './sectionCss';
 import { createSectionDom } from './sectionDom';
+import claudeSkin from './skins/claude.css?raw';
 import deepseekSkin from './skins/deepseek.css?raw';
 import type { HideFiledDom, SiteFoldersAdapter } from './types';
 
@@ -30,6 +31,7 @@ import type { HideFiledDom, SiteFoldersAdapter } from './types';
  * shared defaults.
  */
 const SECTION_SKINS: Partial<Readonly<Record<FolderPlatform, string>>> = {
+  claude: claudeSkin,
   deepseek: deepseekSkin,
 };
 
