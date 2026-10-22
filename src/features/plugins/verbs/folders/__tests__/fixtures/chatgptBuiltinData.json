@@ -1,0 +1,95 @@
+{
+  "_about": "Written by the ChatGPT folders builtin before the folders primitive (13d762e10), on chatgpt.com, 2026-10-22; ids and titles replaced.",
+  "stored": {
+    "folderContents": {
+      "folder_1792679246474_kxylm10mg": [
+        {
+          "addedAt": 1792679302886,
+          "conversationId": "chatgpt:conv:00000000-0000-4000-8000-00000000000a",
+          "sortIndex": 0,
+          "title": "Voyager 测试 会话 A",
+          "url": "https://chatgpt.com/c/00000000-0000-4000-8000-00000000000a"
+        }
+      ],
+      "folder_1792679263439_ztear0gl8": [
+        {
+          "addedAt": 1792679317653,
+          "conversationId": "chatgpt:conv:00000000-0000-4000-8000-00000000000b",
+          "sortIndex": 0,
+          "title": "Voyager 测试 会话 B",
+          "url": "https://chatgpt.com/g/g-p-0000000000000000000000000000000c/c/00000000-0000-4000-8000-00000000000b"
+        }
+      ]
+    },
+    "folders": [
+      {
+        "color": "green",
+        "createdAt": 1792679246474,
+        "id": "folder_1792679246474_kxylm10mg",
+        "isExpanded": true,
+        "name": "Voyager 测试",
+        "parentId": null,
+        "sortIndex": 0,
+        "updatedAt": 1792679274355
+      },
+      {
+        "createdAt": 1792679263439,
+        "id": "folder_1792679263439_ztear0gl8",
+        "isExpanded": true,
+        "name": "Voyager 测试 子",
+        "parentId": "folder_1792679246474_kxylm10mg",
+        "sortIndex": 0,
+        "updatedAt": 1792679263439
+      }
+    ]
+  },
+  "exported": {
+    "format": "gemini-voyager.folders.v1",
+    "exportedAt": "2026-10-22T14:29:04.486Z",
+    "version": "2.2.0",
+    "data": {
+      "folders": [
+        {
+          "id": "folder_1792679246474_kxylm10mg",
+          "name": "Voyager 测试",
+          "parentId": null,
+          "isExpanded": true,
+          "sortIndex": 0,
+          "createdAt": 1792679246474,
+          "updatedAt": 1792679274355,
+          "color": "green"
+        },
+        {
+          "id": "folder_1792679263439_ztear0gl8",
+          "name": "Voyager 测试 子",
+          "parentId": "folder_1792679246474_kxylm10mg",
+          "isExpanded": true,
+          "sortIndex": 0,
+          "createdAt": 1792679263439,
+          "updatedAt": 1792679263439
+        }
+      ],
+      "folderContents": {
+        "folder_1792679246474_kxylm10mg": [
+          {
+            "conversationId": "chatgpt:conv:00000000-0000-4000-8000-00000000000a",
+            "title": "Voyager 测试 会话 A",
+            "url": "https://chatgpt.com/c/00000000-0000-4000-8000-00000000000a",
+            "addedAt": 1792679302886,
+            "sortIndex": 0
+          }
+        ],
+        "folder_1792679263439_ztear0gl8": [
+          {
+            "conversationId": "chatgpt:conv:00000000-0000-4000-8000-00000000000b",
+            "title": "Voyager 测试 会话 B",
+            "url": "https://chatgpt.com/g/g-p-0000000000000000000000000000000c/c/00000000-0000-4000-8000-00000000000b",
+            "addedAt": 1792679317653,
+            "sortIndex": 0
+          }
+        ]
+      }
+    },
+    "platform": "chatgpt"
+  }
+}
