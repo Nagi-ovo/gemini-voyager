@@ -51,12 +51,15 @@ export interface FolderPickerHandle {
   close(): void;
 }
 
-/** Opens the picker over the page; `onSelect` runs once with the chosen folder. */
+/**
+ * Opens the picker over the page; `onSelect` runs once with the chosen folder.
+ * The caller closes the picker it opened: any other picker on the page belongs
+ * to another runtime and is left alone.
+ */
 export function openFolderPicker(
   data: FolderData,
   onSelect: (folderId: string) => void,
 ): FolderPickerHandle {
-  for (const stale of document.querySelectorAll(`.${FOLDER_PICKER_CLASS}`)) stale.remove();
   const host = document.createElement('div');
   host.className = FOLDER_PICKER_CLASS;
   const surface = attachShadowSurface(host, pickerCss);

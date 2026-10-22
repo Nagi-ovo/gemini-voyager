@@ -38,6 +38,8 @@ export class ChatGptMoveMenu implements SiteMoveMenu {
   private waitingFor: Element | null = null;
   private waitedFrames = 0;
   private readonly closeWait: MenuCloseWait;
+  /** Entries this menu added, each with the removal of its listener on the site's menu. */
+  private readonly entries = new Map<HTMLElement, () => void>();
 
   constructor(
     private readonly options: SiteMoveMenuOptions,
@@ -74,7 +76,11 @@ export class ChatGptMoveMenu implements SiteMoveMenu {
   /** Turning the folders off: no pending move, and no entry left in an open menu. */
   dispose(): void {
     this.cancel();
-    for (const entry of this.doc.querySelectorAll(`[${MOVE_ENTRY_ATTR}]`)) entry.remove();
+    for (const [entry, unwire] of this.entries) {
+      unwire();
+      entry.remove();
+    }
+    this.entries.clear();
   }
 
   private inject(menu: HTMLElement, trigger: HTMLElement): void {
@@ -104,7 +110,16 @@ export class ChatGptMoveMenu implements SiteMoveMenu {
       event.stopPropagation();
       activate();
     });
-    wireMenuKeyboard(menu, entry, () => menuItemsOf(menu), activate);
+    // Radix unmounts a closed menu, so an entry only ever leaves with its menu.
+    for (const [stale, unwire] of this.entries) {
+      if (stale.isConnected) continue;
+      unwire();
+      this.entries.delete(stale);
+    }
+    this.entries.set(
+      entry,
+      wireMenuKeyboard(menu, entry, () => menuItemsOf(menu), activate),
+    );
     // Next to ChatGPT's own "Move to project" (its only submenu), else last.
     const anchor = items.find((item) => item.hasAttribute('aria-haspopup')) ?? items.at(-1);
     anchor?.after(entry);

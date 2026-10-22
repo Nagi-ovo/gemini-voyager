@@ -48,6 +48,8 @@ export class ClaudeMoveMenu implements SiteMoveMenu {
   private frame: number | null = null;
   private framesLeft = 0;
   private listening = false;
+  /** Entries this menu added, each with the removal of its listener on Claude's menu. */
+  private readonly entries = new Map<Element, () => void>();
 
   constructor(
     private readonly options: SiteMoveMenuOptions,
@@ -73,7 +75,14 @@ export class ClaudeMoveMenu implements SiteMoveMenu {
       for (const type of OPENING_EVENTS) this.doc.removeEventListener(type, this.onPress, true);
       this.listening = false;
     }
-    for (const entry of this.doc.querySelectorAll(`[${CLAUDE_MOVE_ENTRY_ATTR}]`)) entry.remove();
+    for (const entry of this.entries.keys()) this.drop(entry);
+  }
+
+  /** Removes `entry` and, when it is one of ours, its listener on the menu Base UI keeps. */
+  private drop(entry: Element): void {
+    this.entries.get(entry)?.();
+    this.entries.delete(entry);
+    entry.remove();
   }
 
   private readonly onPress = (event: Event): void => {
@@ -99,7 +108,7 @@ export class ClaudeMoveMenu implements SiteMoveMenu {
   private inject(menu: HTMLElement, trigger: HTMLElement, row: SidebarConversation): boolean {
     for (const stale of menu.querySelectorAll(`[${CLAUDE_MOVE_ENTRY_ATTR}]`)) {
       if (stale.getAttribute(CLAUDE_MOVE_ENTRY_ATTR) === row.id) return true;
-      stale.remove();
+      this.drop(stale);
     }
     const items = menuItemsOf(menu);
     const template =
@@ -130,7 +139,10 @@ export class ClaudeMoveMenu implements SiteMoveMenu {
       event.stopPropagation();
       activate();
     });
-    wireMenuKeyboard(menu, entry, () => menuItemsOf(menu), activate);
+    this.entries.set(
+      entry,
+      wireMenuKeyboard(menu, entry, () => menuItemsOf(menu), activate),
+    );
     // After Claude's own "Move to group" or "Add to project" (its submenus), else last.
     const submenus = items.filter((item) => item.hasAttribute('aria-haspopup'));
     const anchor = submenus.at(-1) ?? items.at(-1) ?? null;

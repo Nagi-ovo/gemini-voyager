@@ -98,6 +98,10 @@ export type SiteFolderSectionOptions = {
 
 const POINTER_CHECK_EVENTS = ['pointermove', 'pointerdown'] as const;
 
+/** Names the section's runtime on its host, which the site's clones of it carry along. */
+const OWNER_ATTR = 'data-gv-folder-section-owner';
+let nextOwner = 0;
+
 export class SiteFolderSection {
   readonly element: HTMLElement;
   /** The header row with the section's title: what the one-time guide points at. */
@@ -120,6 +124,7 @@ export class SiteFolderSection {
   private readonly baseSite: TreeSiteOptions;
   private readonly isConversationSelected: TreeSiteOptions['isConversationSelected'];
   private readonly stopDisplay: () => void;
+  private readonly owner = String(++nextOwner);
   private activeConversationId: string | null = null;
   private data: FolderData;
   private prefs: SiteFolderSectionPrefs;
@@ -153,6 +158,7 @@ export class SiteFolderSection {
     this.onPrefsChange = onPrefsChange;
     this.element = document.createElement('div');
     this.element.className = className;
+    this.element.setAttribute(OWNER_ATTR, this.owner);
     this.element.setAttribute(INLINE_TREE_ATTR, '');
     this.element.setAttribute('role', 'region');
     this.element.setAttribute('aria-label', t('floatingPanelTitle'));
@@ -256,11 +262,15 @@ export class SiteFolderSection {
 
   /**
    * Puts the section just before the site's anchor in `sidebar`, unless it is
-   * already there. Drops copies the site may have cloned along with its own nodes.
+   * already there. Drops copies the site may have cloned along with its own
+   * nodes; another runtime's section (a successor starting while this one
+   * stops) is not a copy and stays.
    */
   place(sidebar: HTMLElement | null): void {
     if (!sidebar) return;
-    for (const copy of sidebar.querySelectorAll(`.${this.className}`)) {
+    for (const copy of sidebar.querySelectorAll(
+      `.${this.className}[${OWNER_ATTR}="${this.owner}"]`,
+    )) {
       if (copy !== this.element) copy.remove();
     }
     // A section dropped while hovered never hears `pointerleave`, which froze the recent order.

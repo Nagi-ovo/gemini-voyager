@@ -20,7 +20,7 @@ import {
   uploadSiteFolders,
 } from '@/pages/content/folder/cloudSyncClient';
 import { createCommandTreeActions } from '@/pages/content/folder/commandTreeActions';
-import { mountFloatingFab, unmountFloatingFab } from '@/pages/content/folder/floatingModeFab';
+import { type FloatingFabHandle, createFloatingFab } from '@/pages/content/folder/floatingModeFab';
 import { type FloatingPanelHandle, mountFloatingPanel } from '@/pages/content/folder/floatingPanel';
 import type { FolderDropTarget } from '@/pages/content/folder/floatingTree/dropTargets';
 import type { TreeActions } from '@/pages/content/folder/floatingTree/shared';
@@ -43,7 +43,7 @@ export class SiteFoldersView {
   /** Multi-select in the sidebar section; it lives and ends with the section. */
   private selection: FolderSelection | null = null;
   private picker: FolderPickerHandle | null = null;
-  private fabShown = false;
+  private fab: FloatingFabHandle | null = null;
   /** The conversation last recorded as opened, so each open is recorded once. */
   private openedConversationId: string | null = null;
   // Gemini's removal confirm; it closes with the panel.
@@ -180,15 +180,15 @@ export class SiteFoldersView {
    * would be two copies of the same tree.
    */
   private showFloatingEntry(show: boolean): void {
-    if (show === this.fabShown || (show && this.scope.isDisposed)) return;
-    this.fabShown = show;
+    if (show === !!this.fab || (show && this.scope.isDisposed)) return;
     if (!show) {
-      unmountFloatingFab();
+      this.fab?.destroy();
+      this.fab = null;
       // Keeps `prefs.open`, so the panel comes back with its button.
       this.unmountPanel();
       return;
     }
-    mountFloatingFab({
+    this.fab = createFloatingFab({
       onClick: () => this.setOpen(!this.panel),
       storedPos: this.prefs.fabPos,
       onPosChange: (pos) => this.savePrefs({ fabPos: pos }),
@@ -272,6 +272,7 @@ export class SiteFoldersView {
     const { store, site } = this;
     this.panel = mountFloatingPanel({
       data: store.data,
+      replaceExisting: false,
       policy: site.policy,
       cloudActions: true,
       dataReady: store.ready,

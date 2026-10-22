@@ -27,6 +27,12 @@ export type FloatingPanelHeaderAction = {
 
 export type MountArgs = TreeActions & {
   data: FolderData;
+  /**
+   * Gemini keeps one panel per page and replaces whatever panel is there (the
+   * default). A runtime that owns its panel passes `false`, so mounting never
+   * removes another owner's panel behind that owner's back.
+   */
+  replaceExisting?: boolean;
   /** The site's root bucket, and which rows are one conversation sharing one star. */
   policy: Pick<FolderSitePolicy, 'rootBucketId' | 'keysOf' | 'idKey'>;
   /** The cloud upload and sync buttons, for a site whose folders sync. */
@@ -191,6 +197,7 @@ function createHintStack(keys: readonly string[]): HTMLElement {
 
 export function mountFloatingPanel({
   data,
+  replaceExisting = true,
   policy,
   cloudActions,
   headerActions: siteActions = [],
@@ -221,8 +228,7 @@ export function mountFloatingPanel({
   getCloudUploadTooltip,
   getCloudSyncTooltip,
 }: MountArgs): FloatingPanelHandle {
-  const existing = document.querySelector(`.${FLOATING_PANEL_CLASS}`);
-  if (existing) existing.remove();
+  if (replaceExisting) document.querySelector(`.${FLOATING_PANEL_CLASS}`)?.remove();
 
   const panel = document.createElement('div');
   panel.className = FLOATING_PANEL_CLASS;

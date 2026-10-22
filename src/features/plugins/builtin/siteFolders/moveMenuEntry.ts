@@ -119,13 +119,17 @@ function claim(event: KeyboardEvent): void {
  * handlers delegated to an ancestor, so a listener on the menu itself runs
  * first and can keep the library from moving past the entry. Everything else
  * (Escape, Tab, typeahead) still reaches the library.
+ *
+ * Returns the removal of the menu's listener. The menu is the site's, and a
+ * library may keep it mounted and reuse it for another row: whoever drops the
+ * entry (or turns the folders off) calls it, so no listener outlives its entry.
  */
 export function wireMenuKeyboard(
   menu: HTMLElement,
   entry: HTMLElement,
   items: () => HTMLElement[],
   activate: () => void,
-): void {
+): () => void {
   const neighbour = (step: 1 | -1): HTMLElement | null => {
     const enabled = items().filter((item) => item === entry || isEnabled(item));
     return enabled[enabled.indexOf(entry) + step] ?? null;
@@ -141,13 +145,15 @@ export function wireMenuKeyboard(
       neighbour(event.key === 'ArrowDown' ? 1 : -1)?.focus();
     }
   });
-  menu.addEventListener('keydown', (event) => {
+  const stepIn = (event: KeyboardEvent): void => {
     if (!entry.isConnected || !(event.target instanceof HTMLElement)) return;
     const from = event.key === 'ArrowDown' ? -1 : event.key === 'ArrowUp' ? 1 : 0;
     if (from === 0 || event.target !== neighbour(from)) return;
     claim(event);
     entry.focus();
-  });
+  };
+  menu.addEventListener('keydown', stepIn);
+  return () => menu.removeEventListener('keydown', stepIn);
 }
 
 /** Frames to wait for a closed menu to hand focus back to its trigger. */
