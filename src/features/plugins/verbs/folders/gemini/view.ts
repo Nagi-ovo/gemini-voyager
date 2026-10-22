@@ -300,6 +300,8 @@ export class GeminiFoldersView extends GeminiFolderSessionView {
     this.batchDelete = null;
     for (const cleanup of this.lifetimeCleanup.splice(0)) cleanup();
     this.selection.reset();
+    // Another view binds these rows when the folders come back; this one's must be gone.
+    this.selection.releaseNativeRows();
     this.treeView.unmount();
     this.navigation.destroy();
     this.session.flush();

@@ -78,6 +78,10 @@ export class FolderSelection {
   private readonly dragImages = new Set<HTMLElement>();
   private readonly toolbar: SelectionToolbarHost;
   private readonly nativeRows: NativeRowSelection;
+  /** The native rows this selection made draggable, with each binding's release. */
+  private readonly boundRows = new Map<HTMLElement, () => void>();
+  /** Bound rows past which those Gemini dropped are released. */
+  private pruneBoundRowsAt = 256;
 
   constructor(private readonly options: FolderSelectionOptions) {
     this.toolbar = new SelectionToolbarHost(options.toolbar);
@@ -132,7 +136,27 @@ export class FolderSelection {
   /** Lets a Gemini sidebar row join the selection and be dragged into folders. */
   makeConversationDraggable(element: HTMLElement): void {
     this.options.nativeSelection?.()?.bindRow?.(element);
-    bindNativeConversationRow(element, () => this.options.nativeSelection?.() ?? this.nativeRows);
+    if (this.boundRows.has(element)) return;
+    const release = bindNativeConversationRow(
+      element,
+      () => this.options.nativeSelection?.() ?? this.nativeRows,
+    );
+    if (!release) return;
+    this.boundRows.set(element, release);
+    if (this.boundRows.size < this.pruneBoundRowsAt) return;
+    // Gemini replaces rows as it scrolls; a row it dropped needs no binding.
+    for (const [row, releaseRow] of this.boundRows) {
+      if (row.isConnected) continue;
+      releaseRow();
+      this.boundRows.delete(row);
+    }
+    this.pruneBoundRowsAt = Math.max(256, this.boundRows.size * 2);
+  }
+
+  /** Gives every native row back as it was; the folders turning off ends this selection. */
+  releaseNativeRows(): void {
+    for (const release of this.boundRows.values()) release();
+    this.boundRows.clear();
   }
 
   private createNativeRowSelection(): NativeRowSelection {
