@@ -22,6 +22,8 @@ import { useCloudSyncTransfer } from '../useCloudSyncTransfer';
 
 export const pageScope: SyncAccountScope = { accountKey: 'page', accountId: 1, routeUserId: '1' };
 export const tabScope: SyncAccountScope = { accountKey: 'tab', accountId: 2, routeUserId: '2' };
+/** What the tab's account bridge reports: Gemini's route slot and its account control's email. */
+export const pageContext = { routeUserId: '1', email: 'page@example.com' };
 export const emptyFolders: FolderData = { folders: [], folderContents: {} };
 export const folders: FolderData = {
   folders: [
@@ -97,9 +99,7 @@ export function setupTransferHarness(): TransferHarness {
       emailHash: null,
     });
     h.tabMessage.mockImplementation(async (_tabId, message) =>
-      message.type === 'gv.account.getContext'
-        ? { ok: true, context: { routeUserId: '1' } }
-        : { ok: false },
+      message.type === 'gv.account.getContext' ? { ok: true, context: pageContext } : { ok: false },
     );
     h.stored = {};
     h.localGet.mockImplementation(async (keys) => {

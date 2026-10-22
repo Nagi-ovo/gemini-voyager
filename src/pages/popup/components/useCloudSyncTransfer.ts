@@ -161,6 +161,11 @@ async function resolvePageScope(
   } catch {
     // A failed tab query leaves no page context.
   }
+  if (respectIsolationSetting && !email) {
+    // The page's folders bind only an account its own control names; a `/u/<n>` slot, the
+    // shared `default` bucket or the unscoped one would sync another account's folders.
+    throw new Error('The page has not shown which account is signed in yet');
+  }
   if (!routeUserId && !email && !pageContextAvailable) return null;
 
   const resolved = await accountIsolationService.resolveAccountScope({

@@ -11,6 +11,7 @@ import { getTimelineHierarchyStorageKey } from '@/pages/content/timeline/hierarc
 import {
   emptyFolders,
   folders,
+  pageContext,
   pageScope,
   setupTransferHarness,
   tabScope,
@@ -36,10 +37,50 @@ describe('popup cloud sync transfer operations', () => {
     });
   });
 
+  it.each([
+    ['gemini', 'upload', { routeUserId: '1', email: null }],
+    ['gemini', 'download', { routeUserId: '1', email: null }],
+    ['aistudio', 'upload', { routeUserId: null, email: null }],
+    ['aistudio', 'download', { routeUserId: null, email: null }],
+    ['gemini', 'download', undefined],
+  ] as const)(
+    'with isolation on, %s refuses to %s for a page that has not named its account (%o)',
+    async (platform, operation, context) => {
+      tabMessage.mockImplementation(async (_tabId, message) => {
+        if (message.type !== 'gv.account.getContext') return { ok: false };
+        if (!context) throw new Error('no content script');
+        return { ok: true, context };
+      });
+      await h.render(platform, false);
+      const prepare =
+        operation === 'upload' ? h.transfer.prepareUpload : h.transfer.prepareDownload;
+      await expect(prepare()).rejects.toThrow();
+      // No `route:<n>`, shared `default` or unscoped bucket stands in for the unknown account.
+      expect(accountIsolationService.resolveAccountScope).not.toHaveBeenCalled();
+      expect(localGet).not.toHaveBeenCalled();
+      expect(localSet).not.toHaveBeenCalled();
+    },
+  );
+
+  it('with isolation off, syncs the unscoped folders of a page that has not named its account', async () => {
+    vi.mocked(accountIsolationService.isIsolationEnabled).mockResolvedValue(false);
+    tabMessage.mockImplementation(async (_tabId, message) =>
+      message.type === 'gv.account.getContext'
+        ? { ok: true, context: { ...pageContext, email: null } }
+        : { ok: false },
+    );
+    localGet.mockResolvedValue({ [StorageKeys.FOLDER_DATA]: folders });
+    await h.render();
+    const payload = await h.transfer.prepareUpload();
+    expect(payload.accountScope).toBeNull();
+    expect(payload.folders).toEqual(folders);
+    expect((await h.transfer.prepareDownload()).payload.accountScope).toBeNull();
+  });
+
   it('uses fresh nonempty tab folders and only overrides the folder scope', async () => {
     tabMessage.mockImplementation(async (_tabId, message) =>
       message.type === 'gv.account.getContext'
-        ? { ok: true, context: { routeUserId: '1' } }
+        ? { ok: true, context: pageContext }
         : { ok: true, data: folders, accountScope: tabScope },
     );
     localGet.mockResolvedValue({
@@ -106,7 +147,7 @@ describe('popup cloud sync transfer operations', () => {
     vi.useFakeTimers();
     tabMessage.mockImplementation(async (_tabId, message) =>
       message.type === 'gv.account.getContext'
-        ? { ok: true, context: { routeUserId: '1' } }
+        ? { ok: true, context: pageContext }
         : new Promise(() => {}),
     );
     localGet.mockResolvedValue({
