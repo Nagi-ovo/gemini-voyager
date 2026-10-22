@@ -6,9 +6,9 @@ import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { HIDE_FILED_SETTING, SidebarHideFiled } from '@/features/plugins/verbs/folders/hideFiled';
 import { initI18n } from '@/utils/i18n';
 
-import { HIDE_FILED_SETTING, SidebarHideFiled } from '../../siteFolders/hideFiled';
 import { FILED_ROW_ATTRIBUTE } from '../chatgptHideFiled';
 import { CHATGPT_SITE_FOLDERS } from '../chatgptSiteFolders';
 import { activateChatGptFolders } from '../index';

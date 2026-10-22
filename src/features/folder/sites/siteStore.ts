@@ -18,8 +18,7 @@ import {
 } from '@/pages/content/folder/siteFolderCommands';
 import type { IFolderStorageAdapter } from '@/pages/content/folder/storage/FolderStorageAdapter';
 
-import { filedIdsOf, filingsOf } from './filings';
-import type { FiledConversations } from './types';
+import { type FiledConversations, filedIdsOf, filingsOf } from './filings';
 
 export class PluginSiteFolderStore extends SiteFolderStore implements FiledConversations {
   constructor(

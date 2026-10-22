@@ -1,4 +1,4 @@
-import type { HideFiledDom } from '../siteFolders/types';
+import type { HideFiledDom } from '@/features/plugins/verbs/folders/types';
 
 export const FILED_ROW_ATTRIBUTE = 'data-gv-chatgpt-filed';
 

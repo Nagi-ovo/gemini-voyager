@@ -1,9 +1,8 @@
 import { bareConversationId } from '@/features/folder/sites/chatgptIdentity';
+import { filedIdsOf, filingsOf } from '@/features/folder/sites/filings';
 import { SiteFolderStore, type SiteFolderNotify } from '@/pages/content/folder/SiteFolderStore';
 import { CHATGPT_FOLDER_CONFIG } from '@/pages/content/folder/pluginSiteFolderConfigs';
 import type { IFolderStorageAdapter } from '@/pages/content/folder/storage/FolderStorageAdapter';
-
-import { filedIdsOf, filingsOf } from '../siteFolders/filings';
 
 /**
  * ChatGPT's folder bucket on the shared site store, plus the reads ChatGPT's

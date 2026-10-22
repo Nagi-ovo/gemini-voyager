@@ -1,6 +1,7 @@
 import type { FolderCommands } from '@/features/folder/commands/folderCommands';
+import type { FiledConversations } from '@/features/folder/sites/filings';
 
-import type { FiledConversations, SidebarRows } from './types';
+import type { SidebarRows } from './types';
 
 /** The filed conversations the sync reads, once the store has loaded. */
 export type TitleSyncStore = FiledConversations & { readonly ready: boolean };

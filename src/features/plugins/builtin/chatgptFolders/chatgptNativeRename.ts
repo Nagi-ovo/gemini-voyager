@@ -12,7 +12,8 @@
  * field taking focus in the row confirms the item was Rename; anything else
  * reports no rename, and the folders keep their titles.
  */
-import type { NativeRenameOptions } from '../siteFolders/types';
+import type { NativeRenameOptions } from '@/features/plugins/verbs/folders/types';
+
 import { MOVE_ENTRY_ATTR } from './chatgptMoveMenu';
 import {
   closeMenu,

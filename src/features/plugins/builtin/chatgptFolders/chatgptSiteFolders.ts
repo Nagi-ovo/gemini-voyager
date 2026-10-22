@@ -15,11 +15,11 @@ import {
   chatgptFolderExportFilename,
   exportChatGptFolders,
 } from '@/features/folder/sites/chatgptTransfer';
+import { siteSectionCss } from '@/features/plugins/verbs/folders/sectionCss';
+import type { SectionSite, SiteFoldersAdapter } from '@/features/plugins/verbs/folders/types';
 import { CHATGPT_FOLDER_CONFIG } from '@/pages/content/folder/pluginSiteFolderConfigs';
 
 import { isTemporaryChat } from '../chatgptTemporaryHandoff/handoff';
-import { siteSectionCss } from '../siteFolders/sectionCss';
-import type { SectionSite, SiteFoldersAdapter } from '../siteFolders/types';
 import { ChatGptFolderStore } from './ChatGptFolderStore';
 import { CHATGPT_HIDE_FILED, FILED_ROW_ATTRIBUTE } from './chatgptHideFiled';
 import { ChatGptMoveMenu } from './chatgptMoveMenu';

@@ -1,6 +1,6 @@
 /**
  * The open conversation and in-app navigation on a plugin site with one
- * origin, as `chatgptFolders/chatgptPage.ts` does for ChatGPT.
+ * origin, as `plugins/builtin/chatgptFolders/chatgptPage.ts` does for ChatGPT.
  */
 import type { ConversationReference } from '@/core/types/folder';
 import type { SiteIdentity } from '@/features/folder/sites/siteIdentity';

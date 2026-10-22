@@ -18,8 +18,8 @@
  *   read before the link route (an attribute plus a safe regex whose group 1
  *   is the id), attributes to `observe`, rows `portaled` outside the sidebar
  *   (document) and how a row is dragged (`pointer`, `link` or `html5`);
- * - `mount`: ordered `anchors`, each a list of `find` / `closest` steps from
- *   the document, with ids equal to the stored anchor preference values, the
+ * - `mount`: ordered `anchors`, each a list of `find` / `closest` steps
+ *   searched inside `sidebar` (the first that finds wins), with ids equal to the stored anchor preference values, the
  *   `default` anchor id, and `open`, present while the sidebar is shown;
  * - `hideFiled`: the rows that may be hidden and those that never are;
  * - `rowMenu`: the row's menu `trigger`, the `menu` and its `item`s, how it

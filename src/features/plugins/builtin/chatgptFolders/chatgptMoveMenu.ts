@@ -1,19 +1,23 @@
 /**
  * "Move to folder" in a sidebar row's "Chat actions" menu: with the row drag in
- * `../siteFolders/rowDrag.ts`, how a conversation gets from the sidebar into a folder
+ * `verbs/folders/rowDrag.ts`, how a conversation gets from the sidebar into a folder
  * without opening it first, and the way that needs no pointer.
  *
  * Observed live (2026-10-01): the menu is a Radix menu portaled under `body` and
  * labelled by the row's trigger, which reads `aria-expanded="true"` while it is
- * open. The entry is the shared clone of a native item (`../siteFolders/moveMenuEntry.ts`).
+ * open. The entry is the shared clone of a native item (`verbs/folders/moveMenuEntry.ts`).
  * Selecting it closes the menu with the Escape Radix listens for, which also
  * returns focus to the trigger.
  */
 import type { ConversationReference } from '@/core/types/folder';
 import { CHATGPT_CONVERSATION_ID_PREFIX } from '@/features/folder/sites/chatgptIdentity';
+import {
+  MenuCloseWait,
+  buildMenuEntry,
+  wireMenuKeyboard,
+} from '@/features/plugins/verbs/folders/moveMenuEntry';
+import type { SiteMoveMenu, SiteMoveMenuOptions } from '@/features/plugins/verbs/folders/types';
 
-import { MenuCloseWait, buildMenuEntry, wireMenuKeyboard } from '../siteFolders/moveMenuEntry';
-import type { SiteMoveMenu, SiteMoveMenuOptions } from '../siteFolders/types';
 import {
   closeMenu,
   findMenuOf,

@@ -1,4 +1,4 @@
-/* Claude's tokens for the shared section sheets (`siteFolders/sectionChrome.css`),
+/* Claude's tokens for the shared section sheets (`verbs/folders/sectionChrome.css`),
  * which come first. Claude's design system sets its `--cds-*` colours on the
  * root for its own light and dark mode, so the section follows the page's
  * theme whatever Voyager's scheme reads; the fallbacks are Claude's light and

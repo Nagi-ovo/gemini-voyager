@@ -6,8 +6,8 @@
  */
 import type { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import type { PluginSettings, SiteAdapter } from '@/features/plugins/types';
+import { activateSiteFolders } from '@/features/plugins/verbs/folders/activate';
 
-import { activateSiteFolders } from '../siteFolders/activate';
 import { DEEPSEEK_SITE_FOLDERS } from './deepseekSiteFolders';
 
 export function activateDeepSeekFolders(

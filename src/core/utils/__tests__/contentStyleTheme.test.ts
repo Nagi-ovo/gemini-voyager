@@ -31,7 +31,7 @@ const STYLESHEETS = [
   'src/pages/content/folder/floatingTree/inlineTree.css',
   'src/pages/content/folder/sidebarTreeTokens.css',
   'src/pages/content/folder/aistudioTreeTokens.css',
-  'src/features/plugins/builtin/siteFolders/sectionTree.css',
+  'src/features/plugins/verbs/folders/sectionTree.css',
   'src/features/plugins/builtin/claudeFolders/claudeSectionTokens.css',
   'src/features/plugins/builtin/deepseekFolders/deepseekSectionTokens.css',
   'src/pages/content/folder/folderSettings/folderSettings.css',

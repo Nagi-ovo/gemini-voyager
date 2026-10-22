@@ -3,13 +3,14 @@
  * its sidebar and conversation rows are, how a conversation is named and
  * opened, and its stored names (keys, classes, guide id, message keys), which
  * are serialized user data or DOM output and so stay the site's own. ChatGPT's
- * is `chatgptFolders/chatgptSiteFolders.ts`.
+ * is `builtin/chatgptFolders/chatgptSiteFolders.ts`.
  */
 import type { StorageKey } from '@/core/types/common';
 import type { ConversationReference, FolderData } from '@/core/types/folder';
 import type { FolderCommands } from '@/features/folder/commands/folderCommands';
 import type { FolderSitePolicy } from '@/features/folder/owner/folderOwnerPolicy';
 import type { FolderPlatform } from '@/features/folder/platforms';
+import type { FiledConversations } from '@/features/folder/sites/filings';
 import type { FolderExportPayload } from '@/features/folder/types/import-export';
 import type { SiteFolderNotify, SiteFolderStore } from '@/pages/content/folder/SiteFolderStore';
 
@@ -44,13 +45,6 @@ export interface SiteConversationIdentity {
 
 /** The site's store: its own bucket, plus reads by bare conversation id. */
 export type SiteFoldersStore = SiteFolderStore & FiledConversations;
-
-export interface FiledConversations {
-  /** Bare ids of every filed conversation, for one pass over the sidebar. */
-  filedIds(): Set<string>;
-  /** One entry per filed reference, keyed by bucket and stored id, with its bare id. */
-  filings(): Map<string, string>;
-}
 
 /** The section's look in the site's sidebar. */
 export interface SectionSite {

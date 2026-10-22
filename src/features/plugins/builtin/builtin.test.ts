@@ -5,9 +5,9 @@ import { NATIVE_HANDLER_BINDINGS } from '@/pages/content/pluginNativeRegistratio
 import { checkPrimitivesAreShippable } from '../../../../scripts/lib/pluginChecks';
 import { validateManifest } from '../manifest/validate';
 import { legacyValueBindingsFor } from '../storage/legacyValueBindings';
+import { HIDE_FILED_SETTING } from '../verbs/folders/hideFiled';
 import { activateChatGptFolders } from './chatgptFolders';
 import { BUILTIN_PLUGINS, NATIVE_BUILTIN_PLUGIN_IDS } from './index';
-import { HIDE_FILED_SETTING } from './siteFolders/hideFiled';
 
 describe('BUILTIN_PLUGINS', () => {
   it('every builtin manifest passes validation', () => {

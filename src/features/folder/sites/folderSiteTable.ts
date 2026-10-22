@@ -12,7 +12,7 @@
  * changed key or namespace silently orphans the folders users already have.
  * Frozen, and never derived for a site that has no row.
  */
-import { StorageKeys } from '@/core/types/common';
+import { type StorageKey, StorageKeys } from '@/core/types/common';
 import type { FolderEditBody } from '@/features/folder/commands/folderCommands';
 import {
   FOLDER_SITE_POLICIES,
@@ -52,7 +52,7 @@ export interface FolderSiteTree {
 export interface FolderSitePrefs {
   /** `split`: separate keys, read in their own formats. `record`: one panel and one section record. */
   readonly codec: 'split' | 'record';
-  readonly keys: Readonly<Record<string, string>>;
+  readonly keys: Readonly<Record<string, StorageKey>>;
 }
 
 /** The i18n keys of the shared folder UI's site texts. */

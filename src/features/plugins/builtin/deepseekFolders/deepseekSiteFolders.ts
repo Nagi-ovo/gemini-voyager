@@ -8,12 +8,16 @@ import { StorageKeys } from '@/core/types/common';
 import type { ConversationReference } from '@/core/types/folder';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
 import { DEEPSEEK_IDENTITY, DEEPSEEK_TRANSFER } from '@/features/folder/sites/deepseekIdentity';
+import {
+  openSiteConversation,
+  pageTitle,
+  readSiteConversation,
+} from '@/features/folder/sites/sitePage';
+import { PluginSiteFolderStore, createPluginSiteCommands } from '@/features/folder/sites/siteStore';
+import { siteSectionCss } from '@/features/plugins/verbs/folders/sectionCss';
+import type { HideFiledDom, SiteFoldersAdapter } from '@/features/plugins/verbs/folders/types';
 import { DEEPSEEK_FOLDER_CONFIG } from '@/pages/content/folder/pluginSiteFolderConfigs';
 
-import { siteSectionCss } from '../siteFolders/sectionCss';
-import { openSiteConversation, pageTitle, readSiteConversation } from '../siteFolders/sitePage';
-import { PluginSiteFolderStore, createPluginSiteCommands } from '../siteFolders/siteStore';
-import type { HideFiledDom, SiteFoldersAdapter } from '../siteFolders/types';
 import tokensCss from './deepseekSectionTokens.css?raw';
 import {
   DEEPSEEK_ROW_SELECTOR,

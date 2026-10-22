@@ -11,9 +11,17 @@
  */
 import type { ConversationReference } from '@/core/types/folder';
 import { CLAUDE_IDENTITY } from '@/features/folder/sites/claudeIdentity';
+import {
+  MenuCloseWait,
+  buildMenuEntry,
+  wireMenuKeyboard,
+} from '@/features/plugins/verbs/folders/moveMenuEntry';
+import type {
+  SidebarConversation,
+  SiteMoveMenu,
+  SiteMoveMenuOptions,
+} from '@/features/plugins/verbs/folders/types';
 
-import { MenuCloseWait, buildMenuEntry, wireMenuKeyboard } from '../siteFolders/moveMenuEntry';
-import type { SidebarConversation, SiteMoveMenu, SiteMoveMenuOptions } from '../siteFolders/types';
 import {
   closeMenu,
   findClaudeSidebar,

@@ -1,5 +1,4 @@
 import { CLAUDE_IDENTITY } from '@/features/folder/sites/claudeIdentity';
-
 /**
  * Reads Claude's own sidebar, by its test ids and row keys rather than its
  * utility classes. Observed live (2026-10-19), `aside[aria-label="Sidebar"]`:
@@ -15,7 +14,7 @@ import { CLAUDE_IDENTITY } from '@/features/folder/sites/claudeIdentity';
  * its trigger, `[data-open]` while open, with `role="menuitem"` items that carry
  * test ids (`rename-chat-trigger`, `move-to-project-trigger`, …).
  */
-import type { SidebarConversation } from '../siteFolders/types';
+import type { SidebarConversation } from '@/features/plugins/verbs/folders/types';
 
 const SIDEBAR_SELECTOR = '[data-testid="sidebar"]';
 const RECENTS_SELECTOR = '[data-testid="sidebar-recents"]';

@@ -1,4 +1,4 @@
-/* DeepSeek's tokens for the shared section sheets (`siteFolders/sectionChrome.css`),
+/* DeepSeek's tokens for the shared section sheets (`verbs/folders/sectionChrome.css`),
  * which come first. DeepSeek's design system sets its `--dsw-*` colours for its
  * own light and dark theme (`body.light` / `body.dark`); the fallbacks are its
  * values for each. Rows are DeepSeek's: 40px, 14px text, a 12px radius. */

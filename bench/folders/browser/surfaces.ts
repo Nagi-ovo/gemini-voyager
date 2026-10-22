@@ -9,11 +9,11 @@ import {
   CHATGPT_SECTION_SITE,
   CHATGPT_SITE_FOLDERS,
 } from '@/features/plugins/builtin/chatgptFolders/chatgptSiteFolders';
-import { openFolderPicker } from '@/features/plugins/builtin/siteFolders/folderPicker';
-import { SiteFolderSection } from '@/features/plugins/builtin/siteFolders/folderSection';
-import { SidebarHideFiled } from '@/features/plugins/builtin/siteFolders/hideFiled';
-import { DEFAULT_SECTION_PREFS } from '@/features/plugins/builtin/siteFolders/sectionPrefs';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { openFolderPicker } from '@/features/plugins/verbs/folders/folderPicker';
+import { SiteFolderSection } from '@/features/plugins/verbs/folders/folderSection';
+import { SidebarHideFiled } from '@/features/plugins/verbs/folders/hideFiled';
+import { DEFAULT_SECTION_PREFS } from '@/features/plugins/verbs/folders/sectionPrefs';
 import { mountFloatingPanel } from '@/pages/content/folder/floatingPanel';
 
 import {

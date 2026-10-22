@@ -11,8 +11,8 @@
  */
 import { AISTUDIO_ROOT_BUCKET_ID, ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 import { CHATGPT_SECTION_SITE } from '@/features/plugins/builtin/chatgptFolders/chatgptSiteFolders';
-import { SiteFolderSection } from '@/features/plugins/builtin/siteFolders/folderSection';
-import { DEFAULT_SECTION_PREFS } from '@/features/plugins/builtin/siteFolders/sectionPrefs';
+import { SiteFolderSection } from '@/features/plugins/verbs/folders/folderSection';
+import { DEFAULT_SECTION_PREFS } from '@/features/plugins/verbs/folders/sectionPrefs';
 import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
 import { GEMINI_PANEL } from '../../__tests__/floatingPanelHarness';

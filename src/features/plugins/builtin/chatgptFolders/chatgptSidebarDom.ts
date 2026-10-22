@@ -1,11 +1,10 @@
 import { readChatGptConversationPath } from '@/features/folder/sites/chatgptIdentity';
-
 /**
  * Reads ChatGPT's own sidebar. Rows are found by their conversation links, not
  * classes: every row link is `/c/<id>` or `/g/<project>/c/<id>`. See the fixture
  * (`__tests__/chatgptSidebarFixture.ts`) for the live structure this follows.
  */
-import type { SidebarConversation } from '../siteFolders/types';
+import type { SidebarConversation } from '@/features/plugins/verbs/folders/types';
 
 /** The scroll area that holds Projects and Recents; only the real sidebar has one. */
 const SIDEBAR_SCROLL_SELECTOR = '[data-app-action-sidebar-scroll]';

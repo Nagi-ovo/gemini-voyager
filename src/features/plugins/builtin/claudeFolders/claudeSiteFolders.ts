@@ -7,12 +7,16 @@ import { StorageKeys } from '@/core/types/common';
 import type { ConversationReference } from '@/core/types/folder';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
 import { CLAUDE_IDENTITY, CLAUDE_TRANSFER } from '@/features/folder/sites/claudeIdentity';
+import {
+  openSiteConversation,
+  pageTitle,
+  readSiteConversation,
+} from '@/features/folder/sites/sitePage';
+import { PluginSiteFolderStore, createPluginSiteCommands } from '@/features/folder/sites/siteStore';
+import { siteSectionCss } from '@/features/plugins/verbs/folders/sectionCss';
+import type { HideFiledDom, SiteFoldersAdapter } from '@/features/plugins/verbs/folders/types';
 import { CLAUDE_FOLDER_CONFIG } from '@/pages/content/folder/pluginSiteFolderConfigs';
 
-import { siteSectionCss } from '../siteFolders/sectionCss';
-import { openSiteConversation, pageTitle, readSiteConversation } from '../siteFolders/sitePage';
-import { PluginSiteFolderStore, createPluginSiteCommands } from '../siteFolders/siteStore';
-import type { HideFiledDom, SiteFoldersAdapter } from '../siteFolders/types';
 import { ClaudeMoveMenu } from './claudeMoveMenu';
 import tokensCss from './claudeSectionTokens.css?raw';
 import {

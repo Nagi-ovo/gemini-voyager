@@ -5,8 +5,8 @@
 import type { FolderCommands } from '@/features/folder/commands/folderCommands';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
 import { importChatGptFolders } from '@/features/folder/sites/chatgptTransfer';
+import { createPluginSiteCommands } from '@/features/folder/sites/siteStore';
 
-import { createPluginSiteCommands } from '../siteFolders/siteStore';
 import type { ChatGptFolderStore } from './ChatGptFolderStore';
 
 export function createLegacyChatGptCommands(store: ChatGptFolderStore): FolderCommands {

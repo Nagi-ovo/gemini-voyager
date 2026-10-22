@@ -9,9 +9,9 @@ import { join } from 'node:path';
 
 import { PLATFORM_LOGOS } from '../../src/core/icons/platformLogos';
 import { BUILTIN_PLUGINS } from '../../src/features/plugins/builtin/index';
-import { HIDE_FILED_SETTING } from '../../src/features/plugins/builtin/siteFolders/hideFiled';
 import { sendInputsOf } from '../../src/features/plugins/sends/sendInputs';
 import type { PluginManifest, SiteAdapter } from '../../src/features/plugins/types';
+import { HIDE_FILED_SETTING } from '../../src/features/plugins/verbs/folders/hideFiled';
 import {
   type NativePopupPlatform,
   isNativePopupSettingAvailable,

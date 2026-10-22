@@ -11,6 +11,7 @@ import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { HIDE_FILED_SETTING } from '@/features/plugins/verbs/folders/hideFiled';
 import { fakeTransfer } from '@/pages/content/folder/floatingTree/__tests__/treeDriver';
 import { initI18n } from '@/utils/i18n';
 
@@ -19,7 +20,6 @@ import {
   createMemoryStorage,
   settle,
 } from '../../chatgptFolders/__tests__/memoryStorage';
-import { HIDE_FILED_SETTING } from '../../siteFolders/hideFiled';
 import { DEEPSEEK_FOLDERS_GUIDE_ID, DEEPSEEK_SITE_FOLDERS } from '../deepseekSiteFolders';
 import { activateDeepSeekFolders } from '../index';
 

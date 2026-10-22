@@ -1,6 +1,14 @@
 import type { ConversationReference, FolderData } from '@/core/types/folder';
 import { ownBucket } from '@/features/folder/model/folderData';
 
+/** A site store's reads by bare conversation id. */
+export interface FiledConversations {
+  /** Bare ids of every filed conversation, for one pass over the sidebar. */
+  filedIds(): Set<string>;
+  /** One entry per filed reference, keyed by bucket and stored id, with its bare id. */
+  filings(): Map<string, string>;
+}
+
 /** Bare ids of every filed conversation in `references`, for one pass over the sidebar. */
 export function filedIdsOf(
   references: Iterable<ConversationReference>,

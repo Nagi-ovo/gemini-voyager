@@ -6,6 +6,7 @@ import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { HIDE_FILED_SETTING } from '@/features/plugins/verbs/folders/hideFiled';
 import { initI18n } from '@/utils/i18n';
 
 import {
@@ -13,7 +14,6 @@ import {
   createMemoryStorage,
   settle,
 } from '../../chatgptFolders/__tests__/memoryStorage';
-import { HIDE_FILED_SETTING } from '../../siteFolders/hideFiled';
 import { CLAUDE_FOLDERS_GUIDE_ID, CLAUDE_SITE_FOLDERS } from '../claudeSiteFolders';
 import { activateClaudeFolders } from '../index';
 import { type ClaudeSidebarFixture, claudeRows, mountClaudeSidebar } from './claudeSidebarFixture';
