@@ -5,6 +5,7 @@ import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContex
 import type { FolderCommands } from '@/features/folder/commands/folderCommands';
 import type { ConversationSortMode } from '@/features/folder/model/folderData';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
+import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
 import type { FolderNavigation } from './FolderNavigation';
 import type { FolderTransferController } from './FolderTransferController';
@@ -56,6 +57,9 @@ function persistSync(key: string, value: unknown, failure: string): void {
  * Floating mode (a popup opt-in): never inject into Gemini's sidebar; mount the
  * body-level floating panel (or its FAB) instead. Owns the open panel's handle.
  */
+const accountNotice = (unknown: boolean): string | null =>
+  unknown ? getTranslationSyncUnsafe('folder_account_unknown') : null;
+
 export class FloatingFolderUI {
   handle: FloatingPanelHandle | null = null;
 
@@ -63,6 +67,13 @@ export class FloatingFolderUI {
 
   get isOpen(): boolean {
     return this.handle !== null;
+  }
+
+  /** Shows whether the folders can be used now, and why not when the account is unreadable. */
+  updateAvailability(): void {
+    const { canEdit } = this.options.store;
+    const accountUnknown = this.options.store.accountUnknown === true;
+    this.handle?.setDataReady(canEdit && !accountUnknown, accountNotice(accountUnknown));
   }
 
   /**
@@ -152,7 +163,8 @@ export class FloatingFolderUI {
       policy: FOLDER_SITE_POLICIES.gemini,
       cloudActions: true,
       hintKeys: HINT_KEYS,
-      dataReady: store.canEdit,
+      dataReady: store.canEdit && store.accountUnknown !== true,
+      accountNotice: accountNotice(store.accountUnknown === true),
       conversationSortMode: this.options.getSortMode(),
       ...geometry,
       onPosChange: (pos) =>

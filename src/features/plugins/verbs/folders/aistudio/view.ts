@@ -32,8 +32,8 @@ import {
 import { readCloudTooltip } from '@/pages/content/folder/syncTooltip';
 import { watchRouteChanges } from '@/pages/content/utils/routeWatcher';
 
+import { setAccountUnknownNotice } from '../accountNotice';
 import type { PanelSection } from '../panelSection';
-import { setAccountUnknownNotice } from './accountNotice';
 import { AIStudioTransfer } from './cloud';
 import {
   buildFolderPanel,

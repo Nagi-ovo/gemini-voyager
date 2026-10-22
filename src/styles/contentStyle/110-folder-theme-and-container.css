@@ -325,3 +325,12 @@ html[data-gv-scheme='light'] .gv-folder-search-input:focus {
   border-radius: 0 2px 2px 0;
   opacity: 0.9;
 }
+
+/* Isolation cannot read the page's account: the folders are hidden, and this says why. */
+.gv-folder-container:not(.gv-aistudio) > .gv-folder-account-notice {
+  margin: 2px 16px 8px;
+  font-size: 12px;
+  line-height: 16px;
+  color: inherit;
+  opacity: 0.72;
+}

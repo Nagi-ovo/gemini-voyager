@@ -369,7 +369,7 @@ export class GeminiFoldersView extends GeminiFolderSessionView {
   private handleStoreChange(reason: FolderStoreChange): void {
     if (this.isDestroyed) return;
     this.treeView.updateAvailability();
-    this.floatingUI.handle?.setDataReady(this.session.canEdit);
+    this.floatingUI.updateAvailability();
     if (reason === 'account') {
       this.resetForAccountChange();
     } else if (reason === 'data') {

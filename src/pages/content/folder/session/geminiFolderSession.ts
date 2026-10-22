@@ -55,6 +55,8 @@ export interface GeminiFolderReads {
   /** Changes on every account rebind, including a return to the same account. */
   readonly activation: number;
   readonly accountIsolationEnabled: boolean;
+  /** Isolation is on and the page names no account it can read: no folders can show. */
+  readonly accountUnknown?: boolean;
 }
 
 const DETACHED = { enabled: false, sidebar: null, sortMode: 'manual' } as const;
@@ -128,6 +130,13 @@ export class GeminiFolderSession implements GeminiFolderReads {
   }
   get accountIsolationEnabled(): boolean {
     return this.store.accountIsolationEnabled;
+  }
+  get accountUnknown(): boolean {
+    return (
+      this.store.accountIsolationEnabled &&
+      !this.accountMatchesPage &&
+      geminiPageAccountFingerprint() === null
+    );
   }
   /** The active bucket's key, which pending native deletes check against. */
   get storageKey(): string {

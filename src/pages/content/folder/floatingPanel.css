@@ -457,3 +457,11 @@
 :host([data-gv-rtl]) .gv-floating-folder-panel__menu-item {
   text-align: right;
 }
+
+/* Isolation cannot read the page's account: the folders are hidden, and this says why. */
+.gv-folder-account-notice {
+  margin: 4px 12px 8px;
+  font-size: 12px;
+  line-height: 16px;
+  opacity: 0.72;
+}

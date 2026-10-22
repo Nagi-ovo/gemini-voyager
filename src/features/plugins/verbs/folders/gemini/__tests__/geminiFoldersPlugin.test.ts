@@ -299,6 +299,33 @@ describe("Gemini folders' account gate", () => {
     expect(memory.values.local.get(KEY)).toEqual(STORED);
   });
 
+  it("says why the folders are hidden instead of loading forever while Gemini's account is unreadable", async () => {
+    memory.values.local.set(await keyOf('a'), structuredClone(STORED));
+    await openPage();
+    await vi.waitFor(() => expect(panel()).not.toBeNull());
+
+    const container = () => panel() as HTMLElement;
+    const notice = () => container().querySelector(':scope > .gv-folder-account-notice');
+    const list = () => container().querySelector<HTMLElement>(':scope > .gv-folder-list')!;
+    expect(container().getAttribute('aria-busy')).toBe('false');
+    expect(notice()?.textContent).toBe(
+      "Can't confirm which account this page is signed in to, so folders are hidden. They're still saved.",
+    );
+    expect(notice()?.getAttribute('role')).toBe('status');
+    expect(list().inert).toBe(true);
+    expect(container().querySelector<HTMLButtonElement>('.gv-folder-add-btn')!.disabled).toBe(true);
+    expect(outline()).toEqual([]);
+
+    showGeminiAccount('a@example.com');
+    await vi.waitFor(() => expect(outline()).toEqual(['Thesis', '  · Chat aa']), {
+      timeout: 4000,
+    });
+    expect(notice()).toBeNull();
+    expect(list().inert).toBe(false);
+    expect(container().inert).toBe(false);
+    expect(container().getAttribute('aria-busy')).toBe('false');
+  });
+
   it("closes on another account's page and reopens on that account's folders", async () => {
     const [aKey, bKey] = [await keyOf('a'), await keyOf('b')];
     memory.values.local.set(aKey, folder('Private a'));

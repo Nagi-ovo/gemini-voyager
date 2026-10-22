@@ -5,15 +5,23 @@
  */
 const NOTICE_CLASS = 'gv-folder-account-notice';
 
-/** Shows `message` under the heading and makes the tree inert, or removes both when null. */
+/**
+ * Shows `message` before the container's `treeHostClass` child and makes that
+ * child inert, or removes both when null. `container` may be a shadow root.
+ */
 export function setAccountUnknownNotice(
-  container: HTMLElement,
+  container: HTMLElement | ShadowRoot,
   treeHostClass: string,
   message: string | null,
 ): void {
-  const tree = container.querySelector<HTMLElement>(`:scope > .${treeHostClass}`);
+  // Direct children only; `:scope` names no element in a shadow root.
+  const child = (className: string): HTMLElement | undefined =>
+    Array.from(container.children).find(
+      (el): el is HTMLElement => el instanceof HTMLElement && el.classList.contains(className),
+    );
+  const tree = child(treeHostClass);
   if (tree) tree.inert = message !== null;
-  let notice = container.querySelector<HTMLElement>(`:scope > .${NOTICE_CLASS}`);
+  let notice = child(NOTICE_CLASS);
   if (message === null) {
     notice?.remove();
     return;

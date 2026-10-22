@@ -1,6 +1,7 @@
 import { CLOUD_SYNC_PATH, CLOUD_UPLOAD_PATH } from '@/core/icons/cloudSyncPaths';
 import type { ConversationSortMode } from '@/features/folder/model/folderData';
 import type { FolderSitePolicy } from '@/features/folder/owner/folderOwnerPolicy';
+import { setAccountUnknownNotice } from '@/features/plugins/verbs/folders/accountNotice';
 
 import { clearOfPromptTrigger } from '../prompt/triggerClearance';
 import { FLOATING_PANEL_CSS as panelCss } from './floatingPanelCss';
@@ -41,6 +42,8 @@ export type MountArgs = TreeActions & {
   /** Hint rows under the header. */
   hintKeys: readonly string[];
   dataReady?: boolean;
+  /** Why no folders can show (the page's account is unreadable); null while there is none. */
+  accountNotice?: string | null;
   conversationSortMode?: ConversationSortMode;
   storedPos?: FloatingPanelPos | null;
   storedSize?: FloatingPanelSize | null;
@@ -57,7 +60,8 @@ export type FloatingPanelMountArgs = MountArgs;
 
 export type FloatingPanelHandle = {
   element: HTMLElement;
-  setDataReady: (ready: boolean) => void;
+  /** `notice`: why the folders cannot show, said instead of a load that never ends. */
+  setDataReady: (ready: boolean, notice?: string | null) => void;
   /** The folder drop target under a viewport point, for a drag driven by pointer events. */
   dropTargetAt: (x: number, y: number) => FolderDropTarget | null;
   update: (data: FolderData, conversationSortMode?: ConversationSortMode) => void;
@@ -203,6 +207,7 @@ export function mountFloatingPanel({
   headerActions: siteActions = [],
   hintKeys,
   dataReady = true,
+  accountNotice = null,
   conversationSortMode = 'manual',
   storedPos,
   storedSize,
@@ -300,19 +305,20 @@ export function mountFloatingPanel({
   const body = document.createElement('div');
   body.className = `${FLOATING_PANEL_CLASS}__body`;
 
-  const setDataReady = (ready: boolean): void => {
-    body.inert = !ready;
-    body.setAttribute('aria-busy', String(!ready));
+  const setDataReady = (ready: boolean, notice: string | null = null): void => {
+    // The notice sets the body's inert for itself; a load in progress keeps it inert as well.
+    setAccountUnknownNotice(surface.root, `${FLOATING_PANEL_CLASS}__body`, notice);
+    body.inert = !ready || notice !== null;
+    body.setAttribute('aria-busy', String(!ready && notice === null));
     headerActions
       .querySelectorAll<HTMLButtonElement>(`.${FLOATING_PANEL_CLASS}__icon-button`)
       .forEach((button) => {
         button.disabled = !ready;
       });
   };
-  setDataReady(dataReady);
-
   const surface = attachShadowSurface(panel, panelCss);
   surface.root.append(header, createHintStack(hintKeys), body);
+  setDataReady(dataReady, accountNotice);
 
   const initialSize = clampSize(storedSize ?? { w: DEFAULT_WIDTH, h: DEFAULT_HEIGHT });
   const initialPos = clampPos(storedPos ?? defaultPos(initialSize), initialSize.w, initialSize.h);

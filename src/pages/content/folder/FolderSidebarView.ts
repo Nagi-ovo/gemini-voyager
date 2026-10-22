@@ -5,6 +5,8 @@ import type { FolderCommands } from '@/features/folder/commands/folderCommands';
 import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 import type { ConversationSortMode } from '@/features/folder/model/folderData';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
+import { setAccountUnknownNotice } from '@/features/plugins/verbs/folders/accountNotice';
+import { getTranslationSyncUnsafe as t } from '@/utils/i18n';
 
 import type { FolderFeedback } from './FolderFeedback';
 import type { FolderNavigation } from './FolderNavigation';
@@ -120,14 +122,24 @@ export class FolderSidebarView {
 
   updateAvailability(panel = this.options.runtime.panel): void {
     if (!panel) return;
-    const ready = this.options.store.canEdit;
-    panel.inert = !ready;
-    panel.setAttribute('aria-busy', String(!ready));
+    const { canEdit } = this.options.store;
+    const accountUnknown = this.options.store.accountUnknown === true;
+    const ready = canEdit && !accountUnknown;
+    // An unreadable account control is no load in progress: the panel says why it is empty.
+    panel.inert = !ready && !accountUnknown;
+    panel.setAttribute('aria-busy', String(!ready && !accountUnknown));
     panel
       .querySelectorAll<HTMLButtonElement>('.gv-folder-header-actions button')
       .forEach((button) => {
         button.disabled = !ready;
       });
+    const search = panel.querySelector<HTMLElement>(':scope > .gv-folder-search');
+    if (search) search.inert = accountUnknown;
+    setAccountUnknownNotice(
+      panel,
+      'gv-folder-list',
+      accountUnknown ? t('folder_account_unknown') : null,
+    );
   }
 
   /** The panel is going away: stop timers and drop the tree, which remounts with the panel. */
@@ -227,6 +239,7 @@ export class FolderSidebarView {
     if (activityMode || !this.tree || existing.classList.contains('gv-folder-activity-list')) {
       this.options.dialogs.closeInline();
       existing.replaceWith(this.createList());
+      this.updateAvailability(panel);
     } else {
       this.showTree();
     }
