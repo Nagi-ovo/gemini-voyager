@@ -3,11 +3,12 @@
  * `folders` section of its `site.json`, and everything that decides what is
  * written (bucket, keys, policy, file format, guide id, texts) from its row in
  * the core folder table (`features/folder/sites/folderSiteTable.ts`). A site
- * with no row, or one not keyed by its route alone, gets no folders here.
+ * with no row, one not keyed by its route alone, or a page the bundled
+ * extension does not give that site, gets no folders here.
  */
 import type { ConversationReference } from '@/core/types/folder';
 import type { FolderPlatform } from '@/features/folder/platforms';
-import { folderSiteOf } from '@/features/folder/sites/folderSiteTable';
+import { folderSiteForPage } from '@/features/folder/sites/folderSiteTable';
 import { routeFolderSiteOf } from '@/features/folder/sites/routeFolderSites';
 import {
   openSiteConversation,
@@ -88,12 +89,12 @@ function placeholderCheck(
 /** The site's folders from its `site.json` and the core table, or `null` where it has none. */
 export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAdapter | null {
   const section = adapter?.folders;
-  const row = adapter ? folderSiteOf(adapter.id) : null;
+  const row = adapter ? folderSiteForPage(adapter.id, location.href) : null;
   const route = row ? routeFolderSiteOf(row.site) : null;
   const panel = row?.prefs.keys.panel;
   const sectionPrefs = row?.prefs.keys.section;
   const page = section?.page;
-  if (!section || !page || !row?.messages || !row.guideId || !route || !panel || !sectionPrefs) {
+  if (!section || !page || !row?.messages || !route || !panel || !sectionPrefs) {
     return null;
   }
   const { identity, transfer, overrides } = route;
@@ -160,19 +161,24 @@ export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAda
     },
     section: {
       className,
-      css: siteSectionCss(className, SECTION_SKINS[site]),
+      css: siteSectionCss(
+        className,
+        Object.prototype.hasOwnProperty.call(SECTION_SKINS, site) ? SECTION_SKINS[site] : undefined,
+      ),
       anchor: dom.anchor,
       conversationHref,
       policy,
       tree: row.tree,
     },
     hideFiled,
-    guide: {
-      id: row.guideId,
-      debugEvent: `gv:debug:${site}FoldersCoachmark`,
-      titleKey: messages.guideTitle,
-      bodyKey: messages.guideBody,
-    },
+    guide: row.guideId
+      ? {
+          id: row.guideId,
+          debugEvent: `gv:debug:${site}FoldersCoachmark`,
+          titleKey: messages.guideTitle,
+          bodyKey: messages.guideBody,
+        }
+      : null,
     messages,
     transfer: { export: transfer.export, filename: () => transfer.filename() },
     native: {

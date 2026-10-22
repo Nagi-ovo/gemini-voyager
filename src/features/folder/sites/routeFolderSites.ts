@@ -2,9 +2,15 @@
  * The catalog sites whose folder entries are keyed by their route alone
  * (`<site>:conv:<id>` from the site's `conversationIdPattern`), with the folder
  * file each imports and exports and any edit it has always stored in a shape
- * of its own. These are what the `folders` primitive can run from a site's data.
+ * of its own, and every derived site (`derivedFolderSites.ts`), keyed the same
+ * way on its one origin. These are what the `folders` primitive can run from a
+ * site's data.
  */
-import type { FolderPlatform } from '@/features/folder/platforms';
+import {
+  DERIVED_FOLDER_SITES,
+  type DerivedFolderPlatform,
+  type FolderPlatform,
+} from '@/features/folder/platforms';
 import type { SiteFolderCommandsOptions } from '@/pages/content/folder/siteFolderCommands';
 
 import { CHATGPT_IDENTITY } from './chatgptIdentity';
@@ -16,7 +22,7 @@ import type { SiteTransfer } from './siteTransfer';
 
 export interface RouteFolderSite {
   readonly identity: SiteIdentity;
-  readonly transfer: SiteTransfer<'chatgpt' | 'claude' | 'deepseek'>;
+  readonly transfer: SiteTransfer<'chatgpt' | 'claude' | 'deepseek' | DerivedFolderPlatform>;
   /** Edits the site stores in its own shape; the shared commands handle the rest. */
   readonly overrides?: SiteFolderCommandsOptions['overrides'];
 }
@@ -37,5 +43,9 @@ const ROUTE_FOLDER_SITES: Partial<Readonly<Record<FolderPlatform, RouteFolderSit
 
 /** The route identity and folder file of `site`, or `null` for a site keyed otherwise. */
 export function routeFolderSiteOf(site: FolderPlatform): RouteFolderSite | null {
-  return ROUTE_FOLDER_SITES[site] ?? null;
+  if (Object.prototype.hasOwnProperty.call(ROUTE_FOLDER_SITES, site)) {
+    return ROUTE_FOLDER_SITES[site] ?? null;
+  }
+  const derived = DERIVED_FOLDER_SITES.get(site as DerivedFolderPlatform);
+  return derived ? { identity: derived.identity, transfer: derived.transfer } : null;
 }

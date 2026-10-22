@@ -8,13 +8,17 @@ import {
 import type { ConversationPlacement } from '@/features/folder/model/placeConversations';
 import {
   FOLDER_PLATFORMS,
-  FOLDER_PLATFORM_IDS,
+  FROZEN_FOLDER_PLATFORM_IDS,
   type FolderPlatform,
+  type FrozenFolderPlatform,
   supportsAccountIsolation,
 } from '@/features/folder/platforms';
 
-/** Every site whose folder bucket the owner may write. */
-export type FolderSite = FolderPlatform;
+/**
+ * Every site whose folder bucket the owner may write: the frozen five. A derived site's
+ * bucket is the page's alone (`legacy`), with no fence entry to publish or read.
+ */
+export type FolderSite = FrozenFolderPlatform;
 
 export type AddVia = 'native-menu' | 'project' | 'picker' | 'outside-drop';
 
@@ -22,8 +26,8 @@ export type AddVia = 'native-menu' | 'project' | 'picker' | 'outside-drop';
  * Per-site rules the owner applies; never chosen by a client. Values keep each
  * site's behavior today (`folders-timeline-ui.md`, the per-entry-point rules).
  */
-export interface FolderSitePolicy {
-  site: FolderSite;
+export interface FolderSitePolicy<S extends FolderPlatform = FolderPlatform> {
+  site: S;
   /** Page hosts whose content scripts may name this site's keys. */
   hosts: readonly string[];
   /** The bucket for conversations outside any folder: a valid target without a folder. */
@@ -39,8 +43,10 @@ export interface FolderSitePolicy {
   addPlacement: (via: AddVia) => ConversationPlacement;
 }
 
-/** Claude and DeepSeek file as ChatGPT does: exact ids, any number of folders per chat. */
-function pluginSitePolicy(site: 'claude' | 'deepseek'): FolderSitePolicy {
+/** Claude, DeepSeek and each derived site file as ChatGPT does: exact ids, any number of folders per chat. */
+export function pluginSitePolicy<
+  S extends Exclude<FolderPlatform, 'gemini' | 'aistudio' | 'chatgpt'>,
+>(site: S): FolderSitePolicy<S> {
   return {
     site,
     hosts: FOLDER_PLATFORMS[site].hosts,
@@ -53,7 +59,10 @@ function pluginSitePolicy(site: 'claude' | 'deepseek'): FolderSitePolicy {
   };
 }
 
-export const FOLDER_SITE_POLICIES: Readonly<Record<FolderSite, FolderSitePolicy>> = {
+/** A site the background owner may write, with its rules. */
+export type OwnerSitePolicy = FolderSitePolicy<FolderSite>;
+
+export const FOLDER_SITE_POLICIES: Readonly<Record<FolderSite, OwnerSitePolicy>> = {
   gemini: {
     site: 'gemini',
     hosts: FOLDER_PLATFORMS.gemini.hosts,
@@ -97,7 +106,7 @@ const ACCOUNT_SUFFIX = /^:acct:[0-9a-z]{1,7}$/;
  * prefix, so sidecars such as `gvFolderDataAIStudio:legacySyncImported` name no site.
  */
 export function siteOfFolderKey(key: string): FolderSite | null {
-  for (const site of FOLDER_PLATFORM_IDS) {
+  for (const site of FROZEN_FOLDER_PLATFORM_IDS) {
     const base = FOLDER_PLATFORMS[site].folderStorageKey;
     if (key === base) return site;
     if (

@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill';
 
-import type { StorageKey } from '@/core/types/common';
+import type { FolderPrefsKey } from '@/features/folder/sites/folderSiteTable';
 
 type Point = { x: number; y: number };
 
@@ -40,7 +40,7 @@ export function parsePanelPrefs(value: unknown): SiteFolderPanelPrefs {
   };
 }
 
-export async function loadPanelPrefs(key: StorageKey): Promise<SiteFolderPanelPrefs> {
+export async function loadPanelPrefs(key: FolderPrefsKey): Promise<SiteFolderPanelPrefs> {
   try {
     const stored = await browser.storage.local.get(key);
     return parsePanelPrefs(stored[key]);
@@ -49,7 +49,10 @@ export async function loadPanelPrefs(key: StorageKey): Promise<SiteFolderPanelPr
   }
 }
 
-export async function savePanelPrefs(key: StorageKey, prefs: SiteFolderPanelPrefs): Promise<void> {
+export async function savePanelPrefs(
+  key: FolderPrefsKey,
+  prefs: SiteFolderPanelPrefs,
+): Promise<void> {
   try {
     await browser.storage.local.set({ [key]: prefs });
   } catch {

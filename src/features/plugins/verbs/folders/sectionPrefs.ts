@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 
-import type { StorageKey } from '@/core/types/common';
 import type { ConversationSortMode } from '@/features/folder/model/folderData';
+import type { FolderPrefsKey } from '@/features/folder/sites/folderSiteTable';
 import type { FolderViewMode } from '@/pages/content/folder/activityView';
 import { toSortMode } from '@/pages/content/folder/sidebarPrefs';
 
@@ -28,7 +28,7 @@ function parseSectionPrefs(value: unknown): SiteFolderSectionPrefs {
 /** Before the user changes anything; the parser's own fallbacks. */
 export const DEFAULT_SECTION_PREFS: Readonly<SiteFolderSectionPrefs> = parseSectionPrefs(undefined);
 
-export async function loadSectionPrefs(key: StorageKey): Promise<SiteFolderSectionPrefs> {
+export async function loadSectionPrefs(key: FolderPrefsKey): Promise<SiteFolderSectionPrefs> {
   try {
     const stored = await browser.storage.local.get(key);
     return parseSectionPrefs(stored[key]);
@@ -38,7 +38,7 @@ export async function loadSectionPrefs(key: StorageKey): Promise<SiteFolderSecti
 }
 
 export async function saveSectionPrefs(
-  key: StorageKey,
+  key: FolderPrefsKey,
   prefs: SiteFolderSectionPrefs,
 ): Promise<void> {
   try {

@@ -5,13 +5,12 @@
  * are serialized user data or DOM output and so stay the site's own. Every
  * site's is built from data by `siteData.ts`.
  */
-import type { StorageKey } from '@/core/types/common';
 import type { ConversationReference, FolderData } from '@/core/types/folder';
 import type { FolderCommands } from '@/features/folder/commands/folderCommands';
 import type { FolderSitePolicy } from '@/features/folder/owner/folderOwnerPolicy';
 import type { FolderPlatform } from '@/features/folder/platforms';
 import type { FiledConversations } from '@/features/folder/sites/filings';
-import type { FolderSiteTree } from '@/features/folder/sites/folderSiteTable';
+import type { FolderPrefsKey, FolderSiteTree } from '@/features/folder/sites/folderSiteTable';
 import type { FolderExportPayload } from '@/features/folder/types/import-export';
 import type { SiteFolderNotify, SiteFolderStore } from '@/pages/content/folder/SiteFolderStore';
 
@@ -140,7 +139,7 @@ export interface SiteFoldersAdapter {
     commands: FolderCommands;
   };
   /** Device-local view state: the floating panel's geometry and the section's view. */
-  readonly prefsKeys: { readonly panel: StorageKey; readonly section: StorageKey };
+  readonly prefsKeys: { readonly panel: FolderPrefsKey; readonly section: FolderPrefsKey };
   readonly identity: SiteConversationIdentity;
   readonly page: {
     /** The open conversation as a folder entry, or `null` when none can be filed. */
@@ -157,7 +156,8 @@ export interface SiteFoldersAdapter {
   };
   readonly section: SectionSite;
   readonly hideFiled: HideFiledDom;
-  readonly guide: SiteFolderGuideConfig;
+  /** `null`: the site shows no first-run guide (a derived site has no texts of its own). */
+  readonly guide: SiteFolderGuideConfig | null;
   readonly messages: SiteFolderMessages;
   readonly transfer: {
     export(data: FolderData): FolderExportPayload;

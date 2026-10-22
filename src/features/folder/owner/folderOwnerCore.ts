@@ -20,7 +20,7 @@ import type {
 import {
   FOLDER_SITE_POLICIES,
   type FolderSite,
-  type FolderSitePolicy,
+  type OwnerSitePolicy,
   siteOfFolderKey,
 } from './folderOwnerPolicy';
 import {
@@ -168,7 +168,7 @@ export function createFolderOwnerCore(options: FolderOwnerCoreOptions): FolderOw
     ownHashes.set(key, [hash, ...(ownHashes.get(key) ?? [])].slice(0, OWN_HASHES_KEPT));
 
   /** The policy of `key`'s site when this build owns it; `null` refuses with no storage access. */
-  const policyFor = (key: string): FolderSitePolicy | null => {
+  const policyFor = (key: string): OwnerSitePolicy | null => {
     const site = siteOfFolderKey(key);
     return site && options.authority[site] === 'owner' ? FOLDER_SITE_POLICIES[site] : null;
   };
@@ -267,7 +267,7 @@ export function createFolderOwnerCore(options: FolderOwnerCoreOptions): FolderOw
     return collect(ctx, meta, at);
   }
 
-  async function openTurn(request: OpenRequest, policy: FolderSitePolicy): Promise<OpenReply> {
+  async function openTurn(request: OpenRequest, policy: OwnerSitePolicy): Promise<OpenReply> {
     const { key, clientId } = request;
     let state = await resolve(key);
     if (state.kind === 'read_failed' || state.kind === 'write_failed') {
@@ -313,7 +313,7 @@ export function createFolderOwnerCore(options: FolderOwnerCoreOptions): FolderOw
     return withClient(meta, clientId, rest);
   }
 
-  async function applyTurn(request: ApplyRequest, policy: FolderSitePolicy): Promise<ApplyReply> {
+  async function applyTurn(request: ApplyRequest, policy: OwnerSitePolicy): Promise<ApplyReply> {
     const { key, clientId, ops } = request;
     const state = await resolve(key);
     if (state.kind === 'read_failed' || state.kind === 'write_failed') {

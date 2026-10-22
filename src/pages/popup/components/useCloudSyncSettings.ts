@@ -337,12 +337,12 @@ export function useCloudSyncSettings(sourceTabId?: number) {
     isDeletingICloudBackup,
     downloadMode,
     lastUploadText: formatSyncTime(
-      syncState[FOLDER_PLATFORMS[platform].lastUploadTimeField],
+      syncState[FOLDER_PLATFORMS[platform].lastUploadTimeField] ?? null,
       'upload',
       t,
     ),
     lastSyncText: formatSyncTime(
-      syncState[FOLDER_PLATFORMS[platform].lastSyncTimeField],
+      syncState[FOLDER_PLATFORMS[platform].lastSyncTimeField] ?? null,
       'download',
       t,
     ),

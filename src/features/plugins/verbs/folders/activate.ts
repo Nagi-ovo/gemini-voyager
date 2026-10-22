@@ -172,16 +172,18 @@ export function startSiteFolders(
       isPlaceholderTitle: (title) => site.page.isPlaceholderTitle(title),
       storedId: (id) => site.identity.storedId(id),
     });
-    const guide = new SiteFolderGuide(
-      scope,
-      site.guide,
-      {
-        anchor: () => shown.guideAnchor(),
-        ready: () => store.ready,
-        busy: () => shown.sectionBusy(),
-      },
-      key,
-    );
+    const guide = site.guide
+      ? new SiteFolderGuide(
+          scope,
+          site.guide,
+          {
+            anchor: () => shown.guideAnchor(),
+            ready: () => store.ready,
+            busy: () => shown.sectionBusy(),
+          },
+          key,
+        )
+      : null;
     if (moveMenu) scope.effect(() => () => moveMenu.dispose(), `${key}:move-menu`);
     const rowAt = site.native.rowAt;
     if (rowAt) {
@@ -199,7 +201,7 @@ export function startSiteFolders(
       shown.placeSection(nav);
       hidden?.rows.sync(nav);
       titles.sync(nav);
-      guide.check();
+      guide?.check();
       if (moveMenu?.check(nav)) sidebar.schedule();
     });
     scope.effect(() => store.subscribe(() => sidebar.schedule()), `${key}:sidebar-sync`);

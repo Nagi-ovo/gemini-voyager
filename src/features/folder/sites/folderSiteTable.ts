@@ -8,17 +8,25 @@
  * A row references today's objects rather than copying them
  * (`FOLDER_PLATFORMS`, `FOLDER_SITE_POLICIES`, each `PlatformFolderConfig`),
  * and adds what the folders primitive will need to know per site. Every value
- * is today's: `__tests__/folderSiteTable.snapshot.json` pins them, because a
- * changed key or namespace silently orphans the folders users already have.
- * Frozen, and never derived for a site that has no row.
+ * of the five frozen rows is today's: `__tests__/fixtures/folderSiteTable.json`
+ * pins them, because a changed key or namespace silently orphans the folders
+ * users already have.
+ *
+ * A bundled site with no frozen row gets a derived one
+ * (`derivedFolderSites.ts`): the catalog sites' policy over one unscoped local
+ * bucket, every name built from its id, no guide and no site extension. A site
+ * the bundle does not describe has no row at all.
  */
 import { type StorageKey, StorageKeys } from '@/core/types/common';
 import type { FolderEditBody } from '@/features/folder/commands/folderCommands';
 import {
   FOLDER_SITE_POLICIES,
   type FolderSitePolicy,
+  pluginSitePolicy,
 } from '@/features/folder/owner/folderOwnerPolicy';
 import {
+  DERIVED_FOLDER_SITES,
+  type DerivedFolderPlatform,
   FOLDER_PLATFORMS,
   type FolderPlatform,
   type FolderPlatformDefinition,
@@ -33,6 +41,7 @@ import {
   CHATGPT_FOLDER_CONFIG,
   CLAUDE_FOLDER_CONFIG,
   DEEPSEEK_FOLDER_CONFIG,
+  pluginSiteFolderConfig,
 } from '@/pages/content/folder/pluginSiteFolderConfigs';
 import type { TranslationKey } from '@/utils/translations';
 
@@ -49,10 +58,15 @@ export interface FolderSiteTree {
   readonly refusedOps: readonly FolderEditKind[];
 }
 
+/** A derived site's device-local view records, named after its id. */
+export type DerivedFolderPrefsKey = `gvFolderPanel:${string}` | `gvFolderSection:${string}`;
+
+export type FolderPrefsKey = StorageKey | DerivedFolderPrefsKey;
+
 export interface FolderSitePrefs {
   /** `split`: separate keys, read in their own formats. `record`: one panel and one section record. */
   readonly codec: 'split' | 'record';
-  readonly keys: Readonly<Record<string, StorageKey>>;
+  readonly keys: Readonly<Record<string, FolderPrefsKey>>;
 }
 
 /** The i18n keys of the shared folder UI's site texts. */
@@ -143,6 +157,35 @@ function freezeRow(row: FolderSiteRow): FolderSiteRow {
     prefs: Object.freeze({ ...row.prefs, keys: Object.freeze({ ...row.prefs.keys }) }),
     messages: row.messages ? Object.freeze({ ...row.messages }) : null,
     importStrategies: Object.freeze([...row.importStrategies]),
+  });
+}
+
+/** A derived site's row: a catalog site's rules over the bucket its id names. */
+function derivedRow(site: DerivedFolderPlatform): FolderSiteRow {
+  const platform = FOLDER_PLATFORMS[site];
+  return freezeRow({
+    site,
+    platform,
+    policy: pluginSitePolicy(site),
+    config: pluginSiteFolderConfig({
+      storageKey: platform.folderStorageKey,
+      backupNamespace: platform.backupNamespace,
+      logPrefix: `[SiteFolderStore:${site}]`,
+      debugFlag: `gvFolderDebug:${site}`,
+    }),
+    storage: 'local',
+    identity: 'route',
+    tree: CATALOG_SITE_TREE,
+    prefs: {
+      codec: 'record',
+      keys: { panel: `gvFolderPanel:${site}`, section: `gvFolderSection:${site}` },
+    },
+    activity: 'sends',
+    // A site-specific guide body would be a new string in every locale; a derived site has none.
+    messages: catalogSiteMessages('siteFoldersNoConversation', 'chatgptFoldersCoachmarkBody'),
+    guideId: null,
+    importStrategies: ['merge'],
+    extension: null,
   });
 }
 
@@ -297,6 +340,7 @@ export const FOLDER_SITE_TABLE: Readonly<Record<FolderPlatform, FolderSiteRow>> 
     importStrategies: ['merge'],
     extension: null,
   }),
+  ...Object.fromEntries([...DERIVED_FOLDER_SITES.keys()].map((site) => [site, derivedRow(site)])),
 });
 
 /** The folder policy of the site `siteId` names; `null` for a site without a folder bucket. */
@@ -304,4 +348,23 @@ export function folderSiteOf(siteId: string): FolderSiteRow | null {
   return Object.prototype.hasOwnProperty.call(FOLDER_SITE_TABLE, siteId)
     ? FOLDER_SITE_TABLE[siteId as FolderPlatform]
     : null;
+}
+
+/**
+ * The folder policy of site `siteId` on the page at `url`, or `null` where the
+ * bundled extension does not give that site's bucket to the page. The site id
+ * a page resolves to can come from a remote `site.json`, so a derived site's
+ * bucket opens only on its one bundled host. A frozen site keeps the hosts it
+ * has always run on.
+ */
+export function folderSiteForPage(siteId: string, url: string): FolderSiteRow | null {
+  const row = folderSiteOf(siteId);
+  if (!row || !DERIVED_FOLDER_SITES.has(row.site as DerivedFolderPlatform)) return row;
+  let page: URL;
+  try {
+    page = new URL(url);
+  } catch {
+    return null;
+  }
+  return page.protocol === 'https:' && row.platform.hosts.includes(page.hostname) ? row : null;
 }

@@ -3,15 +3,31 @@ import type { FolderExportPlatform } from '@/core/types/sync';
 import { readChatGptFolderExport } from '@/features/folder/sites/chatgptTransfer';
 import { CLAUDE_TRANSFER } from '@/features/folder/sites/claudeIdentity';
 import { DEEPSEEK_TRANSFER } from '@/features/folder/sites/deepseekIdentity';
+import {
+  type DerivedFolderPlatform,
+  type DerivedFolderPlatformDefinition,
+  type DerivedFolderSite,
+  type DerivedSyncTimeField,
+  deriveFolderSites,
+} from '@/features/folder/sites/derivedFolderSites';
 import type { FolderExportPayload, ImportStrategy } from '@/features/folder/types/import-export';
+import { BUNDLED_SITE_ADAPTERS } from '@/features/plugins/catalog/sites';
+
+export type { DerivedFolderPlatform } from '@/features/folder/sites/derivedFolderSites';
 
 /**
- * Sites that own a Voyager folder bucket. Every per-platform storage key, Drive file, sync
- * timestamp and host list is looked up here, so adding a platform does not compile until each
- * one is defined. Any other site (custom websites) has no folder bucket: helpers
- * return `null` and callers must skip folder storage, backup and sync.
+ * The five sites whose folder buckets predate the open registry. Their storage keys, Drive
+ * files, sync timestamps and host lists are frozen below, so adding one does not compile until
+ * each is defined; the background folder owner and its write authority know only these.
  */
-export type FolderPlatform = 'gemini' | 'aistudio' | 'chatgpt' | 'claude' | 'deepseek';
+export type FrozenFolderPlatform = 'gemini' | 'aistudio' | 'chatgpt' | 'claude' | 'deepseek';
+
+/**
+ * Sites that own a Voyager folder bucket: the frozen five, plus each bundled site whose
+ * `site.json` describes its folders (`derivedFolderSites.ts`). Any other site (custom websites)
+ * has no folder bucket: helpers return `null` and callers must skip folder storage, backup and sync.
+ */
+export type FolderPlatform = FrozenFolderPlatform | DerivedFolderPlatform;
 
 export interface FolderPlatformDefinition {
   /** Page hosts whose content scripts own this bucket; the owner and sync trust only these. */
@@ -47,7 +63,7 @@ export interface FolderPlatformDefinition {
   lastSyncTimeStorageKey: string;
 }
 
-export const FOLDER_PLATFORMS = {
+const FROZEN_FOLDER_PLATFORMS = {
   gemini: {
     hosts: ['gemini.google.com', 'business.gemini.google'],
     folderStorageKey: StorageKeys.FOLDER_DATA,
@@ -121,18 +137,36 @@ export const FOLDER_PLATFORMS = {
     lastSyncTimeField: 'lastSyncTimeDeepSeek',
     lastSyncTimeStorageKey: 'gvLastSyncTimeDeepSeek',
   },
-} as const satisfies Readonly<Record<FolderPlatform, FolderPlatformDefinition>>;
+} as const satisfies Readonly<Record<FrozenFolderPlatform, FolderPlatformDefinition>>;
+
+/** The frozen five, in registry order: the sites the background folder owner may know. */
+export const FROZEN_FOLDER_PLATFORM_IDS = Object.keys(
+  FROZEN_FOLDER_PLATFORMS,
+) as FrozenFolderPlatform[];
+
+/** The bundled sites that derive a bucket; built once, from data packaged with this build. */
+export const DERIVED_FOLDER_SITES: ReadonlyMap<DerivedFolderPlatform, DerivedFolderSite> =
+  deriveFolderSites(BUNDLED_SITE_ADAPTERS, FROZEN_FOLDER_PLATFORMS);
+
+/** Every folder platform's definition: the frozen five first, then the derived sites. */
+export const FOLDER_PLATFORMS: typeof FROZEN_FOLDER_PLATFORMS &
+  Readonly<Record<DerivedFolderPlatform, DerivedFolderPlatformDefinition>> = Object.freeze({
+  ...FROZEN_FOLDER_PLATFORMS,
+  ...Object.fromEntries([...DERIVED_FOLDER_SITES].map(([id, site]) => [id, site.definition])),
+});
 
 /** The per-platform `SyncState` transfer-time fields, as the registry spells them. */
-export type SyncTimeField = (typeof FOLDER_PLATFORMS)[FolderPlatform][
-  | 'lastUploadTimeField'
-  | 'lastSyncTimeField'];
+export type SyncTimeField =
+  | (typeof FROZEN_FOLDER_PLATFORMS)[FrozenFolderPlatform][
+      | 'lastUploadTimeField'
+      | 'lastSyncTimeField']
+  | DerivedSyncTimeField;
 
 export type AccountScopedFolderPlatform = {
-  [P in FolderPlatform]: (typeof FOLDER_PLATFORMS)[P]['accountIsolationStorageKey'] extends null
-    ? never
-    : P;
-}[FolderPlatform];
+  [
+    P in FrozenFolderPlatform
+  ]: (typeof FROZEN_FOLDER_PLATFORMS)[P]['accountIsolationStorageKey'] extends null ? never : P;
+}[FrozenFolderPlatform];
 
 export function supportsAccountIsolation(
   platform: FolderPlatform,
@@ -140,6 +174,7 @@ export function supportsAccountIsolation(
   return FOLDER_PLATFORMS[platform].accountIsolationStorageKey !== null;
 }
 
+/** Every folder platform, frozen and derived, in registry order. */
 export const FOLDER_PLATFORM_IDS = Object.keys(FOLDER_PLATFORMS) as FolderPlatform[];
 
 export function isFolderPlatform(value: unknown): value is FolderPlatform {
