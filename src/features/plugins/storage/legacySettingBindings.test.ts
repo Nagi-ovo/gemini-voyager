@@ -162,6 +162,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.CHAT_PARAGRAPH_SPACING,
         StorageKeys.CHAT_WIDTH,
         StorageKeys.EDIT_INPUT_WIDTH,
+        StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO,
       ].sort(),
     );
     expect(legacyBindingFor(FORMULA_G)?.key).toBe(legacyBindingFor(FORMULA_A)?.key);

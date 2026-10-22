@@ -3,17 +3,17 @@ import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createToaster } from '@/core/ui/toast/toaster';
+import { buildFolderPanel } from '@/features/plugins/verbs/folders/aistudio/panel';
 import { confirmDriver } from '@/tests/confirmDriver';
 import { readContentStyle } from '@/tests/contentStyle';
 import { toastDriver } from '@/tests/toastDriver';
 import { createTranslator } from '@/utils/i18n';
 
-import { AIStudioFolderManager } from '../aistudio';
 import { LibrarySelection } from '../aistudioLibrarySelection';
 import { bindLibraryRows, getLibraryPromptRows, watchLibraryTable } from '../aistudioLibraryTable';
-import { buildFolderPanel } from '../aistudioPanel';
 import { bindPromptDragSources, watchPromptHistory } from '../aistudioPromptHistory';
 import { mutationAddsPromptLinks, parseDragDataPayload } from '../aistudioPromptLinks';
+import { AIStudioFolderManager } from './aistudioFolderManager';
 
 type DragDataTransferMock = {
   effectAllowed: string;
@@ -444,9 +444,10 @@ describe('AIStudio theme compatibility', () => {
   });
 
   it('paints every header action icon in currentColor in AI Studio', () => {
-    const container = buildFolderPanel(
+    const { container } = buildFolderPanel(
       { cloud: { upload: vi.fn(), sync: vi.fn() }, onCreateFolder: vi.fn() },
       false,
+      { data: { folders: [], folderContents: {} }, actions: {}, activeConversationId: null },
     );
     // Library, cloud and create: stroked icons that follow the header's colour.
     const svgs = [...container.querySelectorAll('svg')];

@@ -228,7 +228,7 @@ export const FOLDER_SITE_TABLE: Readonly<Record<FolderPlatform, FolderSiteRow>> 
     activity: 'none',
     messages: null,
     guideId: null,
-    // `aistudioTransfer.ts` merges only; no AI Studio UI offers an import yet.
+    // `verbs/folders/aistudio/cloud.ts` merges only; no AI Studio UI offers an import yet.
     importStrategies: ['merge'],
     extension: 'aistudio',
   }),

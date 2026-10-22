@@ -20,6 +20,7 @@ import {
   OFFICIAL_PLUGIN_ENTRIES,
   OFFICIAL_PLUGIN_TOPICS,
   POPUP_LEGACY_SNAPSHOT_KEYS,
+  SWITCHED_BY_SETTINGS_CARD,
 } from '../officialPluginRegistry';
 
 async function packagedManifests() {
@@ -41,14 +42,24 @@ describe('the official plugin list registry', () => {
     expect(OFFICIAL_PLUGIN_TOPICS.map((topic) => topic.id)).toEqual([...OFFICIAL_PLUGIN_TOPIC_IDS]);
   });
 
-  it('gives every packaged Gemini and AI Studio plugin a row', () => {
+  it('gives every packaged Gemini and AI Studio plugin a row, or leaves its switch to a settings card', () => {
     const listed = new Set(OFFICIAL_PLUGIN_ENTRIES.map((entry) => entry.id));
-    expect(Object.values(OFFICIAL_PLUGIN_IDS).filter((id) => !listed.has(id))).toEqual([]);
+    expect(
+      Object.values(OFFICIAL_PLUGIN_IDS).filter(
+        (id) => !listed.has(id) && !SWITCHED_BY_SETTINGS_CARD.has(id),
+      ),
+    ).toEqual([]);
+    // One switch never shows twice: a card's plugin has no row as well.
+    expect([...SWITCHED_BY_SETTINGS_CARD].filter((id) => listed.has(id))).toEqual([]);
   });
 
   it('gives every plugin bound to an old setting a row, so none is left without a switch', () => {
     const listed = new Set(OFFICIAL_PLUGIN_ENTRIES.map((entry) => entry.id));
-    expect(Object.keys(LEGACY_ENABLE_BINDINGS).filter((id) => !listed.has(id))).toEqual([]);
+    expect(
+      Object.keys(LEGACY_ENABLE_BINDINGS).filter(
+        (id) => !listed.has(id) && !SWITCHED_BY_SETTINGS_CARD.has(id),
+      ),
+    ).toEqual([]);
   });
 
   it('lists only plugins whose switch is their old setting, so a row never writes plugin state', () => {

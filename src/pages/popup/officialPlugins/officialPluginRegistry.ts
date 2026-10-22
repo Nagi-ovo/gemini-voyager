@@ -9,6 +9,7 @@
  * `.github/docs/POPUP_PLUGIN_LIST_DESIGN.md`).
  */
 import { StorageKeys } from '@/core/types/common';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import {
   type LegacySettingSnapshot,
   legacyBindingKeys,
@@ -143,6 +144,17 @@ export interface OfficialPluginContext {
 
 /** Array order is the display order within each topic card. */
 export { OFFICIAL_PLUGIN_ENTRIES };
+
+/**
+ * Official plugins whose switch is still an older settings card's, which a
+ * native feature also reads: they get no row until that switch retires, so one
+ * switch never shows twice. AI Studio's folders follow the Folders card
+ * (`geminiFolderEnabled`, and AI Studio's hide-archived switch), which Gemini's
+ * native folders read too.
+ */
+export const SWITCHED_BY_SETTINGS_CARD: ReadonlySet<string> = new Set([
+  OFFICIAL_PLUGIN_IDS.aistudioFolders,
+]);
 
 const ENTRY_BY_ID = new Map(OFFICIAL_PLUGIN_ENTRIES.map((entry) => [entry.id, entry]));
 

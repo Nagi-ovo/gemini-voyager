@@ -8,10 +8,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 import { AISTUDIO_ROOT_BUCKET_ID } from '@/features/folder/constants';
+import { AISTUDIO_TREE_HOST_CLASS } from '@/features/plugins/verbs/folders/aistudio/tree';
 import { confirmDriver } from '@/tests/confirmDriver';
 
-import { AIStudioFolderManager } from '../../aistudio';
-import { AISTUDIO_TREE_HOST_CLASS } from '../../aistudioTree';
+import { AIStudioFolderManager } from '../../__tests__/aistudioFolderManager';
 import type { FolderData } from '../../types';
 import {
   type FakeTransfer,

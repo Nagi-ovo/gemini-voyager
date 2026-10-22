@@ -4,7 +4,8 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { AISTUDIO_PROMPT_DRAG_TYPES } from '../../aistudioTree';
+import { AISTUDIO_PROMPT_DRAG_TYPES } from '@/features/plugins/verbs/folders/aistudio/tree';
+
 import type { FolderData } from '../../types';
 import { FOLDER_TOGGLE_DELAY_MS, type TreeActions, cls } from '../shared';
 import { mountFolderTree } from '../treeController';

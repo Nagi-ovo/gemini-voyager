@@ -127,6 +127,10 @@ export const LEGACY_VALUE_BINDINGS: LegacyValueBindingTable = {
   [OFFICIAL_PLUGIN_IDS.geminiEditInputWidth]: [
     numberBinding('widthPercent', StorageKeys.EDIT_INPUT_WIDTH, normalizeEditInputWidthPercent),
   ],
+  // AI Studio's own hide-archived switch, separate from Gemini's.
+  [OFFICIAL_PLUGIN_IDS.aistudioFolders]: [
+    trueOnlyBinding('hideFiledChats', StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO),
+  ],
   [OFFICIAL_PLUGIN_IDS.geminiInputCollapse]: [
     trueOnlyBinding('collapseWhenNotEmpty', StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY),
   ],

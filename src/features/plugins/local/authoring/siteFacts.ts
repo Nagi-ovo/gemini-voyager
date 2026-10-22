@@ -12,6 +12,7 @@ import {
   allowsPluginThemeForSite,
   packagedSitesForPatterns,
 } from '../../sites/hostPolicy';
+import { FOLDERS_HANDLER } from '../../sites/packagedFoldersPolicy';
 import {
   SEMANTIC_KEY_DESCRIPTIONS,
   SEMANTIC_SELECTOR_KEYS,
@@ -79,6 +80,7 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   preventAutoScroll: 'Prevent auto-scroll to bottom',
   responseNotification: 'Response completion notifications',
   timeline: 'Show Timeline',
+  folders: 'Folders',
 };
 
 type SharedRuntimePolicy = 'onePerPage' | 'perElement' | 'sharedDrafts';
@@ -147,15 +149,26 @@ export function forbidsTheme(site: SiteAdapter): boolean {
   return !allowsPluginThemeForSite(site);
 }
 
+/**
+ * The primitives a local plugin may call on `site`. A packaged site's folders
+ * are its official plugin's alone (`packagedFoldersPolicy.ts`), though the
+ * host policy opens `folders` there to that plugin.
+ */
+function localPrimitives(site: SiteAdapter): ReadonlySet<string> | 'all' {
+  const allowed = allowedPrimitivesForSite(site);
+  if (allowed === 'all') return allowed;
+  return new Set([...allowed].filter((handler) => handler !== FOLDERS_HANDLER));
+}
+
 /** Whether a plugin on `site` may call any primitive at all (a `native` op). */
 export function allowsAnyPrimitive(site: SiteAdapter): boolean {
-  const allowed = allowedPrimitivesForSite(site);
+  const allowed = localPrimitives(site);
   return allowed === 'all' || allowed.size > 0;
 }
 
 /** Whether a plugin on `site` may call the `handler` primitive. */
 export function allowsPrimitive(site: SiteAdapter, handler: string): boolean {
-  const allowed = allowedPrimitivesForSite(site);
+  const allowed = localPrimitives(site);
   return allowed === 'all' || allowed.has(handler);
 }
 
@@ -183,7 +196,7 @@ export function siteFactLines(
 ): string[] {
   const missing = SEMANTIC_SELECTOR_KEYS.filter((key) => typeof site.selectors[key] !== 'string');
   const restricted = forbidsTheme(site) && !allowsAnyPrimitive(site);
-  const allowed = allowedPrimitivesForSite(site);
+  const allowed = localPrimitives(site);
   const notes = SITE_NOTES[site.id] ?? [];
   return [
     '"matches" must use these URL patterns (all of them, or a subset):',

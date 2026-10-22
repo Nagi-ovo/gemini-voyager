@@ -2,7 +2,8 @@
  * AI Studio's "hide archived" setting: /library rows of prompts filed in a
  * folder are hidden while it is on, and a one-time nudge offers to turn it on.
  * Its keys are separate from Gemini's, so turning it on there does not hide
- * anything here.
+ * anything here. The switch reaches the folders plugin as its `hideFiledChats`
+ * setting (a value binding on the same key); the nudge's own key is read here.
  */
 import browser, { type Storage } from 'webextension-polyfill';
 
@@ -37,29 +38,33 @@ function hasArchivedPrompt(data: FolderData): boolean {
 }
 
 export class HideArchivedSetting {
-  private enabled = false;
   private nudgeShown = false;
+
+  /** `enabled`: the plugin's `hideFiledChats` setting. */
+  constructor(private enabled = false) {}
 
   async load(): Promise<void> {
     try {
-      const result = await browser.storage.sync.get({
-        [ENABLED_KEY]: false,
-        [NUDGE_SHOWN_KEY]: false,
-      });
-      this.enabled = result[ENABLED_KEY] === true;
+      const result = await browser.storage.sync.get({ [NUDGE_SHOWN_KEY]: false });
       this.nudgeShown = result[NUDGE_SHOWN_KEY] === true;
     } catch (error) {
       console.error('[AIStudioFolderManager] Failed to load hide-archived settings:', error);
-      this.enabled = false;
       this.nudgeShown = false;
     }
   }
 
-  /** Applies synced changes; returns whether either value changed here. */
+  /** The plugin's setting changed; returns whether it changed here. */
+  setEnabled(enabled: boolean): boolean {
+    if (enabled === this.enabled) return false;
+    this.enabled = enabled;
+    return true;
+  }
+
+  /** Applies a synced nudge change; returns whether it changed here. */
   applyStorageChanges(changes: Record<string, Storage.StorageChange>): boolean {
-    if (changes[ENABLED_KEY]) this.enabled = changes[ENABLED_KEY].newValue === true;
-    if (changes[NUDGE_SHOWN_KEY]) this.nudgeShown = changes[NUDGE_SHOWN_KEY].newValue === true;
-    return !!changes[ENABLED_KEY] || !!changes[NUDGE_SHOWN_KEY];
+    if (!changes[NUDGE_SHOWN_KEY]) return false;
+    this.nudgeShown = changes[NUDGE_SHOWN_KEY].newValue === true;
+    return true;
   }
 
   /** Hides the /library rows of filed prompts while on, and shows them while off. */

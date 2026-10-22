@@ -11,13 +11,13 @@ import { resolvePluginPlatformId } from '@/features/plugins/sites/registry';
 import { SiteRegistry } from '@/features/plugins/sites/registry';
 import { initI18n } from '@/utils/i18n';
 
+import { admitAIStudioFolders } from './aistudioFolderStartup';
 import { startAIStudioSidebarLayout } from './aistudioSidebarStartup';
 import { admitBatchDelete } from './batchDeleteStartup';
 import { claimContentScript } from './contentScriptHandoff';
 import { startDevSettingsBridge } from './devSettingsBridge';
 import { flushDraftsBeforeUnload } from './draftSave/draftUnloadFlush';
 import { type NativeFeature, type StopNativeFeature, mountNativeFeature } from './featureLifecycle';
-import { startAIStudioFolderManager } from './folder/aistudio';
 import { startFolderSpacingAdjuster } from './folderSpacing/index';
 import { createGeminiBuiltinStartup } from './geminiBuiltinStartup';
 import { startGeminiPage } from './geminiPageStartup';
@@ -180,6 +180,7 @@ async function initializeFeatures(): Promise<void> {
         console.log('[Gemini Voyager] AI Studio features disabled by user');
         // Admit while off: PluginHost follows the master live and can remount without a reload.
         startAIStudioSidebarLayout(officialAdmission);
+        admitAIStudioFolders(officialAdmission, { masterOn: false, lifetime: pageLifetime.signal });
         officialAdmission.admit('aistudio', 'formulaCopy');
         await settle(startAIStudioSendKeys(officialAdmission));
         return;
@@ -187,7 +188,7 @@ async function initializeFeatures(): Promise<void> {
 
       startAIStudioSidebarLayout(officialAdmission);
       admitBatchDelete(officialAdmission, 'aistudio', pageLifetime.signal);
-      startAIStudioFolderManager();
+      admitAIStudioFolders(officialAdmission, { masterOn: true, lifetime: pageLifetime.signal });
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
       startFolderSpacingAdjuster('aistudio');

@@ -111,7 +111,14 @@ describe('plugin table', () => {
       manifest: manifest('voyager.chatgpt-folders', 'ChatGPT · Folders'),
     };
 
-    expect(ticked(featureRows([folders]))).toEqual([
+    expect(ticked(featureRows([folders]))).toEqual([['folders', ['chatgpt', 'gemini']]]);
+    // AI Studio's folders are a plugin of their own on the same row.
+    const aistudio: SitePlugin = {
+      site: 'aistudio',
+      feature: 'folders',
+      manifest: manifest('voyager.aistudio-folders', 'AI Studio · Folders'),
+    };
+    expect(ticked(featureRows([folders, aistudio]))).toEqual([
       ['folders', ['aistudio', 'chatgpt', 'gemini']],
     ]);
     expect(featureRows([])).toEqual([]);

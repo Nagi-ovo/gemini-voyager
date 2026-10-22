@@ -10,11 +10,14 @@ import type { PromptItem } from '@/core/types/sync';
 import type { ToastTone } from '@/core/ui/toast/types';
 import { toSyncAccountScope } from '@/core/utils/syncAccountScope';
 import { cloneFolderData } from '@/features/folder/model/folderData';
-
-import type { FolderDataSession } from './FolderDataSession';
-import { mergeAIStudioImport, readAIStudioImportFile } from './aistudioImport';
-import { type CloudSyncSite, syncSiteFolders, uploadSiteFolders } from './cloudSyncClient';
-import type { FolderData } from './types';
+import type { FolderDataSession } from '@/pages/content/folder/FolderDataSession';
+import { mergeAIStudioImport, readAIStudioImportFile } from '@/pages/content/folder/aistudioImport';
+import {
+  type CloudSyncSite,
+  syncSiteFolders,
+  uploadSiteFolders,
+} from '@/pages/content/folder/cloudSyncClient';
+import type { FolderData } from '@/pages/content/folder/types';
 
 export type AIStudioTransferHost = {
   t: (key: string) => string;

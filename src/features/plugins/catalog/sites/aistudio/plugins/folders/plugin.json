@@ -1,0 +1,126 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.aistudio-folders",
+  "name": "AI Studio · Folders",
+  "version": "1.0.0",
+  "description": "Organize saved prompts into folders in AI Studio's left nav: drag them in from the history or the Library, and sync them with Google Drive.",
+  "changelog": "First release: AI Studio's built-in folders, packaged as an official plugin that calls the folders primitive.",
+  "i18n": {
+    "zh": {
+      "name": "AI Studio · 文件夹",
+      "description": "在 AI Studio 左侧导航中用文件夹整理已保存的提示，可从历史记录或 Library 拖入，并通过 Google Drive 同步。",
+      "changelog": "首个版本：AI Studio 内置的文件夹，打包为调用 folders 原语的官方插件。",
+      "settings": {
+        "hideFiledChats": {
+          "label": "在 Library 列表中隐藏已放入文件夹的提示"
+        }
+      }
+    },
+    "zh_TW": {
+      "name": "AI Studio · 資料夾",
+      "description": "在 AI Studio 左側導覽中用資料夾整理已儲存的提示，可從歷史紀錄或 Library 拖入，並透過 Google Drive 同步。",
+      "changelog": "首個版本：AI Studio 內建的資料夾，打包為呼叫 folders 原語的官方外掛。",
+      "settings": {
+        "hideFiledChats": {
+          "label": "在 Library 清單中隱藏已放入資料夾的提示"
+        }
+      }
+    },
+    "ja": {
+      "name": "AI Studio · フォルダ",
+      "description": "AI Studio の左ナビで保存済みプロンプトをフォルダに整理します。履歴や Library からドラッグでき、Google Drive と同期できます。",
+      "changelog": "初版：AI Studio 内蔵のフォルダを、folders プリミティブを呼び出す公式プラグインとして同梱しました。",
+      "settings": {
+        "hideFiledChats": {
+          "label": "フォルダに入れたプロンプトを Library の一覧に表示しない"
+        }
+      }
+    },
+    "ko": {
+      "name": "AI Studio · 폴더",
+      "description": "AI Studio 왼쪽 탐색에서 저장된 프롬프트를 폴더로 정리합니다. 기록이나 Library에서 끌어다 놓을 수 있고 Google Drive와 동기화됩니다.",
+      "changelog": "첫 릴리스: AI Studio 내장 폴더를 folders 프리미티브를 호출하는 공식 플러그인으로 포함했습니다.",
+      "settings": {
+        "hideFiledChats": {
+          "label": "폴더에 넣은 프롬프트를 Library 목록에서 숨기기"
+        }
+      }
+    },
+    "fr": {
+      "name": "AI Studio · Dossiers",
+      "description": "Classez vos prompts enregistrés dans des dossiers depuis la navigation de gauche d’AI Studio, par glisser-déposer depuis l’historique ou la Library, avec synchronisation Google Drive.",
+      "changelog": "Première version : les dossiers intégrés d’AI Studio, empaquetés en plugin officiel qui appelle la primitive folders.",
+      "settings": {
+        "hideFiledChats": {
+          "label": "Masquer de la liste Library les prompts déjà classés dans un dossier"
+        }
+      }
+    },
+    "es": {
+      "name": "AI Studio · Carpetas",
+      "description": "Organiza tus prompts guardados en carpetas desde la navegación izquierda de AI Studio, arrastrándolos desde el historial o la Library, con sincronización en Google Drive.",
+      "changelog": "Primera versión: las carpetas integradas de AI Studio, empaquetadas como plugin oficial que llama a la primitiva folders.",
+      "settings": {
+        "hideFiledChats": {
+          "label": "Ocultar de la lista de Library los prompts que ya están en carpetas"
+        }
+      }
+    },
+    "pt": {
+      "name": "AI Studio · Pastas",
+      "description": "Organize os prompts guardados em pastas na navegação à esquerda do AI Studio, arrastando-os do histórico ou da Library, com sincronização no Google Drive.",
+      "changelog": "Primeira versão: as pastas integradas do AI Studio, empacotadas como plugin oficial que chama a primitiva folders.",
+      "settings": {
+        "hideFiledChats": {
+          "label": "Ocultar da lista da Library os prompts que já estão em pastas"
+        }
+      }
+    },
+    "ru": {
+      "name": "AI Studio · Папки",
+      "description": "Раскладывайте сохранённые промпты по папкам в левой навигации AI Studio: перетаскивайте их из истории или Library, с синхронизацией через Google Drive.",
+      "changelog": "Первый выпуск: встроенные папки AI Studio в виде официального плагина, вызывающего примитив folders.",
+      "settings": {
+        "hideFiledChats": {
+          "label": "Скрывать в списке Library промпты, уже разложенные по папкам"
+        }
+      }
+    },
+    "ar": {
+      "name": "AI Studio · المجلدات",
+      "description": "نظّم الموجّهات المحفوظة في مجلدات من شريط التنقل الأيسر في AI Studio، بالسحب من السجل أو من Library، مع المزامنة عبر Google Drive.",
+      "changelog": "الإصدار الأول: مجلدات AI Studio المدمجة، مجمّعة كإضافة رسمية تستدعي العنصر الأساسي folders.",
+      "settings": {
+        "hideFiledChats": {
+          "label": "إخفاء الموجّهات الموجودة في مجلدات من قائمة Library"
+        }
+      }
+    }
+  },
+  "author": "voyager-official",
+  "category": "productivity",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/aistudio/plugins/folders",
+  "engine": ">=next",
+  "tier": "declarative",
+  "matches": ["https://aistudio.google.com/*", "https://aistudio.google.cn/*"],
+  "requires": {
+    "handlers": ["folders"]
+  },
+  "contributes": {
+    "settings": {
+      "hideFiledChats": {
+        "type": "boolean",
+        "label": "Hide prompts already in folders from the Library list",
+        "default": false
+      }
+    },
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "folders",
+        "params": {}
+      }
+    ]
+  }
+}

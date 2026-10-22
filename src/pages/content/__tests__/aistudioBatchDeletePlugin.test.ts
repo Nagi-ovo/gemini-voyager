@@ -11,7 +11,7 @@ import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
 
 import { admitBatchDelete } from '../batchDeleteStartup';
-import { AIStudioFolderManager } from '../folder/aistudio';
+import { AIStudioFolderManager } from '../folder/__tests__/aistudioFolderManager';
 import { LibraryBatchDeleter } from '../folder/aistudioLibraryBatchDelete';
 import { registerBuiltinNativeHandlers } from '../pluginNativeRegistration';
 import { type LifecycleHarness, installLifecycleHarness } from './lifecycleHarness';

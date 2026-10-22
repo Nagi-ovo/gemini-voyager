@@ -13,8 +13,8 @@ import {
 } from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
 
-import { AIStudioFolderManager } from '../aistudio';
 import type { ConversationReference, Folder, FolderData } from '../types';
+import { AIStudioFolderManager } from './aistudioFolderManager';
 import { treeText } from './aistudioTreeDriver';
 
 export const mockBrowser = chrome as unknown as {

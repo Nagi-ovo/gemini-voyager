@@ -1,244 +1,41 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+/** AI Studio folder persistence: loads, writes, imports and cloud drafts. Setup lives in `aistudioPersistenceSuite.ts`. */
+import { describe, expect, it, vi } from 'vitest';
 
-import {
-  type AccountScope,
-  accountIsolationService,
-  buildScopedStorageKey,
-} from '@/core/services/AccountIsolationService';
-import { StorageKeys } from '@/core/types/common';
 import type { PromptItem } from '@/core/types/sync';
 import { toastDriver } from '@/tests/toastDriver';
 import { getTranslationSync } from '@/utils/i18n';
 
-import { AIStudioFolderManager } from '../aistudio';
-import type { TreeActions } from '../floatingTree/shared';
 import type { FolderData } from '../types';
-import { ROOT, nameInput, tree, treeText } from './aistudioTreeDriver';
+import { AIStudioFolderManager } from './aistudioFolderManager';
+import { mockBrowser } from './aistudioPersistenceMockBrowser';
+import {
+  type Manager,
+  accountKey,
+  attemptCreateAndDrop,
+  backupData,
+  chooseImport,
+  createFolder,
+  deferred,
+  folderData,
+  hasErrorNotice,
+  holdFolderWrites,
+  importNotices,
+  installAIStudioPersistenceSuite,
+  pick,
+  managers,
+  local,
+  mountManager,
+  notificationText,
+  selectAccount,
+  storageKey,
+} from './aistudioPersistenceSuite';
+import { treeText } from './aistudioTreeDriver';
 
-const { mockBrowser } = vi.hoisted(() => ({
-  mockBrowser: {
-    runtime: {
-      id: 'test-extension-id',
-      onMessage: { addListener: vi.fn(), removeListener: vi.fn() },
-      sendMessage: vi.fn(),
-    },
-    storage: {
-      onChanged: { addListener: vi.fn(), removeListener: vi.fn() },
-      local: { get: vi.fn(), set: vi.fn(), remove: vi.fn() },
-      sync: { get: vi.fn(), set: vi.fn() },
-    },
-  },
+vi.mock('webextension-polyfill', async () => ({
+  default: (await import('./aistudioPersistenceMockBrowser')).mockBrowser,
 }));
 
-vi.mock('webextension-polyfill', () => ({ default: mockBrowser }));
-
-type Manager = {
-  data: FolderData;
-  accountScope: AccountScope | null;
-  activeStorageKey: string;
-  handleAccountIsolationToggle(enabled: boolean): Promise<void>;
-  refreshScopedDataOnAccountContextChange(): Promise<void>;
-  transfer: { sync(): Promise<void>; importFile(): void };
-  load(): Promise<void>;
-  save(): Promise<boolean>;
-  destroy(): void;
-  treeActions(): TreeActions;
-};
-
-const storageKey = StorageKeys.FOLDER_DATA_AISTUDIO;
-let local: Record<string, unknown>;
-let sync: Record<string, unknown>;
-const managers: Manager[] = [];
-
-function deferred<T>() {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((done) => {
-    resolve = done;
-  });
-  return { promise, resolve };
-}
-
-function pick(values: Record<string, unknown>, keys: unknown): Record<string, unknown> {
-  if (typeof keys === 'string') return structuredClone({ [keys]: values[keys] });
-  if (Array.isArray(keys)) {
-    return structuredClone(Object.fromEntries(keys.map((key) => [key, values[key]])));
-  }
-  if (keys && typeof keys === 'object') {
-    return structuredClone(
-      Object.fromEntries(
-        Object.entries(keys).map(([key, fallback]) => [key, values[key] ?? fallback]),
-      ),
-    );
-  }
-  return structuredClone(values);
-}
-
-function folderData(name: string): FolderData {
-  return {
-    folders: [{ id: name, name, parentId: null, isExpanded: true, createdAt: 1, updatedAt: 1 }],
-    folderContents: { [name]: [] },
-  };
-}
-
-function selectAccount(account: string): void {
-  const indicator = document.querySelector('.account-switcher-text')!;
-  indicator.setAttribute('data-email', `${account}@example.com`);
-  indicator.textContent = `${account}@example.com`;
-}
-
-async function accountKey(account: string): Promise<string> {
-  const scope = await accountIsolationService.resolveAccountScope({
-    pageUrl: window.location.href,
-    email: `${account}@example.com`,
-  });
-  return buildScopedStorageKey(storageKey, scope.accountKey);
-}
-
-async function mountManager(): Promise<Manager> {
-  local[storageKey] = folderData('Global original');
-  local[await accountKey('a')] = folderData('Private a');
-  local[await accountKey('b')] = folderData('Private b');
-  const instance = new AIStudioFolderManager();
-  const manager = instance as unknown as Manager;
-  managers.push(manager);
-  await instance.init();
-  expect(treeText()).toContain('Private a');
-  return manager;
-}
-
-function attemptCreateAndDrop(): void {
-  document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')!.click();
-  const input = nameInput();
-  if (input) {
-    input.value = 'Created during load';
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-  }
-  const drop = new Event('drop', { bubbles: true, cancelable: true });
-  Object.defineProperty(drop, 'dataTransfer', {
-    value: {
-      getData: () =>
-        JSON.stringify({
-          type: 'conversation',
-          conversationId: 'dropped-during-load',
-          title: 'Dropped during load',
-          url: '/prompts/dropped-during-load',
-        }),
-    },
-  });
-  tree.dropTarget(ROOT).dispatchEvent(drop);
-}
-
-function holdFolderWrites(key: string) {
-  const first = deferred<void>();
-  const tail = deferred<boolean>();
-  const firstStarted = deferred<void>();
-  const tailStarted = deferred<void>();
-  const snapshots: FolderData[] = [];
-  mockBrowser.storage.local.set.mockImplementation(async (values: Record<string, unknown>) => {
-    const snapshot = structuredClone(values);
-    if (snapshot[key]) {
-      snapshots.push(snapshot[key] as FolderData);
-      if (snapshots.length === 1) {
-        firstStarted.resolve();
-        await first.promise;
-      } else {
-        tailStarted.resolve();
-        if (!(await tail.promise)) throw new Error('Storage quota exceeded');
-      }
-    }
-    Object.assign(local, snapshot);
-  });
-  return { first, tail, firstStarted, tailStarted, snapshots };
-}
-
-function notificationText(): string {
-  return toastDriver.messages().join('\n');
-}
-
-/** What an import reported, success or failure. */
-function importNotices(): string[] {
-  const starts = (
-    [
-      'folder_import_success',
-      'folder_import_error',
-      'folder_import_invalid_format',
-      'folder_import_wrong_site',
-    ] as const
-  ).map((key) => getTranslationSync(key).split('{')[0]);
-  return toastDriver
-    .messages()
-    .filter((message) => starts.some((start) => message.startsWith(start)));
-}
-
-function hasErrorNotice(): boolean {
-  return toastDriver.all().some((toast) => toast.tone === 'error');
-}
-
-function backupData(manager: Manager, slot: 'primary' | 'emergency' | 'beforeUnload'): FolderData {
-  const namespace = buildScopedStorageKey('aistudio-folders', manager.accountScope!.accountKey);
-  return JSON.parse(localStorage.getItem(`gvBackup_${namespace}_${slot}`)!).data as FolderData;
-}
-
-function createFolder(name: string): void {
-  document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')!.click();
-  const input = nameInput()!;
-  expect(input).not.toBeNull();
-  input.value = name;
-  input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-}
-
-function chooseImport(manager: Manager, data: FolderData, marks: object = {}): void {
-  const click = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {});
-  manager.transfer.importFile();
-  const input = click.mock.contexts.at(-1) as HTMLInputElement;
-  expect(input).toBeInstanceOf(HTMLInputElement);
-  Object.defineProperty(input, 'files', {
-    value: [{ text: async () => JSON.stringify({ ...marks, data }) }],
-  });
-  input.dispatchEvent(new Event('change'));
-}
-
-beforeEach(() => {
-  vi.useFakeTimers();
-  vi.clearAllMocks();
-  localStorage.clear();
-  document.body.innerHTML = `
-    <span class="account-switcher-text" data-email="a@example.com">a@example.com</span>
-    <div class="nav-content v3-left-nav"><nav><div class="empty-space"></div></nav></div>`;
-  (
-    globalThis as unknown as { jsdom: { reconfigure(options: { url: string }): void } }
-  ).jsdom.reconfigure({ url: 'https://aistudio.google.com/' });
-  local = {};
-  sync = {
-    [StorageKeys.LANGUAGE]: 'en',
-    [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: true,
-    geminiFolderEnabled: true,
-  };
-  mockBrowser.storage.local.get.mockImplementation(async (keys: unknown) => pick(local, keys));
-  mockBrowser.storage.local.set.mockImplementation(async (values: Record<string, unknown>) => {
-    Object.assign(local, structuredClone(values));
-  });
-  mockBrowser.storage.sync.get.mockImplementation(async (keys: unknown) => pick(sync, keys));
-  mockBrowser.storage.sync.set.mockImplementation(async (values: Record<string, unknown>) => {
-    Object.assign(sync, structuredClone(values));
-  });
-  chrome.storage.local.get = mockBrowser.storage.local.get as typeof chrome.storage.local.get;
-  chrome.storage.local.set = mockBrowser.storage.local.set as typeof chrome.storage.local.set;
-  chrome.storage.sync.get = mockBrowser.storage.sync.get as typeof chrome.storage.sync.get;
-  chrome.storage.sync.set = mockBrowser.storage.sync.set as typeof chrome.storage.sync.set;
-  vi.spyOn(console, 'log').mockImplementation(() => {});
-  vi.spyOn(console, 'warn').mockImplementation(() => {});
-  vi.spyOn(console, 'error').mockImplementation(() => {});
-});
-
-afterEach(() => {
-  for (const manager of managers.splice(0)) manager.destroy();
-  vi.clearAllTimers();
-  vi.useRealTimers();
-  vi.restoreAllMocks();
-  document.body.innerHTML = '';
-  document.documentElement.className = '';
-});
+installAIStudioPersistenceSuite();
 
 describe('AI Studio folder persistence', () => {
   it.each(['global', 'scoped'] as const)(
@@ -658,144 +455,5 @@ describe('AI Studio folder persistence', () => {
     expect(manager.data).toEqual(folderData('Private a'));
     expect(local[key]).toEqual(folderData('Private a'));
     expect(treeText()).not.toContain('Trips');
-  });
-
-  it('finishes accepted ordinary writes but abandons an unissued import after A → B → A', async () => {
-    const manager = await mountManager();
-    const key = manager.activeStorageKey;
-    const writes = holdFolderWrites(key);
-    manager.data.folders[0].name = 'First ordinary edit';
-    const first = manager.save();
-    await writes.firstStarted.promise;
-    manager.data.folders[0].name = 'Latest ordinary edit';
-    const queued = manager.save();
-    chooseImport(manager, folderData('Abandoned import'));
-    await vi.advanceTimersByTimeAsync(0);
-    selectAccount('b');
-    await manager.refreshScopedDataOnAccountContextChange();
-    expect(manager.data).toEqual(folderData('Private b'));
-    selectAccount('a');
-    await manager.refreshScopedDataOnAccountContextChange();
-    writes.first.resolve();
-    await writes.tailStarted.promise;
-    writes.tail.resolve(true);
-    await Promise.all([first, queued]);
-    await vi.advanceTimersByTimeAsync(0);
-
-    expect(
-      writes.snapshots.map((snapshot) => snapshot.folders.map((folder) => folder.name)),
-    ).toEqual([['First ordinary edit'], ['Latest ordinary edit']]);
-    expect(manager.data.folders.map((folder) => folder.name)).toEqual(['Latest ordinary edit']);
-    expect(local[key]).toEqual(manager.data);
-    expect(importNotices()).toEqual([]);
-    expect(treeText()).not.toContain('Abandoned import');
-    expect(document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')?.disabled).toBe(false);
-  });
-
-  it('publishes an issued cloud draft in its original account when returning through A → B → A', async () => {
-    const manager = await mountManager();
-    const original = structuredClone(manager.data);
-    const key = manager.activeStorageKey;
-    const writes = holdFolderWrites(key);
-    const prompt: PromptItem = {
-      id: 'remote',
-      text: 'Remote prompt',
-      tags: [],
-      createdAt: 1,
-      updatedAt: 1,
-    };
-    local.gvPromptItems = [];
-    mockBrowser.runtime.sendMessage.mockResolvedValue({
-      ok: true,
-      data: { folders: { data: folderData('Cloud') }, prompts: { items: [prompt] } },
-    });
-    const syncing = manager.transfer.sync();
-    await writes.firstStarted.promise;
-    try {
-      expect(manager.data).toEqual(original);
-      selectAccount('b');
-      await manager.refreshScopedDataOnAccountContextChange();
-      expect(manager.data).toEqual(folderData('Private b'));
-      expect(document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')?.disabled).toBe(false);
-      selectAccount('a');
-      await manager.refreshScopedDataOnAccountContextChange();
-      expect(manager.data).toEqual(original);
-      expect(treeText()).not.toContain('Cloud');
-      expect(document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')?.disabled).toBe(true);
-      writes.first.resolve();
-      await syncing;
-      expect(manager.data.folders.map((folder) => folder.name)).toEqual(['Private a', 'Cloud']);
-      expect(local[key]).toEqual(manager.data);
-      expect(local.gvPromptItems).toEqual([prompt]);
-      expect(treeText()).toContain('Cloud');
-      expect(document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')?.disabled).toBe(false);
-      expect(notificationText()).not.toContain(getTranslationSync('downloadMergeSuccess'));
-    } finally {
-      writes.first.resolve();
-      await syncing;
-    }
-  });
-
-  it('does not announce an old account import after its issued write completes', async () => {
-    const manager = await mountManager();
-    const aKey = manager.activeStorageKey;
-    const bKey = await accountKey('b');
-    const writes = holdFolderWrites(aKey);
-    chooseImport(manager, folderData('Imported into a'));
-    await writes.firstStarted.promise;
-    selectAccount('b');
-    await manager.refreshScopedDataOnAccountContextChange();
-    writes.first.resolve();
-    await vi.advanceTimersByTimeAsync(0);
-    expect(importNotices()).toEqual([]);
-    expect(manager.data).toEqual(folderData('Private b'));
-    expect(local[bKey]).toEqual(folderData('Private b'));
-    expect(treeText()).toContain('Private b');
-    expect((local[aKey] as FolderData).folders.map((folder) => folder.name)).toEqual([
-      'Private a',
-      'Imported into a',
-    ]);
-  });
-
-  it('finishes a pending legacy migration before importing after A → B → A', async () => {
-    const manager = await mountManager();
-    const key = manager.activeStorageKey;
-    const legacy = folderData('Legacy');
-    delete local[key];
-    local[storageKey] = legacy;
-    const writes = holdFolderWrites(key);
-    const migration = manager.load();
-    await writes.firstStarted.promise;
-    try {
-      selectAccount('b');
-      await manager.refreshScopedDataOnAccountContextChange();
-      selectAccount('a');
-      await manager.refreshScopedDataOnAccountContextChange();
-      expect(treeText()).toContain('Legacy');
-
-      chooseImport(manager, folderData('Imported after migration'));
-      // An incorrectly concurrent import can finish before the slow migration.
-      writes.tail.resolve(true);
-      await vi.advanceTimersByTimeAsync(0);
-      expect.soft(writes.snapshots).toHaveLength(1);
-      expect.soft(importNotices()).toEqual([]);
-      writes.first.resolve();
-      await migration;
-      await vi.advanceTimersByTimeAsync(0);
-
-      expect((local[key] as FolderData).folders.map((folder) => folder.name)).toEqual([
-        'Legacy',
-        'Imported after migration',
-      ]);
-      expect(local[key]).toEqual(manager.data);
-      expect(backupData(manager, 'primary')).toEqual(manager.data);
-      expect(treeText()).toContain('Imported after migration');
-      expect(local[storageKey]).toEqual(legacy);
-    } finally {
-      writes.first.resolve();
-      writes.tail.resolve(true);
-      await migration;
-      await vi.advanceTimersByTimeAsync(0);
-    }
   });
 });

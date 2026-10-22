@@ -55,7 +55,10 @@ describe('feature owners', () => {
         'turnNavigator',
       ]),
     );
-    expect(pluginOwnedHandlers('aistudio')).toEqual(new Set(['formulaCopy', 'sendShortcut']));
+    // AI Studio's folders are its official plugin's; local plugins stay refused (packagedFoldersPolicy).
+    expect(pluginOwnedHandlers('aistudio')).toEqual(
+      new Set(['formulaCopy', 'sendShortcut', 'folders']),
+    );
     // Appearance is pure CSS or a fixed-id builtin: it opens no primitive.
     for (const id of [
       'voyager.gemini-chat-font-size',

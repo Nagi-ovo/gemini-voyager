@@ -161,7 +161,7 @@ export const AISTUDIO_FOLDER_CONFIG: PlatformFolderConfig = {
   storageKey: FOLDER_PLATFORMS.aistudio.folderStorageKey,
   backupNamespace: FOLDER_PLATFORMS.aistudio.backupNamespace,
   rootBucketId: AISTUDIO_ROOT_BUCKET_ID,
-  // AIStudioFolderManager's own sync listener handles these switches.
+  // AI Studio's folder session (`session/aistudioFolderSession.ts`) listens for these switches.
   isolationSettingKeys: [],
   migrateLegacyData: copyLegacyFolderData,
   logPrefix: '[AIStudioFolderManager]',

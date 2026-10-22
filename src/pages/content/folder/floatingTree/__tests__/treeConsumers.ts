@@ -3,7 +3,7 @@
  * that consumer's own entry point and with the `TreeActions` a test hands in:
  *
  * - `panel`: the Gemini (and ChatGPT) floating panel, `mountFloatingPanel`.
- * - `aistudio`: AI Studio's sidebar tree, `mountAIStudioTree`, inside a nav.
+ * - `aistudio`: AI Studio's nav panel, `buildFolderPanel` (the folder section's panel mode), inside a nav.
  * - `chatgpt`: ChatGPT's sidebar section, `SiteFolderSection` with ChatGPT's site.
  *
  * The characterization suites run the same cases over all three and state each
@@ -11,13 +11,14 @@
  */
 import { AISTUDIO_ROOT_BUCKET_ID, ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 import { requireBundledSiteAdapter } from '@/features/plugins/catalog/sites';
+import { buildFolderPanel } from '@/features/plugins/verbs/folders/aistudio/panel';
+import { AISTUDIO_TREE_HOST_CLASS } from '@/features/plugins/verbs/folders/aistudio/tree';
 import { SiteFolderSection } from '@/features/plugins/verbs/folders/folderSection';
 import { DEFAULT_SECTION_PREFS } from '@/features/plugins/verbs/folders/sectionPrefs';
 import { siteFoldersFromData } from '@/features/plugins/verbs/folders/siteData';
 import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
 import { GEMINI_PANEL } from '../../__tests__/floatingPanelHarness';
-import { mountAIStudioTree } from '../../aistudioTree';
 import { mountFloatingPanel } from '../../floatingPanel';
 import type { FolderData } from '../../types';
 import type { TreeActions } from '../shared';
@@ -78,17 +79,18 @@ function mountAIStudio(data: FolderData, actions: TreeActions, options: MountOpt
   nav.style.transform = 'translateX(0)';
   nav.style.overflow = 'hidden';
   document.body.appendChild(nav);
-  const tree = mountAIStudioTree({
-    data,
-    actions,
-    activeConversationId: options.activeConversationId ?? null,
-  });
-  nav.appendChild(tree.host);
-  const root = tree.host.shadowRoot;
+  const tree = buildFolderPanel(
+    { cloud: { upload: () => {}, sync: () => {} }, onCreateFolder: () => {} },
+    true,
+    { data, actions, activeConversationId: options.activeConversationId ?? null },
+  );
+  nav.appendChild(tree.container);
+  const host = tree.container.querySelector<HTMLElement>(`.${AISTUDIO_TREE_HOST_CLASS}`)!;
+  const root = host.shadowRoot;
   if (!root) throw new Error('the AI Studio tree has no shadow root');
   return {
     consumer: 'aistudio',
-    host: tree.host,
+    host,
     root,
     rootBucketId: AISTUDIO_ROOT_BUCKET_ID,
     update: (next) => tree.update(next),

@@ -7,7 +7,8 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { AISTUDIO_PROMPT_DRAG_TYPES } from '../../aistudioTree';
+import { AISTUDIO_PROMPT_DRAG_TYPES } from '@/features/plugins/verbs/folders/aistudio/tree';
+
 import type { FolderData } from '../../types';
 import type { TreeActions } from '../shared';
 import { CONSUMERS, type ConsumerId, destroyMountedTrees, mountConsumer } from './treeConsumers';

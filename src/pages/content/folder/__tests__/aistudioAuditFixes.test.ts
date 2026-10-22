@@ -3,15 +3,15 @@ import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
 import type { PromptItem } from '@/core/types/sync';
+import { AIStudioTransfer } from '@/features/plugins/verbs/folders/aistudio/cloud';
 
 import { FolderRepository } from '../FolderRepository';
-import { AIStudioFolderManager } from '../aistudio';
 import { applyHideArchivedRows } from '../aistudioLibraryTable';
-import { AIStudioTransfer } from '../aistudioTransfer';
 import { AISTUDIO_FOLDER_CONFIG } from '../platformFolderConfig';
 import { AIStudioFolderStorageAdapter } from '../storage/AIStudioFolderStorageAdapter';
 import { createSyncMessageListener } from '../syncMessageListener';
 import type { FolderData } from '../types';
+import { AIStudioFolderManager } from './aistudioFolderManager';
 
 vi.mock('webextension-polyfill', () => ({
   default: {
@@ -52,14 +52,14 @@ type ManagerInternals = {
     folderContents: Record<string, StoredConversation[]>;
   };
   container: HTMLElement | null;
-  folderEnabled: boolean;
-  account: { polling: boolean };
+  account: { polling: boolean; refresh: (force?: boolean) => Promise<boolean> };
   library: { mountDropZone: () => void };
   startAccountPolling: () => void;
   watchContainerMount: () => void;
   injectUI: () => void;
   destroy: () => void;
-  applyFolderEnabledSetting: () => void;
+  /** The folders plugin turning on or off. */
+  setFolders: (enabled: boolean) => void;
   initializeFolderUI: () => Promise<void>;
   syncConversationTitlesFromPromptList: () => Promise<void>;
   save: () => Promise<boolean>;
@@ -327,7 +327,7 @@ describe('H7 — single-scan native title sync', () => {
   });
 });
 
-describe('M11 — destroy() lifecycle teardown', () => {
+describe('M11 — folders-off lifecycle teardown', () => {
   function mountLibraryPage(): ManagerInternals {
     window.history.pushState({}, '', '/library');
     document.body.innerHTML =
@@ -357,21 +357,21 @@ describe('M11 — destroy() lifecycle teardown', () => {
     // Layout belongs to its official plugin; native folders work without that plugin.
     expect(document.querySelector('.gv-sidebar-resize-handle')).toBeNull();
 
-    internals.destroy();
+    internals.setFolders(false);
 
     expect(vi.getTimerCount()).toBe(0);
     expect(document.querySelector('.gv-folder-container')).toBeNull();
     expect(document.querySelector('.gv-library-drop-zone')).toBeNull();
     expect(document.querySelector('.gv-sidebar-resize-handle')).toBeNull();
     expect(document.documentElement.classList.contains('gv-aistudio-root')).toBe(false);
-    expect(() => internals.destroy()).not.toThrow();
+    expect(() => internals.setFolders(false)).not.toThrow();
     expect(vi.getTimerCount()).toBe(0);
   });
 
   it('leaves no observer binding prompt links or library rows after destroy', async () => {
     const internals = mountLibraryPage();
     await internals.initializeFolderUI();
-    internals.destroy();
+    internals.setFolders(false);
 
     const row = createLibraryRow('late-row');
     const overlay = document.createElement('div');
@@ -386,50 +386,65 @@ describe('M11 — destroy() lifecycle teardown', () => {
     expect(link.dataset.gvDragBound).toBeUndefined();
   });
 
-  it('destroys on disable and re-initializes through initializeFolderUI on enable', async () => {
+  it('tears down on folders off and, on folders on, binds the account before the panel returns', async () => {
     vi.useFakeTimers();
-    const { internals } = createManager();
+    const internals = mountLibraryPage();
     internals.startAccountPolling();
+    await internals.initializeFolderUI();
+    const container = internals.container;
+    expect(container).not.toBeNull();
 
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    internals.container = container;
+    internals.setFolders(false);
 
-    internals.folderEnabled = false;
-    internals.applyFolderEnabledSetting();
-
-    expect(internals.container).toBeNull();
     expect(document.body.contains(container)).toBe(false);
     expect(vi.getTimerCount()).toBe(0);
 
-    const initSpy = vi.fn().mockResolvedValue(undefined);
-    internals.initializeFolderUI = initSpy;
-    internals.folderEnabled = true;
-    internals.applyFolderEnabledSetting();
+    const refresh = vi.spyOn(internals.account, 'refresh');
+    const panelAtRefresh: boolean[] = [];
+    refresh.mockImplementation(async () => {
+      panelAtRefresh.push(!!document.querySelector('.gv-folder-container'));
+      return true;
+    });
+    internals.setFolders(true);
 
-    // Re-enable resolves account ownership before initializing the folder UI.
-    await vi.waitFor(() => expect(initSpy).toHaveBeenCalledTimes(1));
-    // The account-scope poller stopped by destroy() is restarted on re-enable.
+    // Turning on resolves account ownership before the folder UI mounts again.
+    await vi.waitFor(() => expect(document.querySelector('.gv-folder-container')).not.toBeNull());
+    expect(refresh).toHaveBeenCalledWith(true);
+    expect(panelAtRefresh).toEqual([false]);
+    // The account-scope poller stopped with the folders restarts with them.
     expect(internals.account.polling).toBe(true);
   });
 
-  it('keeps one panel mount watch however often it is re-armed', async () => {
+  it('keeps one panel mount watch however often it is re-armed, and none once folders are off', async () => {
+    const live = new Set<MutationObserver>();
+    const observe = MutationObserver.prototype.observe;
+    const disconnect = MutationObserver.prototype.disconnect;
+    vi.spyOn(MutationObserver.prototype, 'observe').mockImplementation(function (
+      this: MutationObserver,
+      ...args: Parameters<MutationObserver['observe']>
+    ) {
+      live.add(this);
+      observe.apply(this, args);
+    });
+    vi.spyOn(MutationObserver.prototype, 'disconnect').mockImplementation(
+      function (this: MutationObserver) {
+        live.delete(this);
+        disconnect.apply(this);
+      },
+    );
     const navContent = document.createElement('div');
     navContent.className = 'nav-content v3-left-nav';
     document.body.appendChild(navContent);
     const { internals } = createManager();
-    const injectUI = vi.fn();
-    internals.injectUI = injectUI;
+    const before = live.size;
 
     internals.watchContainerMount();
     internals.watchContainerMount();
     internals.watchContainerMount();
-    internals.destroy();
-    internals.container = document.createElement('div');
-    navContent.appendChild(document.createElement('span'));
-    await settle();
+    expect(live.size).toBe(before + 1);
 
-    expect(injectUI).not.toHaveBeenCalled();
+    internals.setFolders(false);
+    expect(live.size).toBe(before);
   });
 });
 

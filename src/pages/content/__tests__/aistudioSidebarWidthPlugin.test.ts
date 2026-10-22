@@ -8,7 +8,7 @@ import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
 
 import { startAIStudioSidebarLayout } from '../aistudioSidebarStartup';
-import { AIStudioFolderManager } from '../folder/aistudio';
+import { AIStudioFolderManager } from '../folder/__tests__/aistudioFolderManager';
 import { registerBuiltinNativeHandlers } from '../pluginNativeRegistration';
 import { type LifecycleHarness, installLifecycleHarness } from './lifecycleHarness';
 

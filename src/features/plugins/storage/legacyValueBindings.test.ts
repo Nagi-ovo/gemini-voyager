@@ -169,8 +169,20 @@ describe('legacy value bindings', () => {
         StorageKeys.AISTUDIO_SIDEBAR_WIDTH,
         StorageKeys.GV_GEMS_SIDEBAR_COUNT,
         StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY,
+        StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO,
       ].sort(),
     );
+  });
+
+  it("hides AI Studio's filed prompts only with AI Studio's own switch stored true", () => {
+    const id = 'voyager.aistudio-folders';
+    const key = StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO;
+    expect(deriveLegacyValueSettings(id, {})).toEqual({ hideFiledChats: false });
+    expect(
+      deriveLegacyValueSettings(id, { [StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS]: true }),
+    ).toEqual({ hideFiledChats: false });
+    expect(deriveLegacyValueSettings(id, { [key]: 'true' })).toEqual({ hideFiledChats: false });
+    expect(deriveLegacyValueSettings(id, { [key]: true })).toEqual({ hideFiledChats: true });
   });
 
   it('reads the collapse-with-content switch as true only when stored true, and takes every live change of it', () => {
