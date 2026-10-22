@@ -116,6 +116,7 @@
     "modelPicker": { "$ref": "site-sections/model-picker.schema.json" },
     "projects": { "$ref": "site-sections/projects.schema.json" },
     "pageHooks": { "$ref": "site-sections/page-hooks.schema.json" },
+    "folders": { "$ref": "site-sections/folders.schema.json" },
     "bridge": {
       "type": "object",
       "description": "Local Bridge kill switch: the ops the extension may run for `voyager serve` on this site. A missing or invalid section denies every op, and only a fresh remote catalog newer than the packaged one can allow them. Removing an op from `allow` revokes it at the next catalog revision.",
