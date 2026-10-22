@@ -62,6 +62,23 @@ describe('popup cloud sync transfer operations', () => {
     },
   );
 
+  it('never uploads or overwrites the shared default bucket for an AI Studio page that refuses its folders', async () => {
+    const shared = buildScopedStorageKey(StorageKeys.FOLDER_DATA_AISTUDIO, 'default');
+    h.stored[shared] = folders;
+    // The switcher is unreadable, so the page's gate answers the folder request with a refusal.
+    tabMessage.mockImplementation(async (_tabId, message) =>
+      message.type === 'gv.account.getContext'
+        ? { ok: true, context: { routeUserId: null, email: null } }
+        : { ok: false },
+    );
+    await h.render('aistudio', false);
+    await expect(h.transfer.prepareUpload()).rejects.toThrow();
+    await expect(h.transfer.prepareDownload()).rejects.toThrow();
+    expect(localGet).not.toHaveBeenCalled();
+    expect(localSet).not.toHaveBeenCalled();
+    expect(h.stored[shared]).toEqual(folders);
+  });
+
   it('with isolation off, syncs the unscoped folders of a page that has not named its account', async () => {
     vi.mocked(accountIsolationService.isIsolationEnabled).mockResolvedValue(false);
     tabMessage.mockImplementation(async (_tabId, message) =>
