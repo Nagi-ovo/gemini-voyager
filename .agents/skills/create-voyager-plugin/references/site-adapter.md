@@ -33,6 +33,17 @@ adaptation — no per-site CSS follows.
 A new site also needs its directory, a `CODEOWNERS` line, and an extension
 release (D16).
 
+Folders on a new site take no TypeScript: a `folders` section in its bundled
+`site.json`, a `conversationIdPattern`, and a plugin whose `domOps` call the
+`folders` primitive. The site then gets one unscoped bucket in
+`chrome.storage.local` with names derived from its id (`gvFolderData:<id>`,
+backups `<id>-folders`, Drive `gemini-voyager-<id>-folders.json`, export files
+tagged `<id>`), and no first-run guide (`features/folder/sites/derivedFolderSites.ts`).
+Only the bundled data decides where it runs: the bucket belongs to the first
+exact `https://` host in `matches`, and nothing else may write, sync or import
+into it. An id that could pass for an existing folder site (`chat-gpt`,
+`gemini-pro`), or a host one of them already uses, gets no folders.
+
 ```bash
 bun run plugin:check src/features/plugins/catalog/sites/<site>/plugins/<id>   # each plugin
 bun run test src/features/plugins
