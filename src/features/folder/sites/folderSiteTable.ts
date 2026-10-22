@@ -32,6 +32,7 @@ import {
   type FolderPlatformDefinition,
 } from '@/features/folder/platforms';
 import type { ImportStrategy } from '@/features/folder/types/import-export';
+import { BUNDLED_SITE_ADAPTERS } from '@/features/plugins/catalog/sites';
 import {
   AISTUDIO_FOLDER_CONFIG,
   GEMINI_FOLDER_CONFIG,
@@ -350,21 +351,49 @@ export function folderSiteOf(siteId: string): FolderSiteRow | null {
     : null;
 }
 
+/** The exact `https://` hosts of `matches`; wildcard and `http` patterns name no bucket host. */
+function exactHttpsHosts(matches: readonly string[]): string[] {
+  return matches.flatMap((pattern) => {
+    const host = /^https:\/\/([a-z0-9.-]+)\//.exec(pattern.trim().toLowerCase())?.[1];
+    return host ? [host] : [];
+  });
+}
+
+/**
+ * The hosts whose pages may open each site's bucket, from the bundled data
+ * only: a frozen site's bucket hosts plus the exact hosts of its bundled
+ * `matches` (every host it has always run on, ChatGPT's legacy one included),
+ * a derived site's one host.
+ */
+const PAGE_HOSTS: ReadonlyMap<string, ReadonlySet<string>> = new Map(
+  Object.values(FOLDER_SITE_TABLE).map((row) => {
+    const derived = DERIVED_FOLDER_SITES.has(row.site as DerivedFolderPlatform);
+    const bundled = derived
+      ? undefined
+      : BUNDLED_SITE_ADAPTERS.find((adapter) => adapter.id === row.site);
+    return [
+      row.site,
+      new Set([...row.platform.hosts, ...exactHttpsHosts(bundled?.matches ?? [])]),
+    ] as const;
+  }),
+);
+
 /**
  * The folder policy of site `siteId` on the page at `url`, or `null` where the
  * bundled extension does not give that site's bucket to the page. The site id
- * a page resolves to can come from a remote `site.json`, so a derived site's
- * bucket opens only on its one bundled host. A frozen site keeps the hosts it
- * has always run on.
+ * a page resolves to can come from a remote `site.json`: a poisoned one that
+ * names Claude on DeepSeek's host must not open Claude's folders there, or
+ * write their backup into DeepSeek's page storage.
  */
 export function folderSiteForPage(siteId: string, url: string): FolderSiteRow | null {
   const row = folderSiteOf(siteId);
-  if (!row || !DERIVED_FOLDER_SITES.has(row.site as DerivedFolderPlatform)) return row;
+  if (!row) return null;
   let page: URL;
   try {
     page = new URL(url);
   } catch {
     return null;
   }
-  return page.protocol === 'https:' && row.platform.hosts.includes(page.hostname) ? row : null;
+  const hosts = PAGE_HOSTS.get(row.site);
+  return page.protocol === 'https:' && hosts?.has(page.hostname) ? row : null;
 }

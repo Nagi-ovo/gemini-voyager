@@ -20,9 +20,9 @@ export const CHATGPT_FOLDERS_GUIDE_ID = 'chatgpt-folders-sidebar-intro-v1';
 export const CHATGPT_FOLDERS_GUIDE_DEBUG_EVENT = 'gv:debug:chatgptFoldersCoachmark';
 export const FILED_ROW_ATTRIBUTE = 'data-gv-chatgpt-filed';
 
-/** ChatGPT's folders from its bundled site data. */
+/** ChatGPT's folders from its bundled site data, as a page on chatgpt.com builds them. */
 export function chatgptSite(): SiteFoldersAdapter {
-  const site = siteFoldersFromData(requireBundledSiteAdapter('chatgpt'));
+  const site = siteFoldersFromData(requireBundledSiteAdapter('chatgpt'), 'https://chatgpt.com/');
   if (!site) throw new Error("ChatGPT's site.json carries no usable folders section");
   return site;
 }

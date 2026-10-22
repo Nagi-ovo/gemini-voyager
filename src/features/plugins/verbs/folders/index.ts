@@ -7,7 +7,7 @@
  * (`gemini/`, `aistudio/`). Settings apply in place: hiding filed chats never
  * reloads the folders.
  */
-import { folderSiteOf } from '@/features/folder/sites/folderSiteTable';
+import { folderSiteForPage } from '@/features/folder/sites/folderSiteTable';
 
 import type { ManifestIssue } from '../../manifest/validate';
 import { getPrimitiveContract } from '../contracts';
@@ -39,7 +39,14 @@ export const foldersPrimitive: Primitive<FoldersParams> = {
 
   activate(scope, _params, context) {
     const { adapter } = context;
-    const extension = adapter?.folders ? folderSiteOf(adapter.id)?.extension : null;
+    // Before any branch: the site id can come from a remote site.json, and only a page the
+    // bundled data gives that site may open its bucket (Gemini's and AI Studio's included).
+    const row = adapter?.folders ? folderSiteForPage(adapter.id, location.href) : null;
+    if (!adapter?.folders || !row) {
+      context.setTargetCounter(() => 0);
+      return;
+    }
+    const { extension } = row;
     // Gemini's folders keep their own sidebar section, floating panel and native menus.
     if (extension === 'gemini') {
       const gemini = startGeminiFolders(scope, context.settings);
@@ -47,7 +54,7 @@ export const foldersPrimitive: Primitive<FoldersParams> = {
       return { updateSettings: (settings) => gemini.updateSettings(settings) };
     }
     // AI Studio's folders keep their own panel and /library, on its core folder session.
-    if (extension === 'aistudio' && adapter?.folders) {
+    if (extension === 'aistudio' && adapter.folders) {
       const aistudio = startAIStudioFolders(scope, adapter.folders, context.settings);
       context.setTargetCounter(() => aistudio?.onScreen() ?? 0);
       return aistudio

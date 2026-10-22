@@ -105,7 +105,9 @@ function mountAIStudio(data: FolderData, actions: TreeActions, options: MountOpt
 
 function mountChatGpt(data: FolderData, actions: TreeActions): MountedTree {
   const section = new SiteFolderSection({
-    site: siteFoldersFromData(requireBundledSiteAdapter('chatgpt'))!.section,
+    // Built as a page on chatgpt.com builds it: no other page may open ChatGPT's folders.
+    site: siteFoldersFromData(requireBundledSiteAdapter('chatgpt'), 'https://chatgpt.com/')!
+      .section,
     data,
     rootBucketId: ROOT_CONVERSATIONS_ID,
     actions,

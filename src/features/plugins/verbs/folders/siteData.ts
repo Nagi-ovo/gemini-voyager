@@ -86,10 +86,17 @@ function placeholderCheck(
   return (title) => any.has(title) || (byLanguage.size > 0 && ofPage().includes(title));
 }
 
-/** The site's folders from its `site.json` and the core table, or `null` where it has none. */
-export function siteFoldersFromData(adapter: SiteAdapter | null): SiteFoldersAdapter | null {
+/**
+ * The site's folders from its `site.json` and the core table on the page at
+ * `pageUrl`, or `null` where the site has none or the bundled data does not
+ * give that page the site's bucket.
+ */
+export function siteFoldersFromData(
+  adapter: SiteAdapter | null,
+  pageUrl: string = location.href,
+): SiteFoldersAdapter | null {
   const section = adapter?.folders;
-  const row = adapter ? folderSiteForPage(adapter.id, location.href) : null;
+  const row = adapter ? folderSiteForPage(adapter.id, pageUrl) : null;
   const route = row ? routeFolderSiteOf(row.site) : null;
   const panel = row?.prefs.keys.panel;
   const sectionPrefs = row?.prefs.keys.section;
