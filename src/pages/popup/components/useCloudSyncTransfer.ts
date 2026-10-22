@@ -206,7 +206,10 @@ async function resolveCloudSyncContext(
   };
 }
 
-/** Read fresh tab folders, then legacy/object storage, keeping the tab's scope override. */
+/**
+ * Read fresh tab folders, then legacy/object storage. An upload takes the tab's scope with its
+ * folders; a restore keeps the captured scope and reports a tab now on another account.
+ */
 async function readLocalSyncData(
   context: CloudSyncContext,
   getTargetTab: TargetTab,
@@ -218,6 +221,7 @@ async function readLocalSyncData(
   let folderStorageKey = context.folderStorageKey;
   let folders: FolderData = { folders: [], folderContents: {} };
   let hasLiveFolderSnapshot = false;
+  let accountChanged = false;
   let prompts: PromptItem[] = [];
   let timelineHierarchy: TimelineHierarchyData = { conversations: {} };
   try {
@@ -229,7 +233,11 @@ async function readLocalSyncData(
     if (response?.ok && response.data) {
       folders = response.data;
       hasLiveFolderSnapshot = true;
-      if (supportsAccountIsolation(platform) && response.accountScope) {
+      if (supportsAccountIsolation(platform) && purpose === 'restore') {
+        // The download fetched the captured account's files; a tab that switched accounts
+        // meanwhile would merge them into, or overwrite, the other account's folders.
+        accountChanged = response.accountScope?.accountKey !== accountScope?.accountKey;
+      } else if (supportsAccountIsolation(platform) && response.accountScope) {
         accountScope = response.accountScope;
         folderStorageKey = buildScopedStorageKey(
           FOLDER_PLATFORMS[platform].folderStorageKey,
@@ -266,7 +274,7 @@ async function readLocalSyncData(
   } catch (error) {
     console.error('[CloudSyncSettings] Error loading local data:', error);
   }
-  return { folders, prompts, timelineHierarchy, accountScope, folderStorageKey };
+  return { folders, prompts, timelineHierarchy, accountScope, folderStorageKey, accountChanged };
 }
 
 /** Merge/overwrite, apply the ordered restore, then notify the page only after success. */
@@ -342,6 +350,9 @@ async function restoreCloudDownload(
         }
       : undefined,
     foldersMissing: !hasCloudFolderData,
+    refusal: local.accountChanged
+      ? new Error('The tab switched to another account during the download')
+      : undefined,
     // Both restore modes merge stars so this tab cannot erase other sites or accounts.
     mergeStarred:
       definition.syncsConversationExtras &&

@@ -71,6 +71,8 @@ export interface CloudRestoreInput {
   readonly restoreOutlines?: () => Promise<boolean>;
   /** The backup has no folder data; an overwrite then writes nothing. */
   readonly foldersMissing: boolean;
+  /** Set when the restore must write nothing at all, such as after the tab switched accounts. */
+  readonly refusal?: Error;
 }
 
 interface RestoreStep {
@@ -123,6 +125,13 @@ export async function applyCloudRestore(input: CloudRestoreInput): Promise<void>
   }
 
   const restored: CloudRestorePart[] = input.highlightsRestored ? ['highlights'] : [];
+  if (input.refusal) {
+    throw new CloudRestoreError(
+      restored,
+      steps.flatMap((step) => step.parts),
+      input.refusal,
+    );
+  }
   if (input.mode === 'overwrite' && input.foldersMissing) {
     const failed = steps.flatMap((step) => step.parts);
     const reason = 'syncOverwriteMissingFolders';
