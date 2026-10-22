@@ -57,13 +57,14 @@ export async function startGeminiPage(deps: GeminiPageStartupDeps): Promise<void
   await delay(HEAVY_FEATURE_INIT_DELAY);
 
   admitBatchDelete(admission, 'gemini', deps.lifetime);
-  const folderManager = await adopt(startFolderManager(), (manager) => manager?.destroy());
-  if (folderManager) {
+  const folders = await adopt(startFolderManager(), (started) => started?.destroy());
+  if (folders) {
     cleanupManager.registerCleanupFunction(
-      () => folderManager.destroy(),
+      () => folders.destroy(),
       CleanupPositions.DestroyFolderManagerInstance,
     );
-    startFolderProject(folderManager);
+    // On the session, not the manager: Folder-as-Project runs with folders off too.
+    startFolderProject(folders.session);
   }
   await delay(HEAVY_FEATURE_INIT_DELAY);
 

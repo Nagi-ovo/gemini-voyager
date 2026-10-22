@@ -8,44 +8,42 @@ import { FolderNavigation } from './FolderNavigation';
 import { FolderSelection } from './FolderSelection';
 import { FolderSidebarRuntime } from './FolderSidebarRuntime';
 import { FolderSidebarView } from './FolderSidebarView';
-import { FolderStore, type FolderStoreChange } from './FolderStore';
+import type { FolderStore, FolderStoreChange } from './FolderStore';
 import { FolderTransferController } from './FolderTransferController';
 import { NativeConversationMenus } from './NativeConversationMenus';
 import { NativeSidebarObserver } from './NativeSidebarObserver';
 import { FloatingFolderUI } from './floatingFolderUI';
-import { resolveConversationRouteId } from './folderConversationIdentity';
 import { createFolderDialogs } from './folderDialogs';
 import { folderDebug, folderDebugWarn } from './folderManagerDebug';
 import {
   listenForFolderSettingChanges,
-  migrateLegacySyncMode,
   readFloatingModeSetting,
   readFolderEnabled,
   readHideArchived,
 } from './folderManagerSettings';
-import { listenForFolderRuntimeMessages } from './folderRuntimeMessages';
+import { openNativeRename } from './gemini/nativeRename';
 import { createFolderHeaderMenus } from './headerMenus';
 import { HideArchivedNudgeState } from './hideArchivedNudgeState';
-import { createLegacyFolderCommands } from './legacyFolderCommands';
 import { NativeArchivedRows } from './nativeArchivedRows';
-import { extractNativeConversationTitle } from './nativeConversationTitles';
 import { createNativePaginationNudge } from './nativeListPagination';
-import { findNativeConversationElement, getNativeConversationElements } from './nativeSidebarDom';
+import { getNativeConversationElements } from './nativeSidebarDom';
 import { ligatureIcon } from './selectionToolbar';
-import type { ConversationReference, Folder } from './types';
+import { GeminiFolderSession, type GeminiFolderView } from './session/geminiFolderSession';
+import type { GeminiFolderLease } from './session/geminiFolderSessions';
+import type { Folder } from './types';
 
-export class FolderManager {
-  private readonly store: FolderStore = new FolderStore({
-    getContext: () => ({
-      sidebar: this.sidebarRuntime.sidebar,
-      sortMode: this.treeView.sortMode,
-      enabled: this.folderEnabled,
-    }),
-    onChange: (reason) => this.handleStoreChange(reason),
-    onArchive: () => this.hideArchivedNudge.maybeShow(),
-    onRecovery: (result) => this.feedback.showRecoveryNotification(result),
-  });
-  private readonly commands = createLegacyFolderCommands(this.store);
+/** Sets the session before the manager's fields, which are built on its store. */
+abstract class GeminiFolderSessionView {
+  constructor(protected readonly session: GeminiFolderSession) {}
+}
+
+/**
+ * Draws Gemini's folders over Gemini's folder session: the page's leased one,
+ * or, without a lease, one of its own that it starts and closes (a tab of its own).
+ */
+export class FolderManager extends GeminiFolderSessionView {
+  private readonly store: FolderStore = this.session.store;
+  private readonly commands = this.session.commands;
   private readonly transfer = new FolderTransferController({
     getContext: () => ({
       session: this.store.session,
@@ -68,7 +66,7 @@ export class FolderManager {
       accountIsolationEnabled: this.store.accountIsolationEnabled,
     }),
     onRouteChange: () => {
-      void this.store.reloadScopedDataOnAccountRouteChange();
+      void this.session.reloadForAccountRoute();
     },
     onOpened: (id) => {
       void this.commands.run({
@@ -242,11 +240,31 @@ export class FolderManager {
       isDestroyed: this.isDestroyed,
     }),
     onRefresh: () => this.refresh(),
-    onRenameNative: (conversation) => this.openNativeRenameForFolderConversation(conversation),
+    onRenameNative: (conversation) =>
+      openNativeRename(conversation, {
+        sidebar: this.sidebarRuntime.sidebar,
+        archivedRows: this.archivedRows,
+        menus: this.nativeConversationMenus,
+        commands: this.commands,
+      }),
     onSortModeChange: (mode) => this.floatingUI.handle?.update(this.store.data, mode),
   });
 
-  constructor() {
+  private readonly view: GeminiFolderView = {
+    context: () => ({
+      sidebar: this.sidebarRuntime.sidebar,
+      sortMode: this.treeView.sortMode,
+      enabled: this.folderEnabled,
+    }),
+    onChange: (reason) => this.handleStoreChange(reason),
+    onArchive: () => this.hideArchivedNudge.maybeShow(),
+    onRecovery: (result) => this.feedback.showRecoveryNotification(result),
+    refresh: () => this.refresh(),
+  };
+
+  constructor(private readonly lease?: GeminiFolderLease) {
+    super(lease?.session ?? new GeminiFolderSession());
+    this.session.attach(this.view);
     // Initialize i18n system
     initI18n().catch((e) => {
       folderDebugWarn('Failed to initialize i18n:', e);
@@ -255,8 +273,8 @@ export class FolderManager {
 
   async init(): Promise<void> {
     try {
-      // Initialize storage adapter (handles migration for Safari automatically)
-      await this.store.init();
+      // The leased session starts on its own; one of the manager's own starts here.
+      await (this.lease ? this.lease.ready : this.session.init());
       if (this.isDestroyed) return;
 
       await this.loadSettings();
@@ -264,9 +282,6 @@ export class FolderManager {
 
       // Set up storage change listener (always needed to respond to setting changes)
       this.setupStorageListener();
-
-      // Set up message listener (for popup communication)
-      this.setupMessageListener();
 
       // If folder feature is disabled, skip initialization
       if (!this.folderEnabled) {
@@ -304,7 +319,10 @@ export class FolderManager {
     this.navigation.destroy();
     this.sidebarRuntime.stop();
     this.paginationNudge.cancel();
-    this.store.destroy();
+    this.session.detach(this.view);
+    // A leased session outlives the manager: its holder closes it.
+    if (this.lease) this.store.teardownConversationActivityTracking();
+    else void this.session.close();
     this.feedback.destroy();
   }
 
@@ -346,50 +364,6 @@ export class FolderManager {
     this.paginationNudge.cancel();
   }
 
-  private async openNativeRenameForFolderConversation(
-    conversation: ConversationReference,
-  ): Promise<boolean> {
-    const conversationId = resolveConversationRouteId(
-      conversation.url,
-      conversation.conversationId,
-    );
-    if (!conversationId) return false;
-
-    const conversationEl = findNativeConversationElement(
-      this.sidebarRuntime.sidebar,
-      conversationId,
-    );
-    if (!conversationEl) {
-      folderDebugWarn('Could not find native conversation element for rename:', conversationId);
-      return false;
-    }
-
-    const restoreArchivedVisibility = this.archivedRows.reveal(conversationEl);
-    const nativeTitle = extractNativeConversationTitle(conversationEl);
-    let moreButton: HTMLElement | null = null;
-
-    try {
-      moreButton = await this.nativeConversationMenus.findAndClickMoreButton(conversationEl);
-      if (!moreButton) {
-        folderDebugWarn('Could not find native more button for rename:', conversationId);
-        return false;
-      }
-
-      const renamed = await this.nativeConversationMenus.waitForRenameButtonAndClick();
-      if (!renamed) {
-        folderDebugWarn('Could not find native rename button:', conversationId);
-      } else {
-        await this.commands.run({ kind: 'restoreNativeTitle', conversationId, nativeTitle });
-      }
-      return renamed;
-    } finally {
-      if (moreButton) {
-        this.nativeConversationMenus.resetNativeConversationMenuTrigger(moreButton);
-      }
-      restoreArchivedVisibility();
-    }
-  }
-
   addConversationToFolderFromNative(
     folderId: string,
     conversationId: string,
@@ -399,20 +373,23 @@ export class FolderManager {
     gemId?: string,
     lastTurnAt?: number,
   ): void {
-    void this.commands.run({
-      kind: 'addConversations',
-      target: folderId,
-      via: 'native-menu',
-      seeds: [{ conversationId, title, url, isGem, gemId, lastTurnAt }],
-    });
+    this.session.addConversationToFolderFromNative(
+      folderId,
+      conversationId,
+      title,
+      url,
+      isGem,
+      gemId,
+      lastTurnAt,
+    );
   }
 
   getFolders(): Folder[] {
-    return this.store.data.folders;
+    return this.session.getFolders();
   }
 
-  async ensureDataLoaded(): Promise<void> {
-    await this.store.ensureDataLoaded();
+  ensureDataLoaded(): Promise<void> {
+    return this.session.ensureDataLoaded();
   }
 
   private handleStoreChange(reason: FolderStoreChange): void {
@@ -480,14 +457,7 @@ export class FolderManager {
       onAnchor: (value) => this.sidebarRuntime.setAnchor(value),
     });
     this.lifetimeCleanup.push(removeListener);
-
-    // NOTE: the popup's 'gv.folders.reload' message is handled in
-    // setupMessageListener. A second chrome.runtime.onMessage listener here
-    // used to double-handle it (double loadData + double render per sync) and
-    // its unconditional `return true` left responder-less broadcasts pending
-    // forever on the sender side.
-
-    void migrateLegacySyncMode();
+    // The popup's messages and the legacy sync-mode migration belong to the session.
   }
 
   private applyFloatingModeSetting(enabled: boolean): void {
@@ -529,18 +499,5 @@ export class FolderManager {
 
   private applyHideArchivedSetting(): void {
     this.archivedRows.applyAll(getNativeConversationElements(this.sidebarRuntime.sidebar));
-  }
-
-  private setupMessageListener(): void {
-    const removeListener = listenForFolderRuntimeMessages({
-      store: this.store,
-      refresh: () => this.refresh(),
-      getSidebarContext: () => ({
-        sidebar: this.sidebarRuntime.sidebar,
-        accountIsolationEnabled: this.store.accountIsolationEnabled,
-        isDestroyed: this.isDestroyed,
-      }),
-    });
-    this.lifetimeCleanup.push(removeListener);
   }
 }

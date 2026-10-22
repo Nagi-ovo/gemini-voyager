@@ -9,7 +9,7 @@ import { isImeKeyEvent } from '@/core/services/composer/sendKeys/sendKeyIntent';
 import { StorageKeys } from '@/core/types/common';
 
 import { findChatInput } from '../chatInput/index';
-import type { FolderManager } from '../folder/manager';
+import type { GeminiFolderSession } from '../folder/session/geminiFolderSession';
 import { followGeminiSendKey } from '../sendBehavior/followSendKey';
 import { setInputText } from '../utils/inputHelper';
 import { watchRouteChanges } from '../utils/routeWatcher';
@@ -19,6 +19,15 @@ import {
   stripInstructionBlock,
 } from './instructionBlock';
 import { createFolderProjectPicker } from './picker';
+
+/**
+ * Gemini's folder session as Folder-as-Project uses it: the folders to pick
+ * from, and filing the new chat. It works whether the folders are on or off.
+ */
+export type FolderProjectFolders = Pick<
+  GeminiFolderSession,
+  'ensureDataLoaded' | 'getFolders' | 'addConversationToFolderFromNative'
+>;
 
 // ============================================================================
 // Module state (per-tab, reset on navigation)
@@ -272,7 +281,7 @@ function getConversationTitle(convId: string): string {
 // URL change handler
 // ============================================================================
 
-function handleNavigation(manager: FolderManager, prevPath: string, newPath: string): void {
+function handleNavigation(folders: FolderProjectFolders, prevPath: string, newPath: string): void {
   const prevWasNewChat = isNewChatPath(prevPath);
   const newConvId = extractConvId(newPath);
 
@@ -281,7 +290,7 @@ function handleNavigation(manager: FolderManager, prevPath: string, newPath: str
   if (prevWasNewChat && newConvId && selectedFolderId && pendingSend) {
     const title = getConversationTitle(newConvId);
     const { isGem, gemId } = extractGemMetadata(newPath);
-    manager.addConversationToFolderFromNative(
+    folders.addConversationToFolderFromNative(
       selectedFolderId,
       newConvId,
       title,
@@ -331,7 +340,7 @@ function stopURLWatcher(): void {
   teardownSendDetection();
 }
 
-function startURLWatcher(manager: FolderManager): void {
+function startURLWatcher(folders: FolderProjectFolders): void {
   // Clean up any existing watcher (idempotent for toggle cycles)
   stopURLWatcher();
   effectiveSendKey = followGeminiSendKey((key) => {
@@ -340,8 +349,8 @@ function startURLWatcher(manager: FolderManager): void {
   // A pending mount may finish after an off/on cycle; keep its cleanup owner.
   picker ??= createFolderProjectPicker({
     loadFolders: async () => {
-      await manager.ensureDataLoaded();
-      return manager.getFolders();
+      await folders.ensureDataLoaded();
+      return folders.getFolders();
     },
     canMount: () => featureInitialized && isNewChatPath(window.location.pathname),
     onSelect: (folder, source) => {
@@ -361,7 +370,7 @@ function startURLWatcher(manager: FolderManager): void {
     const prevPath = new URL(lastHref).pathname;
     const newPath = new URL(current).pathname;
     lastHref = current;
-    handleNavigation(manager, prevPath, newPath);
+    handleNavigation(folders, prevPath, newPath);
   };
 
   stopRouteWatcher = watchRouteChanges(({ trigger }) => {
@@ -385,9 +394,9 @@ function startURLWatcher(manager: FolderManager): void {
  * Initialise the Folder-as-Project feature. Reads the enabled flag from
  * chrome.storage.sync and sets up the URL watcher + picker injection.
  *
- * @param manager - The active FolderManager instance
+ * @param folders - Gemini's folder session, which the page holds
  */
-export function startFolderProject(manager: FolderManager): void {
+export function startFolderProject(folders: FolderProjectFolders): void {
   chrome.storage?.sync?.get(
     {
       [StorageKeys.FOLDER_PROJECT_ENABLED]: false,
@@ -400,7 +409,7 @@ export function startFolderProject(manager: FolderManager): void {
       if (res?.[StorageKeys.FOLDER_PROJECT_ENABLED] !== true) return;
       if (featureInitialized) return;
       featureInitialized = true;
-      startURLWatcher(manager);
+      startURLWatcher(folders);
     },
   );
 
@@ -415,7 +424,7 @@ export function startFolderProject(manager: FolderManager): void {
     const enabled = changes[StorageKeys.FOLDER_PROJECT_ENABLED].newValue === true;
     if (enabled && !featureInitialized) {
       featureInitialized = true;
-      startURLWatcher(manager);
+      startURLWatcher(folders);
     } else if (!enabled) {
       featureInitialized = false;
       stopURLWatcher();

@@ -1,14 +1,24 @@
 import browser, { type Runtime } from 'webextension-polyfill';
 
-import type { FolderStore } from './FolderStore';
+import type { AccountScope } from '@/core/services/AccountIsolationService';
+
 import { folderDebug, folderDebugWarn } from './folderManagerDebug';
 import { type NativeSidebarReadContext, collectAllSidebarConversations } from './nativeSidebarDom';
 import { createSyncMessageListener } from './syncMessageListener';
+import type { FolderData } from './types';
 
 type SendResponse = (response: unknown) => void;
 
+/** The folders the answers read, and their reload. */
+export interface FolderRuntimeMessageStore {
+  readonly canEdit: boolean;
+  readonly data: FolderData;
+  readonly accountScope: AccountScope | null;
+  loadData(): Promise<void>;
+}
+
 type FolderRuntimeMessageOptions = {
-  store: FolderStore;
+  store: FolderRuntimeMessageStore;
   refresh(): void;
   getSidebarContext(): NativeSidebarReadContext;
 };

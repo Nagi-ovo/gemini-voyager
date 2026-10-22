@@ -7,7 +7,7 @@ import { getFolderRecoveryNotice } from './folderRecoveryNotice';
 const BATCH_DELETE_CHANNEL = 'batch-delete';
 const NOTICE_MS = 3000;
 /** Warnings and errors about the folder data stay longer than a passing notice. */
-const LEVEL_MS = { info: 3000, warning: 7000, error: 10000 } as const;
+export const LEVEL_MS = { info: 3000, warning: 7000, error: 10000 } as const;
 
 const batchDeleteMessage = (current: number, total: number): string =>
   getTranslationSyncUnsafe('batch_delete_in_progress')

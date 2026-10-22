@@ -35,8 +35,9 @@ type MessageListener = (
 
 type TestableManager = {
   store: FolderStore;
+  /** The page's folder session, which answers the popup. */
+  session: { listen(): void };
   setupStorageListener(): void;
-  setupMessageListener(): void;
   refresh(): void;
 };
 
@@ -83,7 +84,7 @@ describe('folder runtime message lifecycle', () => {
 
   describe('message dispatch', () => {
     function getMessageListener(internals: TestableManager): MessageListener {
-      internals.setupMessageListener();
+      internals.session.listen();
       const call = mockBrowser.runtime.onMessage.addListener.mock.calls.at(-1);
       expect(call).toBeDefined();
       return call?.[0] as MessageListener;
@@ -94,7 +95,7 @@ describe('folder runtime message lifecycle', () => {
       manager = m;
 
       internals.setupStorageListener();
-      internals.setupMessageListener();
+      internals.session.listen();
 
       // The duplicate gv.folders.reload listener used to be registered on the
       // raw chrome.runtime API from setupStorageListener.
@@ -175,7 +176,7 @@ describe('folder runtime message lifecycle', () => {
     const { manager: instance, internals } = makeManager();
     manager = instance;
     internals.setupStorageListener();
-    internals.setupMessageListener();
+    internals.session.listen();
     const settingsListener = mockBrowser.storage.onChanged.addListener.mock.calls.at(-1)![0];
     const messageListener = mockBrowser.runtime.onMessage.addListener.mock.calls.at(-1)![0];
     expect(mockBrowser.storage.onChanged.removeListener).not.toHaveBeenCalledWith(settingsListener);
