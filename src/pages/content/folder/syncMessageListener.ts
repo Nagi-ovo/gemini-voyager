@@ -11,6 +11,11 @@ export type SyncMessageHost = {
   accountScope?: () => AccountScope | null;
   /** Reloads the folders from storage and shows them; the reply waits for it. */
   reload?: () => Promise<unknown>;
+  /**
+   * Work an upload's answer waits for, such as binding the page's account; the
+   * answer is immediate when it returns null or is omitted.
+   */
+  prepare?: () => Promise<unknown> | null;
 };
 
 /** A runtime message listener, for either the polyfill's `onMessage` or Chrome's. */
@@ -29,15 +34,20 @@ export function createSyncMessageListener(host: SyncMessageHost): SyncMessageLis
   return (message, _sender, sendResponse) => {
     const type = (message as { type?: unknown } | null)?.type;
     if (type === 'gv.sync.requestData') {
-      if (!host.canEdit()) {
-        sendResponse({ ok: false });
-        return true;
-      }
-      sendResponse(
-        host.accountScope
-          ? { ok: true, data: host.data(), accountScope: toSyncAccountScope(host.accountScope()) }
-          : { ok: true, data: host.data() },
-      );
+      const answer = () => {
+        if (!host.canEdit()) {
+          sendResponse({ ok: false });
+          return;
+        }
+        sendResponse(
+          host.accountScope
+            ? { ok: true, data: host.data(), accountScope: toSyncAccountScope(host.accountScope()) }
+            : { ok: true, data: host.data() },
+        );
+      };
+      const preparing = host.prepare?.() ?? null;
+      if (!preparing) answer();
+      else void preparing.then(answer, answer);
       return true;
     }
     if (type === 'gv.folders.reload' && host.reload) {

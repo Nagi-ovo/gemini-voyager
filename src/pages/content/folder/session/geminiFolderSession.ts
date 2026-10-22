@@ -231,6 +231,17 @@ export class GeminiFolderSession implements GeminiFolderReads {
     return this.data.folders;
   }
 
+  /**
+   * Before answering the popup's cloud request: binds the page's account when
+   * the gate is closed and that account can be read now, which with the folders
+   * off nothing else would. Null when there is nothing to bind.
+   */
+  prepareRequest(): Promise<void> | null {
+    if (this.closed || !this.started || this.accountMatchesPage) return null;
+    if (geminiPageAccountFingerprint() === null) return null;
+    return this.rebind().then(() => undefined);
+  }
+
   addConversationToFolderFromNative(
     folderId: string,
     conversationId: string,

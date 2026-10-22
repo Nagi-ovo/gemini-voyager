@@ -120,6 +120,15 @@ function requestData(): unknown {
   return answer;
 }
 
+/** The popup's cloud upload request, answered once the page is ready to answer it. */
+function requestUpload(): Promise<unknown> {
+  return new Promise((resolve) => {
+    for (const listener of messageListeners) {
+      listener({ type: 'gv.sync.requestData' }, {}, resolve);
+    }
+  });
+}
+
 async function keyOf(account: string, routeUserId = '1'): Promise<string> {
   const scope = await accountIsolationService.resolveAccountScope({
     pageUrl: `https://gemini.google.com/u/${routeUserId}/app`,
@@ -339,6 +348,21 @@ describe("Gemini folders' account gate", () => {
     expect(memory.values.local.get(aKey)).toEqual(folder('Private a'));
     expect(folderWrites()).toEqual([]);
   }, 10_000);
+
+  it('uploads the folders of an account whose control was unreadable at start with the folders off', async () => {
+    const aKey = await keyOf('a');
+    // That account's folders exist only in the page's own copy, from an older build.
+    localStorage.setItem(aKey, JSON.stringify(folder('Private a')));
+    memory.values.sync.set(StorageKeys.FOLDER_ENABLED, false);
+    await openPage();
+    expect(memory.values.local.get(aKey)).toBeUndefined();
+
+    showGeminiAccount('a@example.com');
+    const answer = await requestUpload();
+
+    expect(answer).toMatchObject({ ok: true, data: folder('Private a') });
+    expect(memory.values.local.get(aKey)).toEqual(folder('Private a'));
+  });
 
   it("turning folders on right after an account switch opens the new account's folders", async () => {
     const [aKey, bKey] = [await keyOf('a'), await keyOf('b')];

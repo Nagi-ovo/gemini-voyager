@@ -17,6 +17,8 @@ export interface FolderRuntimeMessageStore {
   /** False while the folders belong to another account than the page's: nothing is answered. */
   readonly accountMatchesPage?: boolean;
   loadData(): Promise<void>;
+  /** Binds the page's account first when it can, before a cloud request is answered; null when nothing to do. */
+  prepareRequest?(): Promise<void> | null;
 }
 
 type FolderRuntimeMessageOptions = {
@@ -58,6 +60,7 @@ export function listenForFolderRuntimeMessages(options: FolderRuntimeMessageOpti
     data: () => store.data,
     accountScope: () => store.accountScope,
     reload: () => store.loadData().then(() => options.refresh()),
+    prepare: () => store.prepareRequest?.() ?? null,
   });
   const listener = (
     message: unknown,
