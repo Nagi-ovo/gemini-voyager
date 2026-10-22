@@ -228,6 +228,75 @@
     ],
     "accountBlocked": [["suspicious activity detected", "secure your account"]]
   },
+  "folders": {
+    "format": 1,
+    "sidebar": ":is(nav, #stage-slideover-sidebar):has([data-app-action-sidebar-scroll])",
+    "rows": {
+      "row": "[role=\"listitem\"]",
+      "link": "a[href]",
+      "observe": [
+        "target",
+        "role",
+        "data-sidebar-project-container-id",
+        "aria-expanded",
+        "aria-current"
+      ],
+      "drag": "pointer"
+    },
+    "mount": {
+      "anchors": [
+        {
+          "id": "above-recents",
+          "steps": [
+            {
+              "find": "[data-sidebar-project-container-id=\"chats\"]",
+              "closest": "[data-chatgpt-project-conversation-drop-target]"
+            }
+          ]
+        }
+      ]
+    },
+    "hideFiled": {
+      "rows": "[data-sidebar-project-container-id=\"chats\"] [role=\"listitem\"]",
+      "keepShown": ["[aria-current=\"page\"]", ":has([aria-current=\"page\"])"]
+    },
+    "rowMenu": {
+      "trigger": "button[aria-haspopup=\"menu\"][id]",
+      "menu": "[role=\"menu\"][aria-labelledby]",
+      "item": "[role=\"menuitem\"]",
+      "open": "expanded",
+      "after": "firstSubmenu",
+      "strip": ["data-radix-collection-item"],
+      "rename": { "plainItem": 0 }
+    },
+    "page": {
+      "placeholderTitles": {
+        "any": ["ChatGPT"],
+        "byLanguage": {
+          "en": ["New chat"],
+          "zh": ["新聊天", "新对话", "新對話"],
+          "ja": ["新しいチャット"],
+          "ko": ["새 채팅"],
+          "es": ["Nuevo chat"],
+          "fr": ["Nouveau chat", "Nouvelle discussion"],
+          "de": ["Neuer Chat"],
+          "pt": ["Novo chat", "Nova conversa"],
+          "it": ["Nuova chat"],
+          "nl": ["Nieuwe chat"],
+          "pl": ["Nowy czat"],
+          "tr": ["Yeni sohbet"],
+          "ru": ["Новый чат"],
+          "uk": ["Новий чат"],
+          "ar": ["محادثة جديدة", "دردشة جديدة"],
+          "hi": ["नई चैट"],
+          "id": ["Obrolan baru"],
+          "vi": ["Đoạn chat mới"],
+          "th": ["แชทใหม่"]
+        },
+        "fallbackLanguage": "en"
+      }
+    }
+  },
   "bridge": {
     "format": 1,
     "allow": [
