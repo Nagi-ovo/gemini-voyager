@@ -1,8 +1,4 @@
-import browser from 'webextension-polyfill';
-
-import { StorageKeys } from '@/core/types/common';
-import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
-
+import { handOffNewChatFolder } from '../folderProject/pendingFolder';
 import { watchRouteChanges } from '../utils/routeWatcher';
 import { normalizeConversationId, resolveConversationRouteId } from './folderConversationIdentity';
 import {
@@ -169,44 +165,34 @@ export class FolderNavigation {
 
   /**
    * Opens a new chat that Folder-as-Project files into `folderId` on its first
-   * send, in this page: the folder goes to the picker as the pending folder,
-   * then Gemini's own new-chat link opens the page, or the History API when
-   * the link is missing or does not navigate. On the new-chat page already,
-   * the picker takes the folder from the pending folder's change. Never a full
-   * page load: if both routes fail, the folder stays pending for the next new chat.
+   * send, in this page: the folder goes to this tab's picker in the page
+   * (`pendingFolder.ts`, never through storage another tab would see), then
+   * Gemini's own new-chat link opens the page, or the History API when the
+   * link is missing or does not navigate. On the new-chat page already, the
+   * picker takes the folder in place. Never a full page load: if both routes
+   * fail, the folder stays handed off for this tab's next new chat.
    */
   createNewChatInFolder(folderId: string): void {
-    const open = () => {
-      const userPrefix = window.location.pathname.match(/^\/u\/\d+/)?.[0] ?? '';
-      const targetPath = `${userPrefix}/app`;
-      const onNewChat = () =>
-        window.location.pathname === targetPath || window.location.pathname === `${targetPath}/`;
-      if (onNewChat()) return;
-      const spaNavigate = () => {
-        if (!this.navigateWithSpaRoute(`${window.location.origin}${targetPath}`)) {
-          console.warn('[folder] could not open a new chat; the folder stays pending');
-        }
-      };
-      const link = document.querySelector<HTMLElement>(NATIVE_NEW_CHAT_SELECTOR);
-      if (!link) {
-        spaNavigate();
-        return;
+    const userPrefix = window.location.pathname.match(/^\/u\/\d+/)?.[0] ?? '';
+    const targetPath = `${userPrefix}/app`;
+    const onNewChat = () =>
+      window.location.pathname === targetPath || window.location.pathname === `${targetPath}/`;
+    handOffNewChatFolder(folderId);
+    if (onNewChat()) return;
+    const spaNavigate = () => {
+      if (!this.navigateWithSpaRoute(`${window.location.origin}${targetPath}`)) {
+        console.warn('[folder] could not open a new chat; the folder stays pending');
       }
-      triggerNativeConversationClick(link);
-      this.schedule(() => {
-        if (!onNewChat()) spaNavigate();
-      }, FOLDER_NAVIGATION_CONFIRM_DELAY_MS);
     };
-
-    browser.storage.local
-      .set({ [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: folderId })
-      .then(open)
-      .catch((error) => {
-        if (isExtensionContextInvalidatedError(error)) return;
-        // storage failed — still navigate so the user isn't stranded; they can pick the folder manually
-        console.warn('[folder] failed to set pending folder ID', error);
-        open();
-      });
+    const link = document.querySelector<HTMLElement>(NATIVE_NEW_CHAT_SELECTOR);
+    if (!link) {
+      spaNavigate();
+      return;
+    }
+    triggerNativeConversationClick(link);
+    this.schedule(() => {
+      if (!onNewChat()) spaNavigate();
+    }, FOLDER_NAVIGATION_CONFIRM_DELAY_MS);
   }
 
   private navigateWithSpaRoute(url: string): boolean {

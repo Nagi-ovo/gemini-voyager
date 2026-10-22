@@ -1,9 +1,9 @@
 import { createFolderIcon } from '@/core/icons/folderIcons';
-import { StorageKeys } from '@/core/types/common';
 import type { Folder } from '@/core/types/folder';
 import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
 import { getFolderColor, isDarkMode } from '../folder/folderColors';
+import { pendingNewChatFolder, takeNewChatFolder } from './pendingFolder';
 
 interface FolderProjectPickerOptions {
   loadFolders: () => Promise<readonly Folder[]>;
@@ -60,7 +60,7 @@ function waitForElement(selector: string, timeoutMs: number): Promise<HTMLElemen
 export function createFolderProjectPicker(options: FolderProjectPickerOptions): {
   show: () => Promise<void>;
   remove: () => void;
-  /** Takes a folder "New chat in this folder" just chose, on the picker shown or one it shows. */
+  /** Takes the folder this tab's "New chat in this folder" handed off, on the picker shown or one it shows. */
   applyPending: () => Promise<void>;
 } {
   let pickerContainer: HTMLElement | null = null;
@@ -243,22 +243,15 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
   // ============================================================================
 
   /**
-   * Reads a pending folder ID written by the folder manager's
-   * "New chat in this folder" menu item. When found, auto-selects the folder
-   * in the picker and clears the pending value.
+   * Selects the folder this tab's "New chat in this folder" handed off
+   * (`pendingFolder.ts`). The handoff is taken only once the folder is among
+   * the ones this page can file into; until then it stays for the next try.
    */
   async function applyPendingFolderSelection(chip: HTMLButtonElement): Promise<void> {
-    if (!chrome.storage?.local) return;
-
-    const result = await chrome.storage.local.get([StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]);
-    const pendingId = result?.[StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID];
+    const pendingId = pendingNewChatFolder();
     if (!pendingId) return;
-
-    // Clear immediately to avoid re-application
-    await chrome.storage.local.remove([StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]);
-
     const folder = (await options.loadFolders()).find((f) => f.id === pendingId);
-    if (!folder) return;
+    if (!folder || !takeNewChatFolder(pendingId)) return;
 
     options.onSelect(folder, 'pending');
 

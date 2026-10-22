@@ -1,7 +1,6 @@
 import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { StorageKeys } from '@/core/types/common';
-
+import { clearNewChatFolder, pendingNewChatFolder } from '../../folderProject/pendingFolder';
 import { FolderNavigation } from '../FolderNavigation';
 
 const { mockBrowserStorage } = vi.hoisted(() => ({
@@ -78,6 +77,7 @@ describe('createNewChatInFolder', () => {
       configurable: true,
     });
     navigation.destroy();
+    clearNewChatFolder();
     document.body.replaceChildren();
     vi.useRealTimers();
     vi.restoreAllMocks();
@@ -108,13 +108,14 @@ describe('createNewChatInFolder', () => {
     expect(locationMock.href).toBe('');
   }
 
-  it('writes the pending folder ID to storage.local', async () => {
+  it("hands the folder to this tab's picker, never through storage other tabs see", async () => {
+    locationMock.pathname = '/app/abc123def456';
+
     navigation.createNewChatInFolder('folder-1');
     await settle();
 
-    expect(mockBrowserStorage.local.set).toHaveBeenCalledWith({
-      [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: 'folder-1',
-    });
+    expect(pendingNewChatFolder()).toBe('folder-1');
+    expect(mockBrowserStorage.local.set).not.toHaveBeenCalled();
   });
 
   it('stays on the new-chat page without reloading when already on /app', async () => {
@@ -124,8 +125,8 @@ describe('createNewChatInFolder', () => {
     navigation.createNewChatInFolder('folder-1');
     await settle();
 
-    // The page's folder picker takes the folder from the pending folder's change.
-    expect(mockBrowserStorage.local.set).toHaveBeenCalledTimes(1);
+    // The page's folder picker takes the folder from the handoff.
+    expect(pendingNewChatFolder()).toBe('folder-1');
     expect(nativeClick).not.toHaveBeenCalled();
     expect(pushStateSpy).not.toHaveBeenCalled();
     expectNoFullPageLoad();
@@ -194,31 +195,6 @@ describe('createNewChatInFolder', () => {
 
     expectNoFullPageLoad();
     expect(warnSpy).toHaveBeenCalled();
-    expect(mockBrowserStorage.local.set).toHaveBeenCalledWith({
-      [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: 'folder-1',
-    });
-  });
-
-  it('still navigates (SPA) when storage.set rejects with a generic error', async () => {
-    mockBrowserStorage.local.set.mockRejectedValue(new Error('quota exceeded'));
-    locationMock.pathname = '/app/abc';
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    navigation.createNewChatInFolder('folder-1');
-    await settle();
-
-    expect(pushStateSpy).toHaveBeenCalledWith({}, '', '/app');
-    expect(warnSpy).toHaveBeenCalled();
-  });
-
-  it('does not navigate when extension context is invalidated', async () => {
-    mockBrowserStorage.local.set.mockRejectedValue(new Error('Extension context invalidated.'));
-    locationMock.pathname = '/app/abc';
-
-    navigation.createNewChatInFolder('folder-1');
-    await settle();
-
-    expect(pushStateSpy).not.toHaveBeenCalled();
-    expectNoFullPageLoad();
+    expect(pendingNewChatFolder()).toBe('folder-1');
   });
 });
