@@ -1,6 +1,6 @@
 ---
 name: verify-in-browser
-description: Proves a Voyager change on the live host page and shows the evidence as screenshots. Use after changing content scripts, injected CSS, MAIN-world scripts or plugin site code, and when someone reports a feature missing or still old in their browser.
+description: Proves a Voyager change on the live host page and shows the evidence as screenshots. Use after changing content scripts, injected CSS, MAIN-world scripts or plugin site code, when a check needs a setting or plugin switched (the dev build flips it without the popup), and when someone reports a feature missing or still old in their browser.
 metadata:
   version: '2.0.0'
 ---
