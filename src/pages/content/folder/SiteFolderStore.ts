@@ -73,10 +73,19 @@ export class SiteFolderStore {
     if (!this.repository.isDestroyed)
       chrome.runtime.onMessage.addListener(this.syncMessageListener);
   }
-  destroy(): void {
+  /**
+   * Stops the store and resolves once its accepted writes drained
+   * (`FolderRepository.destroy`). A folder session awaits this before the
+   * bucket can be opened again.
+   */
+  close(): Promise<void> {
     chrome.runtime.onMessage.removeListener(this.syncMessageListener);
     this.listeners.clear();
-    this.repository.destroy();
+    return this.repository.destroy();
+  }
+  /** Stops the store without waiting for its writes (a plugin scope child). */
+  destroy(): void {
+    void this.close();
   }
   subscribe(listener: (change: SiteFolderChange) => void): () => void {
     this.listeners.add(listener);

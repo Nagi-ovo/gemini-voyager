@@ -59,7 +59,12 @@ export class FolderRepository extends FolderRepositoryLoads {
     this.accountScopeRequest += 1;
   }
 
-  destroy(): void {
+  /**
+   * Stops edits, timers and listeners at once. The returned drain resolves once
+   * every write already accepted, and its backups, settled: whoever opens this
+   * bucket next waits for it, so two repositories never write one key at once.
+   */
+  destroy(): Promise<void> {
     // Accept the final debounce before disabling edits and cancelling retry timers.
     this.flushPendingSaveData();
     this.destroyed = true;
@@ -75,14 +80,16 @@ export class FolderRepository extends FolderRepositoryLoads {
     // Teardown stops new edits; already accepted writes still need their fresh authority checks.
     const sessions = new Set(this.dataSessions.values());
     if (this.dataSession) sessions.add(this.dataSession);
-    void Promise.all(
+    return Promise.all(
       [...sessions].map(async (session) => {
         // Parked work has no drain once teardown stops authority retries.
         if (!session.saveInProgress || !this.fence.canWrite) session.cancelPendingSave();
         await (session.pendingSaveCompletion?.promise ?? session.activeSave);
         await session.backup.finishPendingWrites();
       }),
-    ).finally(() => this.fence.destroy());
+    )
+      .then(() => undefined)
+      .finally(() => this.fence.destroy());
   }
 
   /** Record the isolation switch without rebinding; the caller refreshes the scope. */
