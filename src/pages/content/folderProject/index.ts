@@ -415,6 +415,15 @@ export function startFolderProject(folders: FolderProjectFolders): void {
 
   // React to toggle changes without a page reload
   chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local') {
+      // "New chat in this folder" on the new-chat page itself: no navigation follows, so the
+      // picker takes the folder here instead of after a reload.
+      const pending = changes[StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]?.newValue;
+      if (typeof pending === 'string' && featureInitialized && isNewChatPath(location.pathname)) {
+        void picker?.applyPending();
+      }
+      return;
+    }
     if (area !== 'sync') return;
     if (StorageKeys.CTRL_ENTER_SEND in changes && !effectiveSendKey?.isFollowing()) {
       ctrlEnterSendEnabled = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;

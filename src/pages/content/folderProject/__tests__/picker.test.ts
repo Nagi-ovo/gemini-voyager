@@ -144,6 +144,23 @@ describe('pending folder selection', () => {
     expect(chrome.storage.local.remove).not.toHaveBeenCalled();
   });
 
+  it('takes a folder chosen while the picker is already shown on the new-chat page', async () => {
+    addAnchor();
+    await picker.show();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(chip().textContent).toBe('folderAsProject_selectFolder');
+
+    // "New chat in this folder" from the new-chat page: no navigation remounts the picker.
+    (chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: 'folder-2',
+    });
+    await picker.applyPending();
+
+    expect(document.querySelectorAll('.gv-fp-picker-container')).toHaveLength(1);
+    expect(chip().textContent).toBe('Personal');
+    expect(onSelect).toHaveBeenCalledWith(folders[1], 'pending');
+  });
+
   it('clears the pending id even when it does not match any folder', async () => {
     (chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: 'nonexistent',

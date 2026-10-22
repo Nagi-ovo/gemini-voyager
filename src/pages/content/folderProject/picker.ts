@@ -60,9 +60,12 @@ function waitForElement(selector: string, timeoutMs: number): Promise<HTMLElemen
 export function createFolderProjectPicker(options: FolderProjectPickerOptions): {
   show: () => Promise<void>;
   remove: () => void;
+  /** Takes a folder "New chat in this folder" just chose, on the picker shown or one it shows. */
+  applyPending: () => Promise<void>;
 } {
   let pickerContainer: HTMLElement | null = null;
   let pickerCleanup: (() => void) | null = null;
+  let pickerChip: HTMLButtonElement | null = null;
 
   async function populateDropdown(dropdown: HTMLElement, chip: HTMLButtonElement): Promise<void> {
     dropdown.innerHTML = '';
@@ -271,6 +274,7 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
     pickerCleanup = null;
     pickerContainer?.remove();
     pickerContainer = null;
+    pickerChip = null;
   }
 
   async function show(): Promise<void> {
@@ -294,6 +298,7 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
       modelPicker.parentElement.insertBefore(element, modelPicker);
       pickerContainer = element;
       pickerCleanup = cleanup;
+      pickerChip = chip;
       void applyPendingFolderSelection(chip);
       return;
     }
@@ -316,8 +321,14 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
     parent.insertBefore(element, richTextarea);
     pickerContainer = element;
     pickerCleanup = cleanup;
+    pickerChip = chip;
     void applyPendingFolderSelection(chip);
   }
 
-  return { show, remove };
+  async function applyPending(): Promise<void> {
+    if (pickerChip && pickerContainer?.isConnected) await applyPendingFolderSelection(pickerChip);
+    else await show();
+  }
+
+  return { show, remove, applyPending };
 }
