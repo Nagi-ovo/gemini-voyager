@@ -6,6 +6,12 @@
  * migration and the listeners run with folders switched off, as they always
  * have; the folders plugin attaches a view while it runs.
  *
+ * One account gate (`accountMatchesPage`): with isolation on, the folders are
+ * shown, edited, uploaded and answered to the popup only while the account the
+ * repository bound is the one the page shows. A page that switched accounts
+ * before its rebind settled sees no folders and makes no write until the
+ * attach retries or the next poll bind its account; then they come back.
+ *
  * Lifetimes: an account release keeps the view but drops the old account's
  * state; detaching (folders off) suspends edits and the account poll but keeps
  * the storage and message listeners, so attaching again rebinds and reloads;
@@ -13,22 +19,22 @@
  */
 import browser, { type Runtime, type Storage } from 'webextension-polyfill';
 
-import {
-  type AccountContext,
-  type AccountScope,
-  detectAccountContextFromDocument,
-} from '@/core/services/AccountIsolationService';
+import type { AccountScope } from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
 import type { PromptItem } from '@/core/types/sync';
 import { createToaster } from '@/core/ui/toast/toaster';
 import type { ToastTone } from '@/core/ui/toast/types';
-import { type FolderCommands, isSaved } from '@/features/folder/commands/folderCommands';
+import { type FolderCommands, failed, isSaved } from '@/features/folder/commands/folderCommands';
 import { createTranslator, initI18n } from '@/utils/i18n';
 
 import { VALID_PATH } from '../../aistudioSidebarPaths';
 import type { FolderDataSession } from '../FolderDataSession';
 import { FolderRepository } from '../FolderRepository';
-import { AIStudioAccountScope } from '../aistudioAccountScope';
+import {
+  AIStudioAccountScope,
+  aistudioAccountFingerprint,
+  aistudioPageAccountFingerprint,
+} from '../aistudioAccountScope';
 import { migrateAIStudioLegacySync } from '../aistudioImport';
 import { getFolderRecoveryNotice } from '../folderRecoveryNotice';
 import { AISTUDIO_FOLDER_CONFIG } from '../platformFolderConfig';
@@ -37,13 +43,13 @@ import { createSyncMessageListener } from '../syncMessageListener';
 import type { FolderData } from '../types';
 import { createAIStudioCommands } from './aistudioCommands';
 
-/** Rebinds `attach` tries while the page keeps switching accounts; the poll takes over after. */
+/**
+ * Rebinds `attach` tries while the page keeps switching accounts. Past them the
+ * account gate stays closed and the poll binds the page's account.
+ */
 const MAX_BIND_ROUNDS = 3;
 
-/** An account as `AIStudioAccountScope` tells accounts apart: `/u/<n>` and the signed-in email. */
-function pageFingerprint(context: Pick<AccountContext, 'routeUserId' | 'email'> | null): string {
-  return context ? `${context.routeUserId || ''}::${context.email || ''}` : '';
-}
+const emptyData = (): FolderData => ({ folders: [], folderContents: {} });
 
 /** Errors and warnings stay longer than a confirmation. */
 export const AISTUDIO_NOTICE_MS: Record<ToastTone, number> = {
@@ -74,10 +80,10 @@ export class AIStudioFolderSession {
   private attachedBefore = false;
   /** Set once `init` bound the account and started listening. */
   private started = false;
-  /** While `attach` binds the page's account: the popup may not edit yet. */
-  private binding = false;
-  /** The account the repository bound, as `pageFingerprint` reads it. */
+  /** The account the repository bound (`aistudioAccountFingerprint`); null while none is. */
   private boundFingerprint: string | null = null;
+  /** The gate's state when the view last rendered for the session. */
+  private shownGateOpen = true;
   private closed = false;
   private stopListening: (() => void) | null = null;
 
@@ -88,7 +94,7 @@ export class AIStudioFolderSession {
       // loaded: a ready session bound or loaded. data/availability: a draft started or settled.
       onChange: (reason) => {
         if (reason === 'loaded' || reason === 'data' || reason === 'availability') {
-          this.view?.render();
+          this.renderView();
         }
       },
       onRecovery: (result) => {
@@ -100,7 +106,10 @@ export class AIStudioFolderSession {
         const view = this.view;
         if (view) void this.load().then(() => view.applyHideArchived());
       },
-      onAccountReleased: () => this.view?.releaseAccount(),
+      onAccountReleased: () => {
+        this.boundFingerprint = null;
+        this.view?.releaseAccount();
+      },
       isEnabled: () => this.view !== null,
       onSaveFailed: () => this.notify(this.t('folder_save_error'), 'error'),
       // Membership decides which /library rows are archived, so every settled write re-syncs them.
@@ -109,25 +118,40 @@ export class AIStudioFolderSession {
         this.view?.syncNudge();
       },
       onAccountBound: (context) => {
-        this.boundFingerprint = pageFingerprint(context);
+        this.boundFingerprint = aistudioAccountFingerprint(context);
         this.account.bound(context);
       },
     },
   );
-  readonly commands: FolderCommands = createAIStudioCommands(this.repository, {
-    commit: () => this.save().then(() => this.view?.render()),
-    onDraftSettled: () => this.view?.applyHideArchived(),
-  });
+  /** Every edit, save and import; each is refused, unwritten, while the account gate is closed. */
+  readonly commands: FolderCommands = this.gated(
+    createAIStudioCommands(this.repository, {
+      commit: () => this.save().then(() => this.view?.render()),
+      onDraftSettled: () => this.view?.applyHideArchived(),
+    }),
+  );
   readonly account = new AIStudioAccountScope(this.repository);
 
+  /**
+   * The account gate: whether the account the repository bound is the one the
+   * page shows now. Always open with isolation off, where one bucket serves
+   * every account.
+   */
+  get accountMatchesPage(): boolean {
+    if (!this.repository.accountIsolationEnabled) return true;
+    if (!this.repository.session || this.boundFingerprint === null) return false;
+    return this.boundFingerprint === aistudioPageAccountFingerprint();
+  }
+
+  /** The folders to show; none while the account gate is closed. */
   get data(): FolderData {
-    return this.repository.data;
+    return this.accountMatchesPage ? this.repository.data : emptyData();
   }
   set data(data: FolderData) {
     this.repository.data = data;
   }
   get canEdit(): boolean {
-    return this.repository.canEdit;
+    return this.repository.canEdit && this.accountMatchesPage;
   }
   get session(): FolderDataSession | null {
     return this.repository.session;
@@ -137,7 +161,7 @@ export class AIStudioFolderSession {
     return this.repository.activation;
   }
   get accountScope(): AccountScope | null {
-    return this.repository.accountScope;
+    return this.accountMatchesPage ? this.repository.accountScope : null;
   }
   get accountIsolationEnabled(): boolean {
     return this.repository.accountIsolationEnabled;
@@ -193,33 +217,15 @@ export class AIStudioFolderSession {
     this.attachedBefore = true;
     // Re-enabling after a detach: restart the poller it stopped.
     if (!first && !this.account.polling) this.startAccountPolling();
-    this.binding = true;
-    try {
-      // First attach: an account switched while folders were off, before the poll
-      // saw it, would otherwise show and take edits into the previous account's
-      // folders. A re-attach rebinds the account the detach suspended.
-      await this.account.refresh(!first);
-      // The page may switch again while that resolution is pending, and it still
-      // binds the account it started for: rebind until the bound account is the
-      // page's, or the folders went off meanwhile.
-      for (let round = 0; round < MAX_BIND_ROUNDS && !this.boundToPage(); round++) {
-        if (this.view !== view) return;
-        await this.account.refresh(true);
-      }
-    } finally {
-      this.binding = false;
+    // First attach: an account switched while folders were off, before the poll saw
+    // it, needs its own bind. A re-attach rebinds the account the detach suspended.
+    await this.account.refresh(!first);
+    // A resolution still binds the account it started for, though the page may have
+    // switched again meanwhile. Retry a few times; past that the gate stays closed.
+    for (let round = 0; round < MAX_BIND_ROUNDS && !this.accountMatchesPage; round++) {
+      if (this.view !== view || this.closed) return;
+      await this.account.refresh(true);
     }
-  }
-
-  /** Whether the bound account is the one the page shows (always, with isolation off). */
-  private boundToPage(): boolean {
-    if (this.closed || this.view === null) return true;
-    if (!this.accountIsolationEnabled) return true;
-    if (!this.repository.session) return false;
-    return (
-      pageFingerprint(detectAccountContextFromDocument(location.href, document)) ===
-      this.boundFingerprint
-    );
   }
 
   /** Folders off: edits and the account poll stop; the data and listeners stay. */
@@ -278,10 +284,10 @@ export class AIStudioFolderSession {
     browser.storage.onChanged.addListener(onStorage);
     const syncListener = createSyncMessageListener({
       // With folders off nothing reloads, so the retained snapshot may be older than storage.
-      canEdit: () => this.view !== null && !this.binding && this.canEdit,
+      canEdit: () => this.view !== null && this.canEdit,
       data: () => this.data,
       accountScope: () => this.accountScope,
-      reload: () => this.load().then(() => this.view?.render()),
+      reload: () => this.load().then(() => this.renderView()),
     });
     // The polyfill's typing cannot express "respond to some messages, ignore the rest".
     browser.runtime.onMessage.addListener(syncListener as Runtime.OnMessageListenerCallback);
@@ -296,7 +302,7 @@ export class AIStudioFolderSession {
     this.repository.setAccountIsolationFlag(enabled);
     await this.account.refresh(true);
     await this.load();
-    this.view?.render();
+    this.renderView();
   }
 
   /** `detach` and `close` stop it; a restart replaces the previous poll. */
@@ -306,9 +312,38 @@ export class AIStudioFolderSession {
 
   async refreshScopedDataOnAccountContextChange(): Promise<void> {
     if (!this.accountIsolationEnabled) return;
-    if (!(await this.account.refresh(false))) return;
+    // A page that switched accounts hides the folders now, before any rebind settles.
+    this.renderIfGateMoved();
+    if (!(await this.account.refresh(false))) {
+      this.renderIfGateMoved();
+      return;
+    }
     await this.load();
+    this.renderView();
+  }
+
+  private renderView(): void {
+    this.shownGateOpen = this.accountMatchesPage;
     this.view?.render();
+  }
+
+  /** The gate opened or closed since the view last rendered: show what it allows now. */
+  private renderIfGateMoved(): void {
+    if (this.accountMatchesPage === this.shownGateOpen) return;
+    this.renderView();
+    this.view?.applyHideArchived();
+  }
+
+  /** `commands` behind the account gate: a closed gate refuses every op before it runs. */
+  private gated(commands: FolderCommands): FolderCommands {
+    const refused = () => Promise.resolve(failed('read_only'));
+    return {
+      ...commands,
+      status: () => (this.accountMatchesPage ? commands.status() : 'read_only'),
+      view: () => this.data,
+      run: (body) => (this.accountMatchesPage ? commands.run(body) : refused()),
+      runBulk: (body) => (this.accountMatchesPage ? commands.runBulk(body) : refused()),
+    };
   }
 }
 

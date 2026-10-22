@@ -14,9 +14,21 @@ import type { FolderRepository } from './FolderRepository';
 
 const ACCOUNT_POLL_MS = 1200;
 
-/** `null` while isolation is off, so any bound session satisfies the poller. */
-function fingerprintFor(context: Pick<AccountContext, 'routeUserId' | 'email'> | null) {
+/**
+ * Which AI Studio account `context` is: its `/u/<n>` slot and signed-in email.
+ * `null` (no context) while isolation is off, so any bound session satisfies the poller.
+ */
+export function aistudioAccountFingerprint(
+  context: Pick<AccountContext, 'routeUserId' | 'email'> | null,
+): string | null {
   return context ? `${context.routeUserId || ''}::${context.email || ''}` : null;
+}
+
+/** The account the page shows now. */
+export function aistudioPageAccountFingerprint(): string | null {
+  return aistudioAccountFingerprint(
+    detectAccountContextFromDocument(window.location.href, document),
+  );
 }
 
 export class AIStudioAccountScope {
@@ -32,7 +44,7 @@ export class AIStudioAccountScope {
 
   /** The repository bound a session for `context`. */
   bound(context: AccountContext | null): void {
-    this.lastFingerprint = fingerprintFor(context);
+    this.lastFingerprint = aistudioAccountFingerprint(context);
   }
 
   async loadIsolationSetting(): Promise<void> {
@@ -57,7 +69,9 @@ export class AIStudioAccountScope {
    * repository retries it.
    */
   async refresh(force = false): Promise<boolean> {
-    const fingerprint = this.repository.accountIsolationEnabled ? this.currentFingerprint() : null;
+    const fingerprint = this.repository.accountIsolationEnabled
+      ? aistudioPageAccountFingerprint()
+      : null;
     const unchanged = this.repository.session && fingerprint === this.lastFingerprint;
     const resolving = fingerprint !== null && fingerprint === this.resolvingFingerprint;
     if (!force && (unchanged || resolving)) return false;
@@ -85,9 +99,5 @@ export class AIStudioAccountScope {
     if (this.poller !== null) clearInterval(this.poller);
     this.poller = null;
     this.resolvingFingerprint = null;
-  }
-
-  private currentFingerprint(): string | null {
-    return fingerprintFor(detectAccountContextFromDocument(window.location.href, document));
   }
 }
