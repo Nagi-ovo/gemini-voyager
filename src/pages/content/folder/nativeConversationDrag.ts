@@ -118,6 +118,11 @@ function onDragStart(
   cancelLongPress: () => void,
 ): void {
   const conversationId = extractConversationId(element);
+  // A row without a readable id cannot be filed: no folder drag starts from it.
+  if (!conversationId) {
+    e.preventDefault();
+    return;
+  }
   // Restrict to move-only to prevent Chrome from triggering split-screen/tab tiling
   if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
 
@@ -171,8 +176,10 @@ export function bindNativeConversationSelection(
     cancelLongPress();
     longPressTimer = selection.schedule(() => {
       longPressTimer = null;
+      const id = extractConversationId(element);
+      if (!id) return;
       longPressTriggered = true;
-      selection.enterMultiSelect(extractConversationId(element));
+      selection.enterMultiSelect(id);
     }, selection.longPressMs);
   };
   const click = (e: MouseEvent) => {
@@ -187,7 +194,8 @@ export function bindNativeConversationSelection(
     if (!selection.isMultiSelectMode()) return;
     e.preventDefault();
     e.stopPropagation();
-    selection.toggle(extractConversationId(element));
+    const id = extractConversationId(element);
+    if (id) selection.toggle(id);
     selection.refresh();
   };
   element.addEventListener('mousedown', press);

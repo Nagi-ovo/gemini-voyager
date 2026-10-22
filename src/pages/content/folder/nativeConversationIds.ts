@@ -1,5 +1,4 @@
 import { folderDebug as debugLog, folderDebugWarn as debugWarn } from './folderManagerDebug';
-import { extractNativeConversationTitle } from './nativeConversationTitles';
 
 const CONVERSATION_LINK_SELECTOR = 'a[href*="/app/"], a[href*="/gem/"]';
 
@@ -12,6 +11,7 @@ function matchHexIdInHref(href: string): string | null {
   return null;
 }
 
+/** A native row's conversation id, or `''` when the row names none it can be filed under. */
 export function extractConversationId(element: HTMLElement): string {
   // Strategy 1: Extract from jslog attribute
   // This is the preferred method as it follows the internal ID format
@@ -39,16 +39,10 @@ export function extractConversationId(element: HTMLElement): string {
   // Enforce c_ prefix to match jslog format standard
   if (hexFromHref) return `c_${hexFromHref}`;
 
-  // Fallback: generate unique ID from element attributes
-  // Use multiple attributes to ensure uniqueness
-  const title = extractNativeConversationTitle(element) || '';
-  const index = Array.from(element.parentElement?.children || []).indexOf(element);
-
-  // Generate unique ID combining title, index, random, and timestamp
-  const uniqueString = `${title}_${index}_${Math.random()}_${Date.now()}`;
-  const fallbackId = `conv_${hashString(uniqueString)}`;
-  debugWarn('Could not extract ID from jslog or href, using fallback:', fallbackId);
-  return fallbackId;
+  // No readable id: the row cannot be filed. A made-up id named nothing stored and
+  // changed on every read; stored `conv_` ids from older builds stay readable.
+  debugWarn('Could not extract ID from jslog or href; the row cannot be filed');
+  return '';
 }
 
 export function extractConversationData(
@@ -313,14 +307,4 @@ export function getCurrentConversationId(): string | null {
   const appMatch = url.match(/\/app\/([^/?#]+)/);
   const gemMatch = url.match(/\/gem\/[^/]+\/([^/?#]+)/);
   return appMatch?.[1] || gemMatch?.[1] || null;
-}
-
-function hashString(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(36);
 }
