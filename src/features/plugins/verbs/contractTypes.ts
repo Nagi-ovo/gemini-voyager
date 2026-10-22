@@ -63,6 +63,8 @@ export interface PrimitiveContract {
    * their types. The checks refuse a declared setting of another type, and on a
    * plugin whose primitives all declare theirs, a setting nothing reads (a
    * misspelled key would otherwise leave the primitive on its default).
+   * Declare it when the primitive first ships: added to a published primitive,
+   * it would refuse stored local plugins that carry settings it does not list.
    */
   readonly settings?: Readonly<Record<string, PrimitiveSettingType>>;
   readonly description: string;
