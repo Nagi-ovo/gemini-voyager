@@ -44,7 +44,8 @@ function hideFiledDom(section: FoldersSection, site: string): HideFiledDom {
     rowSelector: rows,
     filedAttribute: attribute,
     styleAttribute: `data-gv-${site}-hide-filed`,
-    css: `${rows}[${attribute}]${kept}:not(:focus-within) { display: none !important; }`,
+    // `:is()` keeps a selector list's every branch under the conditions, not only its last.
+    css: `:is(${rows})[${attribute}]${kept}:not(:focus-within) { display: none !important; }`,
     idPattern: ROW_ID,
   };
 }
