@@ -28,6 +28,8 @@ interface FolderNavigationOptions {
   };
   /** The route changed: an account route may now name another account. */
   onRouteChange?(): void;
+  /** Whose folders a new chat's folder comes from (`GeminiFolderSession.folderAccount`). */
+  folderAccount?(): string | null;
   onOpened(conversationId: string): void;
   onTitleChange(conversationId: string, title: string): void;
   onGemDetected(conversationId: string, gemId: string): void;
@@ -177,7 +179,7 @@ export class FolderNavigation {
     const targetPath = `${userPrefix}/app`;
     const onNewChat = () =>
       window.location.pathname === targetPath || window.location.pathname === `${targetPath}/`;
-    handOffNewChatFolder(folderId);
+    handOffNewChatFolder(folderId, this.options.folderAccount?.() ?? null);
     if (onNewChat()) return;
     const spaNavigate = () => {
       if (!this.navigateWithSpaRoute(`${window.location.origin}${targetPath}`)) {

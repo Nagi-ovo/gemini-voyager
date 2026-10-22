@@ -78,6 +78,8 @@ export class GeminiFolderSession implements GeminiFolderReads {
   private binding: Promise<void> | null = null;
   /** Told each time the page's folders are ready to read: bound, loaded and the gate open. */
   private readonly readyListeners = new Set<() => void>();
+  /** Told each time the account the page's folders belong to may have changed. */
+  private readonly accountListeners = new Set<() => void>();
   /** Shows notices while no view is attached; a view shows its own. */
   private toaster: ReturnType<typeof createToaster> | null = null;
 
@@ -233,6 +235,23 @@ export class GeminiFolderSession implements GeminiFolderReads {
     return this.data.folders;
   }
 
+  /**
+   * Whose folders the page may pick from and file into now: the page's account
+   * (`geminiAccountFingerprint`, `shared` while isolation is off and the
+   * control unreadable) while the gate is open, `null` while it is closed.
+   * Folder-as-Project keeps a choice only for the account it was made for.
+   */
+  folderAccount(): string | null {
+    if (!this.accountMatchesPage) return null;
+    return geminiPageAccountFingerprint() ?? 'shared';
+  }
+
+  /** Calls `listener` whenever `folderAccount()` may have changed; returns its removal. */
+  onAccountChange(listener: () => void): () => void {
+    this.accountListeners.add(listener);
+    return () => this.accountListeners.delete(listener);
+  }
+
   /** Calls `listener` whenever the page's folders become readable; returns its removal. */
   onFoldersReady(listener: () => void): () => void {
     this.readyListeners.add(listener);
@@ -274,6 +293,7 @@ export class GeminiFolderSession implements GeminiFolderReads {
     this.stopListening?.();
     this.stopListening = null;
     this.readyListeners.clear();
+    this.accountListeners.clear();
     this.syncPoll();
     this.toaster?.destroy();
     this.toaster = null;
@@ -307,6 +327,7 @@ export class GeminiFolderSession implements GeminiFolderReads {
       this.shownGateOpen = this.accountMatchesPage;
     }
     this.view?.onChange(reason);
+    if (reason === 'account') this.tellAccount();
     if (reason === 'loaded' || reason === 'data') this.tellReady();
   }
 
@@ -316,7 +337,13 @@ export class GeminiFolderSession implements GeminiFolderReads {
     if (open === this.shownGateOpen) return;
     this.shownGateOpen = open;
     this.view?.onChange('account');
+    this.tellAccount();
     this.tellReady();
+  }
+
+  private tellAccount(): void {
+    if (this.closed) return;
+    for (const listener of this.accountListeners) listener();
   }
 
   private tellReady(): void {

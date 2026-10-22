@@ -68,6 +68,7 @@ export class GeminiFoldersView extends GeminiFolderSessionView {
     }),
     // The session follows the route on its own too, with the folders off; this is the fast path.
     onRouteChange: () => void this.session.followRoute(),
+    folderAccount: () => this.session.folderAccount(),
     onOpened: (id) => {
       void this.commands.run({
         kind: 'markConversationOpened',

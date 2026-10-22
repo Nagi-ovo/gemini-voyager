@@ -3,10 +3,14 @@ import type { Folder } from '@/core/types/folder';
 import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
 import { getFolderColor, isDarkMode } from '../folder/folderColors';
-import { pendingNewChatFolder, takeNewChatFolder } from './pendingFolder';
+import { newChatFolderIsFor, pendingNewChatFolder, takeNewChatFolder } from './pendingFolder';
 
 interface FolderProjectPickerOptions {
   loadFolders: () => Promise<readonly Folder[]>;
+  /** The folders already loaded, read without loading again (a load may announce itself). */
+  loadedFolders?: () => readonly Folder[];
+  /** Whose folders the picker lists now; a handoff from another account is not taken. */
+  currentAccount?: () => string | null;
   canMount: () => boolean;
   onSelect: (folder: Folder | null, source: 'user' | 'pending') => void;
 }
@@ -62,8 +66,10 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
   remove: () => void;
   /** Takes the folder this tab's "New chat in this folder" handed off, on the picker shown or one it shows. */
   applyPending: () => Promise<void>;
-  /** Tries a handoff the mounted picker could not take yet again; mounts nothing. */
+  /** Tries a handoff the mounted picker could not take yet again, on the loaded folders; mounts nothing. */
   retryPending: () => Promise<void>;
+  /** Shows no folder chosen again, as after another account took the page. */
+  resetChoice: () => void;
 } {
   let pickerContainer: HTMLElement | null = null;
   let pickerCleanup: (() => void) | null = null;
@@ -73,7 +79,7 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
     dropdown.innerHTML = '';
     const allFolders = await options.loadFolders();
     // A handoff the first mount could not take (its folders had not loaded) takes them now.
-    const pendingId = pendingNewChatFolder();
+    const pendingId = pendingFolderForThisAccount();
     const pending = pendingId ? allFolders.find((folder) => folder.id === pendingId) : undefined;
     if (pending && takeNewChatFolder(pending.id)) {
       options.onSelect(pending, 'pending');
@@ -256,10 +262,21 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
    * (`pendingFolder.ts`). The handoff is taken only once the folder is among
    * the ones this page can file into; until then it stays for the next try.
    */
-  async function applyPendingFolderSelection(chip: HTMLButtonElement): Promise<void> {
+  function pendingFolderForThisAccount(): string | null {
     const pendingId = pendingNewChatFolder();
+    if (!pendingId) return null;
+    return !options.currentAccount || newChatFolderIsFor(options.currentAccount())
+      ? pendingId
+      : null;
+  }
+
+  async function applyPendingFolderSelection(
+    chip: HTMLButtonElement,
+    folders: () => Promise<readonly Folder[]> | readonly Folder[] = options.loadFolders,
+  ): Promise<void> {
+    const pendingId = pendingFolderForThisAccount();
     if (!pendingId) return;
-    const folder = (await options.loadFolders()).find((f) => f.id === pendingId);
+    const folder = (await folders()).find((f) => f.id === pendingId);
     if (!folder || !takeNewChatFolder(pendingId)) return;
 
     options.onSelect(folder, 'pending');
@@ -328,7 +345,15 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
   }
 
   async function retryPending(): Promise<void> {
-    if (pickerChip && pickerContainer?.isConnected) await applyPendingFolderSelection(pickerChip);
+    if (!pickerChip || !pickerContainer?.isConnected) return;
+    // Called when the folders finished loading: loading again here would announce another load.
+    await applyPendingFolderSelection(pickerChip, options.loadedFolders ?? options.loadFolders);
+  }
+
+  function resetChoice(): void {
+    if (!pickerChip) return;
+    pickerChip.textContent = t('folderAsProject_selectFolder');
+    pickerChip.removeAttribute('data-selected');
   }
 
   async function applyPending(): Promise<void> {
@@ -336,5 +361,5 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
     else await show();
   }
 
-  return { show, remove, applyPending, retryPending };
+  return { show, remove, applyPending, retryPending, resetChoice };
 }
