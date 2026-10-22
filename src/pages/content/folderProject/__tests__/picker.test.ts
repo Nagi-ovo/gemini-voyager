@@ -130,7 +130,7 @@ describe('pending folder selection', () => {
     expect(chip().textContent).toBe('Work');
     expect(chip().dataset.selected).toBe('folder-1');
     expect(pendingNewChatFolder()).toBeNull();
-    expect(onSelect).toHaveBeenCalledWith(folders[0], 'pending');
+    expect(onSelect).toHaveBeenCalledWith(folders[0], 'pending', null);
   });
 
   it('keeps the default chip when nothing was handed off', async () => {
@@ -200,7 +200,7 @@ describe('pending folder selection', () => {
     await vi.advanceTimersByTimeAsync(0);
 
     expect(chip().textContent).toBe('Work');
-    expect(onSelect).toHaveBeenCalledWith(folders[0], 'pending');
+    expect(onSelect).toHaveBeenCalledWith(folders[0], 'pending', null);
     expect(pendingNewChatFolder()).toBeNull();
   });
 
@@ -216,6 +216,6 @@ describe('pending folder selection', () => {
 
     expect(document.querySelectorAll('.gv-fp-picker-container')).toHaveLength(1);
     expect(chip().textContent).toBe('Personal');
-    expect(onSelect).toHaveBeenCalledWith(folders[1], 'pending');
+    expect(onSelect).toHaveBeenCalledWith(folders[1], 'pending', null);
   });
 });

@@ -183,3 +183,65 @@ it("never puts one account's folder instructions into another account's chat", a
   expect(memory.writes.filter((write) => write.key.startsWith(KEY))).toEqual([]);
   expect(memory.values.local.get(bKey)).toEqual(folder('home', 'Home'));
 });
+
+/** Opens the picker and picks `name` from its options. */
+async function pick(name: string): Promise<void> {
+  chip()!.click();
+  await pass();
+  option(name)!.click();
+}
+const option = (name: string) =>
+  [...document.querySelectorAll<HTMLElement>('.gv-fp-item')].find((item) =>
+    item.textContent?.includes(name),
+  );
+
+async function send(input: HTMLElement, text: string): Promise<void> {
+  input.textContent = text;
+  input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  window.history.pushState({}, '', '/u/1/app/abcdef0123456789');
+  await new Promise((resolve) => setTimeout(resolve, 700));
+  await pass();
+}
+
+it("keeps a folder chosen before Gemini's account control appears, with isolation off", async () => {
+  memory.values.local.set(KEY, folder('work', 'Work', 'Be brief.'));
+  const input = mountComposer();
+  await openNewChat();
+  await pick('Work');
+
+  // The same account's control is drawn after the choice: one bucket either way.
+  showGeminiAccount('a@example.com');
+  await send(input, 'hello');
+
+  expect(input.textContent).toContain('Be brief.');
+  const stored = memory.values.local.get(KEY) as FolderData;
+  expect(stored.folderContents.work.map((entry) => entry.conversationId)).toEqual([
+    'abcdef0123456789',
+  ]);
+});
+
+it("never files another account's chat from options listed before the account switched", async () => {
+  memory.values.sync.set(StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI, true);
+  const [aKey, bKey] = [await keyOf('a'), await keyOf('b')];
+  memory.values.local.set(aKey, folder('work', 'Work', 'Private to account a'));
+  memory.values.local.set(bKey, folder('home', 'Home'));
+  showGeminiAccount('a@example.com');
+  const input = mountComposer();
+  await openNewChat();
+  chip()!.click();
+  await pass();
+  const stale = option('Work')!;
+
+  // The same URL now shows b, and the folders rebind to it.
+  showGeminiAccount('b@example.com');
+  await session!.ensureDataLoaded();
+  await pass();
+  memory.writes.length = 0;
+  stale.click();
+  await send(input, 'hello');
+
+  expect(chip()?.dataset.selected).toBeUndefined();
+  expect(input.textContent).toBe('hello');
+  expect(memory.writes.filter((write) => write.key.startsWith(KEY))).toEqual([]);
+  expect(memory.values.local.get(bKey)).toEqual(folder('home', 'Home'));
+});

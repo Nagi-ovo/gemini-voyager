@@ -134,15 +134,19 @@ function clearFolderSelection(): void {
 }
 
 /**
- * Whether the chosen folder still belongs to the account the page shows. One
- * that does not (the tab switched accounts) is dropped with its chip and any
- * instructions already put in the composer: another account's instructions
- * must never reach this one's chat, nor its chat that account's folder.
+ * Whether the chosen folder belongs to the account the page shows. One whose
+ * account the page no longer shows (the tab switched accounts) is dropped
+ * with its chip and any instructions already put in the composer: another
+ * account's instructions must never reach this one's chat, nor its chat that
+ * account's folder. While the page's account is unreadable (its control
+ * loading or redrawn) the choice is kept but not acted on.
  */
 function selectionBelongsToPage(): boolean {
   if (!selectedFolderId) return false;
   if (!folderSource?.folderAccount) return true;
-  if (folderSource.folderAccount() === selectedFolderAccount) return true;
+  const account = folderSource.folderAccount();
+  if (account === selectedFolderAccount) return true;
+  if (account === null) return false;
   clearFolderSelection();
   clearPendingSendState();
   clearPreparedInstructions();
@@ -381,11 +385,11 @@ function startURLWatcher(folders: FolderProjectFolders): void {
     loadedFolders: () => folders.getFolders(),
     currentAccount: folders.folderAccount ? () => folders.folderAccount?.() ?? null : undefined,
     canMount: () => featureInitialized && isNewChatPath(window.location.pathname),
-    onSelect: (folder, source) => {
+    onSelect: (folder, source, account) => {
       selectedFolderId = folder?.id ?? null;
       selectedFolderName = folder?.name ?? null;
       selectedFolderInstructions = folder?.instructions ?? null;
-      selectedFolderAccount = folder ? (folders.folderAccount?.() ?? null) : null;
+      selectedFolderAccount = folder ? account : null;
       // Pending selection leaves the input alone; only an explicit picker choice clears it.
       if (source === 'user') clearPreparedInstructions();
     },
@@ -456,9 +460,10 @@ export function startFolderProject(folders: FolderProjectFolders): void {
   });
   // Another account took the page: its folders are not the chosen one's.
   folders.onAccountChange?.(() => {
-    const account = folders.folderAccount?.() ?? null;
-    // A closed gate (the account is being read) proves no switch; sending checks again.
-    if (account === null || !selectedFolderId) return;
+    // Options listed for another account are not this one's to pick.
+    picker?.dropStaleOptions();
+    // An unreadable account proves no switch; sending checks again.
+    if ((folders.folderAccount?.() ?? null) === null || !selectedFolderId) return;
     selectionBelongsToPage();
   });
 

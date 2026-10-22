@@ -9,10 +9,15 @@ interface FolderProjectPickerOptions {
   loadFolders: () => Promise<readonly Folder[]>;
   /** The folders already loaded, read without loading again (a load may announce itself). */
   loadedFolders?: () => readonly Folder[];
-  /** Whose folders the picker lists now; a handoff from another account is not taken. */
+  /**
+   * Whose folders the picker lists now. Options are listed for the account
+   * read with them and picked only while the page still shows it; a handoff
+   * from another account is not taken.
+   */
   currentAccount?: () => string | null;
   canMount: () => boolean;
-  onSelect: (folder: Folder | null, source: 'user' | 'pending') => void;
+  /** `account`: whose folders `folder` came from (`currentAccount` when they were read). */
+  onSelect: (folder: Folder | null, source: 'user' | 'pending', account: string | null) => void;
 }
 
 function t(key: string): string {
@@ -70,19 +75,49 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
   retryPending: () => Promise<void>;
   /** Shows no folder chosen again, as after another account took the page. */
   resetChoice: () => void;
+  /** Closes options listed for an account the page no longer shows. */
+  dropStaleOptions: () => void;
 } {
   let pickerContainer: HTMLElement | null = null;
   let pickerCleanup: (() => void) | null = null;
   let pickerChip: HTMLButtonElement | null = null;
+  let pickerDropdown: HTMLElement | null = null;
+  /** Whose folders the open options list; `undefined` while none are listed. */
+  let listedAccount: string | null | undefined;
+  /** Bumped whenever listed options go stale, so a load still running lists nothing. */
+  let listing = 0;
+
+  const accountNow = (): string | null => options.currentAccount?.() ?? null;
+  /** Whether options read for `account` may still be picked. */
+  const stillShows = (account: string | null): boolean =>
+    !options.currentAccount || accountNow() === account;
+
+  function closeDropdown(): void {
+    listing += 1;
+    listedAccount = undefined;
+    if (!pickerDropdown) return;
+    pickerDropdown.hidden = true;
+    pickerDropdown.replaceChildren();
+    pickerChip?.setAttribute('aria-expanded', 'false');
+  }
+
+  function dropStaleOptions(): void {
+    if (listedAccount !== undefined && !stillShows(listedAccount)) closeDropdown();
+  }
 
   async function populateDropdown(dropdown: HTMLElement, chip: HTMLButtonElement): Promise<void> {
     dropdown.innerHTML = '';
+    const run = ++listing;
     const allFolders = await options.loadFolders();
+    if (run !== listing) return;
+    // Read with the folders: the account they belong to.
+    const account = accountNow();
+    listedAccount = account;
     // A handoff the first mount could not take (its folders had not loaded) takes them now.
-    const pendingId = pendingFolderForThisAccount();
+    const pendingId = pendingFolderFor(account);
     const pending = pendingId ? allFolders.find((folder) => folder.id === pendingId) : undefined;
     if (pending && takeNewChatFolder(pending.id)) {
-      options.onSelect(pending, 'pending');
+      options.onSelect(pending, 'pending', account);
       showSelectedFolder(chip, pending);
     }
 
@@ -104,10 +139,15 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
 
     // Handler for selecting a folder
     const selectFolder = (folder: (typeof allFolders)[number]) => {
+      // Listed for another account than the page shows now: not this one's folder.
+      if (!stillShows(account)) {
+        closeDropdown();
+        return;
+      }
       showSelectedFolder(chip, folder);
       dropdown.hidden = true;
       chip.setAttribute('aria-expanded', 'false');
-      options.onSelect(folder, 'user');
+      options.onSelect(folder, 'user', account);
     };
 
     // "No folder" / clear selection option
@@ -121,7 +161,7 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
       chip.removeAttribute('data-selected');
       dropdown.hidden = true;
       chip.setAttribute('aria-expanded', 'false');
-      options.onSelect(null, 'user');
+      options.onSelect(null, 'user', account);
     });
     dropdown.appendChild(noneItem);
 
@@ -222,6 +262,7 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
     }
 
     const dropdown = document.createElement('div');
+    pickerDropdown = dropdown;
     dropdown.className = 'gv-fp-dropdown';
     dropdown.setAttribute('role', 'listbox');
     dropdown.hidden = true;
@@ -262,24 +303,25 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
    * (`pendingFolder.ts`). The handoff is taken only once the folder is among
    * the ones this page can file into; until then it stays for the next try.
    */
-  function pendingFolderForThisAccount(): string | null {
+  function pendingFolderFor(account: string | null): string | null {
     const pendingId = pendingNewChatFolder();
     if (!pendingId) return null;
-    return !options.currentAccount || newChatFolderIsFor(options.currentAccount())
-      ? pendingId
-      : null;
+    return !options.currentAccount || newChatFolderIsFor(account) ? pendingId : null;
   }
 
   async function applyPendingFolderSelection(
     chip: HTMLButtonElement,
     folders: () => Promise<readonly Folder[]> | readonly Folder[] = options.loadFolders,
   ): Promise<void> {
-    const pendingId = pendingFolderForThisAccount();
-    if (!pendingId) return;
-    const folder = (await folders()).find((f) => f.id === pendingId);
-    if (!folder || !takeNewChatFolder(pendingId)) return;
+    if (!pendingFolderFor(accountNow())) return;
+    const loaded = await folders();
+    // Read with the folders: the account they belong to.
+    const account = accountNow();
+    const pendingId = pendingFolderFor(account);
+    const folder = pendingId ? loaded.find((f) => f.id === pendingId) : undefined;
+    if (!folder || !takeNewChatFolder(folder.id)) return;
 
-    options.onSelect(folder, 'pending');
+    options.onSelect(folder, 'pending', account);
 
     showSelectedFolder(chip, folder);
   }
@@ -294,6 +336,10 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
     pickerContainer?.remove();
     pickerContainer = null;
     pickerChip = null;
+    // The removed dropdown goes with its picker; a load still running lists nothing.
+    listing += 1;
+    listedAccount = undefined;
+    pickerDropdown = null;
   }
 
   async function show(): Promise<void> {
@@ -351,6 +397,7 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
   }
 
   function resetChoice(): void {
+    closeDropdown();
     if (!pickerChip) return;
     pickerChip.textContent = t('folderAsProject_selectFolder');
     pickerChip.removeAttribute('data-selected');
@@ -361,5 +408,5 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
     else await show();
   }
 
-  return { show, remove, applyPending, retryPending, resetChoice };
+  return { show, remove, applyPending, retryPending, resetChoice, dropStaleOptions };
 }

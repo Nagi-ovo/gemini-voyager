@@ -255,14 +255,15 @@ export class GeminiFolderSession implements GeminiFolderReads {
   }
 
   /**
-   * Whose folders the page may pick from and file into now: the page's account
-   * (`geminiAccountFingerprint`, `shared` while isolation is off and the
-   * control unreadable) while the gate is open, `null` while it is closed.
+   * Whose folders the page shows: `shared` with isolation off, where one
+   * bucket serves every account whatever its control says; with isolation on,
+   * the account Gemini's control names (`geminiAccountFingerprint`), or `null`
+   * while it is unreadable, which is no account yet rather than another one.
    * Folder-as-Project keeps a choice only for the account it was made for.
    */
   folderAccount(): string | null {
-    if (!this.accountMatchesPage) return null;
-    return geminiPageAccountFingerprint() ?? 'shared';
+    if (!this.store.accountIsolationEnabled) return 'shared';
+    return geminiPageAccountFingerprint();
   }
 
   /** Calls `listener` whenever `folderAccount()` may have changed; returns its removal. */
