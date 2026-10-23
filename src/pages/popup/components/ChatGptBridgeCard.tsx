@@ -107,7 +107,7 @@ export function ChatGptBridgeCard({ t }: ChatGptBridgeCardProps) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<TranslationKey | null>(null);
-  // Shown at once; the next status read takes over once the background has kept it.
+  // Shown at once; the status read after the last change takes over once it is in.
   const [parallelShown, setParallelShown] = useState<ParallelChoice | null>(null);
   const parallelPending = useRef(0);
   const mounted = useRef(true);
@@ -176,10 +176,11 @@ export function ChatGptBridgeCard({ t }: ChatGptBridgeCardProps) {
     // Only the switch waits: a count typed digit by digit must keep its field usable.
     if (change.enabled !== undefined) setBusy(true);
     parallelPending.current += 1;
-    void setBridgeParallel(change).then((result) => {
+    void setBridgeParallel(change).then(async (result) => {
+      await finish(result, 'bridgeErrorAction');
       parallelPending.current -= 1;
+      // Cleared only after the status read has the change: earlier, the switch flicks back.
       if (mounted.current && parallelPending.current === 0) setParallelShown(null);
-      void finish(result, 'bridgeErrorAction');
     });
   };
 

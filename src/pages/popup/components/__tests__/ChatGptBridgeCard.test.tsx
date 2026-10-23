@@ -395,6 +395,30 @@ describe('ChatGptBridgeCard paired status', () => {
     expect(container.querySelector<HTMLInputElement>('#gv-bridge-parallel')?.checked).toBe(true);
   });
 
+  it('keeps the switch where the person put it until the status read after the change is in', async () => {
+    status = pairedStatus();
+    await render();
+    let answerStatus = () => {};
+    const held = new Promise<void>((resolve) => {
+      answerStatus = resolve;
+    });
+    mocks.sendMessage.mockImplementation(async (message: { type: string }) => {
+      if (message.type !== 'gv.bridge.status') return { ok: true, data: { parallel: true } };
+      await held;
+      return { ok: true, data: pairedStatus({ parallel: true }) };
+    });
+    await act(async () => {
+      container.querySelector<HTMLInputElement>('#gv-bridge-parallel')?.click();
+    });
+    await flush();
+    // The background kept it, and the status read that would show so has not answered yet.
+    expect(container.querySelector<HTMLInputElement>('#gv-bridge-parallel')?.checked).toBe(true);
+
+    answerStatus();
+    await flush();
+    expect(container.querySelector<HTMLInputElement>('#gv-bridge-parallel')?.checked).toBe(true);
+  });
+
   it('offers how many jobs run at once only while parallel jobs are on, from 2 to 10', async () => {
     const count = () =>
       container.querySelector<HTMLInputElement>('input[aria-label="bridgeParallelJobsLabel"]');
