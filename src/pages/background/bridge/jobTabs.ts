@@ -53,7 +53,10 @@ export async function jobTab(
   );
   if (!oneAtATime || besideOthers || !newest) {
     return {
-      refused: fail('busy', 'Every bridge tab belongs to a job that may still be running.'),
+      refused: fail(
+        'busy',
+        'Every bridge tab belongs to a job that may still be running; close the tabs jobs left open.',
+      ),
     };
   }
   return { tab: newest };
