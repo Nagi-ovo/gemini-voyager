@@ -26,7 +26,7 @@ const LOGGED_OUT_USER_SELECTOR = '[data-user-message-bubble]';
  */
 export function createChatGptLoggedOutReader(
   adapter: ExportPlatformAdapter,
-): ExportTurnReader & { isActive(): boolean } {
+): ExportTurnReader & Required<Pick<ExportTurnReader, 'roles'>> {
   const extractor = createContentExtractor(adapter);
   const fallbackIds = new WeakMap<HTMLElement, string>();
   let nextId = 0;
@@ -72,7 +72,6 @@ export function createChatGptLoggedOutReader(
   }
 
   return {
-    isActive: () => resolveChatGptLoggedOutThread() !== null,
     messages,
     async roles(selectedIds, options) {
       assertActive(options);

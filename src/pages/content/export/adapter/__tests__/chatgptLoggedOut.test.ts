@@ -5,7 +5,9 @@ import { StarredMessagesService } from '@/features/savedLibrary/StarredMessagesS
 
 import type { ExportSite } from '../../exportSite';
 import { createChatGptExportSite } from '../../sites/chatgpt';
+import type { ChatGptCrawlTiming } from '../chatgptCrawl';
 import { buildChatGptAdapter, chatgptIsConversationPage } from '../platform/chatgpt';
+import { makeTurns, mountThreadFixture } from './chatgptThreadFixture';
 
 const adapter = buildChatGptAdapter(chatgptAdapter);
 let site: ExportSite;
@@ -227,5 +229,60 @@ describe('ChatGPT logged-out page export', () => {
     expect(await site.turns.build(new Set(ids()), {})).toMatchObject([
       { user: 'Desktop prompt', assistant: 'Desktop answer' },
     ]);
+  });
+});
+
+describe('ChatGPT export reader choice', () => {
+  const FAST: Partial<ChatGptCrawlTiming> = {
+    pollMs: 1,
+    settleMs: 4,
+    mountTimeoutMs: 400,
+    historyIdleMs: 25,
+    historyStallMs: 150,
+  };
+  const LOGGED_OUT_STRAY = `<div data-mobile-thread><div data-message-role="assistant">
+    <div data-assistant-markdown-root><p>Stray</p></div></div></div>`;
+
+  beforeEach(() => {
+    window.history.replaceState({}, '', '/c/desktop');
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  it('reads retained desktop turns that sit inside a logged-out thread wrapper', async () => {
+    document.body.innerHTML = `<main><div data-mobile-thread>
+      <div data-turn-id-container="desktop-u"><div data-message-author-role="user">Desktop prompt</div></div>
+      <div data-turn-id-container="desktop-a"><div data-message-author-role="assistant">Desktop answer</div></div>
+    </div></main>`;
+    expect(ids()).toEqual(['desktop-u', 'desktop-a']);
+    expect(await site.turns.build(new Set(ids()), {})).toMatchObject([
+      { user: 'Desktop prompt', assistant: 'Desktop answer' },
+    ]);
+  });
+
+  it("crawls the virtual list's unmounted history when a logged-out message is also on the page", async () => {
+    document.body.replaceChildren();
+    const fixture = mountThreadFixture({ turns: makeTurns(6) });
+    fixture.main.insertAdjacentHTML('afterbegin', LOGGED_OUT_STRAY);
+    expect(fixture.mountedKeys().length).toBeLessThan(6);
+
+    const options = { expectedUrl: location.href, timing: FAST };
+    const session = await site.turns.prepare!(options);
+
+    expect(session?.messages().map((message) => message.messageId)).toEqual(
+      makeTurns(6).flatMap((turn) => [`${turn.key}:u`, `${turn.key}:a`]),
+    );
+    session?.release();
+  });
+
+  it('keeps the reader it prepared with when the page changes under the selection', async () => {
+    document.body.innerHTML = `<main>
+      <div data-turn-id-container="desktop-u"><div data-message-author-role="user">Desktop prompt</div></div>
+    </main>`;
+    expect(await site.turns.prepare!({})).toBeNull();
+    mountLoggedOut();
+
+    expect(ids()).toEqual([]);
+    await site.turns.prepare!({});
+    expect(ids()).toHaveLength(4);
   });
 });
