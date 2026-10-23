@@ -218,6 +218,72 @@ describe('gems list missing once Gemini moves Gems into the More menu', () => {
     expect(document.querySelectorAll('.gv-gems-inline-list')).toHaveLength(1);
   });
 
+  /** A native Gems entry inside a wrapper, visible only while neither carries `hidden`. */
+  function appendHiddenGemsEntry(): {
+    entry: HTMLElement;
+    wrapper: HTMLElement;
+    reads: () => number;
+  } {
+    const wrapper = document.createElement('div');
+    const entry = document.createElement('gem-nav-list-item');
+    entry.setAttribute('data-test-id', 'gems-side-nav-entry-button');
+    entry.hidden = true;
+    let reads = 0;
+    Object.defineProperty(entry, 'getBoundingClientRect', {
+      value: () => {
+        reads++;
+        const height = entry.hidden || wrapper.hidden ? 0 : 40;
+        return { top: 0, left: 0, right: 200, bottom: height, width: 200, height };
+      },
+    });
+    wrapper.appendChild(entry);
+    scrollableNav().appendChild(wrapper);
+    return { entry, wrapper, reads: () => reads };
+  }
+
+  it.each(['entry', 'wrapper'] as const)(
+    'list stuck in its own section after Gemini unhides the Gems %s moves back without a resize',
+    async (unhidden) => {
+      mountRedesignedSidebar();
+      const { entry, wrapper } = appendHiddenGemsEntry();
+      if (unhidden === 'wrapper') {
+        wrapper.hidden = true;
+        entry.hidden = false;
+      }
+      await start();
+      expect(scrollableNav().nextElementSibling).toBe(section());
+
+      (unhidden === 'entry' ? entry : wrapper).hidden = false;
+      await settle();
+
+      expect(section()).toBeNull();
+      expect(entry.nextElementSibling?.classList.contains('gv-gems-inline-list')).toBe(true);
+      expect(entry.querySelector('.gv-gems-expand-toggle')).not.toBeNull();
+      expect(document.querySelectorAll('.gv-gems-inline-list')).toHaveLength(1);
+    },
+  );
+
+  it('reads no layout when conversation rows change attributes beside a hidden Gems entry', async () => {
+    mountRedesignedSidebar();
+    const { reads } = appendHiddenGemsEntry();
+    const conversations = document.querySelector('.conversations')!;
+    const row = document.createElement('div');
+    conversations.appendChild(row);
+    await start();
+    const before = reads();
+
+    for (let i = 0; i < 10; i++) {
+      row.classList.toggle('selected');
+      await settle();
+    }
+    // Collapsing and expanding the section restyles Voyager's own header.
+    header().click();
+    await settle();
+
+    expect(reads()).toBe(before);
+    expect(scrollableNav().nextElementSibling).toBe(section());
+  });
+
   it('removes the section when the plugin stops', async () => {
     mountRedesignedSidebar();
     await start();

@@ -2125,10 +2125,6 @@
     "message": "Широкий",
     "description": "Wide subfolder indentation label"
   },
-  "gemsSidebarUnavailableHint": {
-    "message": "В новой боковой панели Gemini раздел Gems перенесён в меню «Ещё», поэтому эта функция пока не работает.",
-    "description": "Why the Recent Gems popup row is disabled on Gemini’s redesigned sidebar."
-  },
   "gemsSidebarSectionTitle": {
     "message": "Gems",
     "description": "Header of the Recent Gems section Voyager adds below the Gemini sidebar's top nav, now that Gemini keeps Gems in its More menu. Use the name Gemini shows for Gems in this language."

@@ -2125,10 +2125,6 @@
     "message": "広い",
     "description": "広いサブフォルダインデントラベル"
   },
-  "gemsSidebarUnavailableHint": {
-    "message": "Geminiの新しいサイドバーではGemsが「その他」メニューに移動したため、この機能は現在使えません。",
-    "description": "Why the Recent Gems popup row is disabled on Gemini’s redesigned sidebar."
-  },
   "gemsSidebarSectionTitle": {
     "message": "Gems",
     "description": "Header of the Recent Gems section Voyager adds below the Gemini sidebar's top nav, now that Gemini keeps Gems in its More menu. Use the name Gemini shows for Gems in this language."

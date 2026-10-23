@@ -1,24 +1,16 @@
 # Recent Gems in the sidebar
 
-::: info Currently unavailable
-Gemini's new sidebar moved Gems into the More menu and no longer has a Gems entry. This feature does not appear for now, and its switch in the Voyager popup is greyed out.
-:::
-
-Gemini's 2026 redesign first moved Gems behind the settings menu, then quietly put a nav entry back in the sidebar — but it's just a link that bounces you to `/gems/view`.
-
-Voyager lets that native Gems entry "expand" into a list of your gems, right there in the sidebar: pinned gems first, then the ones you used most recently.
+Gemini's new sidebar moved Gems into the More menu, where they are just a link to the full `/gems/view` page. Voyager adds its own Gems section to the sidebar with your gems one click away: pinned gems first, then the ones you used most recently.
 
 ## How it looks
 
-- **Hangs off the native Gems entry.** Indented to align with Gemini's own "Gems" label so it reads as a sub-list of that entry, not a pasted-on panel.
-- **Chevron toggle.** A small `›` button on the right side of the Gems entry rotates to `⌄` when open. Click to collapse / expand. The state is saved locally and synced across tabs.
+- **Its own Gems section.** The list sits under the sidebar's top nav (the group with More), below a **Gems** header. If Gemini still shows a native Gems entry, the list hangs off that entry instead.
+- **Collapsible.** Click the **Gems** header (or the chevron on a native Gems entry) to collapse or expand; its `›` turns to `⌄` when open. The state is saved locally and synced across tabs.
 - **Recently used first.** Opening any gem — your own or one of Google's premade gems — moves it to the top of the list.
 - **Pinned gems stay put.** Pinned gems always come first, in the order you pinned them, and don't count against the slider limit.
 - **Zero network traffic.** Everything comes from what Voyager sees on pages you open. No API calls, no polling, no background fetches.
 
 ## How to use it
-
-For now its row in the popup's **Sidebar** card is greyed out and can't be turned on. Once Gemini's sidebar has a Gems entry again and the feature can run, set it up like this:
 
 1. Open the Voyager popup (extension icon in the toolbar).
 2. Make sure **Sidebar** → **Recent Gems in sidebar** is on (it is on by default). While it is on, a count slider shows under the row. It shows 3 gems by default.

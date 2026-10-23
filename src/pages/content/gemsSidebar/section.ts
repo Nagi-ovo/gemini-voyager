@@ -1,6 +1,6 @@
 import { getTranslationSync } from '@/utils/i18n';
 
-import { GEMS_NAV_ENTRY_SELECTOR } from './anchorGuard';
+import { GEMS_NAV_ENTRY_SELECTOR, containsGemsNavEntry } from './anchorGuard';
 
 /** Gemini's sidebar "More" entry; its popover now holds the native Gems link. */
 export const MORE_NAV_ENTRY_SELECTOR = '[data-test-id="overflow-side-nav-entry-button"]';
@@ -42,15 +42,22 @@ function addsNavEntry(node: Node): boolean {
 
 /**
  * Whether a sidebar mutation batch may have displaced the section, re-rendered
- * the top nav, or brought back a native Gems entry (which the list prefers).
- * Conversation rows streaming in leave it alone. Identity checks only. Pure.
+ * the top nav, or brought back a native Gems entry (which the list prefers),
+ * by adding one or by showing a hidden one. Conversation rows streaming in
+ * leave it alone. Identity and selector checks only, never geometry. Pure.
  */
 export function gemsSectionMayBeDisturbed(
   mutations: readonly MutationRecord[],
   { nav, section }: GemsSectionAnchor,
 ): boolean {
   if (!nav || !section || !nav.isConnected || nav.nextElementSibling !== section) return true;
-  return mutations.some((mutation) => Array.from(mutation.addedNodes).some(addsNavEntry));
+  return mutations.some((mutation) =>
+    // A hidden native Gems entry shown again through attributes on it or a container
+    // adds no node, so without this the list stayed in the section until a resize.
+    mutation.type === 'attributes'
+      ? containsGemsNavEntry(mutation.target)
+      : Array.from(mutation.addedNodes).some(addsNavEntry),
+  );
 }
 
 /** The section shell; the caller appends the gems list after its header. */

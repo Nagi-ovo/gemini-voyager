@@ -161,9 +161,8 @@ the builtins in [`builtin/index.ts`](builtin/index.ts) cover:
   watermark download and preview; Vim input, prompt history, input collapse, Ctrl+Enter send, Safari
   Enter fix, draft save, quote reply; timeline, message timestamps, highlights, prevent auto-scroll,
   response notifications, batch delete, research pack, default model, fork, usage status, context
-  sync. The Gems sidebar row is greyed out in the popup: its registry entry `requires` an
-  unmet condition with the `gemsSidebarUnavailableHint` note, because Gemini moved Gems into its
-  More menu. The plugin and its code are kept.
+  sync. Gemini moved Gems into its More menu, so without a visible native Gems entry the Gems
+  sidebar mounts its list in its own collapsible Gems section below the top nav.
 - AI Studio: Formula copy, Enter send, sidebar width, batch delete.
 - ChatGPT: Formula copy, Vim input, timeline, conversation export, temporary chat handoff, folders,
   response notifications.

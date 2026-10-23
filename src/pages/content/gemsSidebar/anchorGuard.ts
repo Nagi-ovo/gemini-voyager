@@ -13,12 +13,18 @@ export interface GemsAnchor {
   toggle: HTMLElement | null;
 }
 
-function containsGemsEntry(node: Node, anchor: GemsAnchor): boolean {
+/** Whether `node` is or holds a native Gems entry. Selector checks only. Pure. */
+export function containsGemsNavEntry(node: Node): boolean {
   if (!(node instanceof Element)) return false;
-  if (anchor.entry && node.contains(anchor.entry)) return true;
   return (
     node.matches(GEMS_NAV_ENTRY_SELECTOR) || node.querySelector(GEMS_NAV_ENTRY_SELECTOR) !== null
   );
+}
+
+function containsGemsEntry(node: Node, anchor: GemsAnchor): boolean {
+  if (!(node instanceof Element)) return false;
+  if (anchor.entry && node.contains(anchor.entry)) return true;
+  return containsGemsNavEntry(node);
 }
 
 /**

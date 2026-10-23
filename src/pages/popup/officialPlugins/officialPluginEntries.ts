@@ -182,9 +182,8 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     id: OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
     topic: 'pluginsSidebar',
     formerSectionTitle: 'gemsSidebarCount',
-    searchKeys: ['gemsSidebarCountHidden', 'gemsSidebarCountMany', 'gemsSidebarUnavailableHint'],
+    searchKeys: ['gemsSidebarCountHidden', 'gemsSidebarCountMany'],
     searchAliases: ['gems notebook recent side nav gem 宝石 侧边栏 最近'],
-    requires: { met: () => false, note: 'gemsSidebarUnavailableHint' },
     sliders: {
       // 0 hides the list only; the row's switch turns the feature off.
       count: {

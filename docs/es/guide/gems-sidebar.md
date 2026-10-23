@@ -1,24 +1,16 @@
 # Gems recientes en la barra lateral
 
-::: info No disponible por ahora
-La nueva barra lateral de Gemini ha movido Gems al menú «Más» y ya no tiene una entrada de Gems. Por ahora, esta función no se muestra y su interruptor en la ventana emergente de Voyager está desactivado y en gris.
-:::
-
-El rediseño de Gemini 2026 primero movió los Gems al menú de ajustes, y luego añadió silenciosamente una entrada de navegación en la parte superior de la barra lateral — pero es solo un enlace que te lleva a `/gems/view`.
-
-Voyager hace que esa entrada nativa de Gems se "expanda" en una lista de tus gems, directamente en la barra lateral: primero los gems fijados y después los que has usado más recientemente.
+La nueva barra lateral de Gemini movió los Gems al menú «Más», donde solo son un enlace a la página completa `/gems/view`. Voyager añade a la barra lateral su propia sección Gems con tus gems a un clic: primero los gems fijados y después los que has usado más recientemente.
 
 ## Cómo se ve
 
-- **Cuelga de la entrada nativa de Gems.** Sangrado para alinearse con la etiqueta "Gems" de Gemini, de modo que se lee como una sub-lista de esa entrada, no como un panel pegado.
-- **Interruptor con flecha.** Un pequeño botón `›` en el lado derecho de la entrada de Gems gira a `⌄` cuando se abre. Haz clic para plegar/expandir. El estado se guarda localmente y se sincroniza entre pestañas.
+- **Su propia sección Gems.** La lista está bajo la navegación superior de la barra lateral (el grupo con «Más»), con un encabezado **Gems**. Si Gemini aún muestra una entrada nativa de Gems, la lista cuelga de esa entrada.
+- **Plegable.** Haz clic en el encabezado **Gems** (o en la flecha de una entrada nativa de Gems) para plegar o expandir; su `›` gira a `⌄` al abrirse. El estado se guarda localmente y se sincroniza entre pestañas.
 - **Lo usado recientemente, primero.** Al abrir cualquier gem, tuyo o de los gems predefinidos de Google, pasa al principio de la lista.
 - **Los gems fijados se quedan donde están.** Los gems fijados siempre van primero, en el orden en que los fijaste, y no cuentan para el límite del deslizador.
 - **Cero tráfico de red.** Todo procede de lo que Voyager ve en las páginas que abres. Sin llamadas a API, sin polling, sin fetches en segundo plano.
 
 ## Cómo usarlo
-
-Por ahora, su fila aparece en gris en la tarjeta **Barra lateral** del popup y no se puede activar. Cuando la barra lateral de Gemini vuelva a tener una entrada de Gems y la función pueda funcionar, se configura así:
 
 1. Abre el popup de Voyager (icono de la extensión en la barra de herramientas).
 2. Comprueba que **Barra lateral** → **Gems recientes en la barra lateral** esté activado (lo está por defecto). Mientras esté activado, debajo de la fila aparece un deslizador de cantidad; por defecto muestra 3 gems.

@@ -1,24 +1,16 @@
 # Gems récents dans la barre latérale
 
-::: info Indisponible pour le moment
-La nouvelle barre latérale de Gemini a déplacé Gems dans le menu « Plus » et n'affiche plus d'entrée Gems. Cette fonctionnalité ne s'affiche donc pas pour le moment, et son interrupteur dans la fenêtre contextuelle de Voyager est grisé et désactivé.
-:::
-
-Le redesign de Gemini 2026 a d'abord déplacé les Gems derrière le menu des paramètres, puis a discrètement remis une entrée de navigation en haut de la barre latérale — mais ce n'est qu'un lien qui vous renvoie vers `/gems/view`.
-
-Voyager fait en sorte que cette entrée native Gems « se déploie » en une liste de vos gems, directement dans la barre latérale : les gems épinglés d'abord, puis ceux que vous avez utilisés le plus récemment.
+La nouvelle barre latérale de Gemini a déplacé les Gems dans le menu « Plus », où ils ne sont qu'un lien vers la page complète `/gems/view`. Voyager ajoute à la barre latérale sa propre section Gems, avec vos gems à portée de clic : les gems épinglés d'abord, puis ceux que vous avez utilisés le plus récemment.
 
 ## À quoi ça ressemble
 
-- **Suspendu sous l'entrée native Gems.** Indenté pour s'aligner avec l'étiquette « Gems » de Gemini, afin qu'il se lise comme une sous-liste de cette entrée, et non comme un panneau collé.
-- **Basculement avec chevron.** Un petit bouton `›` à droite de l'entrée Gems tourne vers `⌄` quand il est ouvert. Cliquez pour replier/déplier. L'état est conservé localement et synchronisé entre les onglets.
+- **Une section Gems à part.** La liste se trouve sous la navigation du haut de la barre latérale (le groupe avec « Plus »), sous un en-tête **Gems**. Si Gemini affiche encore une entrée Gems native, la liste se place sous cette entrée.
+- **Repliable.** Cliquez sur l'en-tête **Gems** (ou sur le chevron d'une entrée Gems native) pour replier ou déplier ; son `›` tourne vers `⌄` une fois ouvert. L'état est conservé localement et synchronisé entre les onglets.
 - **Utilisés récemment en premier.** Ouvrir un gem — le vôtre ou l'un des gems prédéfinis de Google — le place en tête de liste.
 - **Les gems épinglés restent en place.** Les gems épinglés passent toujours en premier, dans l'ordre où vous les avez épinglés, et ne comptent pas dans la limite du curseur.
 - **Zéro trafic réseau.** Tout provient de ce que Voyager voit sur les pages que vous ouvrez. Aucun appel API, aucun polling, aucune récupération en arrière-plan.
 
 ## Comment l'utiliser
-
-Pour l'instant, sa ligne est grisée dans la carte **Barre latérale** du popup et ne peut pas être activée. Quand la barre latérale de Gemini aura de nouveau une entrée Gems et que la fonctionnalité pourra fonctionner, voici comment la régler :
 
 1. Ouvrez le popup Voyager (icône de l'extension dans la barre d'outils).
 2. Vérifiez que **Barre latérale** → **Gems récents dans la barre latérale** est activé (c'est le cas par défaut). Tant qu'il est activé, un curseur de nombre apparaît sous la ligne ; il affiche 3 gems par défaut.
