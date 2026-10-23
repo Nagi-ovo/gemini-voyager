@@ -43,6 +43,7 @@ describe('PromptManagerSettingsCard', () => {
       },
       transfer: {
         busy: false,
+        cloudUnavailable: false,
         status: null,
         inputRef: createRef<HTMLInputElement>(),
         onExport: vi.fn(async () => {}),
