@@ -134,7 +134,8 @@ export function localRulesSection(
       '- On Gemini and AI Studio: no "theme", and a "native" op only for the primitives listed for that site (Voyager runs its other features there itself).',
       ...(audience === 'agent'
         ? [
-            '- "theme": { "brand": "#rrggbb" } optionally recolors Voyager’s own UI on Claude, ChatGPT or DeepSeek. "requires" is optional: native ops already imply "requires.handlers".',
+            '- "theme": { "brand": "#rrggbb" } optionally recolors Voyager’s own UI on Claude, ChatGPT or DeepSeek. "requires" is optional: native ops already imply "requires.handlers". "requires.formFactors" defaults to ["desktop"]; add "mobile" only after testing on a phone.',
+            '- Optional site.json "routeWords" lists static route segments such as "chat" and "new". Site-check reports keep them and replace every other segment with :id; only the packaged site.json counts.',
           ]
         : primitives
           ? [

@@ -73,7 +73,8 @@ This skill is split into files. The links below are relative to this SKILL.md; w
 - "matches" may only use the URL patterns of a site Voyager supports (see the site files, sites/<site>.md).
 - Every semantic key the plugin relies on must be declared by every site its "matches" cover.
 - On Gemini and AI Studio: no "theme", and a "native" op only for the primitives listed for that site (Voyager runs its other features there itself).
-- "theme": { "brand": "#rrggbb" } optionally recolors Voyager’s own UI on Claude, ChatGPT or DeepSeek. "requires" is optional: native ops already imply "requires.handlers".
+- "theme": { "brand": "#rrggbb" } optionally recolors Voyager’s own UI on Claude, ChatGPT or DeepSeek. "requires" is optional: native ops already imply "requires.handlers". "requires.formFactors" defaults to ["desktop"]; add "mobile" only after testing on a phone.
+- Optional site.json "routeWords" lists static route segments such as "chat" and "new". Site-check reports keep them and replace every other segment with :id; only the packaged site.json counts.
 - An import lands switched off; the user reviews it and turns it on in the popup.
 
 ## Finding selectors
