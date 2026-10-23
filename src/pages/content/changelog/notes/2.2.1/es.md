@@ -5,6 +5,10 @@
 - 🔒 **Las carpetas se quedan con su cuenta**: con el aislamiento de cuentas activado, al cambiar de cuenta de Google las carpetas, la sincronización con Drive y las instrucciones de carpeta de Carpeta como Proyecto se quedan con la cuenta en la que estás; si Voyager no sabe qué cuenta tiene la página, lo indica en lugar de quedarse cargando.
 - 📁 **:gemini: Nuevo chat en una carpeta sin recargar**: con Carpeta como Proyecto activado, **Nuevo chat en esta carpeta** abre al momento un chat nuevo con esa carpeta ya elegida.
 
+### Novedades
+
+- **Comprobación del sitio** _(desactivado por defecto)_: cuando Voyager falla en un sitio, activa **Comprobación del sitio** en los complementos para ver cuántos de los elementos de la página de los que depende Voyager se encontraron y elegir la parte que parece rota; el informe no incluye contenido de los chats y está listo para copiarlo o adjuntarlo a una incidencia.
+
 ### Correcciones
 
 - **:aistudio: Diseño de carpetas en AI Studio**: el título Carpetas se alinea con los títulos de sección de la navegación, y los prompts aparecen sangrados bajo su carpeta.

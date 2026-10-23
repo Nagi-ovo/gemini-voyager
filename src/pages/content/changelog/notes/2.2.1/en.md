@@ -5,6 +5,10 @@
 - 🔒 **Folders stay with their own account**: with account isolation on, switching Google accounts keeps folders, Drive sync and Folder as Project's folder instructions with the account you're on; when Voyager can't tell which account the page is signed in to, it says so instead of loading forever.
 - 📁 **:gemini: New chat in a folder without a reload**: with Folder as Project on, **New chat in this folder** opens a new chat right away with that folder already picked.
 
+### New
+
+- **Site check** _(off by default)_: when Voyager breaks on a site, turn on **Site check** under Plugins to see how many of the page elements Voyager relies on were found, and pick the part that looks broken; the report has no chat content, ready to copy or attach to an issue.
+
 ### Fixes
 
 - **:aistudio: AI Studio folder layout**: the Folders heading lines up with the nav's section headings, and prompts are indented under their folder.

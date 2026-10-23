@@ -5,6 +5,10 @@
 - 🔒 **As pastas ficam com a própria conta**: com o isolamento de contas ativado, trocar de conta Google mantém as pastas, a sincronização com o Drive e as instruções de pasta do Pasta como Projeto com a conta em uso; quando o Voyager não sabe qual conta está conectada na página, ele avisa em vez de ficar carregando.
 - 📁 **:gemini: Novo chat numa pasta sem recarregar**: com Pasta como Projeto ativado, **Novo chat nesta pasta** abre na hora um chat novo com essa pasta já escolhida.
 
+### Novidades
+
+- **Verificação do site** _(desativado por padrão)_: quando o Voyager quebra em um site, ative **Verificação do site** nos plugins para ver quantos dos elementos da página de que o Voyager depende foram encontrados e escolher a parte que parece quebrada; o relatório não traz conteúdo dos chats e fica pronto para copiar ou anexar a uma issue.
+
 ### Correções
 
 - **:aistudio: Layout das pastas no AI Studio**: o título Pastas se alinha aos títulos de seção da navegação, e os prompts ficam recuados sob a pasta.

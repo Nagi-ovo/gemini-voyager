@@ -5,6 +5,10 @@
 - 🔒 **Les dossiers restent à leur compte** : avec l'isolation des comptes activée, changer de compte Google garde les dossiers, la synchronisation Drive et les instructions de dossier de Dossier comme Projet avec le compte actif ; quand Voyager ne sait pas quel compte est connecté sur la page, il le dit au lieu de charger sans fin.
 - 📁 **:gemini: Nouvelle conversation dans un dossier sans rechargement** : avec Dossier comme Projet activé, **Nouvelle conversation dans ce dossier** ouvre aussitôt une nouvelle conversation avec ce dossier déjà choisi.
 
+### Nouveautés
+
+- **Vérification du site** _(désactivé par défaut)_ : quand Voyager ne fonctionne plus sur un site, activez **Vérification du site** dans les extensions pour voir combien des éléments de la page dont Voyager dépend ont été trouvés, et sélectionnez la partie qui semble cassée ; le rapport ne contient aucun contenu de conversation et peut être copié ou joint à un ticket.
+
 ### Corrections
 
 - **:aistudio: Mise en page des dossiers AI Studio** : le titre Dossiers s'aligne sur les titres de section de la navigation, et les prompts sont indentés sous leur dossier.
