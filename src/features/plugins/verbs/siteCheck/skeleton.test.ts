@@ -45,6 +45,21 @@ describe('site check skeleton', () => {
     );
   });
 
+  it('does not export a code block language class or a short data value taken from content', () => {
+    const root = mount(
+      `<pre class="code-block language-alice@example.com lang-Alice x-7f3a9c0d1e"
+          data-owner="Alice" data-language="python" data-kind="secretword"
+          data-empty-paragraph="true" data-collapsed="false" data-message-author-role="user"
+          aria-haspopup="Alice"><code class="language-secretword hljs"></code></pre>`,
+    );
+    const text = buildSkeleton(root).lines.join('\n');
+    expect(text).toBe(
+      'pre.code-block[data-owner][data-language][data-kind][data-empty-paragraph=true][data-collapsed=false][data-message-author-role=user]\n' +
+        '  code.hljs',
+    );
+    expect(text).not.toMatch(/alice|python|secretword|7f3a9c/i);
+  });
+
   it('caps depth, children per element and the whole size, and says it truncated', () => {
     const deep = mount(
       '<div><div><div><div><div><div><span></span></div></div></div></div></div></div>',

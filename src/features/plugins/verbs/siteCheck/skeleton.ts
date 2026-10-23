@@ -1,9 +1,12 @@
 /**
- * A picked element's structure without its content: tag names, class names,
- * `role`, a few enumerated ARIA states, and `data-*` names with a value only
- * when it is a short token that cannot be text or an id. Text nodes are never
- * visited, and every attribute outside this allowlist (aria-label, title, alt,
- * placeholder, href, src, value, style, …) is dropped unread.
+ * A picked element's structure without its content: tag names, structural
+ * class names, `role`, a few enumerated ARIA states, and `data-*` names. A
+ * value's shape proves nothing about where it came from (a code block's class
+ * carries the fence's info string, `data-owner="Alice"` is short and plain),
+ * so `data-*` values are kept only for named structural attributes and for
+ * `true`/`false`. Text nodes are never visited, and every attribute outside
+ * this allowlist (aria-label, title, alt, placeholder, href, src, value,
+ * style, …) is dropped unread.
  */
 import { LAYER_ATTR } from '@/core/ui/layer';
 
@@ -43,23 +46,55 @@ const ARIA_STATES = new Set([
   'aria-busy',
   'aria-modal',
 ]);
-const ENUM_VALUE = /^[a-z]{1,10}$/;
-const CLASS_TOKEN = /^-?[A-Za-z_][\w\-:/.[\]%#()!@,=>]{0,47}$/;
+/** ARIA state values; an author-defined token outside these is dropped. */
+const ARIA_VALUES = new Set([
+  'true',
+  'false',
+  'mixed',
+  'page',
+  'step',
+  'location',
+  'menu',
+  'listbox',
+  'tree',
+  'grid',
+  'dialog',
+]);
+/** A hand-written class: letters first, Tailwind's `:`, `/`, `[…]`, `.` and `%`, and no `@`. */
+const CLASS_TOKEN = /^-?[A-Za-z_][\w\-:/.[\]%]{0,31}$/;
+/** Class prefixes that carry what the author typed, such as a fence's language. */
+const CONTENT_CLASS = /^-?(?:language|lang)[-_]/i;
 const ROLE = /^[a-z]{1,20}$/;
-/** A data value that names a state or kind ("assistant", "code-block", "true"). */
+/** Attributes whose values are the host's own vocabulary, which reports need. */
+const STRUCTURAL_DATA = new Set([
+  'data-testid',
+  'data-test-id',
+  'data-message-author-role',
+  'data-state',
+  'data-side',
+  'data-align',
+  'data-orientation',
+]);
+/** A structural attribute's value: a short word such as "assistant" or "code-block". */
 const DATA_TOKEN = /^[A-Za-z][A-Za-z-]{0,23}$/;
-/** Data attribute names that name a kind or a state, whose token values are vocabulary. */
-const ENUM_DATA_NAME = /(?:-role|-kind|-type|-state|-status|-variant|-mode|-side|test-?id)$/;
-/** Data attribute names whose values are text or identity, whatever they look like. */
-const TEXTUAL_DATA_NAME =
-  /title|label|name|text|content|query|prompt|mail|user|account|author|tooltip|alt|desc|value|url|href|src|placeholder|message|chat|conv|session|token|key|id$/i;
 const DATA_NAME = /^data-[a-z0-9_.:-]{1,40}$/;
+
+function isStructuralClass(token: string): boolean {
+  if (!CLASS_TOKEN.test(token) || CONTENT_CLASS.test(token)) return false;
+  // A hash or an id baked into a class: more digits than a utility like `max-w-3xl` has.
+  return (token.match(/\d/g)?.length ?? 0) <= 4;
+}
+
+function dataValue(name: string, value: string): string | null {
+  if (value === 'true' || value === 'false') return value;
+  return STRUCTURAL_DATA.has(name) && DATA_TOKEN.test(value) ? value : null;
+}
 
 /** One element of the skeleton, as `tag.class[attr]`; shared by the path and the tree. */
 export function describeElement(element: Element): string {
   const tag = element.tagName.toLowerCase();
   const classes = Array.from(element.classList)
-    .filter((token) => CLASS_TOKEN.test(token))
+    .filter(isStructuralClass)
     .slice(0, SKELETON_LIMITS.classes);
   const parts = [tag, ...classes.map((token) => `.${token}`)];
   const role = element.getAttribute('role');
@@ -68,15 +103,13 @@ export function describeElement(element: Element): string {
   for (const attribute of Array.from(element.attributes)) {
     const name = attribute.name.toLowerCase();
     if (ARIA_STATES.has(name)) {
-      if (ENUM_VALUE.test(attribute.value)) parts.push(`[${name}=${attribute.value}]`);
+      if (ARIA_VALUES.has(attribute.value)) parts.push(`[${name}=${attribute.value}]`);
       continue;
     }
     if (!DATA_NAME.test(name) || data >= SKELETON_LIMITS.data) continue;
     data += 1;
-    const value = attribute.value;
-    const vocabulary = ENUM_DATA_NAME.test(name) || !TEXTUAL_DATA_NAME.test(name);
-    const safe = vocabulary && DATA_TOKEN.test(value);
-    parts.push(safe ? `[${name}=${value}]` : `[${name}]`);
+    const value = dataValue(name, attribute.value);
+    parts.push(value === null ? `[${name}]` : `[${name}=${value}]`);
   }
   if (element.shadowRoot) parts.push('{shadow}');
   return parts.join('');
