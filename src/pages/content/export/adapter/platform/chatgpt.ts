@@ -4,10 +4,10 @@ import { escapeHtml, escapeHtmlAttribute } from '@/features/export/services/expo
 import type { SiteAdapter } from '@/features/plugins/types';
 
 import {
-  MOBILE_ASSISTANT_SELECTOR,
-  MOBILE_MESSAGE_SELECTOR,
-  resolveChatGptMobileThread,
-} from '../chatgptMobileDom';
+  LOGGED_OUT_ASSISTANT_SELECTOR,
+  LOGGED_OUT_MESSAGE_SELECTOR,
+  resolveChatGptLoggedOutThread,
+} from '../chatgptLoggedOutDom';
 import { TURN_ITEM_SELECTOR, resolveVisibleConversationRoot } from '../chatgptThread';
 import type { ExportPlatformAdapter } from './contract';
 
@@ -29,7 +29,10 @@ function extractId(): string | null {
   return window.location.pathname.match(CONVERSATION_ROUTE)?.[1] ?? null;
 }
 
-/** Mobile logged-out chats use `/uc/<id>` instead of the desktop `/c/<id>`. */
+/**
+ * Signed in: `/c/<id>` or `/g/<gpt>/c/<id>`, optionally under `/u/<index>/`.
+ * The logged-out page, at any width: `/uc/<id>`.
+ */
 const CONVERSATION_ROUTE = /^(?:\/u\/[^/]+)?(?:\/g\/[^/]+)?\/(?:c|uc)\/([^/?#]+)/;
 /** A turn ChatGPT has actually rendered, whatever the route says. */
 const MOUNTED_TURN_SELECTOR = [
@@ -55,7 +58,7 @@ export function chatgptIsConversationPage(doc: Document, url: string): boolean {
   return (
     CONVERSATION_ROUTE.test(pathname) ||
     doc.querySelector(MOUNTED_TURN_SELECTOR) !== null ||
-    resolveChatGptMobileThread(doc)?.querySelector(MOBILE_MESSAGE_SELECTOR) != null
+    resolveChatGptLoggedOutThread(doc)?.querySelector(LOGGED_OUT_MESSAGE_SELECTOR) != null
   );
 }
 
@@ -270,7 +273,7 @@ export function buildChatGptAdapter(site: SiteAdapter): ExportPlatformAdapter {
   return {
     site,
     getUserSelectors: () => [site.selectors.userTurn],
-    getAssistantSelectors: () => [site.selectors.assistantTurn, MOBILE_ASSISTANT_SELECTOR],
+    getAssistantSelectors: () => [site.selectors.assistantTurn, LOGGED_OUT_ASSISTANT_SELECTOR],
     extractConversationTitle: extractTitle,
     extractConversationIdFromUrl: extractId,
     resolveConversationRoot: resolveRoot,

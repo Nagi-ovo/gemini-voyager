@@ -5,10 +5,10 @@ import { chatGptTurnHash, loadChatGptStarHashes } from '@/features/savedLibrary/
 import type { ExportMessage } from '../conversationCollector';
 import type { ExportTurnReader } from '../exportSite';
 import {
-  MOBILE_ASSISTANT_SELECTOR,
-  MOBILE_MESSAGE_SELECTOR,
-  resolveChatGptMobileThread,
-} from './chatgptMobileDom';
+  LOGGED_OUT_ASSISTANT_SELECTOR,
+  LOGGED_OUT_MESSAGE_SELECTOR,
+  resolveChatGptLoggedOutThread,
+} from './chatgptLoggedOutDom';
 import { assertActive } from './chatgptShared';
 import {
   isChatGptThreadGenerating,
@@ -18,10 +18,13 @@ import {
 import type { ExportPlatformAdapter } from './platform/contract';
 import type { ExportSelectionOptions } from './type';
 
-const MOBILE_USER_SELECTOR = '[data-user-message-bubble]';
+const LOGGED_OUT_USER_SELECTOR = '[data-user-message-bubble]';
 
-/** Mobile messages are retained in DOM order, independently of the desktop virtual list. */
-export function createChatGptMobileReader(
+/**
+ * Reads ChatGPT's logged-out conversation page (see `chatgptLoggedOutDom.ts`),
+ * which keeps every message in the DOM in order, without the desktop virtual list.
+ */
+export function createChatGptLoggedOutReader(
   adapter: ExportPlatformAdapter,
 ): ExportTurnReader & { isActive(): boolean } {
   const extractor = createContentExtractor(adapter);
@@ -29,25 +32,27 @@ export function createChatGptMobileReader(
   let nextId = 0;
 
   function messages(): ExportMessage[] {
-    const thread = resolveChatGptMobileThread();
+    const thread = resolveChatGptLoggedOutThread();
     if (!thread) return [];
     const seen = new Set<string>();
-    return Array.from(thread.querySelectorAll<HTMLElement>(MOBILE_MESSAGE_SELECTOR)).flatMap(
+    return Array.from(thread.querySelectorAll<HTMLElement>(LOGGED_OUT_MESSAGE_SELECTOR)).flatMap(
       (hostElement) => {
         if (!isRendered(hostElement)) return [];
-        if (hostElement.parentElement?.closest(MOBILE_MESSAGE_SELECTOR)) return [];
+        if (hostElement.parentElement?.closest(LOGGED_OUT_MESSAGE_SELECTOR)) return [];
         const role = hostElement.getAttribute('data-message-role');
         if (role !== 'user' && role !== 'assistant') return [];
-        const selector = role === 'user' ? MOBILE_USER_SELECTOR : MOBILE_ASSISTANT_SELECTOR;
+        const selector = role === 'user' ? LOGGED_OUT_USER_SELECTOR : LOGGED_OUT_ASSISTANT_SELECTOR;
         const exportElement = hostElement.matches(selector)
           ? hostElement
           : hostElement.querySelector<HTMLElement>(selector);
         if (!exportElement) return [];
         const nativeId =
           hostElement.id.trim() || hostElement.getAttribute('data-message-id')?.trim();
-        let messageId = nativeId ? `mobile-id:${role}:${nativeId}` : fallbackIds.get(hostElement);
+        let messageId = nativeId
+          ? `logged-out-id:${role}:${nativeId}`
+          : fallbackIds.get(hostElement);
         if (!messageId) {
-          messageId = `mobile-node:${++nextId}`;
+          messageId = `logged-out-node:${++nextId}`;
           fallbackIds.set(hostElement, messageId);
         }
         // Reconciliation can briefly retain two wrappers for the same native message.
@@ -67,7 +72,7 @@ export function createChatGptMobileReader(
   }
 
   return {
-    isActive: () => resolveChatGptMobileThread() !== null,
+    isActive: () => resolveChatGptLoggedOutThread() !== null,
     messages,
     async roles(selectedIds, options) {
       assertActive(options);
@@ -91,7 +96,7 @@ export function createChatGptMobileReader(
       let pending: { turn: ChatTurn; sequence: number } | null = null;
       for (const [sequence, message] of current.entries()) {
         if (!selectedIds.has(message.messageId)) continue;
-        // Mobile role wrappers also hold Copy/Edit controls; only export the message root.
+        // Logged-out role wrappers also hold Copy/Edit controls; only export the message root.
         const element = message.exportElement!;
         const content =
           message.role === 'user'

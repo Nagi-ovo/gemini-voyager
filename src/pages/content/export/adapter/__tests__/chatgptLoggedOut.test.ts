@@ -10,8 +10,11 @@ import { buildChatGptAdapter, chatgptIsConversationPage } from '../platform/chat
 const adapter = buildChatGptAdapter(chatgptAdapter);
 let site: ExportSite;
 
-/** Issue #1066's mobile markers; desktop virtual-list attributes are deliberately absent. */
-function mountMobile(): void {
+/**
+ * ChatGPT's logged-out page (issue #1066): served without an account at any width, not only
+ * on phones. Desktop virtual-list attributes are deliberately absent.
+ */
+function mountLoggedOut(): void {
   document.body.innerHTML = `
     <main><div data-mobile-thread>
       <li data-message-role="user" id="u1" data-message-id="u1">
@@ -39,10 +42,10 @@ function ids(): string[] {
 
 beforeEach(() => {
   document.body.replaceChildren();
-  window.history.replaceState({}, '', '/uc/mobile-chat');
+  window.history.replaceState({}, '', '/uc/logged-out-chat');
   vi.spyOn(StarredMessagesService, 'getStarredMessagesForConversation').mockResolvedValue([]);
   site = createChatGptExportSite(adapter);
-  mountMobile();
+  mountLoggedOut();
 });
 
 afterEach(() => {
@@ -51,8 +54,8 @@ afterEach(() => {
   window.history.replaceState({}, '', '/');
 });
 
-describe('ChatGPT mobile conversation recognition', () => {
-  it.each(['/uc/mobile-chat', '/u/1/uc/mobile-chat', '/c/desktop', '/g/g-abc/c/desktop'])(
+describe('ChatGPT logged-out conversation recognition', () => {
+  it.each(['/uc/logged-out-chat', '/u/1/uc/logged-out-chat', '/c/desktop', '/g/g-abc/c/desktop'])(
     'recognizes %s and extracts its conversation id',
     (path) => {
       document.body.replaceChildren();
@@ -62,14 +65,14 @@ describe('ChatGPT mobile conversation recognition', () => {
     },
   );
 
-  it('recognizes a mounted mobile conversation before its URL changes', () => {
+  it('recognizes a mounted logged-out conversation before its URL changes', () => {
     expect(chatgptIsConversationPage(document, 'https://chatgpt.com/')).toBe(true);
     document.querySelector('[data-mobile-thread]')!.replaceChildren();
     expect(chatgptIsConversationPage(document, 'https://chatgpt.com/')).toBe(false);
     expect(chatgptIsConversationPage(document, 'https://chatgpt.com/uc/')).toBe(false);
   });
 
-  it('does not show export on the home page for a hidden cached mobile conversation', () => {
+  it('does not show export on the home page for a hidden cached logged-out conversation', () => {
     document.querySelector('main')!.hidden = true;
     document.body.insertAdjacentHTML('beforeend', '<main><p>New chat</p></main>');
     expect(chatgptIsConversationPage(document, 'https://chatgpt.com/')).toBe(false);
@@ -78,8 +81,8 @@ describe('ChatGPT mobile conversation recognition', () => {
   });
 });
 
-describe('ChatGPT mobile export', () => {
-  it('offers mobile messages in DOM order and prepares without a desktop crawl', async () => {
+describe('ChatGPT logged-out page export', () => {
+  it('offers logged-out messages in DOM order and prepares without a desktop crawl', async () => {
     const messages = site.turns.messages();
     expect(messages.map((message) => message.role)).toEqual([
       'user',
@@ -96,7 +99,7 @@ describe('ChatGPT mobile export', () => {
     session?.release();
   });
 
-  it('exports mobile messages with rich content and leaves action labels out', async () => {
+  it('exports logged-out messages with rich content and leaves action labels out', async () => {
     const turns = await site.turns.build(new Set(ids()), {});
     expect(turns).toHaveLength(2);
     expect(turns[0].user).toBe('Voyager 测试\nsecond line');
@@ -156,7 +159,7 @@ describe('ChatGPT mobile export', () => {
     expect(turns[0].assistant.match(/First answer/g)).toHaveLength(1);
   });
 
-  it('ignores a cached hidden mobile page, including its stop button', async () => {
+  it('ignores a cached hidden logged-out page, including its stop button', async () => {
     const cached = document.createElement('div');
     cached.hidden = true;
     cached.innerHTML = `<main><div data-mobile-thread>
@@ -200,8 +203,9 @@ describe('ChatGPT mobile export', () => {
     ).rejects.toThrow('chatgpt_export_conversation_changed');
   });
 
-  it('checks the route again after an asynchronous Library read on a logged-in mobile chat', async () => {
-    window.history.replaceState({}, '', '/c/logged-in-mobile');
+  // /uc/ has no Library stars to read; only a /c/ route exercises the asynchronous read.
+  it('checks the route again after an asynchronous Library read', async () => {
+    window.history.replaceState({}, '', '/c/with-stars');
     vi.mocked(StarredMessagesService.getStarredMessagesForConversation).mockImplementation(
       async () => {
         window.history.replaceState({}, '', '/c/another-chat');
@@ -213,7 +217,7 @@ describe('ChatGPT mobile export', () => {
     );
   });
 
-  it('keeps the retained desktop reader when no mobile thread is present', async () => {
+  it('keeps the retained desktop reader when no logged-out thread is present', async () => {
     window.history.replaceState({}, '', '/c/desktop');
     document.body.innerHTML = `<main>
       <div data-turn-id-container="desktop-u"><div data-message-author-role="user">Desktop prompt</div></div>

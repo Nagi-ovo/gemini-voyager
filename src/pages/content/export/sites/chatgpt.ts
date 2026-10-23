@@ -1,7 +1,7 @@
 import { createContentExtractor } from '@/features/export/services/DOMContentExtractor';
 
 import { buildChatGptTurnsForSelection, resolveChatGptSelectionRoles } from '../adapter/chatgpt';
-import { createChatGptMobileReader } from '../adapter/chatgptMobile';
+import { createChatGptLoggedOutReader } from '../adapter/chatgptLoggedOut';
 import {
   type ChatGptThreadSession,
   createChatGptThreadPreparer,
@@ -43,7 +43,7 @@ function exportSession(session: ChatGptThreadSession): ExportTurnSession {
 export function createChatGptExportSite(adapter: ExportPlatformAdapter): ExportSite {
   const extractor = createContentExtractor(adapter);
   const preparer = createChatGptThreadPreparer();
-  const mobile = createChatGptMobileReader(adapter);
+  const mobile = createChatGptLoggedOutReader(adapter);
   return {
     id: adapter.site.id,
     label: adapter.site.label,
