@@ -50,7 +50,12 @@ import type {
   PluginSourceContext,
   SiteAdapter,
 } from '../types';
-import { type FrozenVersions, freezeUpdatedPrimitives, staleMountedIds } from './catalogReloadPlan';
+import {
+  type FrozenVersions,
+  freezeUpdatedPrimitives,
+  runningManifests,
+  staleMountedIds,
+} from './catalogReloadPlan';
 import { DeclarativeEngine } from './declarativeEngine';
 import {
   DEFAULT_LEGACY_SETTINGS,
@@ -225,7 +230,7 @@ export class PluginHost {
       // The initial read runs ON the chain, so a catalog reload the listener
       // queued meanwhile runs after it and its fresher listing wins.
       await this.enqueue(async () => {
-        const manifests = await this.loadManifests();
+        const manifests = await listPluginManifests(this.sources, this.context);
         const state = await loadPluginState();
         const surfaceOn = surfaceSwitch ? await surfaceSwitch.read() : true;
         if (this.generation !== gen) return;
@@ -300,7 +305,10 @@ export class PluginHost {
         logger.info('Plugin health changed', { id, noEffect });
       },
       shouldTrackHealth: (manifest) => tracksPluginHealth(manifest.id),
-      inspectPlugins: () => ({ statuses: this.getStatuses(), manifests: this.manifests }),
+      inspectPlugins: () => ({
+        statuses: this.getStatuses(),
+        manifests: runningManifests(this.manifests, this.frozen),
+      }),
       // The mounted manifest decides what is released, so a plugin frozen
       // on its old version (D7) releases what that version claimed.
       onRelease: (manifest, released) => {
@@ -323,7 +331,10 @@ export class PluginHost {
   private async reloadCatalog(gen: number): Promise<void> {
     const engine = this.engine;
     if (!engine || this.generation !== gen) return;
-    const [manifests, adapter] = await Promise.all([this.loadManifests(), this.resolveAdapter()]);
+    const [manifests, adapter] = await Promise.all([
+      listPluginManifests(this.sources, this.context),
+      this.resolveAdapter(),
+    ]);
     if (this.generation !== gen) return;
     const listing = {
       previous: new Map(this.manifests.map((manifest) => [manifest.id, manifest])),
@@ -362,7 +373,7 @@ export class PluginHost {
     const legacyPhase = this.legacy?.phase() ?? 'none';
     const feed = this.legacy;
     const wasChangedLive = (key: string): boolean => feed?.wasChangedLive(key) ?? false;
-    const manifests = this.manifests.map((listed) => this.frozen.get(listed.id)?.mounted ?? listed);
+    const manifests = runningManifests(this.manifests, this.frozen);
     if (!engine) return;
     const verdicts: Record<Exclude<WishVerdict, 'skip'>, PluginManifest[]> = {
       run: [],
@@ -425,10 +436,6 @@ export class PluginHost {
 
   private targetsThisPage(manifest: PluginManifest): boolean {
     return targetsPage(this.url, manifest);
-  }
-
-  private async loadManifests(): Promise<readonly PluginManifest[]> {
-    return listPluginManifests(this.sources, this.context);
   }
 
   /**
