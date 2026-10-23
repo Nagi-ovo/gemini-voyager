@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 import { isSafari } from '@/core/utils/browser';
+import { packagedPluginRunsHere } from '@/features/plugins/runtime/packagedFormFactor';
 
 import {
   CLEAN_IMAGE_STREAK_CAP,
@@ -13,6 +14,10 @@ import { shouldShowWatermarkNativeNotice, startWatermarkNativeNotice } from '../
 
 vi.mock('@/core/utils/browser', () => ({
   isSafari: vi.fn(() => false),
+}));
+
+vi.mock('@/features/plugins/runtime/packagedFormFactor', () => ({
+  packagedPluginRunsHere: vi.fn(async () => true),
 }));
 
 vi.mock('@/utils/i18n', () => ({
@@ -233,6 +238,21 @@ describe('startWatermarkNativeNotice', () => {
 
     expect(document.querySelector('.gv-wm-notice')).toBeNull();
     expect(onSettled).toHaveBeenCalledOnce();
+  });
+
+  it('stays away on a phone, where the removal it would retire never runs', async () => {
+    const onSettled = vi.fn();
+    vi.mocked(packagedPluginRunsHere).mockResolvedValue(false);
+    mockLocalStorage({});
+    mockSyncStorage(legacyEnabled);
+
+    cleanup = startWatermarkNativeNotice({ delayMs: 0, onSettled });
+    await flush();
+    await vi.advanceTimersByTimeAsync(10);
+
+    expect(document.querySelector('.gv-wm-notice')).toBeNull();
+    expect(onSettled).toHaveBeenCalledOnce();
+    vi.mocked(packagedPluginRunsHere).mockResolvedValue(true);
   });
 
   it('stays away for a user with no watermark preference', async () => {

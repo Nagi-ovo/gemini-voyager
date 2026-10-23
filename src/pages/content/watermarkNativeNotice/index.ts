@@ -1,5 +1,7 @@
 import { StorageKeys } from '@/core/types/common';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
+import { packagedPluginRunsHere } from '@/features/plugins/runtime/packagedFormFactor';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { getCurrentLanguage } from '@/utils/i18n';
 import type { AppLanguage } from '@/utils/language';
 import { TRANSLATIONS, type TranslationKey } from '@/utils/translations';
@@ -321,10 +323,14 @@ function mountNotice(lang: AppLanguage, detectedClean: boolean, onSettled: () =>
   };
 }
 
+/** Whether a packaged plugin runs on this device; the removal plugins do not on a phone. */
+type RunsHere = (pluginId: string) => Promise<boolean>;
+
 async function scheduleNotice(
   delayMs: number,
   currentRunId: number,
   onSettled: () => void,
+  runsHere: RunsHere,
 ): Promise<void> {
   const localDefaults = {
     [StorageKeys.WATERMARK_NATIVE_NOTICE_SHOWN]: false,
@@ -345,11 +351,15 @@ async function scheduleNotice(
     onSettled();
     return;
   }
+  // A switch on for a removal plugin this device never runs removes nothing here.
+  const removalActive =
+    (settings.download && (await runsHere(OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload))) ||
+    (settings.preview && (await runsHere(OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview)));
   if (currentRunId !== runId) return;
 
   const shouldShow = shouldShowWatermarkNativeNotice({
     alreadyShown: stored[StorageKeys.WATERMARK_NATIVE_NOTICE_SHOWN] === true,
-    removalActive: settings.download || settings.preview,
+    removalActive,
   });
   if (!shouldShow) {
     onSettled();
@@ -375,6 +385,8 @@ async function scheduleNotice(
 export interface WatermarkNativeNoticeOptions {
   delayMs?: number;
   onSettled?: () => void;
+  /** Test seam; defaults to the packaged plugins' own form factors. */
+  runsHere?: RunsHere;
 }
 
 /**
@@ -384,12 +396,13 @@ export interface WatermarkNativeNoticeOptions {
 export function startWatermarkNativeNotice(
   options: number | WatermarkNativeNoticeOptions = {},
 ): () => void {
-  const { delayMs, onSettled } =
+  const { delayMs, onSettled, runsHere } =
     typeof options === 'number'
-      ? { delayMs: options, onSettled: undefined }
+      ? { delayMs: options, onSettled: undefined, runsHere: packagedPluginRunsHere }
       : {
           delayMs: options.delayMs ?? WATERMARK_NATIVE_NOTICE_DELAY_MS,
           onSettled: options.onSettled,
+          runsHere: options.runsHere ?? packagedPluginRunsHere,
         };
   let settled = false;
   const settleOnce = () => {
@@ -414,7 +427,7 @@ export function startWatermarkNativeNotice(
     mountNotice(lang, true, () => {});
   };
 
-  void scheduleNotice(delayMs, currentRunId, settleOnce);
+  void scheduleNotice(delayMs, currentRunId, settleOnce, runsHere);
 
   return () => {
     started = false;
