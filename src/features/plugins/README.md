@@ -261,4 +261,8 @@ Studio became plugin platforms too, as recorded in the
   dynamic registration is limited — keep Safari on manifest-declared sites.
 - **Firefox**: declarative works; `userScripts` exists but differs; AMO review
   forbids remote code (declarative is the safe path).
+- **Firefox for Android** (and forks such as Waterfox): only plugins whose
+  `requires.formFactors` includes `mobile` run; the rest report
+  `needs-form-factor` ([runtime/README.md](runtime/README.md)). Google Drive sync
+  is off there, since Firefox for Android has no `identity.launchWebAuthFlow`.
 - **Chrome/Edge**: full support, including the future gated `scripted` tier.

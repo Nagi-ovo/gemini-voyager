@@ -80,6 +80,10 @@ A native feature becomes a packaged official plugin that keeps its old setting a
   Every matched site must declare the semantic keys a primitive reads,
   including the key a `semanticKey` param names; `plugin:check` also refuses a
   missing required param.
+- A plugin runs on desktops only unless `requires.formFactors` says
+  `["desktop", "mobile"]`. Add `mobile` only for a plugin checked on a phone
+  (Firefox for Android); without it a phone shows the plugin disabled with
+  `needs-form-factor`. It needs no `engine` floor: older builds ignore the key.
 - Ten locales for bundled plugins. English lives in the top-level `name` /
   `description`; the other nine sit under `i18n.<locale>` with `name`,
   `description`, `changelog` when set, and a label for every setting. A local

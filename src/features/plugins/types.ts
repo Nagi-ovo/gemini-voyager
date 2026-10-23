@@ -15,6 +15,7 @@
  *    plugin run arbitrary top-level code.
  */
 
+import type { FormFactor } from '@/core/types/formFactor';
 import type { TranslationKey } from '@/utils/translations';
 
 import type { BridgePolicySection } from './sites/sections/bridgePolicyData';
@@ -295,6 +296,12 @@ export interface PluginRequirements {
   readonly handlers?: readonly string[];
   /** Semantic selector keys the plugin expects the site adapter to define. */
   readonly semantic?: readonly string[];
+  /**
+   * Device classes the plugin runs on. Absent means `["desktop"]`: a phone
+   * reports `needs-form-factor` until a plugin adds `"mobile"`. A build that
+   * predates the key ignores it and runs the plugin as it always did.
+   */
+  readonly formFactors?: readonly FormFactor[];
 }
 
 export interface PluginManifest {

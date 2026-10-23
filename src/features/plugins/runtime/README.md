@@ -10,20 +10,38 @@ Part of the [Plugin ecosystem overview](../README.md).
   its ops target. A primitive's own `semantic` keys come from its contract, and
   the key a `semanticKey` param names (every option, when the param is a select
   setting's `{{key}}` token) comes from the op's params.
+- `requires.formFactors` lists the device classes the plugin runs on, `desktop`
+  and `mobile` (a phone: Firefox for Android and its forks). Absent means
+  `["desktop"]`, so a plugin reaches phones only once its manifest adds
+  `"mobile"`; that one line is the whole switch. The device comes from the
+  system (`runtime.getPlatformInfo().os === 'android'`, through
+  `core/utils/formFactor.ts`), never from the user agent or the window width,
+  because Firefox's "Desktop site" rewrites the user agent. A build older than
+  the key ignores it and runs the plugin as before, so it needs no engine floor.
+  Page start paths that serve a plugin's feature outside `PluginHost`
+  (Folder-as-Project, a feature's coachmark or notice, the watermark fetch
+  interceptor) follow the same manifest through `packagedFormFactor.ts`.
 
-`runtime/pluginStatus.ts` derives both sets (`requiredHandlers`,
-`requiredSemanticKeys`) and turns them into a status, which `PluginHost` reports
+`runtime/pluginStatus.ts` derives the first two sets (`requiredHandlers`,
+`requiredSemanticKeys`), checks the device first (`runsOnFormFactor`) and turns
+them into a status, which `PluginHost` reports
 for every plugin that targets the page instead of quietly filtering it:
 
-| Kind             | Meaning                                 | Popup                                         |
-| ---------------- | --------------------------------------- | --------------------------------------------- |
-| `needs-engine`   | `engine` range above this build         | toggle disabled, "needs Voyager ≥ x.y"        |
-| `needs-handler`  | a primitive or runtime it lacks         | toggle disabled, "update Voyager"             |
-| `needs-semantic` | the site adapter lacks a key it needs   | toggle disabled, names the site               |
-| `ready`          | compatible, not mounted yet             | normal toggle                                 |
-| `mounted`        | enabled and running on this page        | normal toggle                                 |
-| `no-effect`      | mounted but found nothing (D12)         | toggle stays on, yellow warning               |
-| `blocked`        | compatible, kept off by `blockedReason` | toggle keeps the user's choice, note says why |
+| Kind                | Meaning                                   | Popup                                         |
+| ------------------- | ----------------------------------------- | --------------------------------------------- |
+| `needs-form-factor` | `requires.formFactors` leaves this device | toggle disabled, "not available on phones"    |
+| `needs-engine`      | `engine` range above this build           | toggle disabled, "needs Voyager ≥ x.y"        |
+| `needs-handler`     | a primitive or runtime it lacks           | toggle disabled, "update Voyager"             |
+| `needs-semantic`    | the site adapter lacks a key it needs     | toggle disabled, names the site               |
+| `ready`             | compatible, not mounted yet               | normal toggle                                 |
+| `mounted`           | enabled and running on this page          | normal toggle                                 |
+| `no-effect`         | mounted but found nothing (D12)           | toggle stays on, yellow warning               |
+| `blocked`           | compatible, kept off by `blockedReason`   | toggle keeps the user's choice, note says why |
+
+`needs-form-factor` leaves the user's switch and its sync alone, so the same
+choice still applies on their desktop. The popup works it out from the manifest
+too (`runsOnFormFactor`), because on Firefox for Android it opens as a tab of its
+own and the page may not answer.
 
 `blockedReason` (with `blockedBy` naming the other plugin where there is one):
 

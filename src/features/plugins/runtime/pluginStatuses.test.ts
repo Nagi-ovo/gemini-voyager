@@ -38,6 +38,7 @@ function input(engine: StatusInput['engine']): StatusInput {
     manifests: [blur],
     frozen: new Map(),
     adapter,
+    formFactor: 'desktop',
     wish: { state: {}, legacy: null, legacyPhase: 'none', admission: CLOSED_ADMISSION },
     blocked: new Map(),
     engine,

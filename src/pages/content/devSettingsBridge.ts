@@ -15,17 +15,24 @@
  * `'gv-dev-settings-result'` and the same `id`. Writes reach storage only:
  * popup-side steps such as permission prompts do not run.
  *
- * Any script on the page can post here, so only `StorageKeys` values are
- * accepted, and callers must guard `startDevSettingsBridge()` with
- * `import.meta.env.VOYAGER_DEV_SETTINGS_BRIDGE` so production bundles drop it.
+ * `{ area: 'local', action: 'set', values: { gvDevFormFactor: 'mobile' } }`
+ * makes this desktop act as a phone (`core/utils/formFactor.ts`) from the next
+ * page load; `remove` it to go back.
+ *
+ * Any script on the page can post here, so only `StorageKeys` values (and the
+ * dev form-factor key) are accepted, and callers must guard
+ * `startDevSettingsBridge()` with `import.meta.env.VOYAGER_DEV_SETTINGS_BRIDGE`
+ * so production bundles drop it.
  */
 import { StorageKeys } from '@/core/types/common';
 import { hasValidExtensionContext } from '@/core/utils/extensionContext';
+import { DEV_FORM_FACTOR_KEY } from '@/core/utils/formFactor';
 
 export const DEV_SETTINGS_REQUEST_SOURCE = 'gv-dev-settings';
 export const DEV_SETTINGS_RESULT_SOURCE = 'gv-dev-settings-result';
 
-const KNOWN_KEYS: readonly string[] = Object.values(StorageKeys);
+// Plus the dev-only device override, which exists only in builds that carry this bridge.
+const KNOWN_KEYS: readonly string[] = [...Object.values(StorageKeys), DEV_FORM_FACTOR_KEY];
 
 type Area = 'sync' | 'local';
 

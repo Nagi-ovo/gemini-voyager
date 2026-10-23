@@ -3,6 +3,7 @@ import {
   accountIsolationService,
   detectAccountPlatformFromUrl,
 } from '@/core/services/AccountIsolationService';
+import { FORM_FACTOR_MESSAGE, formFactorResponse } from '@/core/utils/formFactor';
 import { LIBRARY_OPEN_MESSAGE, LIBRARY_PAGE_PATH } from '@/features/savedLibrary/openLibraryPage';
 
 async function openSettingsPageFallback(sourceTabId?: number): Promise<void> {
@@ -26,6 +27,7 @@ export function handlePageRuntimeMessage(
   if (
     ![
       LIBRARY_OPEN_MESSAGE,
+      FORM_FACTOR_MESSAGE,
       'gv.account.resolve',
       'gv.openPopup',
       'gv.syncToIDE',
@@ -33,6 +35,8 @@ export function handlePageRuntimeMessage(
     ].includes(message.type)
   )
     return null;
+  // Content scripts have no getPlatformInfo; they ask here (`core/utils/formFactor.ts`).
+  if (message.type === FORM_FACTOR_MESSAGE) return formFactorResponse();
   return (async () => {
     if (message.type === LIBRARY_OPEN_MESSAGE) {
       await chrome.tabs.create({ url: chrome.runtime.getURL(LIBRARY_PAGE_PATH) });
