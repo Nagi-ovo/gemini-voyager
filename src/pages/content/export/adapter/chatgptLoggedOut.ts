@@ -19,6 +19,12 @@ import type { ExportPlatformAdapter } from './platform/contract';
 import type { ExportSelectionOptions } from './type';
 
 const LOGGED_OUT_USER_SELECTOR = '[data-user-message-bubble]';
+/**
+ * A reply still streaming: its message carries `data-message-streaming` with an
+ * empty value (measured live). Its Stop button sits outside `main`, where the
+ * desktop check looks, so that check alone never fires on this page.
+ */
+const STREAMING_MESSAGE_SELECTOR = '[data-message-streaming]:not([data-message-streaming="false"])';
 
 /**
  * Reads ChatGPT's logged-out conversation page (see `chatgptLoggedOutDom.ts`),
@@ -87,7 +93,10 @@ export function createChatGptLoggedOutReader(
       selection(selectedIds);
       const hashes = await loadChatGptStarHashes(captured.expectedUrl);
       assertActive(captured);
-      if (isChatGptThreadGenerating(resolveVisibleConversationRoot())) {
+      if (
+        resolveChatGptLoggedOutThread()?.querySelector(STREAMING_MESSAGE_SELECTOR) ||
+        isChatGptThreadGenerating(resolveVisibleConversationRoot())
+      ) {
         throw new Error('chatgpt_export_response_still_generating');
       }
       const current = selection(selectedIds);

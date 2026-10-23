@@ -181,16 +181,19 @@ describe('ChatGPT logged-out page export', () => {
     );
   });
 
-  it('does not export a reply while the mobile composer shows Stop', async () => {
-    document
-      .querySelector('main')!
-      .insertAdjacentHTML(
-        'beforeend',
-        '<button data-testid="stop-button">Stop generating</button>',
-      );
-    await expect(site.turns.build(new Set(ids()), {})).rejects.toThrow(
+  it('does not export a reply that is still streaming', async () => {
+    const selected = new Set(ids());
+    // As measured live: an empty attribute on the message, and Stop outside `main`.
+    document.querySelector('[data-message-id="a2"]')!.setAttribute('data-message-streaming', '');
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<button aria-label="Stop streaming">Stop</button>',
+    );
+    await expect(site.turns.build(selected, {})).rejects.toThrow(
       'chatgpt_export_response_still_generating',
     );
+    document.querySelector('[data-message-id="a2"]')!.removeAttribute('data-message-streaming');
+    await expect(site.turns.build(selected, {})).resolves.toHaveLength(2);
   });
 
   it('honors cancellation and conversation changes', async () => {
