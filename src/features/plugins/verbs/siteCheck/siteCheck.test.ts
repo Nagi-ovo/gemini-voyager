@@ -227,4 +227,30 @@ describe('site check primitive', () => {
     reply.click();
     expect(pageClick).toHaveBeenCalledTimes(1);
   });
+
+  it('does not swallow the first page click after a pick restarted from the launcher and teardown', async () => {
+    activate(claude);
+    const pickButton = () =>
+      [...panel()!.querySelectorAll('button')].find((button) =>
+        button.textContent?.startsWith('Pick'),
+      )!;
+    launcher()!.click();
+    pickButton().click();
+    // The launcher stays pressable mid-pick; it leaves the pick for the panel.
+    launcher()!.click();
+    expect(document.querySelector('.gv-site-check-picker')).toBeNull();
+    pickButton().click();
+    expect(document.querySelectorAll('.gv-site-check-picker')).toHaveLength(1);
+
+    await scope?.dispose();
+    const reply = document.getElementById('reply')!;
+    const pageClick = vi.fn();
+    reply.addEventListener('click', pageClick);
+    reply.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }),
+    );
+    expect(pageClick).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('.gv-site-check-panel')).toBeNull();
+    expect(document.querySelector('.gv-site-check-picker')).toBeNull();
+  });
 });

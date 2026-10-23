@@ -100,6 +100,7 @@ export const siteCheckPrimitive: Primitive<SiteCheckParams> = {
       let picker: Picker | null = null;
       let picked: PickedSection | null = null;
       let current: { report: SiteCheckReport; probes: readonly Probe[] } | null = null;
+      let disposed = false;
 
       const closePanel = (): void => {
         panelLayer?.remove();
@@ -129,27 +130,7 @@ export const siteCheckPrimitive: Primitive<SiteCheckParams> = {
             current = checkPage(context, picked);
             render();
           },
-          pick: () => {
-            closePanel();
-            picker = startPicker({
-              doc,
-              labels: {
-                hint: getTranslationSync('siteCheckPickHint'),
-                cancel: getTranslationSync('siteCheckCancel'),
-              },
-              onPick: (element) => {
-                picker = null;
-                const probes = current?.probes ?? [];
-                const ids = pluginIds(probes.map((probe) => probe.source));
-                picked = describePick(element, probes, ids);
-                openPanel();
-              },
-              onCancel: () => {
-                picker = null;
-                openPanel();
-              },
-            });
-          },
+          pick: startPick,
           copy: () => {
             void copy(report).then((ok) => ok && notify('siteCheckCopied'));
           },
@@ -167,7 +148,38 @@ export const siteCheckPrimitive: Primitive<SiteCheckParams> = {
         });
         panel.querySelector<HTMLButtonElement>('.gv-sc-close')?.focus({ preventScroll: true });
       };
+      const stopPick = (): void => {
+        picker?.stop();
+        picker = null;
+      };
+      function startPick(): void {
+        closePanel();
+        // One picker at a time: a second one would orphan the first's capture listeners.
+        stopPick();
+        const instance: Picker = startPicker({
+          doc,
+          labels: {
+            hint: getTranslationSync('siteCheckPickHint'),
+            cancel: getTranslationSync('siteCheckCancel'),
+          },
+          onPick: (element) => {
+            if (picker !== instance || disposed) return;
+            picker = null;
+            const probes = current?.probes ?? [];
+            const ids = pluginIds(probes.map((probe) => probe.source));
+            picked = describePick(element, probes, ids);
+            openPanel();
+          },
+          onCancel: () => {
+            if (picker !== instance || disposed) return;
+            picker = null;
+            openPanel();
+          },
+        });
+        picker = instance;
+      }
       const openPanel = (): void => {
+        if (disposed) return;
         current = checkPage(context, picked);
         panelLayer ??= mountLayerHost('popover', PANEL_CSS);
         panelLayer.host.classList.add('gv-site-check-panel');
@@ -175,9 +187,20 @@ export const siteCheckPrimitive: Primitive<SiteCheckParams> = {
       };
 
       const listeners = new view.AbortController();
-      launcher.addEventListener('click', () => (panelLayer ? closePanel() : openPanel()), {
-        signal: listeners.signal,
-      });
+      launcher.addEventListener(
+        'click',
+        () => {
+          // The launcher stays live during a pick; pressing it leaves the pick for the panel.
+          if (picker) {
+            stopPick();
+            openPanel();
+            return;
+          }
+          if (panelLayer) closePanel();
+          else openPanel();
+        },
+        { signal: listeners.signal },
+      );
       doc.addEventListener(
         'keydown',
         (event) => {
@@ -190,11 +213,11 @@ export const siteCheckPrimitive: Primitive<SiteCheckParams> = {
       const stopPanelLanguage = onCachedLanguageChange(render);
 
       return () => {
+        disposed = true;
         listeners.abort();
         stopLanguage();
         stopPanelLanguage();
-        picker?.stop();
-        picker = null;
+        stopPick();
         closePanel();
         launcherLayer.remove();
         toaster.destroy();
