@@ -7,7 +7,7 @@
  */
 import { isVoyagerLayerEvent, mountLayerHost } from '@/core/ui/layer';
 
-import { isVoyagerElement } from './skeleton';
+import { clampPick, isVoyagerElement } from './skeleton';
 import { PICKER_CSS, PICKING_CLASS, PICKING_PAGE_CSS } from './styles';
 
 export interface PickerOptions {
@@ -30,7 +30,8 @@ function pageElement(event: Event): Element | null {
   const first = event.composedPath()[0];
   if (!(first instanceof Element) || isVoyagerElement(first)) return null;
   const tag = first.tagName.toLowerCase();
-  return tag === 'html' || tag === 'body' ? null : first;
+  // Outline what the report will describe: a drawing, not a node inside it.
+  return tag === 'html' || tag === 'body' ? null : clampPick(first);
 }
 
 export function startPicker(options: PickerOptions): Picker {

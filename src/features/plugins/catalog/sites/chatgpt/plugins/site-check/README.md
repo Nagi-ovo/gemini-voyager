@@ -13,11 +13,12 @@ and folder rules carry no expectation and read **Nothing, may be normal**.
 **Pick an element** outlines what the pointer is over; a click picks it and
 Escape or Cancel leaves. The panel then adds which selectors match the picked
 element and its ancestors, and its structure: tag names, class names (except
-ones that carry content, such as a code block's language), `role`, a few ARIA
-states and `data-*` names, with values only for structural attributes such as
-`data-testid` and for `true`/`false`. Text nodes and text-bearing attributes
-(`aria-label`, `title`, `alt`, `placeholder`, `href`, `src`, `value`, …) are
-never read.
+ones that carry content, such as a code block's language, and any inside a
+message), `role`, a few ARIA states and `data-*` names, with values only for
+structural attributes such as `data-testid` and for `true`/`false`. A pick
+inside a drawing (an SVG, or a diagram Voyager drew) becomes the drawing,
+shown by its tag alone. Text nodes and text-bearing attributes (`aria-label`,
+`title`, `alt`, `placeholder`, `href`, `src`, `value`, …) are never read.
 
 The preview shows exactly the Markdown that **Copy report** puts on the
 clipboard; **Download .json** saves the same report; **Copy and open an

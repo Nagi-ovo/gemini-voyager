@@ -15,7 +15,7 @@ import type { PluginStatus } from '../../runtime/pluginStatus';
 import type { SiteAdapter } from '../../types';
 import { type Probe, type ProbeResult, probeMatches } from './probes';
 import { redactRoute } from './route';
-import { ancestorChain, buildSkeleton, describeElement } from './skeleton';
+import { ancestorChain, buildSkeleton, clampPick, describeElement, isInsideOnly } from './skeleton';
 
 export const SITE_CHECK_FORMAT = 'voyager.site-check.v1' as const;
 export const LOCAL_SELECTOR_PLACEHOLDER = '(local plugin)';
@@ -84,19 +84,30 @@ export function pluginIds(ids: readonly string[]): PluginIds {
   };
 }
 
-/** The picked element's section: its ancestors' matches and its own sanitized subtree. */
+/** Semantic keys whose elements hold a message, which its author's markup can style. */
+const TURN_KEYS = new Set(['userTurn', 'assistantTurn']);
+
+/**
+ * The picked element's section: its ancestors' matches and its own sanitized
+ * subtree. A pick inside a drawing or a diagram becomes the drawing itself.
+ */
 export function describePick(
-  element: Element,
+  picked: Element,
   probes: readonly Probe[],
   ids: PluginIds,
 ): PickedSection {
+  const element = clampPick(picked);
+  const turns = probes.flatMap((probe) =>
+    probe.source === 'site' && TURN_KEYS.has(probe.name) && probe.selector ? [probe.selector] : [],
+  );
+  const inContent = (node: Element) => isInsideOnly(node, turns);
   const path = ancestorChain(element).map((node) => ({
-    element: describeElement(node),
+    element: describeElement(node, { withoutClasses: inContent(node) }),
     matches: probes
       .filter((probe) => probeMatches(node, probe))
       .map((probe) => probeLabel(probe, ids)),
   }));
-  const { lines, truncated } = buildSkeleton(element);
+  const { lines, truncated } = buildSkeleton(element, inContent);
   return { path, skeleton: lines, truncated };
 }
 

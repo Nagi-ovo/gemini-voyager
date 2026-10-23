@@ -83,12 +83,12 @@ describe('site check skeleton', () => {
     const root = mount(
       '<div><svg class="icon"><text>Secret svg text</text><path d="M0 0"></path></svg><div data-gv-layer="popover"></div></div>',
     );
-    expect(buildSkeleton(root).lines).toEqual(['div', '  svg.icon']);
+    expect(buildSkeleton(root).lines).toEqual(['div', '  svg{withheld}']);
   });
 
   it('lists the ancestors outermost first, stopping below body', () => {
     mount('<main class="app"><section><p id="leaf"></p></section></main>');
     const chain = ancestorChain(document.getElementById('leaf')!);
-    expect(chain.map(describeElement)).toEqual(['main.app', 'section', 'p']);
+    expect(chain.map((node) => describeElement(node))).toEqual(['main.app', 'section', 'p']);
   });
 });
