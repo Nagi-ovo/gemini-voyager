@@ -1,0 +1,34 @@
+# DeepSeek · Site check
+
+A tool for reporting that Voyager broke on DeepSeek. While the plugin is on, a
+small **Site check** button sits near the bottom inline-end corner. It opens a
+panel that lists every selector Voyager relies on for this page with its match
+count right now: the site adapter's semantic keys, and for each running plugin
+the keys it reads, the raw selectors of its DOM ops and primitive params, and
+the `folders` rules of `site.json` when its primitive reads them. A key that
+should be on every page and finds nothing reads **Found nothing**; a
+conversation-only key on another page reads **Only in a chat**; raw selectors
+and folder rules carry no expectation and read **Nothing, may be normal**.
+
+**Pick an element** outlines what the pointer is over; a click picks it and
+Escape or Cancel leaves. The panel then adds which selectors match the picked
+element and its ancestors, and its structure: tag names, class names, `role`,
+a few ARIA states and `data-*` names with short token values. Text nodes and
+text-bearing attributes (`aria-label`, `title`, `alt`, `placeholder`, `href`,
+`src`, `value`, …) are never read.
+
+The preview shows exactly the Markdown that **Copy report** puts on the
+clipboard; **Download .json** saves the same report; **Copy and open an
+issue** copies it and opens the bug report form with only a short title,
+summary and the extension and browser versions in the URL. The report holds
+the site id, the route with conversation ids replaced by `:id`, the extension,
+engine and browser versions, the plugins on the page with their status, the
+selector table and the picked element. It never holds message text, titles,
+account names or emails, or a full URL; a local plugin is named `local.#n`
+and its selectors are withheld.
+
+Enable it from Voyager's popup (off by default); there are no settings.
+
+The plugin invokes Voyager's `siteCheck` primitive with no params, so it needs
+an extension that ships the primitive. The manifest uses `engine: ">=next"`
+until the release stamps its engine version.
