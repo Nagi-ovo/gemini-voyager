@@ -50,33 +50,25 @@ const OTHER: SiteFacts = {
   defaultTriggerSpot: besideMaterialFab,
 };
 
-/** ChatGPT and Claude: no Material button to sit beside. */
+/**
+ * Plugin platforms have no Material button to sit beside, and their theme
+ * markers belong to site descriptors, which the generic detection can miss.
+ */
 const CATALOG: SiteFacts = {
   ...OTHER,
   defaultTriggerSpot: () => null,
-};
-
-/**
- * DeepSeek marks its theme with `body.dark` / `body.light`, which the generic
- * markers miss, so the panel opened light on a dark page. The page-wide scheme
- * bridge already reads DeepSeek's site descriptor.
- */
-const DEEPSEEK: SiteFacts = {
-  ...CATALOG,
   scheme: () => getScheme(),
 };
 
 function siteFacts(url: string): SiteFacts {
-  switch (SiteRegistry.createDefault().resolveByUrl(url)?.id) {
+  const adapter = SiteRegistry.createDefault().resolveByUrl(url);
+  switch (adapter?.id) {
     case 'gemini':
       return GEMINI;
-    case 'chatgpt':
-    case 'claude':
-      return CATALOG;
-    case 'deepseek':
-      return DEEPSEEK;
-    default:
+    case 'aistudio':
       return OTHER;
+    default:
+      return adapter ? CATALOG : OTHER;
   }
 }
 

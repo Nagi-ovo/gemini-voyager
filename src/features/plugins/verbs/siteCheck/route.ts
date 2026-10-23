@@ -3,8 +3,10 @@
  * query or hash), keeping just the site's own route words and replacing every
  * other segment with a placeholder. What a segment looks like proves nothing:
  * a Gemini id can be plain hex letters and a ChatGPT GPT id a short token, so
- * only words this table names survive. An unknown site keeps no segment.
+ * only explicitly configured route words survive. An unknown site without
+ * routeWords keeps no segment.
  */
+import { BUNDLED_SITE_ADAPTERS } from '../../catalog/sites';
 import { parseSiteConversation } from '../../sites/siteConversation';
 import type { SiteAdapter } from '../../types';
 
@@ -61,13 +63,16 @@ export function redactRoute(
     return { route: '/', conversation: false };
   }
   const routes = site ? SITE_ROUTES[site.id] : undefined;
+  // Words come from this build's site.json only: a remote site record could name an id as a word.
+  const bundled = site ? BUNDLED_SITE_ADAPTERS.find((entry) => entry.id === site.id) : undefined;
+  const words = new Set([...(routes?.words ?? []), ...(bundled?.routeWords ?? [])]);
   const segments = pathname.split('/').filter((segment) => segment.length > 0);
   const kept = segments.slice(0, MAX_SEGMENTS).map((segment, index) => {
     if (routes?.accountSlots && index === 1 && segments[0] === 'u' && ACCOUNT_SLOT.test(segment)) {
       return segment;
     }
     if (routes?.accountSlots && index === 0 && segment === 'u') return segment;
-    return routes?.words.has(segment) ? segment : ROUTE_ID_PLACEHOLDER;
+    return words.has(segment) ? segment : ROUTE_ID_PLACEHOLDER;
   });
   if (segments.length > MAX_SEGMENTS) kept.push('…');
   const route = `/${kept.join('/')}`;

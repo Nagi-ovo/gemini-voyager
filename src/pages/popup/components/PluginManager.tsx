@@ -17,6 +17,7 @@ import {
 } from './PluginIdentity';
 import { PluginOpsNotes } from './PluginOpsNotes';
 import { PluginSettings } from './PluginSettings';
+import { DEDICATED_TIMELINE_SOURCES } from './dedicatedTimelineSources';
 import { BLOCKED_NOTE_TONE_CLASS, blockedPluginNote } from './pluginBlockedNote';
 import { usePluginAccess } from './usePluginAccess';
 import { usePluginPreferences } from './usePluginPreferences';
@@ -37,13 +38,6 @@ export interface TimelineRailOptions {
     enabled: boolean,
   ) => ReactNode;
 }
-
-// Custom catalog IDs can be object property names such as "constructor".
-const DEDICATED_TIMELINE_SOURCES = new Map<string, readonly string[]>([
-  ['voyager.chatgpt-timeline', ['builtin']],
-  ['voyager.claude-timeline', ['builtin']],
-  ['voyager.deepseek-timeline', ['bundled-catalog', 'host-catalog']],
-]);
 
 function dedicatedTimelineKeys(
   plugin: PluginManifest,

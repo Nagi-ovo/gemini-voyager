@@ -2,8 +2,8 @@ import type { PromptScheme } from '@/features/prompt/PromptSiteAdapter';
 
 /**
  * The page's light/dark, read from the theme markers Gemini and AI Studio set
- * (and a few generic ones), else the OS. Prompt surfaces opened on any site
- * other than DeepSeek start from this.
+ * (and a few generic ones), else the OS. Prompt surfaces on Gemini, AI Studio
+ * and custom websites start from this; plugin sites read their site descriptor.
  */
 export function detectPageScheme(): PromptScheme {
   if (

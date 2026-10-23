@@ -47,6 +47,7 @@ export interface SiteAdapterData {
   readonly brandColor?: string;
   readonly capabilities: readonly SiteCapability[];
   readonly conversationIdPattern?: string;
+  readonly routeWords?: readonly string[];
   readonly turnKeyAttributes?: readonly string[];
   readonly modelPicker?: ModelPickerSection;
   readonly projects?: ProjectsSection;
@@ -64,6 +65,8 @@ const MAX_PATTERN_LENGTH = 500;
 /** A plain lower-case attribute name: it is interpolated into `[name]`. */
 const ATTRIBUTE_NAME = /^[a-z][a-z0-9-]{0,63}$/;
 const MAX_TURN_KEY_ATTRIBUTES = 8;
+const ROUTE_WORD = /^[a-z0-9-]{1,64}$/;
+const MAX_ROUTE_WORDS = 64;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -309,6 +312,18 @@ function parseSiteAdapterData(input: unknown): SiteAdapterDataParse {
   }
 
   if (
+    input.routeWords !== undefined &&
+    (!Array.isArray(input.routeWords) ||
+      input.routeWords.length > MAX_ROUTE_WORDS ||
+      !input.routeWords.every((word) => typeof word === 'string' && ROUTE_WORD.test(word)))
+  ) {
+    issues.push({
+      path: 'routeWords',
+      message: `must be up to ${MAX_ROUTE_WORDS} static route segments of 1-64 lower-case letters, digits or hyphens`,
+    });
+  }
+
+  if (
     input.turnKeyAttributes !== undefined &&
     (!Array.isArray(input.turnKeyAttributes) ||
       input.turnKeyAttributes.length === 0 ||
@@ -345,6 +360,9 @@ function parseSiteAdapterData(input: unknown): SiteAdapterDataParse {
         ...(typeof input.conversationIdPattern === 'string'
           ? { conversationIdPattern: input.conversationIdPattern }
           : {}),
+        ...(Array.isArray(input.routeWords)
+          ? { routeWords: (input.routeWords as string[]).slice() }
+          : {}),
         ...(Array.isArray(input.turnKeyAttributes)
           ? { turnKeyAttributes: (input.turnKeyAttributes as string[]).slice() }
           : {}),
@@ -372,6 +390,7 @@ export function siteAdapterToData(adapter: SiteAdapter): SiteAdapterData {
     ...(adapter.conversationIdPattern
       ? { conversationIdPattern: adapter.conversationIdPattern }
       : {}),
+    ...(adapter.routeWords ? { routeWords: [...adapter.routeWords] } : {}),
     ...(adapter.turnKeyAttributes ? { turnKeyAttributes: [...adapter.turnKeyAttributes] } : {}),
     // Without these the refresher's cache write would silently drop the sections.
     ...(adapter.modelPicker ? { modelPicker: { ...adapter.modelPicker } } : {}),

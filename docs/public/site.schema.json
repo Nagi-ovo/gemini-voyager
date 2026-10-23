@@ -105,6 +105,13 @@
       "description": "Regular expression over `location.pathname` whose first capture group is the conversation id. Not a selector. Omit for sites without per-conversation routes.",
       "examples": ["^/chat/([^/?#]+)"]
     },
+    "routeWords": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "type": "string", "pattern": "^[a-z0-9-]{1,64}$" },
+      "description": "Static router segments site-check reports may retain. Every other path segment is redacted; queries and hashes are always omitted. Only lower-case letters, digits and hyphens are allowed; never put conversation or account identifiers here.",
+      "examples": [["chat", "new", "library"]]
+    },
     "turnKeyAttributes": {
       "type": "array",
       "minItems": 1,

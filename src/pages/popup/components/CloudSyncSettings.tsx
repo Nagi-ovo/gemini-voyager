@@ -1,7 +1,9 @@
 import React from 'react';
 
+import { PLATFORM_LOGOS, type PlatformLogo } from '@/core/icons/platformLogos';
 import type { SyncPlatform } from '@/core/types/sync';
 import { FOLDER_PLATFORMS } from '@/features/folder/platforms';
+import { BUNDLED_SITE_ADAPTERS } from '@/features/plugins/catalog/sites';
 import type { TranslationKey } from '@/utils/translations';
 
 import { Button } from '../../../components/ui/button';
@@ -21,12 +23,14 @@ interface CloudSyncSettingsProps {
   sourceTabId?: number;
 }
 
-const PLATFORM_PRESENTATION: Record<
-  SyncPlatform,
-  {
-    labelKey: TranslationKey;
-    logo: string | React.ComponentType;
-  }
+const PLATFORM_PRESENTATION: Partial<
+  Record<
+    SyncPlatform,
+    {
+      labelKey: TranslationKey;
+      logo: string | React.ComponentType;
+    }
+  >
 > = {
   gemini: {
     labelKey: 'platformGemini',
@@ -40,6 +44,31 @@ const PLATFORM_PRESENTATION: Record<
   claude: { labelKey: 'platformClaude', logo: IconClaude },
   deepseek: { labelKey: 'platformDeepSeek', logo: IconDeepSeek },
 };
+
+function CloudSyncPlatformLogo({ platform }: { platform: string }) {
+  const logos: Readonly<Record<string, PlatformLogo>> = PLATFORM_LOGOS;
+  const logo = Object.hasOwn(logos, platform) ? logos[platform] : undefined;
+  return logo ? (
+    <svg viewBox={logo.viewBox} width="100%" height="100%" fill="currentColor">
+      {logo.paths.map((path) => (
+        <path key={path} d={path} />
+      ))}
+    </svg>
+  ) : (
+    <svg
+      viewBox="0 0 24 24"
+      width="100%"
+      height="100%"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <ellipse cx="12" cy="12" rx="4" ry="9" />
+      <path d="M3 12h18" />
+    </svg>
+  );
+}
 
 export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) {
   const { t } = useLanguage();
@@ -66,8 +95,15 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
     handleDownloadFromDrive,
   } = useCloudSyncSettings(sourceTabId);
 
-  const { labelKey, logo: Logo } = PLATFORM_PRESENTATION[platform];
   if (!hasFolderPlatform) return null;
+  // Derived folder sites have no preset; catalog metadata must not crash the popup.
+  const preset = Object.hasOwn(PLATFORM_PRESENTATION, platform)
+    ? PLATFORM_PRESENTATION[platform]
+    : undefined;
+  const label = preset
+    ? t(preset.labelKey)
+    : BUNDLED_SITE_ADAPTERS.find((site) => site.id === platform)?.label || platform;
+  const Logo = preset?.logo;
   return (
     <Card className="p-4">
       <CardTitle className="mb-4">{t('cloudSync')}</CardTitle>
@@ -300,7 +336,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
                     className="bg-primary/70 size-1.5 shrink-0 rounded-full"
                   />
                   <span className="sr-only">{t('currentPlatform')}: </span>
-                  <span className="min-w-0 break-words">{t(labelKey)}</span>
+                  <span className="min-w-0 break-words">{label}</span>
                 </p>
 
                 <div className="text-muted-foreground grid min-w-0 gap-1 text-xs leading-snug">
@@ -326,7 +362,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
               >
                 {typeof Logo !== 'string' ? (
                   <div className="size-16 opacity-[0.13] dark:opacity-[0.2]">
-                    <Logo />
+                    {Logo ? <Logo /> : <CloudSyncPlatformLogo platform={platform} />}
                   </div>
                 ) : (
                   <img

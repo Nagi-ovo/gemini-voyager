@@ -17,6 +17,7 @@ import {
   partitionPluginOriginPatterns,
   pluginsToOriginPatterns,
 } from '@/features/plugins/runtime/siteRegistration';
+import { FOLDERS_PLUGIN_IDS } from '@/features/plugins/sources/bundledFolderPlugins';
 import type { PluginManifest } from '@/features/plugins/types';
 
 import {
@@ -27,11 +28,7 @@ import {
 export const SHADOW_KEY_GUARD_SCRIPT_ID = 'gv-shadow-key-guard';
 
 /** Plugins whose pages host a shadow-root panel with text fields. */
-export const SHADOW_KEY_GUARD_PLUGIN_IDS: ReadonlySet<string> = new Set([
-  'voyager.chatgpt-folders',
-  'voyager.claude-folders',
-  'voyager.deepseek-folders',
-]);
+export const SHADOW_KEY_GUARD_PLUGIN_IDS = FOLDERS_PLUGIN_IDS;
 
 /** The emitted file name keeps the entry's name; see `selfContainedContentScripts`. */
 const GUARD_ENTRY_NAME = 'shadowKeyGuardEntry';

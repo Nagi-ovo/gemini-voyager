@@ -16,18 +16,9 @@ import type {
 import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '../verbs/contracts';
 import { BuiltinPluginSource } from './BuiltinPluginSource';
 import { BundledCatalogPluginSource } from './BundledCatalogPluginSource';
+import { FOLDERS_PLUGIN_IDS } from './bundledFolderPlugins';
 
-/**
- * The folders plugins of the catalog sites. Their records come only from this
- * build, as the packaged ids' do: a remote record could otherwise change the
- * pages and settings through which a site's folder data is reached, or the
- * kill switch could delist them, while the folders themselves stay Voyager's.
- */
-const FOLDERS_PLUGIN_IDS: ReadonlySet<string> = new Set([
-  'voyager.chatgpt-folders',
-  'voyager.claude-folders',
-  'voyager.deepseek-folders',
-]);
+export { FOLDERS_PLUGIN_IDS } from './bundledFolderPlugins';
 
 /** Whether only this build may supply the record under `id`. */
 export function isBuildOnlyPluginId(id: string): boolean {
