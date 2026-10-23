@@ -81,6 +81,7 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   responseNotification: 'Response completion notifications',
   timeline: 'Show Timeline',
   folders: 'Folders',
+  siteCheck: 'Site check',
 };
 
 type SharedRuntimePolicy = 'onePerPage' | 'perElement' | 'sharedDrafts';

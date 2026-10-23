@@ -10,6 +10,9 @@ import type { LegacySettingSnapshot } from '@/features/plugins/storage/legacySet
 import type { OfficialPluginEntry } from './officialPluginRegistry';
 import { sidebarWidthForDisplay } from './sidebarWidthDisplay';
 
+const SITE_CHECK_ALIASES =
+  'site check diagnostics bug report broken selector element picker 站点检查 诊断 反馈 失效';
+
 const BATCH_DELETE_ALIASES =
   'batch delete bulk remove select multiple conversations chats 批量删除 多选 删除对话';
 
@@ -481,5 +484,18 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     ],
     searchAliases: ['ide vscode cursor local server code context cobridge 上下文 代码 编辑器 本地'],
     panel: 'contextSync',
+  },
+  // Gemini and AI Studio share one switch, as the batch delete rows do.
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiSiteCheck,
+    topic: 'pluginsConversations',
+    searchKeys: [],
+    searchAliases: [SITE_CHECK_ALIASES],
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.aistudioSiteCheck,
+    topic: 'pluginsConversations',
+    searchKeys: [],
+    searchAliases: [SITE_CHECK_ALIASES],
   },
 ];

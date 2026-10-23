@@ -188,5 +188,6 @@
   "BRIDGE_PAIRING": "gvBridgePairing",
   "BRIDGE_POLICY_HIGH_WATER": "gvBridgePolicyHighWater",
   "BRIDGE_OUTBOX": "gvBridgeOutbox",
-  "BRIDGE_ACCOUNT_PLANS": "gvBridgeAccountPlans"
+  "BRIDGE_ACCOUNT_PLANS": "gvBridgeAccountPlans",
+  "SITE_CHECK_ENABLED": "gvSiteCheckEnabled"
 }
