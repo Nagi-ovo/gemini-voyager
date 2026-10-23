@@ -60,5 +60,6 @@ export const GEMINI_EXPORT_MANIFEST: PluginManifest = {
   engine: '>=1.2.0',
   tier: 'declarative',
   matches: ['https://gemini.google.com/*'],
+  requires: { formFactors: ['desktop', 'mobile'] },
   contributes: {},
 };
