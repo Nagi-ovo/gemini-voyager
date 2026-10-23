@@ -4396,5 +4396,11 @@
   "chatgptProUsageUsedCount": {
     "message": "Pro messages used this week: {used}",
     "description": "First line of the Pro usage card when no weekly allowance is known. {used} is a number."
+  },
+  "export_read_incomplete": {
+    "message": "This export may be incomplete. The beginning, end, or message order could not be confirmed."
+  },
+  "export_read_interrupted": {
+    "message": "Export stopped because the conversation changed or a response started. Wait for the response to finish, then try again."
   }
 }

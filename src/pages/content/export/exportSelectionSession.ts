@@ -334,6 +334,11 @@ function createSelectionView(
         if (!liveIds.has(id)) removeBinding(id);
       }
       for (const msg of messages) {
+        // Virtual history stays selectable by role/all, but detached snapshots have no visible checkbox.
+        if (!msg.hostElement.isConnected) {
+          removeBinding(msg.messageId);
+          continue;
+        }
         const previous = bindings.get(msg.messageId);
         const selected = isSelected(msg.messageId);
         if (reconcileExistingSelectionHost(previous?.host, msg.hostElement, selected)) continue;

@@ -4396,5 +4396,11 @@
   "chatgptProUsageUsedCount": {
     "message": "استُخدم {used} من رسائل Pro هذا الأسبوع",
     "description": "First line of the Pro usage card when no weekly allowance is known. {used} is a number."
+  },
+  "export_read_incomplete": {
+    "message": "قد يكون هذا التصدير غير مكتمل. تعذّر تأكيد بداية المحادثة أو نهايتها أو ترتيب الرسائل."
+  },
+  "export_read_interrupted": {
+    "message": "توقف التصدير لأن المحادثة تغيّرت أو بدأ إنشاء رد. انتظر اكتمال الرد ثم حاول مرة أخرى."
   }
 }

@@ -112,6 +112,7 @@
             "enum": [
               "codeCollapse",
               "collapse",
+              "conversationExport",
               "copyButton",
               "counterBadge",
               "draftSave",
@@ -339,6 +340,7 @@
               "enum": [
                 "codeCollapse",
                 "collapse",
+                "conversationExport",
                 "copyButton",
                 "counterBadge",
                 "draftSave",

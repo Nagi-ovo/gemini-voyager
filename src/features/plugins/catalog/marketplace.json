@@ -177,6 +177,11 @@
       "name": "deepseek-site-check",
       "source": "sites/deepseek/plugins/site-check/plugin.json",
       "official": true
+    },
+    {
+      "name": "deepseek-export",
+      "source": "sites/deepseek/plugins/export/plugin.json",
+      "official": true
     }
   ]
 }

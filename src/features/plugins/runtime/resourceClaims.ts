@@ -23,6 +23,7 @@ const HANDLER_RESOURCES: Readonly<Record<string, readonly ResourceId[]>> = {
   turnNavigator: ['timeline-rail'],
   folders: ['folders-surface'],
   siteCheck: ['site-check-launcher'],
+  conversationExport: ['conversation-export-surface'],
 };
 
 /** One resource claimed by one `native` op, kept per op so repeats stay visible. */

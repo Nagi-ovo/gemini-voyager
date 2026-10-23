@@ -3,7 +3,11 @@ import { IMAGE_RENDER_EVENT_ERROR_CODE } from '../types/errors';
 export function resolveExportErrorMessage(
   error: unknown,
   t: (
-    key: 'export_error_generic' | 'export_error_refresh_retry' | 'export_select_mode_empty',
+    key:
+      | 'export_error_generic'
+      | 'export_error_refresh_retry'
+      | 'export_select_mode_empty'
+      | 'export_read_interrupted',
   ) => string,
 ): string {
   const raw =
@@ -17,6 +21,7 @@ export function resolveExportErrorMessage(
     return t('export_error_refresh_retry');
   }
   if (raw === 'export_empty_selection') return t('export_select_mode_empty');
+  if (raw === 'export_read_interrupted') return t('export_read_interrupted');
   if (
     raw === 'export_conversation_changed' ||
     raw === 'chatgpt_export_conversation_changed' ||

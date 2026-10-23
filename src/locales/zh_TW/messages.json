@@ -4396,5 +4396,11 @@
   "chatgptProUsageUsedCount": {
     "message": "本週已用 {used} 次 Pro",
     "description": "First line of the Pro usage card when no weekly allowance is known. {used} is a number."
+  },
+  "export_read_incomplete": {
+    "message": "此次匯出可能不完整，未能確認對話的起點、終點或訊息順序。"
+  },
+  "export_read_interrupted": {
+    "message": "對話已切換或開始產生回覆，匯出已停止。請等待回覆結束後重試。"
   }
 }

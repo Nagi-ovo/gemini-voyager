@@ -4396,5 +4396,11 @@
   "chatgptProUsageUsedCount": {
     "message": "今週の Pro 使用 {used} 回",
     "description": "First line of the Pro usage card when no weekly allowance is known. {used} is a number."
+  },
+  "export_read_incomplete": {
+    "message": "このエクスポートは不完全な可能性があります。会話の先頭、末尾、またはメッセージの順序を確認できませんでした。"
+  },
+  "export_read_interrupted": {
+    "message": "会話が切り替わったか、応答の生成が始まったため、エクスポートを停止しました。応答が完了してから、もう一度お試しください。"
   }
 }

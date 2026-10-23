@@ -76,6 +76,7 @@ export function isSameSiteAdapter(a: SiteAdapter | null, b: SiteAdapter | null):
     a.label === b.label &&
     a.brandColor === b.brandColor &&
     a.conversationIdPattern === b.conversationIdPattern &&
+    JSON.stringify(a.export ?? null) === JSON.stringify(b.export ?? null) &&
     JSON.stringify(a.matches) === JSON.stringify(b.matches) &&
     JSON.stringify(a.selectors) === JSON.stringify(b.selectors) &&
     // The send tracker reads turn keys through this list; a change must rebuild it.

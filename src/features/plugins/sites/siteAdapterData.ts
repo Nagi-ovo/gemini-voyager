@@ -30,6 +30,7 @@ import {
   bridgePolicySectionToData,
   readBridgePolicySection,
 } from './sections/bridgePolicyData';
+import { type SiteExportConfig, readExportConfig } from './sections/exportData';
 import { type FoldersSection, readFoldersSection } from './sections/foldersData';
 import { type ModelPickerSection, readModelPickerSection } from './sections/modelPickerData';
 import { type PageHooksSection, readPageHooksSection } from './sections/pageHooksData';
@@ -49,6 +50,7 @@ export interface SiteAdapterData {
   readonly conversationIdPattern?: string;
   readonly routeWords?: readonly string[];
   readonly turnKeyAttributes?: readonly string[];
+  readonly export?: SiteExportConfig;
   readonly modelPicker?: ModelPickerSection;
   readonly projects?: ProjectsSection;
   readonly pageHooks?: PageHooksSection;
@@ -239,6 +241,9 @@ function parseSiteAdapterData(input: unknown): SiteAdapterDataParse {
   }
   const issues: ManifestIssue[] = [];
   const unknownKeys: ManifestIssue[] = [];
+  const exportConfig = readExportConfig(input.export, issues, isValidSelectorSyntax, (name) =>
+    ATTRIBUTE_NAME.test(name),
+  );
   const modelPickerRead = readModelPickerSection(input.modelPicker);
   const projectsRead = readProjectsSection(input.projects, isValidSelectorSyntax);
   const pageHooksRead = readPageHooksSection(input.pageHooks, isValidSelectorSyntax);
@@ -371,6 +376,7 @@ function parseSiteAdapterData(input: unknown): SiteAdapterDataParse {
         ...(pageHooksRead.pageHooks ? { pageHooks: pageHooksRead.pageHooks } : {}),
         ...(bridgeRead.policy ? { bridge: bridgeRead.policy } : {}),
         ...(foldersRead.folders ? { folders: foldersRead.folders } : {}),
+        ...(exportConfig ? { export: exportConfig } : {}),
       },
     },
   };
@@ -392,6 +398,7 @@ export function siteAdapterToData(adapter: SiteAdapter): SiteAdapterData {
       : {}),
     ...(adapter.routeWords ? { routeWords: [...adapter.routeWords] } : {}),
     ...(adapter.turnKeyAttributes ? { turnKeyAttributes: [...adapter.turnKeyAttributes] } : {}),
+    ...(adapter.export ? { export: { ...adapter.export } } : {}),
     // Without these the refresher's cache write would silently drop the sections.
     ...(adapter.modelPicker ? { modelPicker: { ...adapter.modelPicker } } : {}),
     ...(adapter.projects ? { projects: { ...adapter.projects } } : {}),

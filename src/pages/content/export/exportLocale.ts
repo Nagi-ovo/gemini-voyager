@@ -8,8 +8,13 @@ import type { TranslationKey } from '@/utils/translations';
 export type ExportDictionaries = Record<AppLanguage, Record<string, string>>;
 export type ExportTranslate = (key: TranslationKey) => string;
 
+let loadedDictionaries: ExportDictionaries | null = null;
+
 /** Load every locale's messages. Resolves empty dictionaries if loading fails. */
 export async function loadExportDictionaries(): Promise<ExportDictionaries> {
+  // Each mount awaits this; a repeated dynamic import still waits on the module loader, which can
+  // leave a remounted export entry missing for a moment after a plugin switch.
+  if (loadedDictionaries) return loadedDictionaries;
   try {
     const [enRaw, zhRaw, zhTWRaw, jaRaw, frRaw, esRaw, ptRaw, arRaw, ruRaw, koRaw] =
       await Promise.all([
@@ -25,7 +30,7 @@ export async function loadExportDictionaries(): Promise<ExportDictionaries> {
         import(/* @vite-ignore */ '../../../locales/ko/messages.json'),
       ]);
 
-    return {
+    loadedDictionaries = {
       en: extractMessageDictionary(enRaw),
       zh: extractMessageDictionary(zhRaw),
       zh_TW: extractMessageDictionary(zhTWRaw),
@@ -37,6 +42,7 @@ export async function loadExportDictionaries(): Promise<ExportDictionaries> {
       ru: extractMessageDictionary(ruRaw),
       ko: extractMessageDictionary(koRaw),
     };
+    return loadedDictionaries;
   } catch {
     return {
       en: {},

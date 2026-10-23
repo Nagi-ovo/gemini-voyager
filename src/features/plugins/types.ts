@@ -19,6 +19,7 @@ import type { FormFactor } from '@/core/types/formFactor';
 import type { TranslationKey } from '@/utils/translations';
 
 import type { BridgePolicySection } from './sites/sections/bridgePolicyData';
+import type { SiteExportConfig } from './sites/sections/exportData';
 import type { FoldersSection } from './sites/sections/foldersData';
 import type { ModelPickerSection } from './sites/sections/modelPickerData';
 import type { PageHooksSection } from './sites/sections/pageHooksData';
@@ -89,6 +90,8 @@ export interface SiteAdapter {
    * a send produced from older ones mounting; omit them where the site has none.
    */
   readonly turnKeyAttributes?: readonly string[];
+  /** Optional page facts for the conversationExport primitive. */
+  readonly export?: SiteExportConfig;
   /**
    * Data for the Local Bridge `model.select` op. Optional and isolated: a bad
    * section is dropped without invalidating the adapter (`sectionIssues`).

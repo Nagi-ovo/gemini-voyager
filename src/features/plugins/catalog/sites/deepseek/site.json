@@ -22,6 +22,11 @@
   "brandColor": "#4d6bfe",
   "capabilities": ["chat", "composer", "darkMode"],
   "conversationIdPattern": "^/a/chat/s/([^/?#]+)",
+  "export": {
+    "version": 1,
+    "read": "virtual",
+    "messageKey": "data-virtual-list-item-key"
+  },
   "folders": {
     "format": 1,
     "sidebar": "div:not(.ds-scroll-area):has(> .ds-scroll-area a[href^=\"/a/chat/s/\"]:not(.ds-virtual-list *))",

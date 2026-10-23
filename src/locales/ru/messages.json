@@ -4396,5 +4396,11 @@
   "chatgptProUsageUsedCount": {
     "message": "Pro за неделю: {used}",
     "description": "First line of the Pro usage card when no weekly allowance is known. {used} is a number."
+  },
+  "export_read_incomplete": {
+    "message": "Экспорт может быть неполным. Не удалось подтвердить начало, конец или порядок сообщений."
+  },
+  "export_read_interrupted": {
+    "message": "Экспорт остановлен: диалог изменился или началась генерация ответа. Дождитесь завершения ответа и повторите попытку."
   }
 }

@@ -4396,5 +4396,11 @@
   "chatgptProUsageUsedCount": {
     "message": "이번 주 Pro {used}회 사용",
     "description": "First line of the Pro usage card when no weekly allowance is known. {used} is a number."
+  },
+  "export_read_incomplete": {
+    "message": "이 내보내기는 일부 내용이 누락될 수 있습니다. 대화의 시작, 끝 또는 메시지 순서를 확인하지 못했습니다."
+  },
+  "export_read_interrupted": {
+    "message": "대화가 바뀌었거나 응답 생성이 시작되어 내보내기를 중단했습니다. 응답이 끝난 후 다시 시도하세요."
   }
 }

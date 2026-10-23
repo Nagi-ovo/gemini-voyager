@@ -14,6 +14,9 @@ import type {
 
 /** Selectable messages and the export turns built from a selection of them. */
 export interface ExportTurnReader {
+  /** Catalog readers prove both boundaries and identity before claiming completeness. */
+  readonly completeness?: 'complete' | 'partial' | 'unknown';
+  readonly interruption?: 'generating' | 'route';
   /** Selectable messages, in reading order. */
   readonly messages: () => ExportMessage[];
   /** Export turns for the selected messages, content already read from the page. */

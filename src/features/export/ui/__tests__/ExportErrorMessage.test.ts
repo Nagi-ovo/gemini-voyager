@@ -4,12 +4,17 @@ import { resolveExportErrorMessage } from '../ExportErrorMessage';
 
 describe('resolveExportErrorMessage', () => {
   const t = (
-    key: 'export_error_generic' | 'export_error_refresh_retry' | 'export_select_mode_empty',
+    key:
+      | 'export_error_generic'
+      | 'export_error_refresh_retry'
+      | 'export_select_mode_empty'
+      | 'export_read_interrupted',
   ): string => {
     if (key === 'export_error_refresh_retry') {
       return 'Image export failed to load some resources. Please refresh the page and try exporting again.';
     }
     if (key === 'export_select_mode_empty') return 'Select at least one message.';
+    if (key === 'export_read_interrupted') return 'Wait for the response to finish.';
     return 'Export failed: {error}';
   };
 
@@ -29,6 +34,9 @@ describe('resolveExportErrorMessage', () => {
     ).toContain('Please refresh the page');
     expect(resolveExportErrorMessage(new Error('export_empty_selection'), t)).toBe(
       'Select at least one message.',
+    );
+    expect(resolveExportErrorMessage(new Error('export_read_interrupted'), t)).toBe(
+      'Wait for the response to finish.',
     );
   });
 });

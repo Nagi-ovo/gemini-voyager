@@ -1,0 +1,64 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.deepseek-export",
+  "name": "DeepSeek · Conversation export",
+  "version": "1.0.0",
+  "description": "Select messages and export DeepSeek conversations as JSON, Markdown, PDF or images.",
+  "i18n": {
+    "zh": {
+      "name": "DeepSeek · 会话导出",
+      "description": "将 DeepSeek 对话导出为 JSON、Markdown、PDF 或图片，并在导出前选择消息。"
+    },
+    "zh_TW": {
+      "name": "DeepSeek · 對話匯出",
+      "description": "將 DeepSeek 對話匯出為 JSON、Markdown、PDF 或圖片，並在匯出前選取訊息。"
+    },
+    "ja": {
+      "name": "DeepSeek · 会話エクスポート",
+      "description": "メッセージを選んで、DeepSeek の会話を JSON、Markdown、PDF、画像としてエクスポートします。"
+    },
+    "ko": {
+      "name": "DeepSeek · 대화 내보내기",
+      "description": "메시지를 선택해 DeepSeek 대화를 JSON, Markdown, PDF 또는 이미지로 내보냅니다."
+    },
+    "fr": {
+      "name": "DeepSeek · Export de conversations",
+      "description": "Exportez vos conversations DeepSeek en JSON, Markdown, PDF ou image après avoir sélectionné les messages."
+    },
+    "es": {
+      "name": "DeepSeek · Exportar conversaciones",
+      "description": "Selecciona mensajes y exporta conversaciones de DeepSeek como JSON, Markdown, PDF o imagen."
+    },
+    "pt": {
+      "name": "DeepSeek · Exportar conversas",
+      "description": "Selecione mensagens e exporte conversas do DeepSeek como JSON, Markdown, PDF ou imagem."
+    },
+    "ru": {
+      "name": "DeepSeek · Экспорт диалогов",
+      "description": "Выбирайте сообщения и экспортируйте диалоги DeepSeek в JSON, Markdown, PDF или изображение."
+    },
+    "ar": {
+      "name": "DeepSeek · تصدير المحادثات",
+      "description": "اختر الرسائل وصدّر محادثات DeepSeek بصيغة JSON أو Markdown أو PDF أو صورة."
+    }
+  },
+  "author": "voyager-official",
+  "category": "productivity",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/deepseek/plugins/export",
+  "engine": ">=next",
+  "tier": "declarative",
+  "matches": ["https://chat.deepseek.com/*"],
+  "requires": {
+    "formFactors": ["desktop"]
+  },
+  "contributes": {
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "conversationExport",
+        "params": {}
+      }
+    ]
+  }
+}

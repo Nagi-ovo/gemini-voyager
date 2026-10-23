@@ -10,6 +10,7 @@
 import { SiteRegistry } from '@/features/plugins/sites/registry';
 import type { SiteAdapter } from '@/features/plugins/types';
 
+import { buildCatalogExportAdapter, hasCatalogExport } from './platform/catalog';
 import { buildChatGptAdapter } from './platform/chatgpt';
 import type { ExportPlatformAdapter } from './platform/contract';
 import { buildGeminiAdapter } from './platform/gemini';
@@ -21,6 +22,7 @@ type ExportAdapterFactory = (site: SiteAdapter) => ExportPlatformAdapter;
 const EXPORT_ADAPTER_FACTORIES = {
   gemini: buildGeminiAdapter,
   chatgpt: buildChatGptAdapter,
+  catalog: buildCatalogExportAdapter,
 } satisfies Record<string, ExportAdapterFactory>;
 
 /** A site id with a registered exporter. */
@@ -39,15 +41,18 @@ function isExportHostId(id: string): id is ExportHostId {
 }
 
 /** The exporter registered for the current site. */
-export function resolveExportHost(): ExportHost {
-  const site = siteRegistry.resolveByUrl(window.location.href);
-  if (site && isExportHostId(site.id)) {
+export function resolveExportHost(url = window.location.href): ExportHost {
+  const site = siteRegistry.resolveByUrl(url);
+  if (site && isExportHostId(site.id) && site.id !== 'catalog') {
     return { id: site.id, adapter: EXPORT_ADAPTER_FACTORIES[site.id](site) };
   }
+  if (site && hasCatalogExport(site)) {
+    return { id: 'catalog', adapter: buildCatalogExportAdapter(site) };
+  }
 
-  // Preserve Voyager's historical behavior on the native Gemini entry point.
-  // Future platforms must register an explicit factory instead of inheriting
-  // Gemini's DOM rules by accident.
+  // A catalog site without an exporter must not read its page with Gemini's rules.
+  if (site) throw new Error('Conversation export is unavailable on this site');
+  // Hosts the registry does not know keep the native Gemini entry point's historical fallback.
   const geminiSite = siteRegistry.resolveByUrl(GEMINI_FALLBACK_URL);
   if (!geminiSite) throw new Error('Gemini site adapter is unavailable');
   return { id: 'gemini', adapter: buildGeminiAdapter(geminiSite) };

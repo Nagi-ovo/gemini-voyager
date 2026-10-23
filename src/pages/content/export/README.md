@@ -10,6 +10,21 @@ and cancels the active run. File writing
 (JSON/Markdown/PDF/image) lives in `src/features/export/`; it renders only content that was read
 from the page beforehand (`extractTurnContent` with an extractor from `createContentExtractor`).
 
+Catalog sites use the `conversationExport` primitive and `sites/catalogSite.ts`, with facts in
+the adapter's versioned `export` descriptor. `catalogReader.ts` snapshots mounted messages or
+crawls a virtual list. Virtual reading requires `export.messageKey`; without a key, use
+`mounted` to read the current DOM once in order, always with `unknown` completeness.
+`catalogReaderMerge.ts` orders keyed messages with adjacent-window constraints and a Kahn
+topological sort, breaking ties by first appearance; contradictory constraints are uncertain.
+A `messageKey` site must guarantee that DOM order within each mounted window equals conversation order.
+A pinned message that never reappears has no later ordering evidence, so unrelated keys retain first-appearance order.
+During continuous streaming each dirty poll still extracts the entire mounted window, and
+content clones remain until selection ends; incremental extraction is outside this phase. A read
+claims completeness only after stable top and bottom boundaries with no interruption or
+identity ambiguity and configured generation detection. The runner warns before selection for partial/unknown reads and stops
+on generation or route changes. The primitive's scope owns its toolbar, dialog and active run.
+The `export` descriptor (including `read`, `messageKey`, `title` and `generating`) accepts remote updates like other selectors: catalog maintainers are trusted to maintain these export completeness and reading policies.
+
 | Change                                                                               | Owner                                                                                |
 | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
 | Platform selectors, titles and content dialect; ChatGPT crawl, session, thread watch | `adapter/`                                                                           |

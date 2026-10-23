@@ -330,6 +330,14 @@ export function createExportRunner(deps: ExportRunnerDeps): ExportRunner {
     const signal = activeExportController?.signal;
     throwIfExportCancelled(signal);
 
+    if (reader.interruption) {
+      showExportAlert(t('export_read_interrupted'), t, 'warning');
+      return;
+    }
+    if (reader.completeness && reader.completeness !== 'complete') {
+      showExportAlert(t('export_read_incomplete'), t, 'warning');
+    }
+
     await new Promise((r) => setTimeout(r, FINAL_EXPORT_PREPARE_DELAY_MS));
     throwIfExportCancelled(signal);
     await captureGeneratedUiScreenshots();
