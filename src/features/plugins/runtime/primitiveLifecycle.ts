@@ -9,7 +9,7 @@ import { logger } from '@/core/services/LoggerService';
 import { hasNativeParamTemplates, renderNativeParams } from '../manifest/nativeParamSettings';
 import type { NativeOperation, PluginManifest, PluginSettings, SiteAdapter } from '../types';
 import { getPrimitive } from '../verbs/registry';
-import type { PrimitiveHandle } from '../verbs/types';
+import type { PluginInspection, PrimitiveHandle } from '../verbs/types';
 import { PluginScope } from './pluginScope';
 
 /** The primitive state of one mounted plugin, held on its engine entry. */
@@ -34,6 +34,7 @@ export interface PrimitiveEnv {
   readonly adapter: SiteAdapter | null;
   /** False once the slot's plugin was unmounted or remounted. */
   readonly isCurrent: (slot: PrimitiveSlot) => boolean;
+  readonly inspectPlugins?: () => PluginInspection;
 }
 
 function nativeOps(manifest: PluginManifest): NativeOperation[] {
@@ -68,6 +69,7 @@ export function activatePrimitives(
     setTargetCounter: (count: () => number) => {
       entry.targetCounters.push(count);
     },
+    inspectPlugins: env.inspectPlugins,
   };
   for (const op of ops) {
     const primitive = getPrimitive(op.handler);

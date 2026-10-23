@@ -300,6 +300,7 @@ export class PluginHost {
         logger.info('Plugin health changed', { id, noEffect });
       },
       shouldTrackHealth: (manifest) => tracksPluginHealth(manifest.id),
+      inspectPlugins: () => ({ statuses: this.getStatuses(), manifests: this.manifests }),
       // The mounted manifest decides what is released, so a plugin frozen
       // on its old version (D7) releases what that version claimed.
       onRelease: (manifest, released) => {
