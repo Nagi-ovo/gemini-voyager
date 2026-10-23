@@ -10,6 +10,7 @@ import { pushCatalogTimeline } from '@/features/timeline/catalogTimelineCloud';
 import type { TranslationKey } from '@/utils/translations';
 
 import { useLanguage } from '../../../contexts/LanguageContext';
+import { usePopupFormFactor } from '../hooks/usePopupFormFactor';
 import { type CloudRestoreMode, cloudRestoreFailureText } from './cloudRestore';
 import { type CloudDownloadData, useCloudSyncTransfer } from './useCloudSyncTransfer';
 
@@ -43,6 +44,8 @@ function formatSyncTime(
 export function useCloudSyncSettings(sourceTabId?: number) {
   const { t } = useLanguage();
   const supportsICloud = getVoyagerBuildTarget() === 'safari' || isSafari();
+  // Firefox for Android has no identity.launchWebAuthFlow, so Drive cannot sign in there.
+  const googleDriveUnavailable = usePopupFormFactor() === 'mobile';
 
   const [syncState, setSyncState] = useState<SyncState>(DEFAULT_SYNC_STATE);
   const [statusMessage, setStatusMessage] = useState<{
@@ -329,6 +332,7 @@ export function useCloudSyncSettings(sourceTabId?: number) {
     syncState,
     statusMessage,
     supportsICloud,
+    googleDriveUnavailable,
     hasFolderPlatform,
     platform,
     highlightSyncEnabled,

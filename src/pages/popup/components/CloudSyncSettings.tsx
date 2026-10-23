@@ -47,6 +47,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
     syncState,
     statusMessage,
     supportsICloud,
+    googleDriveUnavailable,
     hasFolderPlatform,
     platform,
     highlightSyncEnabled,
@@ -84,6 +85,12 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
           )}
         </p>
 
+        {googleDriveUnavailable && (
+          <p role="note" className="text-warning text-xs leading-snug">
+            {t('syncGoogleDriveUnavailableAndroid')}
+          </p>
+        )}
+
         {supportsICloud && (
           <div className="grid grid-cols-[auto_1fr] items-center gap-3">
             <Label className="text-sm font-medium">{t('syncProvider')}</Label>
@@ -108,8 +115,11 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
           </a>
         )}
 
-        {/* Sync Mode Toggle */}
-        <div className="grid grid-cols-[auto_1fr] items-center gap-3">
+        {/* Sync Mode Toggle: shown but not usable where Drive cannot sign in. */}
+        <fieldset
+          disabled={googleDriveUnavailable}
+          className={`grid min-w-0 grid-cols-[auto_1fr] items-center gap-3 ${googleDriveUnavailable ? 'opacity-50' : ''}`}
+        >
           <Label className="text-sm font-medium">{t('syncMode')}</Label>
           <SegmentedControl
             aria-label={t('syncMode')}
@@ -120,7 +130,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
             value={syncState.mode === 'disabled' ? 'disabled' : 'manual'}
             onChange={(mode) => void handleModeChange(mode)}
           />
-        </div>
+        </fieldset>
 
         {FOLDER_PLATFORMS[platform].syncsConversationExtras && (
           <div className="highlight-cloud-sync-row border-border/70 bg-muted/30 gap-3 rounded-lg border px-3 py-2">
@@ -147,7 +157,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
         )}
 
         {/* Sync Actions - Only show if not disabled */}
-        {syncState.mode !== 'disabled' && (
+        {syncState.mode !== 'disabled' && !googleDriveUnavailable && (
           <>
             {/* Upload/Download Buttons */}
             <div className="grid gap-2">

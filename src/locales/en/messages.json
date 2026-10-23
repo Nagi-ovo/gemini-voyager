@@ -1408,6 +1408,10 @@
   "syncProviderGoogleDrive": {
     "message": "Google Drive"
   },
+  "syncGoogleDriveUnavailableAndroid": {
+    "message": "Google Drive sync isn't available on Android yet: Firefox for Android can't open the Google sign-in window.",
+    "description": "Shown in Cloud Sync on Android, where Firefox cannot run the Google Drive sign-in (no identity.launchWebAuthFlow)"
+  },
   "syncProviderICloud": {
     "message": "iCloud"
   },
@@ -3344,6 +3348,10 @@
   "pluginNeedsVoyagerUpdate": {
     "message": "Needs a newer Voyager to run",
     "description": "Note on a plugin that uses a capability this build of Voyager does not ship"
+  },
+  "pluginUnavailableOnMobile": {
+    "message": "Not available on phones yet",
+    "description": "Note on a plugin that does not run on phones (Firefox for Android); the user's on/off choice is kept for their other devices"
   },
   "pluginNeedsSiteAdapterUpdate": {
     "message": "Needs an updated {site} adapter",

@@ -1376,6 +1376,10 @@
   "syncProviderGoogleDrive": {
     "message": "Google Drive"
   },
+  "syncGoogleDriveUnavailableAndroid": {
+    "message": "Android 上暫不支援 Google Drive 同步：Firefox for Android 無法開啟 Google 登入視窗。",
+    "description": "Shown in Cloud Sync on Android, where Firefox cannot run the Google Drive sign-in (no identity.launchWebAuthFlow)"
+  },
   "syncProviderICloud": {
     "message": "iCloud"
   },
@@ -3344,6 +3348,10 @@
   "pluginNeedsVoyagerUpdate": {
     "message": "需要更新版本的 Voyager 才能執行",
     "description": "Note on a plugin that uses a capability this build of Voyager does not ship"
+  },
+  "pluginUnavailableOnMobile": {
+    "message": "手機上暫不支援",
+    "description": "Note on a plugin that does not run on phones (Firefox for Android); the user's on/off choice is kept for their other devices"
   },
   "pluginNeedsSiteAdapterUpdate": {
     "message": "需要更新後的 {site} 配接器",

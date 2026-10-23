@@ -99,6 +99,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     legacy: plugins.legacySettings,
     legacyLoaded: plugins.legacySettingsLoaded,
     context: { isSafariBrowser },
+    formFactor: plugins.formFactor,
   });
   const canUseSystemNotifications = supportsExtensionNotifications();
   const currentPlatformLabel = isAIStudio ? t('platformAIStudio') : t('platformGemini');
