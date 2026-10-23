@@ -17,14 +17,14 @@ const CORE = 'src/pages/content/folder/floatingTree/inlineTree.css';
 /** Skins that each lay the full set of tree tokens over the core. */
 const FULL_SKINS = [
   'src/pages/content/folder/sidebarTreeTokens.css',
-  'src/features/plugins/builtin/siteFolders/sectionTree.css',
+  'src/features/plugins/verbs/folders/sectionTree.css',
 ] as const;
 
 /** Site sheets layered over a full skin: tokens, plus listed exceptions. */
 const SITE_SKINS = [
   'src/pages/content/folder/aistudioTreeTokens.css',
-  'src/features/plugins/builtin/claudeFolders/claudeSectionTokens.css',
-  'src/features/plugins/builtin/deepseekFolders/deepseekSectionTokens.css',
+  'src/features/plugins/verbs/folders/skins/claude.css',
+  'src/features/plugins/verbs/folders/skins/deepseek.css',
 ] as const;
 
 /**

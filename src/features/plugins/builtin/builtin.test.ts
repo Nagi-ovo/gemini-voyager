@@ -5,9 +5,7 @@ import { NATIVE_HANDLER_BINDINGS } from '@/pages/content/pluginNativeRegistratio
 import { checkPrimitivesAreShippable } from '../../../../scripts/lib/pluginChecks';
 import { validateManifest } from '../manifest/validate';
 import { legacyValueBindingsFor } from '../storage/legacyValueBindings';
-import { activateChatGptFolders } from './chatgptFolders';
 import { BUILTIN_PLUGINS, NATIVE_BUILTIN_PLUGIN_IDS } from './index';
-import { HIDE_FILED_SETTING } from './siteFolders/hideFiled';
 
 describe('BUILTIN_PLUGINS', () => {
   it('every builtin manifest passes validation', () => {
@@ -129,34 +127,6 @@ describe('BUILTIN_PLUGINS', () => {
       expect(timeline?.i18n?.[locale]?.name, locale).toContain('ChatGPT');
       expect(timeline?.i18n?.[locale]?.description, locale).toContain('ChatGPT');
       expect(timeline?.i18n?.[locale]?.settings?.timelineStyle?.label, locale).toBeTruthy();
-    }
-  });
-
-  it('binds ChatGPT folders, a ChatGPT-only native plugin, to its activate handler', () => {
-    const folders = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.chatgpt-folders');
-    expect(folders?.matches).toEqual(['https://chatgpt.com/*', 'https://chat.openai.com/*']);
-    // Still bound by id: its only contribution is a setting, no native op.
-    expect(folders?.contributes.domOps).toBeUndefined();
-    expect(folders?.i18n?.zh?.name).toBe('ChatGPT · 文件夹');
-    // Manifest -> handler and handler -> manifest.
-    expect(NATIVE_BUILTIN_PLUGIN_IDS).toContain('voyager.chatgpt-folders');
-    expect(NATIVE_HANDLER_BINDINGS['voyager.chatgpt-folders']).toEqual({
-      activate: activateChatGptFolders,
-    });
-  });
-
-  it('describes ChatGPT folders and its opt-in hide setting in every locale', () => {
-    const folders = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.chatgpt-folders');
-    // The key the plugin reads at activation is the key the manifest declares.
-    expect(folders?.contributes.settings?.[HIDE_FILED_SETTING]).toMatchObject({
-      type: 'boolean',
-      default: false,
-    });
-    const locales = ['zh', 'zh_TW', 'ja', 'ko', 'fr', 'es', 'pt', 'ru', 'ar'] as const;
-    for (const locale of locales) {
-      expect(folders?.i18n?.[locale]?.description, locale).toContain('ChatGPT');
-      expect(folders?.i18n?.[locale]?.description, locale).not.toBe(folders?.description);
-      expect(folders?.i18n?.[locale]?.settings?.[HIDE_FILED_SETTING]?.label, locale).toBeTruthy();
     }
   });
 
@@ -298,6 +268,7 @@ describe('BUILTIN_PLUGINS', () => {
   it.each([
     ['Markdown rendering fix', 'voyager.gemini-markdown-fix'],
     ['Message timestamps', 'voyager.gemini-message-timestamps'],
+    ['conversation export', 'voyager.gemini-export'],
     ['canvas copy', 'voyager.gemini-canvas-copy'],
     ['Deep Research export', 'voyager.gemini-deep-research-export'],
     ['context sync', 'voyager.gemini-context-sync'],

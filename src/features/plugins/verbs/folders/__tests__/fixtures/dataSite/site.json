@@ -1,0 +1,15 @@
+{
+  "id": "nimbus",
+  "label": "Nimbus",
+  "matches": ["https://chat.nimbus.test/*", "https://*.nimbus.test/*"],
+  "selectors": {},
+  "theme": { "hostSelector": "body", "lightSelector": "body.light", "darkSelector": "body.dark" },
+  "conversationIdPattern": "^/c/([A-Za-z0-9-]+)",
+  "folders": {
+    "format": 1,
+    "sidebar": "nav.history",
+    "rows": { "row": "li.chat", "link": "a", "title": [".label"], "drag": "link" },
+    "mount": { "anchors": [{ "id": "above-history", "steps": [{ "find": "ul.chats" }] }] },
+    "page": { "placeholderTitles": { "any": ["New chat"] }, "titleSuffix": "\\s+-\\s+Nimbus$" }
+  }
+}

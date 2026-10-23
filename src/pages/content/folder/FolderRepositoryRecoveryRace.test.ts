@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DataBackupService } from '@/core/services/DataBackupService';
 import { validateFolderData } from '@/features/folder/model/folderData';
-import { CHATGPT_FOLDER_CONFIG } from '@/features/plugins/builtin/chatgptFolders/config';
+import { CHATGPT_FOLDER_CONFIG } from '@/pages/content/folder/pluginSiteFolderConfigs';
 
 import { FolderRepository } from './FolderRepository';
 import {

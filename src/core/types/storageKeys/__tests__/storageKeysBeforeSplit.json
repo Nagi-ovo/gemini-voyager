@@ -159,6 +159,7 @@
   "MARKDOWN_FIX_ENABLED": "gvMarkdownFixEnabled",
   "CANVAS_COPY_ENABLED": "gvCanvasCopyEnabled",
   "DEEP_RESEARCH_EXPORT_ENABLED": "gvDeepResearchExportEnabled",
+  "GEMINI_EXPORT_ENABLED": "gvGeminiExportEnabled",
   "EXPORT_IMAGE_WIDTH": "gvExportImageWidth",
   "EXPORT_SPEAKER_LABELS": "gvExportSpeakerLabels",
   "PERSISTENT_EXPORT_TOOLBAR_ENABLED": "gvPersistentExportToolbarEnabled",

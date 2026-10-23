@@ -18,6 +18,7 @@
 import type { TranslationKey } from '@/utils/translations';
 
 import type { BridgePolicySection } from './sites/sections/bridgePolicyData';
+import type { FoldersSection } from './sites/sections/foldersData';
 import type { ModelPickerSection } from './sites/sections/modelPickerData';
 import type { PageHooksSection } from './sites/sections/pageHooksData';
 import type { ProjectsSection } from './sites/sections/projectsData';
@@ -108,6 +109,13 @@ export interface SiteAdapter {
    * `isSameSiteAdapter`, so a policy change does not remount every plugin.
    */
   readonly bridge?: BridgePolicySection;
+  /**
+   * Page facts for the `folders` primitive: sidebar, rows, mount anchors, row
+   * menu and title rules. Optional and isolated like `modelPicker`; without
+   * it a plugin calling `folders` reports `needs-site-data`. What is written,
+   * and where, never comes from here (`features/folder/sites/folderSiteTable.ts`).
+   */
+  readonly folders?: FoldersSection;
 }
 
 // ---------------------------------------------------------------------------

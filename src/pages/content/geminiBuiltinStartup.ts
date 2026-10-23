@@ -25,7 +25,9 @@ export interface GeminiBuiltinStartup {
   startGemsSidebar(): Promise<void>;
   /** The rail at its original heavy-feature start point, after the independent page services. */
   startTimeline(): Promise<void>;
-  /** Canvas share-menu copy, after the conversation export button. */
+  /** Conversation export at the native export button's start point. */
+  startExport(): Promise<void>;
+  /** Canvas share-menu copy, after the conversation export. */
   startCanvasCopy(): Promise<void>;
   /** Default model, among the DOM enhancements. */
   startDefaultModel(): Promise<void>;
@@ -85,6 +87,10 @@ export function createGeminiBuiltinStartup(
     async startUsageStatus() {
       if (isStopped()) return;
       admission.admit('gemini', 'usageStatus');
+    },
+    async startExport() {
+      if (isStopped()) return;
+      admission.admit('gemini', 'conversationExport');
     },
     async startCanvasCopy() {
       if (isStopped()) return;

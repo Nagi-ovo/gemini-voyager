@@ -76,6 +76,7 @@ export async function evaluatePlugin(
       requiredEngine: incompatibility.requiredEngine,
       missingHandlers: incompatibility.missingHandlers,
       missingSemantic: incompatibility.missingSemantic,
+      missingSections: incompatibility.missingSections,
     });
     return 'skip';
   }

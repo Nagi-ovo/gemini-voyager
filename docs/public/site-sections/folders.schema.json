@@ -1,0 +1,327 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://voyager.nagi.fun/site-sections/folders.schema.json",
+  "title": "Voyager site adapter: folders",
+  "type": "object",
+  "description": "Where the `folders` primitive finds the site's sidebar, its conversation rows and the place its folder section goes. Page facts only: storage keys, buckets, account rules and Drive files stay in Voyager's per-site folder policy, so this section can never redirect folder data. A section that fails validation is dropped (the folders become unavailable) and `catalog:build` refuses to publish it.",
+  "required": ["format", "sidebar", "rows"],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": 1,
+      "description": "Data format version; an unknown format drops the section."
+    },
+    "sidebar": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000,
+      "description": "CSS selector of the site's sidebar root, searched in the document and observed for rows. Match nothing while the site lists no conversations: the folders then fall back to a floating panel."
+    },
+    "rows": {
+      "type": "object",
+      "required": ["row", "drag"],
+      "additionalProperties": false,
+      "description": "One conversation row inside `sidebar`.",
+      "properties": {
+        "row": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "CSS selector of one conversation row."
+        },
+        "link": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "CSS selector of the row's conversation link inside the row; the row itself when omitted."
+        },
+        "title": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "description": "CSS selectors inside the row tried in order for its title; the link's text when none has text."
+        },
+        "idSources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "required": ["attribute", "pattern"],
+            "additionalProperties": false,
+            "properties": {
+              "attribute": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,63}$",
+                "description": "Attribute holding the conversation id."
+              },
+              "pattern": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "format": "regex",
+                "description": "Safe regex over the attribute value with exactly one capturing group, the id."
+              },
+              "descendants": {
+                "type": "boolean",
+                "description": "Read the attribute from the row's descendants too."
+              }
+            }
+          },
+          "description": "Where a row names its conversation before its link's route does."
+        },
+        "observe": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{0,63}$",
+            "description": "Attribute name."
+          },
+          "description": "Attributes whose changes start a new pass over the rows."
+        },
+        "portaled": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "CSS selector of rows the site renders outside `sidebar`, searched in the document."
+        },
+        "drag": {
+          "enum": ["pointer", "link", "html5"],
+          "description": "How a row is dragged onto a folder."
+        }
+      }
+    },
+    "mount": {
+      "type": "object",
+      "required": ["anchors"],
+      "additionalProperties": false,
+      "description": "Where the folder section is inserted.",
+      "properties": {
+        "anchors": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "required": ["id", "steps"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,39}$",
+                "description": "The anchor's id, as the anchor preference stores it."
+              },
+              "steps": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "object",
+                  "required": ["find"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "find": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1000,
+                      "description": "CSS selector searched inside `sidebar`."
+                    },
+                    "closest": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1000,
+                      "description": "Lifts the found element to its closest ancestor matching this selector, inside `sidebar`."
+                    }
+                  }
+                },
+                "description": "Tried in order; the first that finds an element is where the section goes, just before it."
+              }
+            }
+          },
+          "description": "The anchors the section may sit before; ids are unique."
+        },
+        "default": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "The anchor used unless the user chose another; the first anchor when omitted."
+        },
+        "open": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "CSS selector present in the document while the sidebar is shown."
+        }
+      }
+    },
+    "hideFiled": {
+      "type": "object",
+      "required": ["rows"],
+      "additionalProperties": false,
+      "description": "The rows hiding filed chats may hide. Without it, every `rows.row` may be hidden.",
+      "properties": {
+        "rows": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "CSS selector of the rows that may be hidden."
+        },
+        "keepShown": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "description": "CSS selectors of rows never hidden."
+        }
+      }
+    },
+    "rowMenu": {
+      "type": "object",
+      "required": ["trigger", "menu", "item", "open", "after"],
+      "additionalProperties": false,
+      "description": "The row's own menu, which gains a Move to folder entry.",
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "CSS selector of the row's menu button."
+        },
+        "menu": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "CSS selector of the open menu."
+        },
+        "item": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "CSS selector of one menu item."
+        },
+        "open": {
+          "enum": ["expanded", "press"],
+          "description": "How the menu is seen to open: `aria-expanded` on the trigger flips, or a press starts a short look."
+        },
+        "template": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "CSS selector of the item cloned for the entry."
+        },
+        "after": {
+          "enum": ["firstSubmenu", "lastSubmenu", "end"],
+          "description": "Where the entry goes."
+        },
+        "strip": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{0,63}$",
+            "description": "Attribute name."
+          },
+          "description": "Attributes removed from the cloned item."
+        },
+        "iconHolder": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "CSS selector of the element whose glyph becomes the folder icon."
+        },
+        "rename": {
+          "type": "object",
+          "required": ["plainItem"],
+          "additionalProperties": false,
+          "description": "The site's own rename item.",
+          "properties": {
+            "plainItem": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 15,
+              "description": "Index of the rename item among the menu's plain items."
+            }
+          }
+        }
+      }
+    },
+    "page": {
+      "type": "object",
+      "required": ["placeholderTitles"],
+      "additionalProperties": false,
+      "description": "Title rules for the open conversation. Required by the shared folder section on catalog sites; Voyager's own sites (AI Studio) title prompts from their own pages.",
+      "properties": {
+        "placeholderTitles": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "description": "Titles the site shows before a chat is named; never stored as a title.",
+          "properties": {
+            "any": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "description": "Placeholders in every UI language."
+            },
+            "byLanguage": {
+              "type": "object",
+              "minProperties": 1,
+              "maxProperties": 32,
+              "propertyNames": {
+                "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 32,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                "description": "Placeholders in this UI language."
+              },
+              "description": "Placeholders by UI language, such as `zh-CN`."
+            },
+            "fallbackLanguage": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20,
+              "description": "The `byLanguage` entry used for an unlisted UI language."
+            }
+          }
+        },
+        "titleSuffix": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "format": "regex",
+          "description": "Safe regex removed from `document.title` to leave the conversation's title. A tab title it does not match is the site's own page, never a conversation's title."
+        },
+        "newChat": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "CSS selector of the site's own new-chat link."
+        }
+      }
+    }
+  }
+}

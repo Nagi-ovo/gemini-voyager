@@ -32,6 +32,7 @@ export type OwnedFeatureId =
   | 'messageTimestamps'
   | 'canvasCopy'
   | 'deepResearchExport'
+  | 'conversationExport'
   | 'watermarkDownload'
   | 'watermarkPreview'
   | 'gemsSidebar'
@@ -55,13 +56,16 @@ export type OwnedFeatureId =
   | 'highlight'
   | 'preventAutoScroll'
   | 'responseNotification'
-  | 'timeline';
+  | 'timeline'
+  | 'folders';
 
 /** The packaged official plugin ids, by feature. */
 export const OFFICIAL_PLUGIN_IDS = {
   visualEffects: 'voyager.visual-effects',
   geminiBatchDelete: 'voyager.gemini-batch-delete',
   aistudioBatchDelete: 'voyager.aistudio-batch-delete',
+  aistudioFolders: 'voyager.aistudio-folders',
+  geminiFolders: 'voyager.gemini-folders',
   geminiFormulaCopy: 'voyager.gemini-formula-copy',
   aistudioFormulaCopy: 'voyager.aistudio-formula-copy',
   geminiVimInput: 'voyager.gemini-vim-input',
@@ -78,6 +82,7 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiWatermarkDownload: 'voyager.gemini-watermark-download',
   geminiWatermarkPreview: 'voyager.gemini-watermark-preview',
   geminiDeepResearchExport: 'voyager.gemini-deep-research-export',
+  geminiExport: 'voyager.gemini-export',
   geminiSidebarWidth: 'voyager.gemini-sidebar-width',
   aistudioSidebarWidth: 'voyager.aistudio-sidebar-width',
   geminiSidebarAutoHide: 'voyager.gemini-sidebar-auto-hide',
@@ -142,6 +147,22 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     feature: 'batchDelete',
     officialPluginId: OFFICIAL_PLUGIN_IDS.aistudioBatchDelete,
     handlers: [],
+    healthTracking: false,
+  },
+  {
+    // Local plugins never get `folders` here (`packagedFoldersPolicy.ts`).
+    site: 'gemini',
+    feature: 'folders',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiFolders,
+    handlers: ['folders'],
+    healthTracking: false,
+  },
+  {
+    // Local plugins never get `folders` here (`packagedFoldersPolicy.ts`).
+    site: 'aistudio',
+    feature: 'folders',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.aistudioFolders,
+    handlers: ['folders'],
     healthTracking: false,
   },
   {
@@ -299,6 +320,14 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     site: 'gemini',
     feature: 'deepResearchExport',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
+    handlers: [],
+    healthTracking: false,
+  },
+  // The menus, copy-as-image, logo dropdown and toolbar; export services stay native.
+  {
+    site: 'gemini',
+    feature: 'conversationExport',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiExport,
     handlers: [],
     healthTracking: false,
   },

@@ -1,0 +1,351 @@
+{
+  "_about": "Written for Gemini's folder code before the folders primitive (c549a53bd), with ids, titles and times replaced, in the shapes a real profile holds: five folders (two nested, colour absent, \"default\" or a hex), a __root_conversations__ bucket, 21 c_<hex> ids and 5 legacy bare <hex> ids, one conversation filed under both forms, two learning-coach gem chats, two starred. Driven in jsdom on gemini.google.com/app; every output it produced carried these folders unchanged, so \"$stored\" below stands for `stored` byte for byte. 2026-10-22.",
+  "stored": {
+    "folderContents": {
+      "__root_conversations__": [
+        {
+          "addedAt": 1771133201311,
+          "conversationId": "c_1aa661cdb85a436c",
+          "isGem": false,
+          "lastOpenedAt": 1771306005632,
+          "lastTurnAt": 1771126000312,
+          "sortIndex": 2,
+          "title": "会话 1",
+          "updatedAt": 1771306005632,
+          "url": "https://gemini.google.com/app/1aa661cdb85a436c"
+        },
+        {
+          "addedAt": 1771266402311,
+          "conversationId": "c_f2311d6e43fd38be",
+          "lastOpenedAt": 1771525606632,
+          "lastTurnAt": 1771255601312,
+          "sortIndex": 0,
+          "title": "会话 2",
+          "updatedAt": 1771525606632,
+          "url": "https://gemini.google.com/app/f2311d6e43fd38be"
+        },
+        {
+          "addedAt": 1771399603311,
+          "conversationId": "d5bec037ce6a9972",
+          "isGem": false,
+          "sortIndex": 4,
+          "title": "会话 3",
+          "url": "https://gemini.google.com/app/d5bec037ce6a9972"
+        },
+        {
+          "addedAt": 1771532804311,
+          "conversationId": "c_1cca0976bbef24d7",
+          "isGem": false,
+          "lastOpenedAt": 1771964808632,
+          "sortIndex": 1,
+          "title": "会话 4",
+          "updatedAt": 1771964808632,
+          "url": "https://gemini.google.com/app/1cca0976bbef24d7"
+        },
+        {
+          "addedAt": 1771666005311,
+          "conversationId": "c_6eff77f0ed024f11",
+          "isGem": false,
+          "lastOpenedAt": 1771752409632,
+          "lastTurnAt": 1771655204312,
+          "sortIndex": 3,
+          "title": "会话 5",
+          "updatedAt": 1771752409632,
+          "url": "https://gemini.google.com/app/6eff77f0ed024f11"
+        }
+      ],
+      "folder_1771000000000_k3v9x2m7q": [
+        {
+          "addedAt": 1771799206311,
+          "conversationId": "c_df48566846ab7d49",
+          "isGem": false,
+          "lastOpenedAt": 1771972010632,
+          "lastTurnAt": 1771795605312,
+          "sortIndex": 1,
+          "title": "会话 6",
+          "updatedAt": 1771972010632,
+          "url": "https://gemini.google.com/app/df48566846ab7d49"
+        },
+        {
+          "addedAt": 1771932407311,
+          "conversationId": "c_1f025dec882ee593",
+          "gemId": "learning-coach",
+          "isGem": true,
+          "lastOpenedAt": 1772191611632,
+          "sortIndex": 0,
+          "starred": true,
+          "title": "会话 7",
+          "updatedAt": 1772191611632,
+          "url": "https://gemini.google.com/gem/learning-coach/1f025dec882ee593"
+        },
+        {
+          "addedAt": 1772065608311,
+          "conversationId": "c_b50a2e06cb56df55",
+          "isGem": false,
+          "lastOpenedAt": 1772411212632,
+          "lastTurnAt": 1772054807312,
+          "sortIndex": 3,
+          "title": "会话 8",
+          "updatedAt": 1772411212632,
+          "url": "https://gemini.google.com/app/b50a2e06cb56df55"
+        },
+        {
+          "addedAt": 1772198809311,
+          "conversationId": "c_dbd098bf105b7aa3",
+          "lastOpenedAt": 1772630813632,
+          "lastTurnAt": 1772195208312,
+          "sortIndex": 2,
+          "starred": true,
+          "title": "会话 9",
+          "updatedAt": 1772630813632,
+          "url": "https://gemini.google.com/app/dbd098bf105b7aa3"
+        },
+        {
+          "addedAt": 1772332010311,
+          "conversationId": "c_ae60b96f98118c91",
+          "isGem": false,
+          "lastOpenedAt": 1772418414632,
+          "sortIndex": 4,
+          "title": "会话 10",
+          "updatedAt": 1772418414632,
+          "url": "https://gemini.google.com/app/ae60b96f98118c91"
+        }
+      ],
+      "folder_1771108123457_p8d1w4z6r": [
+        {
+          "addedAt": 1772465211311,
+          "conversationId": "c_892f05bfccd54bd8",
+          "isGem": false,
+          "lastOpenedAt": 1772638015632,
+          "lastTurnAt": 1772454410312,
+          "sortIndex": 0,
+          "title": "会话 11",
+          "updatedAt": 1772638015632,
+          "url": "https://gemini.google.com/app/892f05bfccd54bd8"
+        },
+        {
+          "addedAt": 1772598412311,
+          "conversationId": "de13717053114416",
+          "isGem": false,
+          "sortIndex": 3,
+          "title": "会话 12",
+          "url": "https://gemini.google.com/app/de13717053114416"
+        },
+        {
+          "addedAt": 1772731613311,
+          "conversationId": "c_635b3c6ae7d56aba",
+          "lastOpenedAt": 1773077217632,
+          "lastTurnAt": 1772724412312,
+          "sortIndex": 1,
+          "title": "会话 13",
+          "updatedAt": 1773077217632,
+          "url": "https://gemini.google.com/app/635b3c6ae7d56aba"
+        },
+        {
+          "addedAt": 1772864814311,
+          "conversationId": "c_e05808790d67a3dd",
+          "isGem": false,
+          "lastOpenedAt": 1773296818632,
+          "lastTurnAt": 1772854013312,
+          "sortIndex": 2,
+          "title": "会话 14",
+          "updatedAt": 1773296818632,
+          "url": "https://gemini.google.com/app/e05808790d67a3dd"
+        }
+      ],
+      "folder_1771720246914_a5n2c8t0y": [
+        {
+          "addedAt": 1772998015311,
+          "conversationId": "c_23c822a3a00d73f5",
+          "isGem": false,
+          "lastOpenedAt": 1773084419632,
+          "lastTurnAt": 1772994414312,
+          "sortIndex": 2,
+          "title": "会话 15",
+          "updatedAt": 1773084419632,
+          "url": "https://gemini.google.com/app/23c822a3a00d73f5"
+        },
+        {
+          "addedAt": 1773131216311,
+          "conversationId": "c_d7e7926e414191fb",
+          "gemId": "learning-coach",
+          "isGem": true,
+          "lastOpenedAt": 1773304020632,
+          "sortIndex": 0,
+          "title": "会话 16",
+          "updatedAt": 1773304020632,
+          "url": "https://gemini.google.com/gem/learning-coach/d7e7926e414191fb"
+        },
+        {
+          "addedAt": 1773264417311,
+          "conversationId": "42ebd29822eb17e2",
+          "isGem": false,
+          "lastTurnAt": 1773253616312,
+          "sortIndex": 1,
+          "title": "会话 17",
+          "url": "https://gemini.google.com/app/42ebd29822eb17e2"
+        }
+      ],
+      "folder_1772476370371_h7j3e9b1u": [
+        {
+          "addedAt": 1773397618311,
+          "conversationId": "6f304ae596730fb8",
+          "isGem": false,
+          "sortIndex": 4,
+          "title": "会话 18",
+          "url": "https://gemini.google.com/app/6f304ae596730fb8"
+        },
+        {
+          "addedAt": 1773530819311,
+          "conversationId": "c_821821d4d4a71587",
+          "isGem": false,
+          "lastOpenedAt": 1773962823632,
+          "lastTurnAt": 1773523618312,
+          "sortIndex": 1,
+          "title": "会话 19",
+          "updatedAt": 1773962823632,
+          "url": "https://gemini.google.com/app/821821d4d4a71587"
+        },
+        {
+          "addedAt": 1773664020311,
+          "conversationId": "c_8089c45648579e33",
+          "lastOpenedAt": 1773750424632,
+          "lastTurnAt": 1773653219312,
+          "sortIndex": 0,
+          "title": "会话 20",
+          "updatedAt": 1773750424632,
+          "url": "https://gemini.google.com/app/8089c45648579e33"
+        },
+        {
+          "addedAt": 1773797221311,
+          "conversationId": "c_1587851cdbc32e3c",
+          "isGem": false,
+          "lastOpenedAt": 1773970025632,
+          "sortIndex": 3,
+          "title": "会话 21",
+          "updatedAt": 1773970025632,
+          "url": "https://gemini.google.com/app/1587851cdbc32e3c"
+        },
+        {
+          "addedAt": 1773930422311,
+          "conversationId": "df48566846ab7d49",
+          "isGem": false,
+          "sortIndex": 2,
+          "title": "会话 22",
+          "url": "https://gemini.google.com/app/df48566846ab7d49"
+        }
+      ],
+      "folder_1773520493828_x2q6s4l8g": [
+        {
+          "addedAt": 1774063623311,
+          "conversationId": "c_81346527c2fd7a0b",
+          "isGem": false,
+          "lastOpenedAt": 1774409227632,
+          "lastTurnAt": 1774052822312,
+          "sortIndex": 0,
+          "title": "会话 23",
+          "updatedAt": 1774409227632,
+          "url": "https://gemini.google.com/app/81346527c2fd7a0b"
+        },
+        {
+          "addedAt": 1774196824311,
+          "conversationId": "c_9ec5667ccbd6ac4a",
+          "lastOpenedAt": 1774628828632,
+          "lastTurnAt": 1774193223312,
+          "sortIndex": 2,
+          "title": "会话 24",
+          "updatedAt": 1774628828632,
+          "url": "https://gemini.google.com/app/9ec5667ccbd6ac4a"
+        },
+        {
+          "addedAt": 1774330025311,
+          "conversationId": "c_602c696f6e628acd",
+          "isGem": false,
+          "lastOpenedAt": 1774416429632,
+          "lastTurnAt": 1774322824312,
+          "sortIndex": 1,
+          "title": "会话 25",
+          "updatedAt": 1774416429632,
+          "url": "https://gemini.google.com/app/602c696f6e628acd"
+        },
+        {
+          "addedAt": 1774463226311,
+          "conversationId": "c_76cc59ea9eb571cf",
+          "isGem": false,
+          "lastOpenedAt": 1774636030632,
+          "lastTurnAt": 1774452425312,
+          "sortIndex": 3,
+          "title": "会话 26",
+          "updatedAt": 1774636030632,
+          "url": "https://gemini.google.com/app/76cc59ea9eb571cf"
+        }
+      ]
+    },
+    "folders": [
+      {
+        "createdAt": 1771000000000,
+        "id": "folder_1771000000000_k3v9x2m7q",
+        "isExpanded": false,
+        "name": "Voyager 测试 1",
+        "parentId": null,
+        "sortIndex": 0,
+        "updatedAt": 1771018000777
+      },
+      {
+        "color": "default",
+        "createdAt": 1771108123457,
+        "id": "folder_1771108123457_p8d1w4z6r",
+        "isExpanded": false,
+        "name": "Voyager 测试 2",
+        "parentId": null,
+        "sortIndex": 1,
+        "updatedAt": 1771108123457
+      },
+      {
+        "createdAt": 1771720246914,
+        "id": "folder_1771720246914_a5n2c8t0y",
+        "isExpanded": true,
+        "name": "Voyager 测试 3",
+        "parentId": null,
+        "sortIndex": 2,
+        "updatedAt": 1771738247691
+      },
+      {
+        "color": "#d84f4f",
+        "createdAt": 1772476370371,
+        "id": "folder_1772476370371_h7j3e9b1u",
+        "isExpanded": false,
+        "name": "Voyager 测试 4",
+        "parentId": "folder_1771720246914_a5n2c8t0y",
+        "sortIndex": 0,
+        "updatedAt": 1772476370371
+      },
+      {
+        "createdAt": 1773520493828,
+        "id": "folder_1773520493828_x2q6s4l8g",
+        "isExpanded": true,
+        "name": "Voyager 测试 5",
+        "parentId": "folder_1771720246914_a5n2c8t0y",
+        "sortIndex": 1,
+        "updatedAt": 1773538494605
+      }
+    ]
+  },
+  "opened": {
+    "gvFolderData": "$stored",
+    "localStorageMirror": "$stored",
+    "primaryBackup": "$stored"
+  },
+  "uploaded": {
+    "folders": "$stored",
+    "prompts": [],
+    "platform": "gemini"
+  },
+  "exported": {
+    "format": "gemini-voyager.folders.v1",
+    "exportedAt": "2026-10-22T14:48:04.903Z",
+    "version": "2.2.0",
+    "data": "$stored"
+  },
+  "imported": "$stored"
+}

@@ -1,14 +1,28 @@
 import browser, { type Runtime } from 'webextension-polyfill';
 
-import type { FolderStore } from './FolderStore';
+import type { AccountScope } from '@/core/services/AccountIsolationService';
+
 import { folderDebug, folderDebugWarn } from './folderManagerDebug';
 import { type NativeSidebarReadContext, collectAllSidebarConversations } from './nativeSidebarDom';
 import { createSyncMessageListener } from './syncMessageListener';
+import type { FolderData } from './types';
 
 type SendResponse = (response: unknown) => void;
 
+/** The folders the answers read, and their reload. */
+export interface FolderRuntimeMessageStore {
+  readonly canEdit: boolean;
+  readonly data: FolderData;
+  readonly accountScope: AccountScope | null;
+  /** False while the folders belong to another account than the page's: nothing is answered. */
+  readonly accountMatchesPage?: boolean;
+  loadData(): Promise<void>;
+  /** Binds the page's account first when it can, before a cloud request is answered; null when nothing to do. */
+  prepareRequest?(): Promise<void> | null;
+}
+
 type FolderRuntimeMessageOptions = {
-  store: FolderStore;
+  store: FolderRuntimeMessageStore;
   refresh(): void;
   getSidebarContext(): NativeSidebarReadContext;
 };
@@ -20,6 +34,11 @@ function respondWithStructureForAI(
 ): true {
   const { store } = options;
   folderDebug('Received AI structure request');
+  // Another account's folders, or none, must not seed a prompt whose answer is imported here.
+  if (store.accountMatchesPage === false) {
+    sendResponse({ ok: false });
+    return true;
+  }
   collectAllSidebarConversations(options.getSidebarContext)
     .then((sidebarConversations) => {
       sendResponse({ ok: true, sidebarConversations, folderData: store.data });
@@ -41,6 +60,7 @@ export function listenForFolderRuntimeMessages(options: FolderRuntimeMessageOpti
     data: () => store.data,
     accountScope: () => store.accountScope,
     reload: () => store.loadData().then(() => options.refresh()),
+    prepare: () => store.prepareRequest?.() ?? null,
   });
   const listener = (
     message: unknown,

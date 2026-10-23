@@ -16,44 +16,48 @@ const PROMPT_LINK_SELECTORS = [
   'a[href*="://aistudio.google.cn/u/"][href*="/prompts/"]',
 ];
 export const PROMPT_LINK_SELECTOR = PROMPT_LINK_SELECTORS.join(', ');
-export const UNBOUND_PROMPT_LINK_SELECTOR = PROMPT_LINK_SELECTORS.map(
-  (selector) => `${selector}:not([data-gv-drag-bound])`,
-).join(', ');
 
 /** Drag data for a prompt the page links to. */
 export type PromptDragData = DragData & { conversationId: string };
 
-export function nodeContainsPromptLink(node: Node): boolean {
+/** Whether `node` is or holds a prompt link; `links` is the page's prompt-link selector. */
+export function nodeContainsPromptLink(node: Node, links: string = PROMPT_LINK_SELECTOR): boolean {
   if (!(node instanceof Element)) return false;
-  if (node.matches(PROMPT_LINK_SELECTOR)) return true;
-  return !!node.querySelector(PROMPT_LINK_SELECTOR);
+  if (node.matches(links)) return true;
+  return !!node.querySelector(links);
 }
 
-export function mutationAddsPromptLinks(mutations: MutationRecord[]): boolean {
+export function mutationAddsPromptLinks(
+  mutations: MutationRecord[],
+  links: string = PROMPT_LINK_SELECTOR,
+): boolean {
   return mutations.some((mutation) =>
-    Array.from(mutation.addedNodes).some((node) => nodeContainsPromptLink(node)),
+    Array.from(mutation.addedNodes).some((node) => nodeContainsPromptLink(node, links)),
   );
 }
 
-function insidePromptLink(node: Node): boolean {
-  return node instanceof Element && !!node.closest(PROMPT_LINK_SELECTOR);
+function insidePromptLink(node: Node, links: string): boolean {
+  return node instanceof Element && !!node.closest(links);
 }
 
-function mutationMayAffectTitle(mutation: MutationRecord): boolean {
+function mutationMayAffectTitle(mutation: MutationRecord, links: string): boolean {
   if (mutation.type === 'characterData') {
-    return !!mutation.target.parentElement?.closest(PROMPT_LINK_SELECTOR);
+    return !!mutation.target.parentElement?.closest(links);
   }
-  if (mutation.type === 'attributes') return insidePromptLink(mutation.target);
+  if (mutation.type === 'attributes') return insidePromptLink(mutation.target, links);
   if (mutation.type !== 'childList') return false;
-  if (insidePromptLink(mutation.target)) return true;
+  if (insidePromptLink(mutation.target, links)) return true;
   return (
-    Array.from(mutation.addedNodes).some((node) => nodeContainsPromptLink(node)) ||
-    Array.from(mutation.removedNodes).some((node) => nodeContainsPromptLink(node))
+    Array.from(mutation.addedNodes).some((node) => nodeContainsPromptLink(node, links)) ||
+    Array.from(mutation.removedNodes).some((node) => nodeContainsPromptLink(node, links))
   );
 }
 
-export function mutationMayAffectPromptTitles(mutations: MutationRecord[]): boolean {
-  return mutations.some(mutationMayAffectTitle);
+export function mutationMayAffectPromptTitles(
+  mutations: MutationRecord[],
+  links: string = PROMPT_LINK_SELECTOR,
+): boolean {
+  return mutations.some((mutation) => mutationMayAffectTitle(mutation, links));
 }
 
 export function extractPromptIdFromHref(rawHref: string): string | null {

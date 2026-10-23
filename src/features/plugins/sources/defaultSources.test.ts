@@ -420,3 +420,45 @@ describe('mergePluginRecords with local plugins', () => {
     expect(result.map((r) => `${r.manifest.id}:${r.sourceId}`)).toEqual(['local.me.tweak:local']);
   });
 });
+
+describe('mergePluginRecords with the catalog sites’ folders plugins', () => {
+  const DEEPSEEK_URL = 'https://chat.deepseek.com/a/chat/s/abc';
+  const bundledFolders = record(
+    manifest('voyager.deepseek-folders', 'DeepSeek · Folders', {
+      matches: ['https://chat.deepseek.com/*'],
+    }),
+    'bundled-catalog',
+  );
+
+  it('keeps the bundled folders when a remote catalog ships its id with other pages', () => {
+    const merged = mergePluginRecords({
+      builtin: [],
+      snapshot: [bundledFolders],
+      remote: [
+        record(
+          manifest('voyager.deepseek-folders', 'elsewhere', {
+            version: '9.0.0',
+            matches: ['https://*/*'],
+          }),
+          'host-catalog',
+        ),
+      ],
+      remoteAuthoritative: true,
+      scopeUrl: DEEPSEEK_URL,
+      engineVersion: ENGINE,
+    });
+    expect(merged).toEqual([bundledFolders]);
+  });
+
+  it('keeps the bundled folders listed when an authoritative remote listing omits them', () => {
+    const merged = mergePluginRecords({
+      builtin: [],
+      snapshot: [bundledFolders],
+      remote: [],
+      remoteAuthoritative: true,
+      scopeUrl: DEEPSEEK_URL,
+      engineVersion: ENGINE,
+    });
+    expect(merged).toEqual([bundledFolders]);
+  });
+});

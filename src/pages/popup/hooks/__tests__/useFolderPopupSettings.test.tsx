@@ -151,6 +151,26 @@ describe('useFolderPopupSettings', () => {
     });
   });
 
+  it("hides archived chats on AI Studio with its own switch, not Gemini's", () => {
+    act(() =>
+      settings.hydrateFromStorage({
+        geminiFolderHideArchivedConversations: true,
+        [StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO]: false,
+      }),
+    );
+    render('aistudio');
+    expect(settings.values.hideArchivedConversations).toBe(false);
+
+    act(() => settings.onChange({ hideArchivedConversations: true }));
+
+    expect(settings.values.hideArchivedConversations).toBe(true);
+    expect(writeSyncStorage).toHaveBeenCalledExactlyOnceWith({
+      [StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO]: true,
+    });
+    render('gemini');
+    expect(settings.values.hideArchivedConversations).toBe(true);
+  });
+
   it('preserves the startup preference when floating mode is turned off and back on', () => {
     act(() =>
       settings.hydrateFromStorage({

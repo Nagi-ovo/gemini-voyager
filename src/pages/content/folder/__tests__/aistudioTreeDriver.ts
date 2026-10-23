@@ -5,9 +5,9 @@
  * folder menu renders in a popover layer on `document.body`.
  */
 import { AISTUDIO_ROOT_BUCKET_ID } from '@/features/folder/constants';
+import { AISTUDIO_TREE_HOST_CLASS } from '@/features/plugins/verbs/folders/aistudio/tree';
 import { confirmDriver } from '@/tests/confirmDriver';
 
-import { AISTUDIO_TREE_HOST_CLASS } from '../aistudioTree';
 import { POPOVER_LAYER_HOST_CLASS } from '../floatingTree/popoverLayer';
 import { cls, t } from '../floatingTree/shared';
 

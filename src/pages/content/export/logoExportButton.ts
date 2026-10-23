@@ -32,6 +32,8 @@ export interface LogoExportButton {
   relabel: (texts: LogoExportButtonTexts) => void;
   /** Stop re-creating the button. The button itself stays in place. */
   stop: () => void;
+  /** Stop, then remove the dropdown and put the logo back where it was. */
+  remove: () => void;
 }
 
 function swallow(e: Event): void {
@@ -175,13 +177,28 @@ export function mountLogoExportButton(
   window.addEventListener('gv-print-cleanup', reinjectExportButtonIfNeeded);
   window.addEventListener('afterprint', reinjectExportButtonIfNeeded);
 
+  const stop = () => {
+    if (reinjectTimer !== null) clearTimeout(reinjectTimer);
+    reinjectTimer = null;
+    window.removeEventListener('resize', reinjectExportButtonIfNeeded);
+    window.removeEventListener('gv-print-cleanup', reinjectExportButtonIfNeeded);
+    window.removeEventListener('afterprint', reinjectExportButtonIfNeeded);
+  };
   return {
     relabel: (texts) => applyTexts(btn, texts),
-    stop: () => {
-      if (reinjectTimer !== null) clearTimeout(reinjectTimer);
-      window.removeEventListener('resize', reinjectExportButtonIfNeeded);
-      window.removeEventListener('gv-print-cleanup', reinjectExportButtonIfNeeded);
-      window.removeEventListener('afterprint', reinjectExportButtonIfNeeded);
+    stop,
+    remove: () => {
+      stop();
+      const wrapper = currentBtn.closest('.gv-logo-dropdown-wrapper');
+      if (!wrapper) {
+        currentBtn.remove();
+        return;
+      }
+      // Everything but our dropdown is the logo we moved in; it goes back in place.
+      for (const child of Array.from(wrapper.children)) {
+        if (!child.classList.contains('gv-logo-dropdown')) wrapper.before(child);
+      }
+      wrapper.remove();
     },
   };
 }

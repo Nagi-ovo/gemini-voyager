@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { FolderStore } from '../FolderStore';
-import { FolderManager } from '../manager';
 import type { FolderData } from '../types';
+import { FolderManager } from './geminiFolderManager';
 
 const { mockBrowser } = vi.hoisted(() => ({
   mockBrowser: {
@@ -35,9 +35,9 @@ type MessageListener = (
 
 type TestableManager = {
   store: FolderStore;
+  /** The page's folder session, which answers the popup. */
+  session: { listen(): void };
   setupStorageListener(): void;
-  setupMessageListener(): void;
-  refresh(): void;
 };
 
 function makeManager(): { manager: FolderManager; internals: TestableManager } {
@@ -83,7 +83,7 @@ describe('folder runtime message lifecycle', () => {
 
   describe('message dispatch', () => {
     function getMessageListener(internals: TestableManager): MessageListener {
-      internals.setupMessageListener();
+      internals.session.listen();
       const call = mockBrowser.runtime.onMessage.addListener.mock.calls.at(-1);
       expect(call).toBeDefined();
       return call?.[0] as MessageListener;
@@ -94,7 +94,7 @@ describe('folder runtime message lifecycle', () => {
       manager = m;
 
       internals.setupStorageListener();
-      internals.setupMessageListener();
+      internals.session.listen();
 
       // The duplicate gv.folders.reload listener used to be registered on the
       // raw chrome.runtime API from setupStorageListener.
@@ -108,7 +108,9 @@ describe('folder runtime message lifecycle', () => {
       internals.setupStorageListener();
 
       const loadSpy = vi.spyOn(internals.store, 'loadData').mockResolvedValue(undefined);
-      const refreshSpy = vi.spyOn(internals, 'refresh').mockImplementation(() => {});
+      // The folders' view shows what the reload brought.
+      const view = m.view as unknown as { refresh(): void };
+      const refreshSpy = vi.spyOn(view, 'refresh').mockImplementation(() => {});
       const sendResponse = vi.fn();
 
       const listener = getMessageListener(internals);
@@ -175,7 +177,7 @@ describe('folder runtime message lifecycle', () => {
     const { manager: instance, internals } = makeManager();
     manager = instance;
     internals.setupStorageListener();
-    internals.setupMessageListener();
+    internals.session.listen();
     const settingsListener = mockBrowser.storage.onChanged.addListener.mock.calls.at(-1)![0];
     const messageListener = mockBrowser.runtime.onMessage.addListener.mock.calls.at(-1)![0];
     expect(mockBrowser.storage.onChanged.removeListener).not.toHaveBeenCalledWith(settingsListener);

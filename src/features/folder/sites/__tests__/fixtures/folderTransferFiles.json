@@ -1,0 +1,150 @@
+{
+  "gemini": {
+    "format": "gemini-voyager.folders.v1",
+    "exportedAt": "2026-01-02T03:04:05.000Z",
+    "version": "<extension version>",
+    "data": {
+      "folders": [
+        {
+          "id": "folder_1",
+          "name": "Research",
+          "parentId": null,
+          "isExpanded": true,
+          "sortIndex": 0,
+          "createdAt": 1700000000000,
+          "updatedAt": 1700000000000
+        }
+      ],
+      "folderContents": {
+        "folder_1": [
+          {
+            "conversationId": "c_abc123",
+            "title": "Notes",
+            "url": "https://gemini.google.com/app/abc123",
+            "addedAt": 1700000000000,
+            "sortIndex": 0
+          }
+        ]
+      }
+    }
+  },
+  "aistudio": {
+    "format": "gemini-voyager.folders.v1",
+    "exportedAt": "2026-01-02T03:04:05.000Z",
+    "version": "<extension version>",
+    "data": {
+      "folders": [
+        {
+          "id": "folder_1",
+          "name": "Research",
+          "parentId": null,
+          "isExpanded": true,
+          "sortIndex": 0,
+          "createdAt": 1700000000000,
+          "updatedAt": 1700000000000
+        }
+      ],
+      "folderContents": {
+        "folder_1": [
+          {
+            "conversationId": "abc123",
+            "title": "Notes",
+            "url": "https://aistudio.google.com/prompts/abc123",
+            "addedAt": 1700000000000,
+            "sortIndex": 0
+          }
+        ]
+      }
+    }
+  },
+  "chatgpt": {
+    "format": "gemini-voyager.folders.v1",
+    "exportedAt": "2026-01-02T03:04:05.000Z",
+    "version": "<extension version>",
+    "data": {
+      "folders": [
+        {
+          "id": "folder_1",
+          "name": "Research",
+          "parentId": null,
+          "isExpanded": true,
+          "sortIndex": 0,
+          "createdAt": 1700000000000,
+          "updatedAt": 1700000000000
+        }
+      ],
+      "folderContents": {
+        "folder_1": [
+          {
+            "conversationId": "chatgpt:conv:abc123",
+            "title": "Notes",
+            "url": "https://chatgpt.com/c/abc123",
+            "addedAt": 1700000000000,
+            "sortIndex": 0
+          }
+        ]
+      }
+    },
+    "platform": "chatgpt"
+  },
+  "claude": {
+    "format": "gemini-voyager.folders.v1",
+    "exportedAt": "2026-01-02T03:04:05.000Z",
+    "version": "<extension version>",
+    "data": {
+      "folders": [
+        {
+          "id": "folder_1",
+          "name": "Research",
+          "parentId": null,
+          "isExpanded": true,
+          "sortIndex": 0,
+          "createdAt": 1700000000000,
+          "updatedAt": 1700000000000
+        }
+      ],
+      "folderContents": {
+        "folder_1": [
+          {
+            "conversationId": "claude:conv:abc123",
+            "title": "Notes",
+            "url": "https://claude.ai/chat/abc123",
+            "addedAt": 1700000000000,
+            "sortIndex": 0
+          }
+        ]
+      }
+    },
+    "platform": "claude"
+  },
+  "deepseek": {
+    "format": "gemini-voyager.folders.v1",
+    "exportedAt": "2026-01-02T03:04:05.000Z",
+    "version": "<extension version>",
+    "data": {
+      "folders": [
+        {
+          "id": "folder_1",
+          "name": "Research",
+          "parentId": null,
+          "isExpanded": true,
+          "sortIndex": 0,
+          "createdAt": 1700000000000,
+          "updatedAt": 1700000000000
+        }
+      ],
+      "folderContents": {
+        "folder_1": [
+          {
+            "conversationId": "deepseek:conv:abc123",
+            "title": "Notes",
+            "url": "https://chat.deepseek.com/a/chat/s/abc123",
+            "addedAt": 1700000000000,
+            "sortIndex": 0
+          }
+        ]
+      }
+    },
+    "platform": "deepseek"
+  }
+}

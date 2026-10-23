@@ -53,9 +53,13 @@ describe('feature owners', () => {
         'sendShortcut',
         'draftSave',
         'turnNavigator',
+        'folders',
       ]),
     );
-    expect(pluginOwnedHandlers('aistudio')).toEqual(new Set(['formulaCopy', 'sendShortcut']));
+    // Folders on both are their official plugins'; local plugins stay refused (packagedFoldersPolicy).
+    expect(pluginOwnedHandlers('aistudio')).toEqual(
+      new Set(['formulaCopy', 'sendShortcut', 'folders']),
+    );
     // Appearance is pure CSS or a fixed-id builtin: it opens no primitive.
     for (const id of [
       'voyager.gemini-chat-font-size',
@@ -74,6 +78,7 @@ describe('feature owners', () => {
       ['markdownFix', 'voyager.gemini-markdown-fix'],
       ['messageTimestamps', 'voyager.gemini-message-timestamps'],
       ['deepResearchExport', 'voyager.gemini-deep-research-export'],
+      ['conversationExport', 'voyager.gemini-export'],
     ] as const) {
       expect(isPackagedOfficialPluginId(id)).toBe(true);
       expect(ownedFeatureByPluginId(id)).toMatchObject({ site: 'gemini', feature, handlers: [] });

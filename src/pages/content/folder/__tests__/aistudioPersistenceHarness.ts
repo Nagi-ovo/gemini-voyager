@@ -19,9 +19,9 @@ import {
 import { StorageKeys } from '@/core/types/common';
 import { toastDriver } from '@/tests/toastDriver';
 
-import { AIStudioFolderManager } from '../aistudio';
 import { cls } from '../floatingTree/shared';
 import type { ConversationReference, FolderData } from '../types';
+import { AIStudioFolderManager } from './aistudioFolderManager';
 import { mockBrowser } from './aistudioPersistenceMockBrowser';
 import { treeRoot } from './aistudioTreeDriver';
 

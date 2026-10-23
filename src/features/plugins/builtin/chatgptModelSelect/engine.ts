@@ -18,14 +18,23 @@
  *   `effort-unavailable`; nothing settles for a nearby step.
  * - Switching the model itself was not measured (the radios sit in a
  *   collapsed sub-panel), so another model selected is `model-not-found`.
- * - Close: Escape on the menu, confirmed by the trigger.
+ * - Close: Escape on the menu, confirmed by the trigger, and once more if the
+ *   menu stays open. ChatGPT saves the choice only as the menu closes
+ *   (measured 2026-10-21: one PATCH of `user_last_used_model_config` on close,
+ *   none while the menu is open, none when the composer goes away with it), so
+ *   a menu that never closed, or whose trigger went away, applied nothing. The
+ *   closed trigger must then not name another step.
  */
 import type { ModelSelectResult, ModelSelection, ModelTarget } from '@/features/bridge/protocol';
 import {
   GRANT_MARGIN_MS,
   type OpContext,
 } from '@/features/plugins/builtin/chatgptLocalBridge/opContext';
-import type { ModelPickerSection } from '@/features/plugins/sites/sections/modelPickerData';
+import type {
+  ModelPickerEffort,
+  ModelPickerSection,
+} from '@/features/plugins/sites/sections/modelPickerData';
+import { isRendered } from '@/pages/content/export/adapter/chatgptThread';
 
 import {
   type PickerReading,
@@ -41,7 +50,9 @@ const OPEN_TIMEOUT_MS = 3_000;
 const STEP_TIMEOUT_MS = 2_500;
 const TRIGGER_TIMEOUT_MS = 5_000;
 const STATUS_TIMEOUT_MS = 1_500;
-const CLOSE_TIMEOUT_MS = 2_000;
+const CLOSE_TIMEOUT_MS = 1_500;
+/** Radix dismisses only its topmost layer on Escape: anything stacked over the menu takes one. */
+const CLOSE_ATTEMPTS = 2;
 /** The least gap between two looks at the picker; a step lands about 500 ms after its key. */
 const MIN_GAP_MS = 100;
 
@@ -116,6 +127,18 @@ function selectionOf(data: ModelPickerSection, reading: PickerReading): ModelSel
     effortIndex: reading.slider?.now ?? null,
     effortMax: reading.slider?.max ?? null,
   };
+}
+
+/** Whether a step name fits step `goal`: the position decides, a name only vetoes as another step's. */
+function stepNamer(
+  efforts: readonly ModelPickerEffort[],
+  goal: number,
+): (label: string | null) => boolean {
+  const labels = mergedLabels(efforts[goal].labels);
+  const otherLabels = new Set(
+    efforts.flatMap((step, index) => (index === goal ? [] : [...mergedLabels(step.labels)])),
+  );
+  return (label) => label === null || labels.has(label) || !otherLabels.has(label);
 }
 
 function pointer(type: 'pointerdown' | 'pointerup'): PointerEvent {
@@ -197,14 +220,23 @@ export async function selectModel(
     return reading;
   };
 
-  const close = async (): Promise<boolean> => {
-    if (!openMenu.isConnected || menuTrigger.getAttribute('aria-expanded') !== 'true') return true;
-    ctx.dispatch(openMenu, key('Escape'));
-    const closed = await ctx.waitFor(
-      () => !openMenu.isConnected || menuTrigger.getAttribute('aria-expanded') !== 'true',
-      { timeoutMs: budget(ctx, CLOSE_TIMEOUT_MS), minGapMs: MIN_GAP_MS },
-    );
-    return closed === true;
+  /**
+   * `gone`: the trigger was removed or hidden with its menu open, as when ChatGPT mounts the
+   * composer anew. A detached menu is not a closed one: ChatGPT saved nothing through it.
+   */
+  const menuState = (): 'open' | 'closed' | 'gone' => {
+    if (!isRendered(menuTrigger)) return 'gone';
+    return menuTrigger.getAttribute('aria-expanded') === 'true' ? 'open' : 'closed';
+  };
+  const close = async (): Promise<'open' | 'closed' | 'gone'> => {
+    for (let attempt = 0; attempt < CLOSE_ATTEMPTS && menuState() === 'open'; attempt += 1) {
+      ctx.dispatch(findOpenMenu(menuTrigger) ?? openMenu, key('Escape'));
+      await ctx.waitFor(() => menuState() !== 'open', {
+        timeoutMs: budget(ctx, CLOSE_TIMEOUT_MS),
+        minGapMs: MIN_GAP_MS,
+      });
+    }
+    return menuState();
   };
 
   const before = read();
@@ -239,6 +271,8 @@ export async function selectModel(
   }
 
   let steps = 0;
+  /** The status at the target step, confirmed while the menu was open. */
+  let targetStatus: PickerReading['status'] | null = null;
   if (target.effortIndex !== null) {
     const efforts = data.models[target.modelId].efforts ?? [];
     const goal = target.effortIndex;
@@ -280,14 +314,9 @@ export async function selectModel(
       now = moved!.value;
     }
 
-    const labels = mergedLabels(efforts[goal].labels);
-    const otherLabels = new Set(
-      efforts.flatMap((step, index) => (index === goal ? [] : [...mergedLabels(step.labels)])),
-    );
     // A zh-CN page may name its steps in English ("Extra High" for 极高), and other languages
-    // are not in the data at all: the position decides, a name only vetoes as another step's.
-    const named = (label: string | null): boolean =>
-      label === null || labels.has(label) || !otherLabels.has(label);
+    // are not in the data at all.
+    const named = stepNamer(efforts, goal);
     const confirmed = await ctx.waitFor(
       () => {
         const reading = read();
@@ -306,27 +335,56 @@ export async function selectModel(
         valueNow: read().slider?.now ?? null,
       });
     }
+    targetStatus = confirmed!.status;
   }
 
   const after = read();
   const observed = selectionOf(data, after);
   if (observed.modelId !== target.modelId) {
     await failClosed('unverified', 'The model selection changed while it was being set.', {
-      observed,
+      shown: observed,
     });
   }
-  const evidence = {
-    statusText: after.status.text,
-    seenLabels,
-    steps,
-    triggerText: triggerText(menuTrigger),
-  };
-  if (!(await close())) {
-    ctx.fail('unverified', 'The ChatGPT model menu did not close.', {
-      partial: changed,
-      previous,
-      observed,
-    });
+  // What the open menu showed is no selection until the menu closes: a failure from here on
+  // carries `applied: false`, and no failure carries `observed`, which reads as applied.
+  const notApplied = { applied: false, partial: changed, previous, statusText: after.status.text };
+  const closed = await close();
+  if (closed !== 'closed') {
+    ctx.fail(
+      'unverified',
+      closed === 'open'
+        ? 'The ChatGPT model menu did not close.'
+        : 'The ChatGPT model picker went away before its menu closed.',
+      { ...notApplied, menu: closed },
+    );
   }
+  let shown = triggerText(menuTrigger);
+  if (target.effortIndex !== null && targetStatus) {
+    const status = targetStatus;
+    const labels = mergedLabels(data.models[target.modelId].efforts![target.effortIndex].labels);
+    const named = stepNamer(data.models[target.modelId].efforts!, target.effortIndex);
+    // No slider backs the closed trigger, so a name is proof only as the step the status named
+    // at the target: a revert to a name the data lacks ("Sofort") must not pass as unknown.
+    const names = (text: string): boolean =>
+      text !== '' &&
+      named(text) &&
+      (status.label ? text === status.label || labels.has(text) : status.text.includes(text));
+    // The closed trigger names the saved step; it may repaint a moment after `aria-expanded`.
+    const settled = await ctx.waitFor(
+      () => {
+        const text = triggerText(menuTrigger);
+        return names(text) ? { text } : null;
+      },
+      { timeoutMs: budget(ctx, STATUS_TIMEOUT_MS), minGapMs: MIN_GAP_MS },
+    );
+    if (!settled) {
+      ctx.fail('unverified', 'ChatGPT does not name the requested effort after its menu closed.', {
+        ...notApplied,
+        triggerText: triggerText(menuTrigger),
+      });
+    }
+    shown = settled.text;
+  }
+  const evidence = { statusText: after.status.text, seenLabels, steps, triggerText: shown };
   return { changed, previous, observed, evidence };
 }

@@ -18,6 +18,23 @@ import { BuiltinPluginSource } from './BuiltinPluginSource';
 import { BundledCatalogPluginSource } from './BundledCatalogPluginSource';
 
 /**
+ * The folders plugins of the catalog sites. Their records come only from this
+ * build, as the packaged ids' do: a remote record could otherwise change the
+ * pages and settings through which a site's folder data is reached, or the
+ * kill switch could delist them, while the folders themselves stay Voyager's.
+ */
+const FOLDERS_PLUGIN_IDS: ReadonlySet<string> = new Set([
+  'voyager.chatgpt-folders',
+  'voyager.claude-folders',
+  'voyager.deepseek-folders',
+]);
+
+/** Whether only this build may supply the record under `id`. */
+export function isBuildOnlyPluginId(id: string): boolean {
+  return isPackagedOfficialPluginId(id) || FOLDERS_PLUGIN_IDS.has(id);
+}
+
+/**
  * Active sources, in tier order: first-party native plugins, the bundled
  * declarative snapshot, the per-host remote catalog (read from the cache the
  * background refresher maintains; never fetched here), and the plugins the
@@ -76,7 +93,8 @@ export interface MergePluginRecordsInput {
  *     remote record under one is dropped, and a local record is added last,
  *     outside the kill switch, only when its id is still free;
  *   - packaged official ids (`PACKAGED_OFFICIAL_PLUGIN_IDS`, the Gemini and
- *     AI Studio features) come only from this build: a remote record under one
+ *     AI Studio features) and the catalog sites' folders plugins
+ *     (`isBuildOnlyPluginId`) come only from this build: a remote record under one
  *     is dropped, so it can neither replace the bundled record nor stand in for
  *     a missing one, and the kill switch never delists the bundled record.
  */
@@ -90,7 +108,7 @@ export function mergePluginRecords(input: MergePluginRecordsInput): SourcedPlugi
   // Decided by the build's stable id table, never by the owner entry or the
   // remote manifest itself.
   const remoteRecords = input.remote.filter(
-    (record) => official(record) && !isPackagedOfficialPluginId(record.manifest.id),
+    (record) => official(record) && !isBuildOnlyPluginId(record.manifest.id),
   );
 
   for (const record of builtin) {
@@ -130,7 +148,7 @@ export function mergePluginRecords(input: MergePluginRecordsInput): SourcedPlugi
     }
     const targetsScope =
       !!input.scopeUrl && matchesAnyPattern(input.scopeUrl, record.manifest.matches);
-    if (input.remoteAuthoritative && targetsScope && !isPackagedOfficialPluginId(id)) continue;
+    if (input.remoteAuthoritative && targetsScope && !isBuildOnlyPluginId(id)) continue;
     merged.push(record);
   }
 

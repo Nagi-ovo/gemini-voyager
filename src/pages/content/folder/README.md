@@ -15,15 +15,24 @@ The folder manager allows users to:
 
 ## Change the owner of the behavior
 
-`manager.ts` composes the Gemini owners and connects them to native menus, the floating panel,
-and extension messages. Start changes at the owner below; keep the public folder-project entry
-points (`ensureDataLoaded`, `getFolders`, `addConversationToFolderFromNative`) compatible.
+Gemini's folder data is a session the page holds for its lifetime
+([`session/geminiFolderSession.ts`](session/geminiFolderSession.ts), opened by
+[`geminiFolderStartup.ts`](../geminiFolderStartup.ts), which also admits the folders plugin): the
+store, its commands and account gate, the popup's cloud-sync and AI-structure answers and the
+legacy sync-mode migration, which run with folders off. It binds an account only once Gemini's
+account control names it, and follows the `/u/<n>/` route only while the plugin's view is attached.
+Folder-as-Project files chats through it (`ensureDataLoaded`, `getFolders`,
+`addConversationToFolderFromNative`). The packaged `voyager.gemini-folders` plugin shows it: its
+view ([`verbs/folders/gemini/view.ts`](../../../features/plugins/verbs/folders/gemini/view.ts))
+attaches to the session and composes the Gemini owners below with native menus and the floating
+panel. The Folders card switch (`geminiFolderEnabled`) turns the plugin on and off. Start changes
+at the owner below.
 
 | Responsibility                   | Entry point                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Persisted schema                 | [`core/types/folder.ts`](../../../core/types/folder.ts); local [`types.ts`](types.ts) re-exports it and defines drag data.                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | Pure tree operations             | [`features/folder/model/folderData.ts`](../../../features/folder/model/folderData.ts): moves, removal, ordering, integrity repair, `validateFolderData` and `cloneFolderData`. Adding or moving a conversation goes through [`placeConversations.ts`](../../../features/folder/model/placeConversations.ts) on both hosts, where callers build records and own side effects. Dropping at a position (reorder, including across folders) goes through `reorderConversations`. Shared constants live in [`features/folder/constants.ts`](../../../features/folder/constants.ts). |
-| Data and commands                | [`FolderStore.ts`](FolderStore.ts): folder mutations, title/activity updates and the delegates the views call.                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Data and commands                | [`FolderStore.ts`](FolderStore.ts): folder mutations over `FolderStoreState`; Gemini's activity, Gem tags, titles and record edits in `gemini/`.                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | Persistence                      | [`FolderRepository.ts`](FolderRepository.ts): load, serialized saves, draft replacement, recovery, storage echoes, account switching and scope retry, configured per platform by [`platformFolderConfig.ts`](platformFolderConfig.ts) (keys, backup namespace, root bucket, legacy migration hook, normalize/prune/recovery/retry policy). Gemini (`FolderStore`) and AI Studio (`aistudio.ts`, chrome.storage-only adapter) both use it.                                                                                                                                      |
 | Account write lifetime           | [`FolderDataSession.ts`](FolderDataSession.ts): captured snapshots, queued saves, recovery namespaces and unload cleanup.                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Sidebar rendering                | [`FolderSidebarView.ts`](FolderSidebarView.ts): header, search, Activity and preferences; the tree is the shared `floatingTree` mounted by [`sidebarTree.ts`](sidebarTree.ts), with drops in [`sidebarDrops.ts`](sidebarDrops.ts) and search/account filters over the cycle-cut layout in [`sidebarFilter.ts`](sidebarFilter.ts).                                                                                                                                                                                                                                              |
@@ -40,11 +49,12 @@ points (`ensureDataLoaded`, `getFolders`, `addConversationToFolderFromNative`) c
 | Native menus and deletion        | [`NativeConversationMenus.ts`](NativeConversationMenus.ts): menu injection, confirmation identity and settlement checks; callbacks change data through the store.                                                                                                                                                                                                                                                                                                                                                                                                              |
 | Browser storage                  | [`storage/FolderStorageAdapter.ts`](storage/FolderStorageAdapter.ts): Safari durable storage and Chromium mirror behavior.                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | Other hosts and views            | [`aistudio.ts`](aistudio.ts) (see [AI Studio](#ai-studio)), [`floatingPanel.ts`](floatingPanel.ts); shared schema/session, separate host integration.                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Gem metadata and startup         | [`gemConfig.ts`](gemConfig.ts), [`index.ts`](index.ts).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Gem metadata and startup         | [`gemConfig.ts`](gemConfig.ts), [`geminiFolderStartup.ts`](../geminiFolderStartup.ts).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
-Test data invariants and scheduling at their owner. Keep account transitions and manager wiring in
-integration tests. UI tests can compose real owners with memory storage using
-[`folderViewHarness.ts`](__tests__/folderViewHarness.ts). Do not pass the entire manager into a
+Test data invariants and scheduling at their owner. Keep account transitions and view wiring in
+integration tests ([`geminiFolderManager.ts`](__tests__/geminiFolderManager.ts) composes the session
+and the view as the page does). UI tests can compose real owners with memory storage using
+[`folderViewHarness.ts`](__tests__/folderViewHarness.ts). Do not pass the entire view into a
 module or add production wrappers solely to preserve a private test interface.
 
 Account changes, sidebar remounts and destruction have different lifetimes:
@@ -65,23 +75,8 @@ file length alone is not a reason to add another layer.
 
 ### AI Studio
 
-[`aistudio.ts`](aistudio.ts) is the adapter: it binds `FolderRepository` (AI Studio config, chrome.storage
-adapter) to the page and owns the three lifetimes. Account release resets the tree, dialogs and library
-selection; a nav rebuild re-injects the panel; `destroy()` stops everything except the settings and
-runtime-message listeners. The other modules take explicit host callbacks, never the manager.
-
-| Responsibility                      | Module                                                                                                                                          |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Folder tree, edits and drops        | [`aistudioTree.ts`](aistudioTree.ts): the shared floating tree in the nav, `aistudioTreeActions`, `placePrompt`                                 |
-| Panel frame and mount               | [`aistudioPanel.ts`](aistudioPanel.ts): header actions, legacy/V2 insertion, remount watch                                                      |
-| Account scope                       | [`aistudioAccountScope.ts`](aistudioAccountScope.ts): isolation setting, `/u/<n>`+email fingerprint, 1200 ms poll                               |
-| Left-nav prompt history             | [`aistudioPromptHistory.ts`](aistudioPromptHistory.ts), [`aistudioPromptLinks.ts`](aistudioPromptLinks.ts): drag sources, titles, active prompt |
-| /library page                       | [`aistudioLibraryPage.ts`](aistudioLibraryPage.ts) over table, selection, batch delete and drop-zone modules                                    |
-| Hide archived                       | [`aistudioHideArchived.ts`](aistudioHideArchived.ts)                                                                                            |
-| Drive sync, import/export, messages | [`aistudioTransfer.ts`](aistudioTransfer.ts), [`aistudioImport.ts`](aistudioImport.ts)                                                          |
-
-Sidebar width is owned separately by the official [`aistudioSidebarWidth/pluginHandler.ts`](../aistudioSidebarWidth/pluginHandler.ts)
-plugin. Turning it off restores native nav layout and leaves the folder manager running.
+AI Studio's folders (the session the page holds, the plugin's view, and where each responsibility
+lives) are described in [`verbs/folders/aistudio/README.md`](../../../features/plugins/verbs/folders/aistudio/README.md).
 
 ## Adding Support for New Gems
 

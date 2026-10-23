@@ -44,6 +44,11 @@
       "official": true
     },
     {
+      "name": "claude-folders",
+      "source": "sites/claude/plugins/folders/plugin.json",
+      "official": true
+    },
+    {
       "name": "chatgpt-reading-width",
       "source": "sites/chatgpt/plugins/reading-width/plugin.json",
       "official": true
@@ -139,6 +144,11 @@
       "official": true
     },
     {
+      "name": "deepseek-folders",
+      "source": "sites/deepseek/plugins/folders/plugin.json",
+      "official": true
+    },
+    {
       "name": "chatgpt-user-latex",
       "source": "sites/chatgpt/plugins/user-latex/plugin.json",
       "official": true
@@ -146,6 +156,11 @@
     {
       "name": "chatgpt-diagram-rendering",
       "source": "sites/chatgpt/plugins/diagram-rendering/plugin.json",
+      "official": true
+    },
+    {
+      "name": "chatgpt-folders",
+      "source": "sites/chatgpt/plugins/folders/plugin.json",
       "official": true
     }
   ]

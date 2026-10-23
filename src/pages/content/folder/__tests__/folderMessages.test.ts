@@ -7,10 +7,10 @@ import enMessages from '@/locales/en/messages.json';
 import { confirmDriver } from '@/tests/confirmDriver';
 import { toastDriver } from '@/tests/toastDriver';
 
-import { AIStudioFolderManager } from '../aistudio';
 import { mergeAIStudioImport } from '../aistudioImport';
 import type { TreeActions } from '../floatingTree/shared';
 import type { ConversationReference, FolderData } from '../types';
+import { AIStudioFolderManager } from './aistudioFolderManager';
 
 vi.mock('webextension-polyfill', () => ({
   default: {

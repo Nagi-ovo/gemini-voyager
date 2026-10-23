@@ -21,6 +21,14 @@ Each of these cost a wrong fix or a wrong click before it was measured. Add a li
 - Voyager's folder section renders its tree inside a shadow root on `.gv-claude-folder-section`; query `section.shadowRoot ?? section`.
 - Voyager adds "移动到文件夹" to Claude's own row menu, after "Move to group". A filed conversation leaves Recents.
 
+## ChatGPT
+
+- The sidebar is `:is(nav, #stage-slideover-sidebar):has([data-app-action-sidebar-scroll])`, not the app rail beside it. Recents rows are `[data-sidebar-project-container-id="chats"] [role="listitem"]`; many link to `/g/g-p-<project>/c/<id>`, not `/c/<id>`.
+- On every press, ChatGPT dispatches its own `pointercancel` (and on blur, its own Escape keydown) to end a drag it thinks is stuck. A gesture that a window-capture listener started a moment earlier receives it too.
+- Hiding filed chats keeps a row that holds focus, and a drag or click leaves focus on the row's link: blur it before checking that a filed row hides.
+- Rename opens ChatGPT's own "重命名聊天" dialog with 取消 and 保存, not a field in the row.
+- The tab title is the chat's title alone, with no " - ChatGPT" suffix.
+
 ## DeepSeek
 
 - The sidebar header has DeepSeek's own icon that enters a "选择对话" batch-select mode, with 置顶 and 删除 at the bottom. Escape does not leave it; its ✕ at the top of the sidebar does. Nothing is selected until a row is ticked.

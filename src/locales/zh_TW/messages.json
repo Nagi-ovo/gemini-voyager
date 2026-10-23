@@ -430,6 +430,10 @@
     "message": "資料夾",
     "description": "資料夾區域標題"
   },
+  "folder_account_unknown": {
+    "message": "無法確認此頁面登入的是哪個帳號，已暫時隱藏資料夾，資料仍完整保存。",
+    "description": "Shown in the folder panel when account isolation cannot read which account the page is signed in to"
+  },
   "folder_activity_turn_on": {
     "message": "開啟動態檢視",
     "description": "開啟注意力優先的動態檢視"

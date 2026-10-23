@@ -53,3 +53,12 @@ tr.gv-library-row-selected:hover {
 tr.gv-library-row-selected td {
   background: transparent !important;
 }
+
+/* Isolation cannot read the page's account: the folders are hidden, and this says why. */
+.gv-aistudio .gv-folder-account-notice {
+  margin: 2px 12px 8px;
+  font-size: 12px;
+  line-height: 16px;
+  color: inherit;
+  opacity: 0.72;
+}

@@ -9,9 +9,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AISTUDIO_ROOT_BUCKET_ID } from '@/features/folder/constants';
 import { toastDriver } from '@/tests/toastDriver';
 
-import { AIStudioFolderManager } from '../aistudio';
 import type { TreeActions } from '../floatingTree/shared';
 import type { ConversationReference, FolderData } from '../types';
+import { AIStudioFolderManager } from './aistudioFolderManager';
 
 vi.mock('webextension-polyfill', () => ({
   default: {

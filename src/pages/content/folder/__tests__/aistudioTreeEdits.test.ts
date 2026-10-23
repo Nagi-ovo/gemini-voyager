@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { addFolder, renameFolder } from '../aistudioTree';
+import { addFolder, renameFolder } from '@/features/folder/sites/aistudioEdits';
+
 import type { FolderData } from '../types';
 
 function data(): FolderData {

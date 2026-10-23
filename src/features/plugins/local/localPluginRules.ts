@@ -8,11 +8,12 @@
  *     host's own class names;
  *   - every semantic key the plugin relies on is declared by every site it
  *     targets; otherwise the popup would only show it as `needs-semantic`;
+ *   - likewise every `site.json` section its primitives read (`needs-site-data`);
  *   - settings are the kinds the popup can render (boolean, number, select): a
  *     string or color setting would import with no control to change it.
  */
 import type { ManifestIssue } from '../manifest/validate';
-import { requiredSemanticKeys } from '../runtime/pluginStatus';
+import { missingSiteSections, requiredSemanticKeys } from '../runtime/pluginStatus';
 import { patternWithinAny } from '../sites/matchPattern';
 import { SEMANTIC_SELECTOR_KEYS, isSemanticSelectorKey } from '../sites/semanticKeys';
 import type { PluginManifest, SiteAdapter } from '../types';
@@ -110,6 +111,19 @@ function semanticIssues(manifest: PluginManifest, sites: readonly SiteAdapter[])
   return issues;
 }
 
+/** A `site.json` section a primitive reads must be on every site the plugin targets. */
+function siteSectionIssues(
+  manifest: PluginManifest,
+  sites: readonly SiteAdapter[],
+): ManifestIssue[] {
+  return targetedSites(manifest, sites).flatMap((site) =>
+    missingSiteSections(manifest, site).map((section) => ({
+      path: 'contributes.domOps',
+      message: `${site.label} has no "${section}" site data, which a primitive this plugin calls reads`,
+    })),
+  );
+}
+
 /** Every local-only problem with a manifest the shared gate already accepted. */
 export function localPluginRuleIssues(
   manifest: PluginManifest,
@@ -118,6 +132,7 @@ export function localPluginRuleIssues(
   return [
     ...classNameIssues(manifest),
     ...semanticIssues(manifest, sites),
+    ...siteSectionIssues(manifest, sites),
     ...settingTypeIssues(manifest),
   ];
 }

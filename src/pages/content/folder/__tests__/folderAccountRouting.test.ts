@@ -10,9 +10,10 @@ import { FolderImportExportService } from '@/features/folder/services/FolderImpo
 import { toastDriver } from '@/tests/toastDriver';
 
 import { FolderStore } from '../FolderStore';
-import { FolderManager } from '../manager';
 import * as storageAdapters from '../storage/FolderStorageAdapter';
 import type { FolderData } from '../types';
+import { showGeminiAccount } from './geminiAccountControl';
+import { FolderManager } from './geminiFolderManager';
 import { mountSidebar } from './sidebarRuntimeHarness';
 import { sidebarTree, sidebarTreeRoot } from './sidebarTreeDriver';
 
@@ -60,6 +61,13 @@ function accountScope(account: string, route: string): AccountScope {
   };
 }
 
+/** Gemini moves to another account slot: its account control and route change together. */
+function openRoute(path: string): void {
+  const slot = path.match(/^\/u\/(\d+)\//)?.[1] ?? '1';
+  showGeminiAccount(`${{ '1': 'a', '2': 'b' }[slot] ?? `slot${slot}`}@example.com`);
+  history.pushState({}, '', path);
+}
+
 function deferred<T>() {
   let resolve!: (value: T) => void;
   const promise = new Promise<T>((done) => {
@@ -98,6 +106,7 @@ describe('FolderManager account routes across mounted surfaces', () => {
     document.body.innerHTML = '';
     history.replaceState({}, '', '/u/1/app');
     mountSidebar();
+    showGeminiAccount('a@example.com');
     vi.mocked(chrome.storage.local.get).mockImplementation(async () => ({}));
     vi.mocked(chrome.storage.local.set).mockResolvedValue();
     vi.mocked(chrome.storage.sync.set).mockResolvedValue();
@@ -144,7 +153,7 @@ describe('FolderManager account routes across mounted surfaces', () => {
         return loaded.promise;
       });
 
-      history.pushState({}, '', '/u/2/app');
+      openRoute('/u/2/app');
       await vi.advanceTimersByTimeAsync(0);
 
       expect(instance.getFolders()).toEqual([]);
@@ -220,12 +229,12 @@ describe('FolderManager account routes across mounted surfaces', () => {
       }),
     );
 
-    history.pushState({}, '', '/u/2/app');
+    openRoute('/u/2/app');
     await vi.advanceTimersByTimeAsync(0);
     expect(sidebarFolders()).toContain('Private b');
     expect(sidebarFolders()).not.toContain('Imported A');
     expect(document.querySelector('.gv-folder-import-dialog')).toBeNull();
-    history.pushState({}, '', '/u/1/app');
+    openRoute('/u/1/app');
     await vi.advanceTimersByTimeAsync(0);
     expect(instance.getFolders().map((folder) => folder.name)).toEqual(['Private a']);
     expect(sidebarFolders()).toContain('Private a');
@@ -244,7 +253,7 @@ describe('FolderManager account routes across mounted surfaces', () => {
       const instance = await initialize(surface);
       setEnabled(false);
       vi.mocked(accountIsolationService.resolveAccountScope).mockClear();
-      history.pushState({}, '', '/u/1/app/while-disabled');
+      openRoute('/u/1/app/while-disabled');
       await vi.advanceTimersByTimeAsync(1000);
       expect(accountIsolationService.resolveAccountScope).not.toHaveBeenCalled();
       expect(document.querySelector('.gv-floating-folder-panel, .gv-floating-fab')).toBeNull();
@@ -254,7 +263,7 @@ describe('FolderManager account routes across mounted surfaces', () => {
       expect(document.querySelectorAll('.gv-floating-folder-panel, .gv-floating-fab')).toHaveLength(
         1,
       );
-      history.pushState({}, '', '/u/2/app');
+      openRoute('/u/2/app');
       await vi.advanceTimersByTimeAsync(1000);
       expect(instance.getFolders().map((folder) => folder.name)).toEqual(['Private b']);
       expect(accountIsolationService.resolveAccountScope).toHaveBeenCalledTimes(1);
@@ -262,7 +271,7 @@ describe('FolderManager account routes across mounted surfaces', () => {
       instance.destroy();
       manager = null;
       vi.mocked(accountIsolationService.resolveAccountScope).mockClear();
-      history.pushState({}, '', '/u/3/app');
+      openRoute('/u/3/app');
       window.dispatchEvent(new PopStateEvent('popstate'));
       await vi.advanceTimersByTimeAsync(1000);
       expect(accountIsolationService.resolveAccountScope).not.toHaveBeenCalled();

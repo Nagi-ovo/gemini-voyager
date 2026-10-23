@@ -2,7 +2,12 @@
  * Sync-related type definitions for Google Drive sync feature
  * Provides type safety for sync state management and data transfer
  */
-import type { FolderPlatform, SyncTimeField } from '@/features/folder/platforms';
+import type {
+  DerivedFolderPlatform,
+  FolderPlatform,
+  FrozenFolderPlatform,
+  SyncTimeField,
+} from '@/features/folder/platforms';
 import type { PluginStateMap } from '@/features/plugins/storage/pluginState';
 import type { StarredMessagesData } from '@/features/savedLibrary/starTypes';
 
@@ -31,12 +36,18 @@ export interface SyncAccountScope {
   routeUserId: string | null;
 }
 
+type FrozenSyncTimeField = Exclude<SyncTimeField, `${string}:${string}`>;
+
 /**
  * Current sync state for UI display. Each folder platform keeps its own last upload and
- * last download time under the fields `FOLDER_PLATFORMS` names, so a new platform's times
- * are required here (and in `DEFAULT_SYNC_STATE`) as soon as it is registered.
+ * last download time under the fields `FOLDER_PLATFORMS` names, so a new frozen platform's
+ * times are required here (and in `DEFAULT_SYNC_STATE`) as soon as it is registered. A
+ * derived site's (`lastSyncTime:<id>`) are absent until it first syncs.
  */
-export interface SyncState extends Record<SyncTimeField, number | null> {
+export interface SyncState
+  extends
+    Record<FrozenSyncTimeField, number | null>,
+    Partial<Record<Exclude<SyncTimeField, FrozenSyncTimeField>, number | null>> {
   /** Cloud storage provider. iCloud is available only in the Safari build. */
   provider: SyncProvider;
   /** Current sync mode setting */
@@ -69,8 +80,10 @@ export interface PromptItem {
   pinnedAt?: number | null;
 }
 
-/** Plugin sites whose folder files name the site they came from. */
-export type FolderExportPlatform = 'chatgpt' | 'claude' | 'deepseek';
+/** Plugin sites whose folder files name the site they came from: every one but Gemini and AI Studio. */
+export type FolderExportPlatform =
+  | Exclude<FrozenFolderPlatform, 'gemini' | 'aistudio'>
+  | DerivedFolderPlatform;
 
 /**
  * Folder export payload format (matches existing export format)

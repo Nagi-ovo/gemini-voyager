@@ -5,11 +5,11 @@
  */
 import type { ToastTone } from '@/core/ui/toast/types';
 import type { FolderCommands } from '@/features/folder/commands/folderCommands';
+import { newFolderId } from '@/features/folder/sites/aistudioEdits';
 
 import { aistudioBatchDeleteService } from '../batchDelete/aistudio';
 import { mountLibraryDropZone, type LibraryDropZone } from './aistudioLibraryDropZone';
 import { bindLibraryRows, watchLibraryTable } from './aistudioLibraryTable';
-import { newFolderId } from './aistudioTree';
 import type { Folder, FolderData } from './types';
 
 export type LibraryPageHost = {

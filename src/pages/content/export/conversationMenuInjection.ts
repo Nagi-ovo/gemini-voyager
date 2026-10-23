@@ -249,6 +249,13 @@ export function injectConversationMenuExportButton(
   return button;
 }
 
+/** Remove every export item injected into a menu that is still open. */
+export function removeExportMenuItems(root: ParentNode = document): void {
+  root
+    .querySelectorAll(`.${MENU_BUTTON_CLASS}, .${RESPONSE_MENU_BUTTON_CLASS}`)
+    .forEach((item) => item.remove());
+}
+
 export function injectConversationMenuMoveToFolderButton(
   menuPanel: HTMLElement,
   options: ConversationMenuExportOptions,

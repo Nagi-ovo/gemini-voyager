@@ -27,6 +27,11 @@ import type { PluginManifest, SiteAdapter } from '../types';
 import { type PackagedSiteId, pluginOwnedHandlers } from './featureOwners';
 import { patternWithinAny } from './matchPattern';
 import {
+  FOLDERS_HANDLER,
+  packagedFoldersPolicyIssues,
+  refusesLocalFolders,
+} from './packagedFoldersPolicy';
+import {
   SHARED_TIMELINE_MATCHES,
   sharedTimelineAdmissionId,
   sharedTimelinePolicyIssues,
@@ -175,7 +180,10 @@ export function manifestHostPolicyIssues(
   manifest: Pick<PluginManifest, 'matches' | 'theme' | 'contributes'>,
 ): ManifestIssue[] {
   const sites = packagedSitesForPatterns(manifest.matches);
-  const issues = sharedTimelinePolicyIssues(manifest, sites.includes('gemini'));
+  const issues = [
+    ...sharedTimelinePolicyIssues(manifest, sites.includes('gemini')),
+    ...packagedFoldersPolicyIssues(manifest, sites),
+  ];
   if (manifest.theme && !sites.every(siteAllowsPluginTheme)) {
     issues.push({
       path: 'theme',
@@ -183,7 +191,8 @@ export function manifestHostPolicyIssues(
     });
   }
   (manifest.contributes.domOps ?? []).forEach((op, index) => {
-    if (op.op !== 'native') return;
+    // A local `folders` op already has its own issue above.
+    if (op.op !== 'native' || op.handler === FOLDERS_HANDLER) return;
     for (const site of sites) {
       if (allowsNativeHandler(site, op.handler)) continue;
       issues.push({
@@ -205,7 +214,7 @@ export type HostPolicyRefusal =
  */
 export function hostPolicyRefusal(
   url: string,
-  manifest: Pick<PluginManifest, 'matches' | 'theme' | 'contributes'>,
+  manifest: Pick<PluginManifest, 'matches' | 'theme' | 'contributes'> & { readonly id?: string },
 ): HostPolicyRefusal | null {
   const site = packagedSiteForUrl(url);
   if (site !== null && manifest.theme && !siteAllowsPluginTheme(site)) return { kind: 'theme' };
@@ -220,6 +229,7 @@ export function hostPolicyRefusal(
     )
       refused.add(op.handler);
     if (site !== null && !allowsNativeHandler(site, op.handler)) refused.add(op.handler);
+    if (refusesLocalFolders(manifest.id, op.handler, site)) refused.add(op.handler);
   }
   return refused.size > 0 ? { kind: 'native-op', handlers: [...refused] } : null;
 }

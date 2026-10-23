@@ -9,14 +9,11 @@ import {
   startChatGptExportPlugin,
   stopChatGptExportPlugin,
 } from '@/features/plugins/builtin/chatgptExport/runtime';
-import { activateChatGptFolders } from '@/features/plugins/builtin/chatgptFolders';
 import { activateChatGptLocalBridge } from '@/features/plugins/builtin/chatgptLocalBridge';
 import { activateChatGptProUsage } from '@/features/plugins/builtin/chatgptProUsage';
 import { isChatGptProUsageSupported } from '@/features/plugins/builtin/chatgptProUsage/manifest';
 import { activateChatGptResponseNotification } from '@/features/plugins/builtin/chatgptResponseNotification';
 import { activateChatGptTemporaryHandoff } from '@/features/plugins/builtin/chatgptTemporaryHandoff';
-import { activateClaudeFolders } from '@/features/plugins/builtin/claudeFolders';
-import { activateDeepSeekFolders } from '@/features/plugins/builtin/deepseekFolders';
 import {
   type NativeHandler,
   registerNativeHandler,
@@ -40,6 +37,7 @@ import {
   activateGeminiEditInputWidth,
   updateGeminiEditInputWidthSettings,
 } from './editInputWidth/pluginHandler';
+import { activateGeminiExport } from './export/pluginHandler';
 import { activateGeminiFork } from './fork/pluginHandler';
 import {
   activateGeminiGemsSidebar,
@@ -110,11 +108,6 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   'voyager.chatgpt-temporary-handoff': {
     activate: activateChatGptTemporaryHandoff,
   },
-  'voyager.chatgpt-folders': {
-    activate: activateChatGptFolders,
-  },
-  'voyager.claude-folders': { activate: activateClaudeFolders },
-  'voyager.deepseek-folders': { activate: activateDeepSeekFolders },
   'voyager.chatgpt-response-notification': {
     activate: activateChatGptResponseNotification,
   },
@@ -132,6 +125,7 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   },
   'voyager.gemini-markdown-fix': { activate: activateGeminiMarkdownFix },
   'voyager.gemini-message-timestamps': { activate: activateGeminiMessageTimestamps },
+  'voyager.gemini-export': { activate: activateGeminiExport },
   'voyager.gemini-canvas-copy': { activate: activateGeminiCanvasCopy },
   'voyager.gemini-deep-research-export': { activate: activateGeminiDeepResearchExport },
   'voyager.gemini-edit-input-width': {

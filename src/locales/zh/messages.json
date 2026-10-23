@@ -430,6 +430,10 @@
     "message": "文件夹",
     "description": "文件夹区域标题"
   },
+  "folder_account_unknown": {
+    "message": "无法确认此页面登录的是哪个账号，已暂时隐藏文件夹，数据仍完好保存。",
+    "description": "Shown in the folder panel when account isolation cannot read which account the page is signed in to"
+  },
   "folder_activity_turn_on": {
     "message": "开启动态视图",
     "description": "开启注意力优先的动态视图"

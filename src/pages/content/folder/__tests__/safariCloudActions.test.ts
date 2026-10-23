@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { accountIsolationService } from '@/core/services/AccountIsolationService';
+import { buildFolderPanel } from '@/features/plugins/verbs/folders/aistudio/panel';
 
-import { buildFolderPanel } from '../aistudioPanel';
 import { FLOATING_PANEL_CLASS } from '../floatingTree/shared';
 import { destroyMountedPanels, mountPanel, panelRoot } from './floatingPanelHarness';
 import { createFolderViewHarness, resetFolderViewBrowserMocks } from './folderViewHarness';
@@ -85,7 +85,15 @@ describe('Safari folder cloud actions', () => {
   it('Safari shows the folder cloud menu in AI Studio', () => {
     const upload = vi.fn();
     const sync = vi.fn();
-    const container = buildFolderPanel({ cloud: { upload, sync }, onCreateFolder: vi.fn() }, true);
+    const { container } = buildFolderPanel(
+      { cloud: { upload, sync }, onCreateFolder: vi.fn() },
+      true,
+      {
+        data: { folders: [], folderContents: {} },
+        actions: {},
+        activeConversationId: null,
+      },
+    );
     document.body.appendChild(container);
     const cloud = container.querySelector<HTMLButtonElement>('button[aria-label="folder_cloud"]');
     expect(cloud).not.toBeNull();

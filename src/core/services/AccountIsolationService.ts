@@ -298,9 +298,9 @@ export function detectAccountContextFromDocument(pageUrl: string, doc: Document)
       'alkali-accountswitcher [aria-label*="@"]',
       '.account-switcher-container [aria-label*="@"]',
     ]);
-    if (aiStudioEmail) {
-      return { routeUserId, email: aiStudioEmail };
-    }
+    // Only the account switcher counts: the page-wide scan below would take a `mailto:` or an
+    // email in a prompt, and bind this tab to that account's bucket. No switcher, no email.
+    return { routeUserId, email: aiStudioEmail };
   }
 
   if (isGeminiHost(hostname)) {

@@ -36,18 +36,24 @@ function defaultPos(): FloatingFabPos {
   });
 }
 
+/** One floating button, removed only through its own handle. */
+export interface FloatingFabHandle {
+  readonly element: HTMLElement;
+  /** Removes this button and its listeners; another owner's button stays. Idempotent. */
+  destroy(): void;
+}
+
 /**
- * Mounts the persistent floating-mode re-entry button. Draggable (pointer),
- * position persists via `onPosChange`, idempotent.
+ * Mounts a floating-mode re-entry button (draggable; its position persists via
+ * `onPosChange`) owned by the caller: nothing else on the page is read or
+ * removed, so two runtimes (one stopping while its successor starts) never
+ * take down each other's button.
  */
-export function mountFloatingFab({
+export function createFloatingFab({
   onClick,
   storedPos,
   onPosChange,
-}: MountArgs): HTMLElement | null {
-  const existing = document.querySelector(`.${FLOATING_FAB_CLASS}`);
-  if (existing) return existing as HTMLElement;
-
+}: MountArgs): FloatingFabHandle {
   const label = getTranslationSyncUnsafe('floatingFabLabel');
 
   const btn = document.createElement('button');
@@ -157,15 +163,30 @@ export function mountFloatingFab({
     btn.style.left = `${next.x}px`;
     btn.style.top = `${next.y}px`;
   });
-  // Stash cleanup handle on the element so unmount can reliably remove it.
-  (btn as HTMLElement & { __gvResizeCleanup?: () => void }).__gvResizeCleanup = () => {
+  let destroyed = false;
+  const destroy = (): void => {
+    if (destroyed) return;
+    destroyed = true;
     window.removeEventListener('resize', onResize);
     stopTriggerWatch();
+    btn.remove();
   };
 
   document.body.appendChild(btn);
   requestAnimationFrame(() => btn.classList.add(`${FLOATING_FAB_CLASS}--show`));
-  return btn;
+  return { element: btn, destroy };
+}
+
+/**
+ * Mounts Gemini's one floating-mode re-entry button for the page; idempotent.
+ */
+export function mountFloatingFab(args: MountArgs): HTMLElement | null {
+  const existing = document.querySelector(`.${FLOATING_FAB_CLASS}`);
+  if (existing) return existing as HTMLElement;
+  const fab = createFloatingFab(args);
+  // Stash cleanup handle on the element so unmount can reliably remove it.
+  (fab.element as HTMLElement & { __gvResizeCleanup?: () => void }).__gvResizeCleanup = fab.destroy;
+  return fab.element;
 }
 
 export function unmountFloatingFab(): void {

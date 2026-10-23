@@ -1,12 +1,9 @@
 import { type PluginManifest, hasNativeOps } from '../types';
 import { AISTUDIO_BATCH_DELETE_MANIFEST } from './aistudioBatchDeleteManifest';
 import { AISTUDIO_SIDEBAR_WIDTH_MANIFEST } from './aistudioSidebarWidthManifest';
-import { CHATGPT_FOLDERS_MANIFEST } from './chatgptFolders/manifest';
 import { CHATGPT_LOCAL_BRIDGE_MANIFEST } from './chatgptLocalBridge/manifest';
 import { CHATGPT_PRO_USAGE_MANIFEST, isChatGptProUsageSupported } from './chatgptProUsage/manifest';
 import { CHATGPT_RESPONSE_NOTIFICATION_MANIFEST } from './chatgptResponseNotification/manifest';
-import { CLAUDE_FOLDERS_MANIFEST } from './claudeFolders/manifest';
-import { DEEPSEEK_FOLDERS_MANIFEST } from './deepseekFolders/manifest';
 import { GEMINI_BATCH_DELETE_MANIFEST } from './geminiBatchDeleteManifest';
 import { GEMINI_CANVAS_COPY_MANIFEST } from './geminiCanvasCopyManifest';
 import { GEMINI_CHAT_WIDTH_MANIFEST } from './geminiChatWidthManifest';
@@ -14,6 +11,7 @@ import { GEMINI_CONTEXT_SYNC_MANIFEST } from './geminiContextSyncManifest';
 import { GEMINI_DEEP_RESEARCH_EXPORT_MANIFEST } from './geminiDeepResearchExportManifest';
 import { GEMINI_DEFAULT_MODEL_MANIFEST } from './geminiDefaultModelManifest';
 import { GEMINI_EDIT_INPUT_WIDTH_MANIFEST } from './geminiEditInputWidthManifest';
+import { GEMINI_EXPORT_MANIFEST } from './geminiExportManifest';
 import { GEMINI_FORK_MANIFEST } from './geminiForkManifest';
 import { GEMINI_GEMS_SIDEBAR_MANIFEST } from './geminiGemsSidebarManifest';
 import { GEMINI_HIGHLIGHT_MANIFEST } from './geminiHighlightManifest';
@@ -309,9 +307,6 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
     matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*'],
     contributes: {},
   },
-  CHATGPT_FOLDERS_MANIFEST,
-  CLAUDE_FOLDERS_MANIFEST,
-  DEEPSEEK_FOLDERS_MANIFEST,
   CHATGPT_RESPONSE_NOTIFICATION_MANIFEST,
   CHATGPT_LOCAL_BRIDGE_MANIFEST,
   // Not listed where it cannot run (Firefox, Safari), so no switch does nothing.
@@ -325,6 +320,7 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   GEMINI_SIDEBAR_FULL_HIDE_MANIFEST,
   GEMINI_MARKDOWN_FIX_MANIFEST,
   GEMINI_MESSAGE_TIMESTAMPS_MANIFEST,
+  GEMINI_EXPORT_MANIFEST,
   GEMINI_CANVAS_COPY_MANIFEST,
   GEMINI_DEEP_RESEARCH_EXPORT_MANIFEST,
   GEMINI_WATERMARK_DOWNLOAD_MANIFEST,

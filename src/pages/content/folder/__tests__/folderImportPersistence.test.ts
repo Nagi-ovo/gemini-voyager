@@ -8,8 +8,8 @@ import { toastDriver } from '@/tests/toastDriver';
 import { getTranslationSyncUnsafe as t } from '@/utils/i18n';
 
 import { historyTimestampStore } from '../../timestamp/historyTimestamps';
-import { FolderManager } from '../manager';
 import * as storageAdapters from '../storage/FolderStorageAdapter';
+import { FolderManager } from './geminiFolderManager';
 import { mountSidebar } from './sidebarRuntimeHarness';
 import { sidebarTree } from './sidebarTreeDriver';
 

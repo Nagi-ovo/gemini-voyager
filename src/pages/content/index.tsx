@@ -11,51 +11,35 @@ import { resolvePluginPlatformId } from '@/features/plugins/sites/registry';
 import { SiteRegistry } from '@/features/plugins/sites/registry';
 import { initI18n } from '@/utils/i18n';
 
+import { admitAIStudioFolders } from './aistudioFolderStartup';
 import { startAIStudioSidebarLayout } from './aistudioSidebarStartup';
-import { startGeminiChatAppearance } from './appearanceStartup';
 import { admitBatchDelete } from './batchDeleteStartup';
-import { startChangelog } from './changelog/index';
-import { runCoachmarkSequence } from './coachmark';
 import { claimContentScript } from './contentScriptHandoff';
 import { startDevSettingsBridge } from './devSettingsBridge';
 import { flushDraftsBeforeUnload } from './draftSave/draftUnloadFlush';
-import { startExportButton } from './export/index';
 import { type NativeFeature, type StopNativeFeature, mountNativeFeature } from './featureLifecycle';
-import { folderActivityCoachmarkStep } from './folder/activityCoachmark';
-import { startAIStudioFolderManager } from './folder/aistudio';
-import { conversationSortCoachmarkStep } from './folder/conversationSortCoachmark';
-import { folderSearchCoachmarkStep } from './folder/folderSearchCoachmark';
-import { startFolderManager } from './folder/index';
-import { startFolderItemFontSizeAdjuster } from './folderItemFontSize/index';
-import { startFolderProject } from './folderProject/index';
 import { startFolderSpacingAdjuster } from './folderSpacing/index';
 import { createGeminiBuiltinStartup } from './geminiBuiltinStartup';
-import { enterInitialization } from './initializationEntry';
+import { startGeminiPage } from './geminiPageStartup';
 import {
-  createGeminiInputStartup,
-  startAIStudioSendKeys,
-  startGeminiSendKeys,
-  startPageSendKeys,
-} from './inputStartup';
+  HEAVY_FEATURE_INIT_DELAY,
+  LIGHT_FEATURE_INIT_DELAY,
+  getInitializationDelay,
+  yieldToIdle,
+} from './initPacing';
+import { enterInitialization } from './initializationEntry';
+import { createGeminiInputStartup, startAIStudioSendKeys, startPageSendKeys } from './inputStartup';
 import { initKaTeXConfig } from './katexConfig';
 import { NATIVE_FEATURES } from './nativeFeatures';
+import { createOnboardingCoachmarks } from './onboardingCoachmarks';
 import { PageRetiredError, createPageSteps } from './pageInitSteps';
 import { ensureScheme, stopScheme } from './platformTheme/scheme';
 import { registerBuiltinNativeHandlers } from './pluginNativeRegistration';
-import { createPostChangelogFlow } from './postChangelogFlow';
 import { createPromptManagerEngine, readPromptCoverage } from './prompt/promptManagerEngine';
-import { promptReorderCoachmarkStep } from './prompt/promptReorderCoachmark';
 import { resolvePromptSiteAdapter } from './prompt/resolvePromptSiteAdapter';
-import { slashPromptCoachmarkStep } from './prompt/slashPromptCoachmark';
 import { createGeminiRendererStartup } from './rendererStartup';
 import { createSelectionStartup } from './selectionStartup';
-import {
-  maybeShowRulerTimelineCoachmark,
-  rulerTimelineCoachmarkStep,
-} from './timeline/rulerTimelineCoachmark';
-import { usageCoachmarkStep } from './usageStatus/usageCoachmark';
 import { admitVisualEffectsForPage } from './visualEffectsStartup';
-import { startWatermarkNativeNotice } from './watermarkNativeNotice';
 
 // Suppress Vite's CSS preload errors in the Chrome extension content script context.
 // Dynamic imports (e.g., mermaid) trigger Vite's __vitePreload helper which tries to
@@ -68,23 +52,6 @@ window.addEventListener('vite:preloadError', (event) => {
 });
 
 if (import.meta.env.VOYAGER_DEV_SETTINGS_BRIDGE) startDevSettingsBridge();
-
-/**
- * Staggered initialization to prevent "thundering herd" problem when multiple tabs
- * are restored simultaneously (e.g., after browser restart).
- *
- * Background tabs get a random delay (3-8s) to distribute initialization load.
- * Foreground tabs initialize immediately for good UX.
- *
- * This prevents triggering Google's rate limiting when restoring sessions with
- * many Gemini tabs containing long conversations.
- */
-
-// Initialization delay constants (in milliseconds)
-const HEAVY_FEATURE_INIT_DELAY = 100; // For resource-intensive features (Timeline, Folder)
-const LIGHT_FEATURE_INIT_DELAY = 50; // For lightweight features
-const BACKGROUND_TAB_MIN_DELAY = 3000; // Minimum delay for background tabs
-const BACKGROUND_TAB_MAX_DELAY = 8000; // Maximum delay for background tabs (3000 + 5000)
 
 const cleanupManager = new CleanupManager();
 // Aborted only when a newer copy retires this one, never on `beforeunload`
@@ -119,6 +86,7 @@ cleanupManager.registerCleanupFunction(
   () => timelineCoachmarkLifetime.abort(),
   CleanupPositions.CleanupTimelineCoachmarks,
 );
+const showOnboardingCoachmarks = createOnboardingCoachmarks(timelineCoachmarkLifetime.signal);
 
 // Every await in initializeFeatures goes through these, so a starter it calls
 // directly (Quote Reply, folders, export buttons, …) never runs after retirement.
@@ -131,39 +99,6 @@ function mountForPage(feature: NativeFeature): Promise<StopNativeFeature> {
 
 let initialized = false;
 let initializationTimer: number | null = null;
-
-let onboardingCoachmarkShownThisPage = false;
-let onboardingCoachmarkSequenceRunning = false;
-
-function showOnboardingCoachmarksWhenChangelogIsIdle(): void {
-  if (
-    document.querySelector('.gv-changelog-overlay') ||
-    onboardingCoachmarkShownThisPage ||
-    onboardingCoachmarkSequenceRunning
-  )
-    return;
-
-  onboardingCoachmarkSequenceRunning = true;
-  void runCoachmarkSequence([
-    {
-      ...rulerTimelineCoachmarkStep,
-      show: (progress) =>
-        maybeShowRulerTimelineCoachmark({ progress, signal: timelineCoachmarkLifetime.signal }),
-    },
-    folderActivityCoachmarkStep,
-    usageCoachmarkStep,
-    folderSearchCoachmarkStep,
-    conversationSortCoachmarkStep,
-    slashPromptCoachmarkStep,
-    promptReorderCoachmarkStep,
-  ])
-    .then((result) => {
-      if (result !== 'skipped') onboardingCoachmarkShownThisPage = true;
-    })
-    .finally(() => {
-      onboardingCoachmarkSequenceRunning = false;
-    });
-}
 
 /**
  * Initialize all features sequentially to reduce simultaneous load
@@ -182,23 +117,7 @@ async function initializeFeatures(): Promise<void> {
 
     await settle(promptManager.startComposerFeatures());
 
-    // Yield between features instead of sleeping a fixed amount. On an idle main
-    // thread (the common foreground case) requestIdleCallback fires on the next
-    // idle slice — typically well under `ms` — so tail features (timeline, export,
-    // mermaid, …) wire up promptly instead of waiting out a ~2s floor of stacked
-    // setTimeouts. When the thread is busy, the `timeout` cap makes it back off
-    // exactly like the old fixed delay, preserving the anti-thundering-herd intent.
-    // Falls back to setTimeout where requestIdleCallback is unavailable (older WebKit).
-    const delay = (ms: number) =>
-      settle(
-        new Promise<void>((resolve) => {
-          if (typeof window.requestIdleCallback === 'function') {
-            window.requestIdleCallback(() => resolve(), { timeout: ms });
-          } else {
-            setTimeout(resolve, ms);
-          }
-        }),
-      );
+    const delay = (ms: number) => settle(yieldToIdle(ms));
 
     // Custom-website coverage and Gemini Enterprise end initialization here.
     const entry = await enterInitialization(location, document, {
@@ -210,95 +129,20 @@ async function initializeFeatures(): Promise<void> {
     if (entry !== 'start-points') return;
 
     if (location.hostname === 'gemini.google.com') {
-      // Owners below report anchor health to it, so it listens before they start.
-      await settle(mountForPage(NATIVE_FEATURES.nativeHealth));
-      // Before the timeline and folders: they read server identities from it.
-      await settle(mountForPage(NATIVE_FEATURES.historyTimestampPageService));
-      // Message time display has its own switch and remains available with the rail closed.
-      await settle(geminiBuiltins.startMessageTimestamps());
-      // Timeline is most resource-intensive, start it first
-      await settle(geminiBuiltins.startTimeline());
-      await delay(HEAVY_FEATURE_INIT_DELAY);
-
-      admitBatchDelete(officialAdmission, 'gemini', pageLifetime.signal);
-      const folderManager = await adopt(startFolderManager(), (manager) => manager?.destroy());
-      if (folderManager) {
-        cleanupManager.registerCleanupFunction(
-          () => folderManager.destroy(),
-          CleanupPositions.DestroyFolderManagerInstance,
-        );
-        startFolderProject(folderManager);
-      }
-      await delay(HEAVY_FEATURE_INIT_DELAY);
-
-      // Layout preferences are independent and only install lightweight
-      // storage listeners/styles, so yield once for the group instead of once
-      // per setting.
-      startFolderSpacingAdjuster('gemini');
-      startFolderItemFontSizeAdjuster();
-      await settle(startGeminiChatAppearance(officialAdmission, pageLifetime.signal));
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      await settle(geminiInputs.startInputCollapse());
-      officialAdmission.admit('gemini', 'hideInputHalo');
-      officialAdmission.admit('gemini', 'vimInput');
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      await settle(startGeminiSendKeys(officialAdmission));
-      await settle(geminiBuiltins.startPreventAutoScroll());
-      officialAdmission.admit('gemini', 'formulaCopy');
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      // The selection toolbar, sent-quote styling, then Quote and Highlight.
-      await settle(selectionStartup.start());
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      // Independent content helpers can initialize in the same idle slice.
-      await settle(geminiBuiltins.startWatermarkRemover());
-      await settle(geminiBuiltins.startDeepResearchExport());
-      await settle(geminiBuiltins.startContextSync());
-      // Gemini moved Gems into the More menu, so the old sidebar hider no longer has a target.
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      // These modules only share the extension storage API and can hydrate in
-      // parallel without changing their runtime ordering.
-      const parallelResults = await Promise.allSettled([
-        geminiBuiltins.startResponseNotification(),
-        geminiBuiltins.startGemsSidebar(),
-        geminiBuiltins.startUsageStatus(),
-        geminiInputs.startDraftSave(),
-        geminiInputs.startPromptHistory(),
-      ]);
-      const failedInitializer = parallelResults.find(
-        (result): result is PromiseRejectedResult => result.status === 'rejected',
-      );
-      if (failedInitializer) throw failedInitializer.reason;
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      // DOM enhancements install observers/listeners but do not need separate
-      // idle waits between each initializer.
-      await settle(geminiBuiltins.startMarkdownFix());
-      await settle(geminiRenderers.startCodeBlockCollapse());
-      await settle(geminiBuiltins.startDefaultModel());
-      startExportButton();
-      await settle(geminiBuiltins.startCanvasCopy());
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      await settle(geminiBuiltins.startForkAndResearchPack());
-
-      // Release-time interruptions are intentionally sequential: changelog,
-      // native-watermark notice, then any eligible feature coachmarks.
-      const postChangelogFlow = createPostChangelogFlow({
-        hasOpenChangelog: () => Boolean(document.querySelector('.gv-changelog-overlay')),
-        startWatermarkNotice: (onSettled) => {
-          cleanupManager.registerCleanupFunction(
-            startWatermarkNativeNotice({ onSettled }),
-            CleanupPositions.CleanupWatermarkNativeNotice,
-          );
-        },
-        startCoachmarks: showOnboardingCoachmarksWhenChangelogIsIdle,
+      await startGeminiPage({
+        settle,
+        adopt,
+        delay,
+        mountForPage,
+        admission: officialAdmission,
+        cleanupManager,
+        lifetime: pageLifetime.signal,
+        builtins: geminiBuiltins,
+        inputs: geminiInputs,
+        renderers: geminiRenderers,
+        selection: selectionStartup,
+        showOnboardingCoachmarks,
       });
-      void startChangelog({ onClosed: postChangelogFlow.start }).then(postChangelogFlow.start);
     }
 
     if (
@@ -336,6 +180,7 @@ async function initializeFeatures(): Promise<void> {
         console.log('[Gemini Voyager] AI Studio features disabled by user');
         // Admit while off: PluginHost follows the master live and can remount without a reload.
         startAIStudioSidebarLayout(officialAdmission);
+        admitAIStudioFolders(officialAdmission, { masterOn: false, lifetime: pageLifetime.signal });
         officialAdmission.admit('aistudio', 'formulaCopy');
         await settle(startAIStudioSendKeys(officialAdmission));
         return;
@@ -343,7 +188,7 @@ async function initializeFeatures(): Promise<void> {
 
       startAIStudioSidebarLayout(officialAdmission);
       admitBatchDelete(officialAdmission, 'aistudio', pageLifetime.signal);
-      startAIStudioFolderManager();
+      admitAIStudioFolders(officialAdmission, { masterOn: true, lifetime: pageLifetime.signal });
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
       startFolderSpacingAdjuster('aistudio');
@@ -366,28 +211,6 @@ async function initializeFeatures(): Promise<void> {
     console.error('[Gemini Voyager] Initialization error:', e);
   } finally {
     officialAdmission.close();
-  }
-}
-
-/**
- * Determine initialization delay based on tab visibility
- */
-function getInitializationDelay(): number {
-  // Check if tab is currently visible
-  const isVisible = document.visibilityState === 'visible';
-
-  if (isVisible) {
-    // Foreground tab: initialize immediately for good UX
-    console.log('[Gemini Voyager] Foreground tab detected, initializing immediately');
-    return 0;
-  } else {
-    // Background tab: add random delay to distribute load across multiple tabs
-    const randomRange = BACKGROUND_TAB_MAX_DELAY - BACKGROUND_TAB_MIN_DELAY;
-    const randomDelay = BACKGROUND_TAB_MIN_DELAY + Math.random() * randomRange;
-    console.log(
-      `[Gemini Voyager] Background tab detected, delaying initialization by ${Math.round(randomDelay)}ms`,
-    );
-    return randomDelay;
   }
 }
 

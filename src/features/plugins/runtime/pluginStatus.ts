@@ -9,6 +9,8 @@
  *   needs-handler    a primitive it invokes, or the scripted runtime it needs,
  *                    is not in this build
  *   needs-semantic   the site adapter lacks a semantic key it relies on
+ *   needs-site-data  the site adapter lacks a `site.json` section (or its
+ *                    format) one of its primitives reads, such as `folders`
  *   ready            compatible, not enabled (or enabled and not yet mounted)
  *   mounted          enabled and running on this page
  *   no-effect        mounted, but the health signal found no targets (D12);
@@ -25,13 +27,18 @@ import { resolveEngineVersion } from '../engineVersion';
 import { acceptedSemanticKeyParamValues } from '../manifest/semanticKeyParams';
 import { engineSatisfied } from '../semver';
 import type { PluginManifest, SiteAdapter } from '../types';
-import { EFFECTIVE_PLUGIN_ENGINE_VERSION, getPrimitiveContract } from '../verbs/contracts';
+import {
+  EFFECTIVE_PLUGIN_ENGINE_VERSION,
+  type PrimitiveSiteSection,
+  getPrimitiveContract,
+} from '../verbs/contracts';
 import type { OpDiagnostic } from './opDiagnostics';
 
 export type PluginStatusKind =
   | 'needs-engine'
   | 'needs-handler'
   | 'needs-semantic'
+  | 'needs-site-data'
   | 'ready'
   | 'mounted'
   | 'no-effect'
@@ -73,6 +80,8 @@ export interface PluginStatus {
   readonly missingHandlers?: readonly string[];
   /** For needs-semantic: keys the site adapter does not define. */
   readonly missingSemantic?: readonly string[];
+  /** For needs-site-data: `site.json` sections the site adapter lacks or reads in an older format. */
+  readonly missingSections?: readonly string[];
   /**
    * A newer version arrived while this page kept the old one mounted (plan
    * D7: primitive-backed plugins switch on the next full page load).
@@ -98,10 +107,11 @@ export interface PluginStatus {
 export interface PluginIncompatibility {
   readonly id: string;
   readonly version: string;
-  readonly kind: 'needs-engine' | 'needs-handler' | 'needs-semantic';
+  readonly kind: 'needs-engine' | 'needs-handler' | 'needs-semantic' | 'needs-site-data';
   readonly requiredEngine?: string;
   readonly missingHandlers?: readonly string[];
   readonly missingSemantic?: readonly string[];
+  readonly missingSections?: readonly string[];
 }
 
 /** Primitives the plugin invokes: declared `requires.handlers` plus every `native` op. */
@@ -136,6 +146,40 @@ export function requiredSemanticKeys(manifest: PluginManifest): readonly string[
   return [...keys];
 }
 
+/** The format of each `site.json` section a primitive can require, as the adapter carries it. */
+const SITE_SECTION_FORMAT: Readonly<
+  Record<PrimitiveSiteSection, (adapter: SiteAdapter) => number | undefined>
+> = {
+  folders: (adapter) => adapter.folders?.format,
+};
+
+/** `site.json` sections the plugin's primitives read, with the highest format any of them needs. */
+export function requiredSiteSections(
+  manifest: PluginManifest,
+): ReadonlyMap<PrimitiveSiteSection, number> {
+  const sections = new Map<PrimitiveSiteSection, number>();
+  for (const handler of requiredHandlers(manifest)) {
+    const wanted = getPrimitiveContract(handler)?.sections ?? {};
+    for (const [section, format] of Object.entries(wanted) as [PrimitiveSiteSection, number][]) {
+      sections.set(section, Math.max(format, sections.get(section) ?? 0));
+    }
+  }
+  return sections;
+}
+
+/** The required sections `adapter` lacks, or carries in a format older than needed. */
+export function missingSiteSections(
+  manifest: PluginManifest,
+  adapter: SiteAdapter | null,
+): readonly PrimitiveSiteSection[] {
+  return [...requiredSiteSections(manifest)]
+    .filter(([section, format]) => {
+      const carried = adapter ? SITE_SECTION_FORMAT[section](adapter) : undefined;
+      return carried === undefined || carried < format;
+    })
+    .map(([section]) => section);
+}
+
 export interface CompatibilityInput {
   readonly manifest: PluginManifest;
   readonly adapter: SiteAdapter | null;
@@ -161,6 +205,10 @@ export function findIncompatibility(input: CompatibilityInput): PluginIncompatib
   const missingSemantic = requiredSemanticKeys(manifest).filter((key) => !selectors[key]);
   if (missingSemantic.length > 0) {
     return { ...base, kind: 'needs-semantic', missingSemantic };
+  }
+  const missingSections = missingSiteSections(manifest, input.adapter);
+  if (missingSections.length > 0) {
+    return { ...base, kind: 'needs-site-data', missingSections };
   }
   return null;
 }

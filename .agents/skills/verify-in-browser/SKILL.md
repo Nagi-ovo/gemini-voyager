@@ -1,6 +1,6 @@
 ---
 name: verify-in-browser
-description: Proves a Voyager change on the live host page and shows the evidence as screenshots. Use after changing content scripts, injected CSS, MAIN-world scripts or plugin site code, and when someone reports a feature missing or still old in their browser.
+description: Proves a Voyager change on the live host page and shows the evidence as screenshots. Use after changing content scripts, injected CSS, MAIN-world scripts or plugin site code, when a check needs a setting or plugin switched (the dev build flips it without the popup), and when someone reports a feature missing or still old in their browser.
 metadata:
   version: '2.0.0'
 ---
@@ -33,7 +33,7 @@ Read the real DOM and computed styles, and compare them with the assumption unde
 
 - **Coordinates**: clicks use the frame the screenshot result reports. Compute targets in JavaScript as CSS px divided by `innerWidth / frameWidth`, then click the result.
 - **Typing**: type only right after a JavaScript check shows `document.activeElement` is the Voyager input you expect (inside the section's shadow root when it has one). Enter goes only to that input. A click that opened something else gets closed before the next step.
-- **Settings**: the popup and options pages are out of reach of page scripts. On the dev build, post to the dev settings bridge from the page and await its `gv-dev-settings-result` reply (`src/pages/content/devSettingsBridge.ts` has the request shape). Read the value first and restore it when done. `area: 'sync'` holds ordinary settings and the Gemini/AI Studio plugins bound in `LEGACY_ENABLE_BINDINGS` (`src/features/plugins/storage/legacySettingBindings.ts`); every other plugin keeps `enabled` and settings in `gvPluginsState` with `area: 'local'`, a missing entry meaning its default (`storage/pluginDefaults.ts`). `set` replaces the whole map: `get`, change one entry, `set`.
+- **Settings**: the popup and options pages are out of reach of page scripts. On the dev build, post to the dev settings bridge from the page and await its `gv-dev-settings-result` reply (`src/pages/content/devSettingsBridge.ts` has the request shape). Read the value first and restore it when done. `area: 'sync'` holds ordinary settings and the Gemini/AI Studio plugins bound in `LEGACY_ENABLE_BINDINGS` (`src/features/plugins/storage/legacyEnableBindingTable.ts`); every other plugin keeps `enabled` and settings in `gvPluginsState` with `area: 'local'`, a missing entry meaning its default (`storage/pluginDefaults.ts`). `set` replaces the whole map: `get`, change one entry, `set`.
 - **Background tabs**: a tab opened by a tool can stay `visibilityState: 'hidden'`, where `requestAnimationFrame` never fires, so focus or layout done in a frame callback looks broken there. Check `document.visibilityState` before calling it a bug.
 - **Themes**: to capture the other theme, flip the host's own theme marker on the page (the attribute or class its `site.json` theme descriptor reads), capture, and flip it back; the person's site setting stays as it was.
 - **Probes**: a temporary element can test a CSS rule when the rule is new in this change; remove it afterward.

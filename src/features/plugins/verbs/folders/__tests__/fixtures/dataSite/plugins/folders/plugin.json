@@ -1,0 +1,23 @@
+{
+  "id": "voyager.nimbus-folders",
+  "name": "Nimbus · Folders",
+  "version": "1.0.0",
+  "description": "Folders for a test site described only by data.",
+  "author": "voyager-official",
+  "category": "productivity",
+  "license": "GPL-3.0-or-later",
+  "engine": ">=next",
+  "tier": "declarative",
+  "matches": ["https://chat.nimbus.test/*"],
+  "requires": { "handlers": ["folders"] },
+  "contributes": {
+    "settings": {
+      "hideFiledChats": {
+        "type": "boolean",
+        "label": "Hide chats already in folders from the sidebar list",
+        "default": false
+      }
+    },
+    "domOps": [{ "op": "native", "handler": "folders", "params": {} }]
+  }
+}

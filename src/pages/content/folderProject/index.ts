@@ -9,7 +9,7 @@ import { isImeKeyEvent } from '@/core/services/composer/sendKeys/sendKeyIntent';
 import { StorageKeys } from '@/core/types/common';
 
 import { findChatInput } from '../chatInput/index';
-import type { FolderManager } from '../folder/manager';
+import type { GeminiFolderSession } from '../folder/session/geminiFolderSession';
 import { followGeminiSendKey } from '../sendBehavior/followSendKey';
 import { setInputText } from '../utils/inputHelper';
 import { watchRouteChanges } from '../utils/routeWatcher';
@@ -18,7 +18,23 @@ import {
   hasInstructionBlock,
   stripInstructionBlock,
 } from './instructionBlock';
-import { createFolderProjectPicker } from './picker';
+import { clearNewChatFolder, onNewChatFolder, pendingNewChatFolder } from './pendingFolder';
+import { type FolderSnapshot, createFolderProjectPicker } from './picker';
+
+/**
+ * Gemini's folder session as Folder-as-Project uses it: the folders to pick
+ * from, and filing the new chat. It works whether the folders are on or off.
+ */
+export type FolderProjectFolders = Pick<
+  GeminiFolderSession,
+  'ensureDataLoaded' | 'getFolders' | 'addConversationToFolderFromNative'
+> &
+  Partial<
+    Pick<
+      GeminiFolderSession,
+      'onFoldersReady' | 'folderAccount' | 'folderSnapshot' | 'onAccountChange'
+    >
+  >;
 
 // ============================================================================
 // Module state (per-tab, reset on navigation)
@@ -28,6 +44,10 @@ let featureInitialized = false;
 let selectedFolderId: string | null = null;
 let selectedFolderName: string | null = null;
 let selectedFolderInstructions: string | null = null;
+/** Whose folders the selection came from (`FolderProjectFolders.folderAccount`). */
+let selectedFolderAccount: string | null = null;
+/** The page's folder session, once started; it answers whose folders the page shows. */
+let folderSource: FolderProjectFolders | null = null;
 let picker: ReturnType<typeof createFolderProjectPicker> | null = null;
 let lastHref = '';
 let stopRouteWatcher: (() => void) | null = null;
@@ -101,8 +121,7 @@ function clearPendingSendState(): void {
   pendingSend = false;
 }
 
-function clearPreparedInstructions(): void {
-  const input = findChatInput();
+function clearPreparedInstructions(input: HTMLElement | null = findChatInput()): void {
   if (!input) return;
 
   const currentText = readInputText(input);
@@ -111,8 +130,55 @@ function clearPreparedInstructions(): void {
   setInputText(input, stripInstructionBlock(currentText));
 }
 
+/** The folders to pick from, with the account they came from read in the same step. */
+function snapshotOf(folders: FolderProjectFolders): FolderSnapshot {
+  return folders.folderSnapshot?.() ?? { account: null, folders: folders.getFolders() };
+}
+
+function clearFolderSelection(): void {
+  selectedFolderId = null;
+  selectedFolderName = null;
+  selectedFolderInstructions = null;
+  selectedFolderAccount = null;
+}
+
+/**
+ * Whether the chosen folder belongs to the account the page shows. One whose
+ * account the page no longer shows (the tab switched accounts) is dropped
+ * with its chip and any instructions already put in the composer: another
+ * account's instructions must never reach this one's chat, nor its chat that
+ * account's folder. While the page's account is unreadable (its control
+ * loading or redrawn) the choice is kept but not acted on.
+ */
+function selectionBelongsToPage(): boolean {
+  if (!selectedFolderId) return false;
+  if (!folderSource?.folderAccount) return true;
+  const account = folderSource.folderAccount();
+  if (account === selectedFolderAccount) return true;
+  if (account === null) return false;
+  clearFolderSelection();
+  clearPendingSendState();
+  clearPreparedInstructions();
+  picker?.resetChoice();
+  return false;
+}
+
+/**
+ * Whether the choice may act on the send about to go out. One that may not
+ * (the page's account is unreadable now, or another one) leaves no
+ * instructions in the composer and no send pending: the message goes out
+ * plain and unfiled rather than carry a folder whose account is unconfirmed.
+ */
+function choiceMayActOnSend(input: HTMLElement | null): boolean {
+  if (selectionBelongsToPage()) return true;
+  clearPreparedInstructions(input);
+  clearPendingSendState();
+  return false;
+}
+
 function prepareInputForSend(input: HTMLElement | null): void {
   if (!input || !selectedFolderInstructions || !selectedFolderName) return;
+  if (!selectionBelongsToPage()) return;
 
   const currentText = stripInstructionBlock(readInputText(input));
   const combined = `${buildInstructionBlock(selectedFolderName, selectedFolderInstructions)}${currentText}`;
@@ -205,15 +271,15 @@ function setupSendDetection(): void {
   sendClickListener = (e: Event) => {
     if (!selectedFolderId) return;
     const target = e.target as HTMLElement;
-    if (target.closest(SEND_BUTTON_SELECTOR)) {
-      markPendingSend(findChatInput());
-    }
+    if (!target.closest(SEND_BUTTON_SELECTOR)) return;
+    const input = findChatInput();
+    if (choiceMayActOnSend(input)) markPendingSend(input);
   };
 
   sendKeydownListener = (e: KeyboardEvent) => {
     if (!selectedFolderId || !isKeyboardSend(e) || !isEditableTarget(e.target)) return;
     if (handleEmptyInputEnter(e.target)) return;
-    markPendingSend(e.target);
+    if (choiceMayActOnSend(e.target)) markPendingSend(e.target);
   };
 
   // Cancel pendingSend when user clicks a sidebar conversation link, so the
@@ -272,16 +338,16 @@ function getConversationTitle(convId: string): string {
 // URL change handler
 // ============================================================================
 
-function handleNavigation(manager: FolderManager, prevPath: string, newPath: string): void {
+function handleNavigation(folders: FolderProjectFolders, prevPath: string, newPath: string): void {
   const prevWasNewChat = isNewChatPath(prevPath);
   const newConvId = extractConvId(newPath);
 
   // User sent their first message: new-chat → conversation
   // Gate on pendingSend to avoid false assignment when clicking sidebar links
-  if (prevWasNewChat && newConvId && selectedFolderId && pendingSend) {
+  if (prevWasNewChat && newConvId && pendingSend && selectionBelongsToPage() && selectedFolderId) {
     const title = getConversationTitle(newConvId);
     const { isGem, gemId } = extractGemMetadata(newPath);
-    manager.addConversationToFolderFromNative(
+    folders.addConversationToFolderFromNative(
       selectedFolderId,
       newConvId,
       title,
@@ -290,17 +356,13 @@ function handleNavigation(manager: FolderManager, prevPath: string, newPath: str
       gemId,
       Date.now(),
     );
-    selectedFolderId = null;
-    selectedFolderName = null;
-    selectedFolderInstructions = null;
+    clearFolderSelection();
     clearPendingSendState();
   }
 
   if (isNewChatPath(newPath)) {
     // Navigated to a new chat page — (re)show picker
-    selectedFolderId = null;
-    selectedFolderName = null;
-    selectedFolderInstructions = null;
+    clearFolderSelection();
     clearPendingSendState();
     clearPreparedInstructions();
     picker?.remove();
@@ -311,9 +373,7 @@ function handleNavigation(manager: FolderManager, prevPath: string, newPath: str
     // the >60s timer fired, the conversation is NOT auto-assigned (user
     // must drag it manually) — the alternative would re-introduce follow-up
     // injection on the new conversation page.
-    selectedFolderId = null;
-    selectedFolderName = null;
-    selectedFolderInstructions = null;
+    clearFolderSelection();
     clearPendingSendState();
     picker?.remove();
   }
@@ -331,7 +391,7 @@ function stopURLWatcher(): void {
   teardownSendDetection();
 }
 
-function startURLWatcher(manager: FolderManager): void {
+function startURLWatcher(folders: FolderProjectFolders): void {
   // Clean up any existing watcher (idempotent for toggle cycles)
   stopURLWatcher();
   effectiveSendKey = followGeminiSendKey((key) => {
@@ -340,14 +400,17 @@ function startURLWatcher(manager: FolderManager): void {
   // A pending mount may finish after an off/on cycle; keep its cleanup owner.
   picker ??= createFolderProjectPicker({
     loadFolders: async () => {
-      await manager.ensureDataLoaded();
-      return manager.getFolders();
+      await folders.ensureDataLoaded();
+      return snapshotOf(folders);
     },
+    loadedFolders: () => snapshotOf(folders),
+    currentAccount: folders.folderAccount ? () => folders.folderAccount?.() ?? null : undefined,
     canMount: () => featureInitialized && isNewChatPath(window.location.pathname),
-    onSelect: (folder, source) => {
+    onSelect: (folder, source, account) => {
       selectedFolderId = folder?.id ?? null;
       selectedFolderName = folder?.name ?? null;
       selectedFolderInstructions = folder?.instructions ?? null;
+      selectedFolderAccount = folder ? account : null;
       // Pending selection leaves the input alone; only an explicit picker choice clears it.
       if (source === 'user') clearPreparedInstructions();
     },
@@ -361,7 +424,7 @@ function startURLWatcher(manager: FolderManager): void {
     const prevPath = new URL(lastHref).pathname;
     const newPath = new URL(current).pathname;
     lastHref = current;
-    handleNavigation(manager, prevPath, newPath);
+    handleNavigation(folders, prevPath, newPath);
   };
 
   stopRouteWatcher = watchRouteChanges(({ trigger }) => {
@@ -385,9 +448,10 @@ function startURLWatcher(manager: FolderManager): void {
  * Initialise the Folder-as-Project feature. Reads the enabled flag from
  * chrome.storage.sync and sets up the URL watcher + picker injection.
  *
- * @param manager - The active FolderManager instance
+ * @param folders - Gemini's folder session, which the page holds
  */
-export function startFolderProject(manager: FolderManager): void {
+export function startFolderProject(folders: FolderProjectFolders): void {
+  folderSource = folders;
   chrome.storage?.sync?.get(
     {
       [StorageKeys.FOLDER_PROJECT_ENABLED]: false,
@@ -400,9 +464,29 @@ export function startFolderProject(manager: FolderManager): void {
       if (res?.[StorageKeys.FOLDER_PROJECT_ENABLED] !== true) return;
       if (featureInitialized) return;
       featureInitialized = true;
-      startURLWatcher(manager);
+      startURLWatcher(folders);
     },
   );
+
+  // "New chat in this folder" on the new-chat page itself: no navigation follows, so the
+  // picker takes this tab's handoff here.
+  onNewChatFolder(() => {
+    if (featureInitialized && isNewChatPath(location.pathname)) void picker?.applyPending();
+  });
+  // A handoff whose folders had not loaded yet (the account was still unreadable) is taken
+  // once they have.
+  folders.onFoldersReady?.(() => {
+    if (!featureInitialized || !isNewChatPath(location.pathname) || !pendingNewChatFolder()) return;
+    void picker?.retryPending();
+  });
+  // Another account took the page: its folders are not the chosen one's.
+  folders.onAccountChange?.(() => {
+    // Options listed for another account are not this one's to pick.
+    picker?.dropStaleOptions();
+    // An unreadable account proves no switch; sending checks again.
+    if ((folders.folderAccount?.() ?? null) === null || !selectedFolderId) return;
+    selectionBelongsToPage();
+  });
 
   // React to toggle changes without a page reload
   chrome.storage.onChanged.addListener((changes, area) => {
@@ -415,16 +499,16 @@ export function startFolderProject(manager: FolderManager): void {
     const enabled = changes[StorageKeys.FOLDER_PROJECT_ENABLED].newValue === true;
     if (enabled && !featureInitialized) {
       featureInitialized = true;
-      startURLWatcher(manager);
+      startURLWatcher(folders);
     } else if (!enabled) {
       featureInitialized = false;
       stopURLWatcher();
       clearPreparedInstructions();
       picker?.remove();
-      selectedFolderId = null;
-      selectedFolderName = null;
-      selectedFolderInstructions = null;
+      clearFolderSelection();
       // Drop any pending folder selection so re-enabling later doesn't auto-select a stale folder
+      clearNewChatFolder();
+      // Older builds handed it off through storage; one may still be stored.
       void chrome.storage?.local?.remove([StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]);
     }
   });

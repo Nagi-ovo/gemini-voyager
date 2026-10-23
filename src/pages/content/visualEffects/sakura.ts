@@ -285,7 +285,9 @@ export function createSakuraRenderer(): VisualEffectRenderer {
       frame.dataset.gvSakuraRenderer = 'worker-pending';
       frame.setAttribute('aria-hidden', 'true');
       frame.setAttribute('tabindex', '-1');
-      frame.style.cssText = `position:fixed;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:transparent;z-index:${EFFECT_Z_INDEX};`;
+      // A dark host's color-scheme would differ from the renderer page's, and Firefox
+      // then paints the frame opaque over the chat; both sides pin the same scheme.
+      frame.style.cssText = `position:fixed;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:transparent;color-scheme:only light;z-index:${EFFECT_Z_INDEX};`;
       frame.src = `${chrome.runtime.getURL(RENDERER_PAGE_PATH)}#${encodeURIComponent(channelId)}`;
 
       rendererMode = 'worker-frame';

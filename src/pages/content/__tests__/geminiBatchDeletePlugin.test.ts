@@ -11,9 +11,9 @@ import { confirmDriver } from '@/tests/confirmDriver';
 
 import { admitBatchDelete } from '../batchDeleteStartup';
 import { NativeConversationMenus } from '../folder/NativeConversationMenus';
+import { FolderManager } from '../folder/__tests__/geminiFolderManager';
 import { mountSidebar } from '../folder/__tests__/sidebarRuntimeHarness';
 import { sidebarTree, sidebarTreeRoot } from '../folder/__tests__/sidebarTreeDriver';
-import { FolderManager } from '../folder/manager';
 import { registerBuiltinNativeHandlers } from '../pluginNativeRegistration';
 import { type LifecycleHarness, installLifecycleHarness } from './lifecycleHarness';
 
@@ -190,6 +190,42 @@ describe('Gemini batch delete through the real builtin source, host and folder o
       .openListeners()
       .filter((entry) => entry.startsWith('div#batch-chat-') && entry.includes(':mousedown:'));
     expect(rowPress).toHaveLength(2);
+  });
+
+  it('drags every selected chat into a folder after the folders turn off and on', async () => {
+    const dragStart = (row: HTMLElement) => {
+      const setData = vi.fn();
+      const event = new Event('dragstart', { bubbles: true, cancelable: true });
+      Object.defineProperty(event, 'dataTransfer', {
+        value: { setData, setDragImage: vi.fn(), effectAllowed: 'all' },
+      });
+      row.dispatchEvent(event);
+      const payload = setData.mock.calls[0]?.[1];
+      return typeof payload === 'string' ? JSON.parse(payload) : null;
+    };
+    await start();
+    await vi.advanceTimersByTimeAsync(100);
+    expect(rows.map((row) => row.draggable)).toEqual([true, true]);
+
+    manager!.setFolders(false);
+    await flush();
+    // The folders' teardown gives the rows back as Gemini drew them.
+    expect(rows.map((row) => row.draggable)).toEqual([false, false]);
+    expect(rows.map((row) => row.dataset.gvConvDragAttached)).toEqual([undefined, undefined]);
+    expect(dragStart(rows[0])).toBeNull();
+
+    manager!.setFolders(true);
+    await vi.advanceTimersByTimeAsync(100);
+    await flush();
+    await press();
+    rows[1].click();
+    expect(selected()).toHaveLength(2);
+
+    expect(
+      dragStart(rows[0])?.conversations?.map(
+        ({ conversationId }: { conversationId: string }) => conversationId,
+      ),
+    ).toEqual([`c_${FIRST}`, `c_${SECOND}`]);
   });
 
   it('finishes only the confirmed snapshot while off and holds re-enable until that run drains', async () => {

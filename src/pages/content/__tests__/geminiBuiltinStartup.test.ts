@@ -164,6 +164,7 @@ describe('official plugins at their Gemini start points', () => {
     ['startTimeline', OFFICIAL_PLUGIN_IDS.geminiTimeline],
     ['startMessageTimestamps', OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps],
     ['startMarkdownFix', OFFICIAL_PLUGIN_IDS.geminiMarkdownFix],
+    ['startExport', OFFICIAL_PLUGIN_IDS.geminiExport],
     ['startCanvasCopy', OFFICIAL_PLUGIN_IDS.geminiCanvasCopy],
     ['startDeepResearchExport', OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport],
     ['startGemsSidebar', OFFICIAL_PLUGIN_IDS.geminiGemsSidebar],
@@ -212,6 +213,7 @@ describe('official plugins at their Gemini start points', () => {
     await startup.startTimeline();
     await startup.startMessageTimestamps();
     await startup.startMarkdownFix();
+    await startup.startExport();
     await startup.startCanvasCopy();
     await startup.startDeepResearchExport();
     await startup.startGemsSidebar();
@@ -228,6 +230,7 @@ describe('official plugins at their Gemini start points', () => {
       OFFICIAL_PLUGIN_IDS.geminiTimeline,
       OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps,
       OFFICIAL_PLUGIN_IDS.geminiMarkdownFix,
+      OFFICIAL_PLUGIN_IDS.geminiExport,
       OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
       OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
       OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,

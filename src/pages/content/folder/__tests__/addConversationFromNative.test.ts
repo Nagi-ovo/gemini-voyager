@@ -6,9 +6,9 @@ import {
 } from '@/features/folder/model/folderData';
 
 import type { FolderStore } from '../FolderStore';
-import { FolderManager } from '../manager';
 import * as storageAdapters from '../storage/FolderStorageAdapter';
 import type { ConversationReference, Folder, FolderData } from '../types';
+import { FolderManager } from './geminiFolderManager';
 
 vi.mock('@/utils/i18n', () => ({
   getTranslationSync: (key: string) => key,

@@ -8,3 +8,14 @@
   overflow-y: auto;
   margin-top: 4px;
 }
+
+/* The heading reads as one of the nav's own sections (EXPLORE, BUILD,
+   MANAGE): their `.section-header` type, and their text column, 16px from the
+   nav's edge (the panel already starts 10px in). */
+.gv-aistudio.gv-aistudio-v2 .gv-folder-title {
+  padding-inline-start: 6px;
+  color: var(--color-v3-text-disable, inherit);
+  opacity: 1;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}

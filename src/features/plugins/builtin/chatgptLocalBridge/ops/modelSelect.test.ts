@@ -64,7 +64,12 @@ describe('Local Bridge model.select: reaching an effort', () => {
         observed: { modelId: 'gpt-6', modelLabel: 'GPT-6', effortIndex: 4, effortMax: 4 },
       },
     });
-    expect(picker.state()).toMatchObject({ effort: 4, open: false, keydowns: 3, overlapping: 0 });
+    expect(picker.state()).toMatchObject({
+      committed: 4,
+      open: false,
+      keydowns: 3,
+      overlapping: 0,
+    });
   });
 
   it("selects the model in a tab hidden for minutes, waking on the page's own changes instead of a timer", async () => {
@@ -247,6 +252,101 @@ describe('Local Bridge model.select: a remounted composer', () => {
 
     expect(errorCode(bridge.outcome())).toBe('menu-not-found');
     expect(picker.state().pointerdowns).toBe(1);
+  });
+
+  it.each([
+    ['hides the old one', 'hide'],
+    ['removes the old one', 'remove'],
+  ] as const)(
+    'does not report Pro as applied when ChatGPT mounts the composer anew and %s with its menu open',
+    async (_name, how) => {
+      mount({ effort: 3 });
+      let fresh: LiveModelPicker | null = null;
+      const listening = new AbortController();
+      document.addEventListener(
+        'keydown',
+        (event) => {
+          if (event.key !== 'ArrowRight') return;
+          // After the step lands: ChatGPT keeps an old page hidden, or drops it with its menu.
+          setTimeout(() => {
+            const old = page.form;
+            const form = old.cloneNode(true) as HTMLFormElement;
+            form.querySelector('[aria-haspopup="menu"]')?.remove();
+            old.after(form);
+            if (how === 'hide') old.style.setProperty('display', 'none', 'important');
+            else {
+              document.getElementById(picker.trigger.getAttribute('aria-controls')!)?.remove();
+              old.remove();
+            }
+            fresh = mountLiveModelPicker(form, { effort: 3 });
+          }, 500);
+        },
+        { signal: listening.signal },
+      );
+      await select({ target: { preset: 'pro' } });
+      listening.abort();
+
+      expect(errorCode(bridge.outcome())).toBe('unverified');
+      expect(details()).toMatchObject({
+        applied: false,
+        menu: 'gone',
+        previous: { effortIndex: 3 },
+      });
+      expect(details()).not.toHaveProperty('observed');
+      expect(picker.state().committed).toBe(3);
+      expect(fresh!.state()).toMatchObject({ committed: 3, pointerdowns: 0 });
+    },
+  );
+});
+
+describe('Local Bridge model.select: closing the menu', () => {
+  it('does not report the requested effort as applied when the model menu never closes', async () => {
+    mount({ effort: 0, escapesIgnored: Infinity });
+    await select({ target: { preset: 'pro' }, capturePrevious: true });
+
+    expect(errorCode(bridge.outcome())).toBe('unverified');
+    expect(details()).toMatchObject({
+      applied: false,
+      menu: 'open',
+      partial: true,
+      previous: { effortIndex: 0 },
+    });
+    expect(details()).not.toHaveProperty('observed');
+    expect(picker.state()).toMatchObject({ effort: 4, committed: 0, open: true });
+  });
+
+  it('closes the menu with a second Escape when a layer above it took the first', async () => {
+    mount({ effort: 0, escapesIgnored: 1 });
+    await select({ target: { preset: 'pro' } });
+
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { observed: { effortIndex: 4 } } });
+    expect(picker.state()).toMatchObject({ committed: 4, open: false });
+  });
+
+  it('fails when the closed picker still names the step it had before', async () => {
+    mount({ effort: 0, discardsOnClose: true });
+    await select({ target: { preset: 'pro' } });
+
+    expect(errorCode(bridge.outcome())).toBe('unverified');
+    expect(details()).toMatchObject({ applied: false, triggerText: '即时' });
+    expect(details()).not.toHaveProperty('observed');
+  });
+
+  it('does not report Pro as applied when a German picker reverts to Sofort on close', async () => {
+    // Neither "Sofort" nor the German status template is in the site data.
+    mount({
+      triggerLabel: 'ChatGPT-Modell auswählen',
+      stepLabels: ['Sofort', 'Mittel', 'Hoch', 'Sehr hoch', 'Pro'],
+      status: (label, position, count) => `${label}, ${position} von ${count}.`,
+      effort: 0,
+      discardsOnClose: true,
+    });
+    await select({ target: { preset: 'pro' } });
+
+    expect(errorCode(bridge.outcome())).toBe('unverified');
+    expect(details()).toMatchObject({ applied: false, triggerText: 'Sofort' });
+    expect(details()).not.toHaveProperty('observed');
+    expect(picker.state().committed).toBe(0);
   });
 });
 

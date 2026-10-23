@@ -118,6 +118,11 @@ function onDragStart(
   cancelLongPress: () => void,
 ): void {
   const conversationId = extractConversationId(element);
+  // A row without a readable id cannot be filed: no folder drag starts from it.
+  if (!conversationId) {
+    e.preventDefault();
+    return;
+  }
   // Restrict to move-only to prevent Chrome from triggering split-screen/tab tiling
   if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
 
@@ -171,8 +176,10 @@ export function bindNativeConversationSelection(
     cancelLongPress();
     longPressTimer = selection.schedule(() => {
       longPressTimer = null;
+      const id = extractConversationId(element);
+      if (!id) return;
       longPressTriggered = true;
-      selection.enterMultiSelect(extractConversationId(element));
+      selection.enterMultiSelect(id);
     }, selection.longPressMs);
   };
   const click = (e: MouseEvent) => {
@@ -187,7 +194,8 @@ export function bindNativeConversationSelection(
     if (!selection.isMultiSelectMode()) return;
     e.preventDefault();
     e.stopPropagation();
-    selection.toggle(extractConversationId(element));
+    const id = extractConversationId(element);
+    if (id) selection.toggle(id);
     selection.refresh();
   };
   element.addEventListener('mousedown', press);
@@ -205,22 +213,37 @@ export function bindNativeConversationSelection(
   };
 }
 
-/** Folder-owned drag support survives turning the batch selection plugin off. */
+/**
+ * Folder-owned drag support survives turning the batch selection plugin off.
+ * Returns the binding's release, which takes its listeners and marker off and
+ * restores the row's own `draggable` and cursor, so the next folders view binds
+ * its own; `null` when the row is bound already.
+ */
 export function bindNativeConversationRow(
   element: HTMLElement,
   getSelection: () => NativeRowSelection,
-): void {
-  if (element.dataset.gvConvDragAttached === 'true') return;
+): (() => void) | null {
+  if (element.dataset.gvConvDragAttached === 'true') return null;
   element.dataset.gvConvDragAttached = 'true';
+  const draggable = element.getAttribute('draggable');
+  const cursor = element.style.cursor;
   element.draggable = true;
   element.style.cursor = 'grab';
-  element.addEventListener('dragstart', (event) =>
-    onDragStart(element, getSelection(), event, () => {}),
-  );
-  element.addEventListener('dragend', () => {
+  const dragStart = (event: DragEvent) => onDragStart(element, getSelection(), event, () => {});
+  const dragEnd = () => {
     const selection = getSelection();
     if (selection.selectedIds().length > 1) setSelectedOpacity(selection, '1');
     else element.style.opacity = '1';
     selection.endDrag();
-  });
+  };
+  element.addEventListener('dragstart', dragStart);
+  element.addEventListener('dragend', dragEnd);
+  return () => {
+    element.removeEventListener('dragstart', dragStart);
+    element.removeEventListener('dragend', dragEnd);
+    delete element.dataset.gvConvDragAttached;
+    if (draggable === null) element.removeAttribute('draggable');
+    else element.setAttribute('draggable', draggable);
+    element.style.cursor = cursor;
+  };
 }

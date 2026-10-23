@@ -1,7 +1,7 @@
+import { readChatGptConversationPath } from '@/features/folder/sites/chatgptIdentity';
 import type { SiteAdapter } from '@/features/plugins/types';
 
 import { chatgptAdapter } from '../../sites/adapters/chatgpt';
-import { readChatGptConversationPath } from '../chatgptFolders/chatgptIdentity';
 
 /**
  * Read-only views of the ChatGPT page that the completion run inspects, as

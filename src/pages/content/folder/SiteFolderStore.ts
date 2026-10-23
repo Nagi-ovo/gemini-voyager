@@ -23,7 +23,8 @@ export type SiteFolderNotify = (message: string, tone: 'warning' | 'error') => v
  * One site's folder data over the shared FolderRepository, which owns load,
  * recovery, serialized saves and cross-tab reloads. Edits are shared owner ops
  * that `createSiteFolderCommands` computes and commits through `apply`; the
- * popup's cloud sync reads the folders through the store's message listener.
+ * popup's cloud sync reads the folders through the store's message listener,
+ * which also reloads them after a cloud restore.
  * The default adapter writes the folder data only to `chrome.storage.local`
  * (despite its name); the repository's recovery backups go to the page's
  * localStorage, under the config's backup namespace.
@@ -31,10 +32,12 @@ export type SiteFolderNotify = (message: string, tone: 'warning' | 'error') => v
 export class SiteFolderStore {
   private readonly repository: FolderRepository;
   private readonly listeners = new Set<(change: SiteFolderChange) => void>();
-  // Failed saves leave memory newer than disk; cloud merges must include those edits.
+  // Failed saves leave memory newer than disk; cloud merges must include those edits. A popup
+  // restore writes storage, then asks the tab to reload instead of waiting for its echo.
   private readonly syncMessageListener = createSyncMessageListener({
     canEdit: () => this.ready,
     data: () => this.data,
+    reload: () => this.repository.loadData(),
   });
 
   constructor(
@@ -73,10 +76,19 @@ export class SiteFolderStore {
     if (!this.repository.isDestroyed)
       chrome.runtime.onMessage.addListener(this.syncMessageListener);
   }
-  destroy(): void {
+  /**
+   * Stops the store and resolves once its accepted writes drained
+   * (`FolderRepository.destroy`). A folder session awaits this before the
+   * bucket can be opened again.
+   */
+  close(): Promise<void> {
     chrome.runtime.onMessage.removeListener(this.syncMessageListener);
     this.listeners.clear();
-    this.repository.destroy();
+    return this.repository.destroy();
+  }
+  /** Stops the store without waiting for its writes (a plugin scope child). */
+  destroy(): void {
+    void this.close();
   }
   subscribe(listener: (change: SiteFolderChange) => void): () => void {
     this.listeners.add(listener);

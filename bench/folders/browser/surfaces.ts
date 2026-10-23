@@ -5,15 +5,13 @@
  */
 import type { FolderData } from '@/core/types/folder';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
-import {
-  CHATGPT_SECTION_SITE,
-  CHATGPT_SITE_FOLDERS,
-} from '@/features/plugins/builtin/chatgptFolders/chatgptSiteFolders';
-import { openFolderPicker } from '@/features/plugins/builtin/siteFolders/folderPicker';
-import { SiteFolderSection } from '@/features/plugins/builtin/siteFolders/folderSection';
-import { SidebarHideFiled } from '@/features/plugins/builtin/siteFolders/hideFiled';
-import { DEFAULT_SECTION_PREFS } from '@/features/plugins/builtin/siteFolders/sectionPrefs';
+import { requireBundledSiteAdapter } from '@/features/plugins/catalog/sites';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { openFolderPicker } from '@/features/plugins/verbs/folders/folderPicker';
+import { SiteFolderSection } from '@/features/plugins/verbs/folders/folderSection';
+import { SidebarHideFiled } from '@/features/plugins/verbs/folders/hideFiled';
+import { DEFAULT_SECTION_PREFS } from '@/features/plugins/verbs/folders/sectionPrefs';
+import { siteFoldersFromData } from '@/features/plugins/verbs/folders/siteData';
 import { mountFloatingPanel } from '@/pages/content/folder/floatingPanel';
 
 import {
@@ -43,6 +41,13 @@ const EXPANSIONS = [
   { expanded: true, label: 'all expanded' },
   { expanded: false, label: 'all collapsed' },
 ] as const;
+
+/** ChatGPT's folders as the `folders` primitive builds them from its bundled site data. */
+function chatgptFolders() {
+  const site = siteFoldersFromData(requireBundledSiteAdapter('chatgpt'));
+  if (!site) throw new Error("ChatGPT's site.json carries no usable folders section");
+  return site;
+}
 
 function typeInto(input: HTMLInputElement, value: string): void {
   input.value = value;
@@ -171,7 +176,7 @@ const noTreeActions = {
 
 const chatGptSection = (data: FolderData) =>
   new SiteFolderSection({
-    site: CHATGPT_SECTION_SITE,
+    site: chatgptFolders().section,
     data,
     rootBucketId: ROOT_BUCKET_ID,
     actions: noTreeActions,
@@ -401,7 +406,7 @@ export async function benchHideFiledStyle(
   for (let i = 0; i < RECENTS_ROWS; i++) addRow(i);
   document.body.append(nav);
   const scope = new PluginScope();
-  const { hideFiled: dom, sidebar, key } = CHATGPT_SITE_FOLDERS;
+  const { hideFiled: dom, sidebar, key } = chatgptFolders();
   const hideFiled = new SidebarHideFiled(scope, dom, sidebar, key);
   const style = document.querySelector<HTMLStyleElement>('style[data-gv-chatgpt-hide-filed]')!;
 

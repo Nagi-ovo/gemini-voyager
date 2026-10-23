@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StorageKeys } from '@/core/types/common';
 import type { Folder } from '@/core/types/folder';
 
+import { clearNewChatFolder, handOffNewChatFolder, pendingNewChatFolder } from '../pendingFolder';
 import { createFolderProjectPicker } from '../picker';
 
 vi.mock('@/utils/i18n', () => ({
@@ -58,7 +59,7 @@ beforeEach(() => {
     .mockResolvedValue({});
   vi.mocked(chrome.storage.local.remove).mockReset().mockResolvedValue(undefined);
   picker = createFolderProjectPicker({
-    loadFolders: async () => folders,
+    loadFolders: async () => ({ account: null, folders }),
     canMount: () => true,
     onSelect,
   });
@@ -117,10 +118,10 @@ describe('folder project picker mounting', () => {
 });
 
 describe('pending folder selection', () => {
-  it('auto-selects the pending folder after mounting and consumes its stored id', async () => {
-    (chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
-      [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: 'folder-1',
-    });
+  afterEach(() => clearNewChatFolder());
+
+  it('auto-selects the folder handed off in this tab after mounting and takes the handoff', async () => {
+    handOffNewChatFolder('folder-1');
     addAnchor();
 
     await picker.show();
@@ -128,34 +129,93 @@ describe('pending folder selection', () => {
 
     expect(chip().textContent).toBe('Work');
     expect(chip().dataset.selected).toBe('folder-1');
-    expect(chrome.storage.local.remove).toHaveBeenCalledWith([
-      StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID,
-    ]);
-    expect(onSelect).toHaveBeenCalledWith(folders[0], 'pending');
+    expect(pendingNewChatFolder()).toBeNull();
+    expect(onSelect).toHaveBeenCalledWith(folders[0], 'pending', null);
   });
 
-  it('keeps the default chip when no pending folder id exists', async () => {
+  it('keeps the default chip when nothing was handed off', async () => {
     addAnchor();
 
     await picker.show();
     await vi.advanceTimersByTimeAsync(0);
 
     expect(chip().textContent).toBe('folderAsProject_selectFolder');
-    expect(chrome.storage.local.remove).not.toHaveBeenCalled();
+    expect(onSelect).not.toHaveBeenCalled();
   });
 
-  it('clears the pending id even when it does not match any folder', async () => {
+  it("does not take another tab's new chat folder from storage", async () => {
+    // Another tab (of possibly another account) writing the key older builds handed off through.
     (chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
-      [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: 'nonexistent',
+      [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: 'folder-1',
     });
     addAnchor();
 
     await picker.show();
+    await picker.applyPending();
     await vi.advanceTimersByTimeAsync(0);
 
     expect(chip().textContent).toBe('folderAsProject_selectFolder');
-    expect(chrome.storage.local.remove).toHaveBeenCalledWith([
-      StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID,
-    ]);
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(chrome.storage.local.remove).not.toHaveBeenCalled();
+  });
+
+  it('keeps a handed-off folder it cannot find yet, and takes it once the folders have it', async () => {
+    let shown: readonly Folder[] = [];
+    picker.remove();
+    picker = createFolderProjectPicker({
+      loadFolders: async () => ({ account: null, folders: shown }),
+      canMount: () => true,
+      onSelect,
+    });
+    handOffNewChatFolder('folder-2');
+    addAnchor();
+
+    await picker.show();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(chip().textContent).toBe('folderAsProject_selectFolder');
+    expect(pendingNewChatFolder()).toBe('folder-2');
+
+    shown = folders;
+    await picker.applyPending();
+    expect(chip().textContent).toBe('Personal');
+    expect(pendingNewChatFolder()).toBeNull();
+  });
+
+  it('takes a handed-off folder when the dropdown opens after the folders loaded late', async () => {
+    let shown: readonly Folder[] = [];
+    picker.remove();
+    picker = createFolderProjectPicker({
+      loadFolders: async () => ({ account: null, folders: shown }),
+      canMount: () => true,
+      onSelect,
+    });
+    handOffNewChatFolder('folder-1');
+    addAnchor();
+    await picker.show();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(chip().textContent).toBe('folderAsProject_selectFolder');
+
+    shown = folders;
+    chip().click();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(chip().textContent).toBe('Work');
+    expect(onSelect).toHaveBeenCalledWith(folders[0], 'pending', null);
+    expect(pendingNewChatFolder()).toBeNull();
+  });
+
+  it('takes a folder handed off while the picker is already shown on the new-chat page', async () => {
+    addAnchor();
+    await picker.show();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(chip().textContent).toBe('folderAsProject_selectFolder');
+
+    // "New chat in this folder" from the new-chat page: no navigation remounts the picker.
+    handOffNewChatFolder('folder-2');
+    await picker.applyPending();
+
+    expect(document.querySelectorAll('.gv-fp-picker-container')).toHaveLength(1);
+    expect(chip().textContent).toBe('Personal');
+    expect(onSelect).toHaveBeenCalledWith(folders[1], 'pending', null);
   });
 });

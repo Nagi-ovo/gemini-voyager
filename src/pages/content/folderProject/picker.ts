@@ -1,14 +1,32 @@
 import { createFolderIcon } from '@/core/icons/folderIcons';
-import { StorageKeys } from '@/core/types/common';
 import type { Folder } from '@/core/types/folder';
 import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
 import { getFolderColor, isDarkMode } from '../folder/folderColors';
+import { newChatFolderIsFor, pendingNewChatFolder, takeNewChatFolder } from './pendingFolder';
+
+/**
+ * Folders and the account they belong to, read together in one step: an
+ * account read later may already be another one's.
+ */
+export interface FolderSnapshot {
+  readonly account: string | null;
+  readonly folders: readonly Folder[];
+}
 
 interface FolderProjectPickerOptions {
-  loadFolders: () => Promise<readonly Folder[]>;
+  loadFolders: () => Promise<FolderSnapshot>;
+  /** The folders already loaded, read without loading again (a load may announce itself). */
+  loadedFolders?: () => FolderSnapshot;
+  /**
+   * Whose folders the picker lists now. Options are listed for the account
+   * read with them and picked only while the page still shows it; a handoff
+   * from another account is not taken.
+   */
+  currentAccount?: () => string | null;
   canMount: () => boolean;
-  onSelect: (folder: Folder | null, source: 'user' | 'pending') => void;
+  /** `account`: whose folders `folder` came from (its snapshot's). */
+  onSelect: (folder: Folder | null, source: 'user' | 'pending', account: string | null) => void;
 }
 
 function t(key: string): string {
@@ -60,13 +78,55 @@ function waitForElement(selector: string, timeoutMs: number): Promise<HTMLElemen
 export function createFolderProjectPicker(options: FolderProjectPickerOptions): {
   show: () => Promise<void>;
   remove: () => void;
+  /** Takes the folder this tab's "New chat in this folder" handed off, on the picker shown or one it shows. */
+  applyPending: () => Promise<void>;
+  /** Tries a handoff the mounted picker could not take yet again, on the loaded folders; mounts nothing. */
+  retryPending: () => Promise<void>;
+  /** Shows no folder chosen again, as after another account took the page. */
+  resetChoice: () => void;
+  /** Closes options listed for an account the page no longer shows. */
+  dropStaleOptions: () => void;
 } {
   let pickerContainer: HTMLElement | null = null;
   let pickerCleanup: (() => void) | null = null;
+  let pickerChip: HTMLButtonElement | null = null;
+  let pickerDropdown: HTMLElement | null = null;
+  /** Whose folders the open options list; `undefined` while none are listed. */
+  let listedAccount: string | null | undefined;
+  /** Bumped whenever listed options go stale, so a load still running lists nothing. */
+  let listing = 0;
+
+  const accountNow = (): string | null => options.currentAccount?.() ?? null;
+  /** Whether options read for `account` may still be picked. */
+  const stillShows = (account: string | null): boolean =>
+    !options.currentAccount || accountNow() === account;
+
+  function closeDropdown(): void {
+    listing += 1;
+    listedAccount = undefined;
+    if (!pickerDropdown) return;
+    pickerDropdown.hidden = true;
+    pickerDropdown.replaceChildren();
+    pickerChip?.setAttribute('aria-expanded', 'false');
+  }
+
+  function dropStaleOptions(): void {
+    if (listedAccount !== undefined && !stillShows(listedAccount)) closeDropdown();
+  }
 
   async function populateDropdown(dropdown: HTMLElement, chip: HTMLButtonElement): Promise<void> {
     dropdown.innerHTML = '';
-    const allFolders = await options.loadFolders();
+    const run = ++listing;
+    const { account, folders: allFolders } = await options.loadFolders();
+    if (run !== listing) return;
+    listedAccount = account;
+    // A handoff the first mount could not take (its folders had not loaded) takes them now.
+    const pendingId = pendingFolderFor(account);
+    const pending = pendingId ? allFolders.find((folder) => folder.id === pendingId) : undefined;
+    if (pending && takeNewChatFolder(pending.id)) {
+      options.onSelect(pending, 'pending', account);
+      showSelectedFolder(chip, pending);
+    }
 
     if (allFolders.length === 0) {
       const empty = document.createElement('div');
@@ -86,10 +146,15 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
 
     // Handler for selecting a folder
     const selectFolder = (folder: (typeof allFolders)[number]) => {
+      // Listed for another account than the page shows now: not this one's folder.
+      if (!stillShows(account)) {
+        closeDropdown();
+        return;
+      }
       showSelectedFolder(chip, folder);
       dropdown.hidden = true;
       chip.setAttribute('aria-expanded', 'false');
-      options.onSelect(folder, 'user');
+      options.onSelect(folder, 'user', account);
     };
 
     // "No folder" / clear selection option
@@ -103,7 +168,7 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
       chip.removeAttribute('data-selected');
       dropdown.hidden = true;
       chip.setAttribute('aria-expanded', 'false');
-      options.onSelect(null, 'user');
+      options.onSelect(null, 'user', account);
     });
     dropdown.appendChild(noneItem);
 
@@ -204,6 +269,7 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
     }
 
     const dropdown = document.createElement('div');
+    pickerDropdown = dropdown;
     dropdown.className = 'gv-fp-dropdown';
     dropdown.setAttribute('role', 'listbox');
     dropdown.hidden = true;
@@ -240,24 +306,26 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
   // ============================================================================
 
   /**
-   * Reads a pending folder ID written by the folder manager's
-   * "New chat in this folder" menu item. When found, auto-selects the folder
-   * in the picker and clears the pending value.
+   * Selects the folder this tab's "New chat in this folder" handed off
+   * (`pendingFolder.ts`). The handoff is taken only once the folder is among
+   * the ones this page can file into; until then it stays for the next try.
    */
-  async function applyPendingFolderSelection(chip: HTMLButtonElement): Promise<void> {
-    if (!chrome.storage?.local) return;
+  function pendingFolderFor(account: string | null): string | null {
+    const pendingId = pendingNewChatFolder();
+    return pendingId && newChatFolderIsFor(account) ? pendingId : null;
+  }
 
-    const result = await chrome.storage.local.get([StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]);
-    const pendingId = result?.[StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID];
-    if (!pendingId) return;
+  async function applyPendingFolderSelection(
+    chip: HTMLButtonElement,
+    snapshot: () => Promise<FolderSnapshot> | FolderSnapshot = options.loadFolders,
+  ): Promise<void> {
+    if (!pendingFolderFor(accountNow())) return;
+    const { account, folders } = await snapshot();
+    const pendingId = pendingFolderFor(account);
+    const folder = pendingId ? folders.find((f) => f.id === pendingId) : undefined;
+    if (!folder || !takeNewChatFolder(folder.id)) return;
 
-    // Clear immediately to avoid re-application
-    await chrome.storage.local.remove([StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]);
-
-    const folder = (await options.loadFolders()).find((f) => f.id === pendingId);
-    if (!folder) return;
-
-    options.onSelect(folder, 'pending');
+    options.onSelect(folder, 'pending', account);
 
     showSelectedFolder(chip, folder);
   }
@@ -271,6 +339,11 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
     pickerCleanup = null;
     pickerContainer?.remove();
     pickerContainer = null;
+    pickerChip = null;
+    // The removed dropdown goes with its picker; a load still running lists nothing.
+    listing += 1;
+    listedAccount = undefined;
+    pickerDropdown = null;
   }
 
   async function show(): Promise<void> {
@@ -294,6 +367,7 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
       modelPicker.parentElement.insertBefore(element, modelPicker);
       pickerContainer = element;
       pickerCleanup = cleanup;
+      pickerChip = chip;
       void applyPendingFolderSelection(chip);
       return;
     }
@@ -316,8 +390,27 @@ export function createFolderProjectPicker(options: FolderProjectPickerOptions): 
     parent.insertBefore(element, richTextarea);
     pickerContainer = element;
     pickerCleanup = cleanup;
+    pickerChip = chip;
     void applyPendingFolderSelection(chip);
   }
 
-  return { show, remove };
+  async function retryPending(): Promise<void> {
+    if (!pickerChip || !pickerContainer?.isConnected) return;
+    // Called when the folders finished loading: loading again here would announce another load.
+    await applyPendingFolderSelection(pickerChip, options.loadedFolders ?? options.loadFolders);
+  }
+
+  function resetChoice(): void {
+    closeDropdown();
+    if (!pickerChip) return;
+    pickerChip.textContent = t('folderAsProject_selectFolder');
+    pickerChip.removeAttribute('data-selected');
+  }
+
+  async function applyPending(): Promise<void> {
+    if (pickerChip && pickerContainer?.isConnected) await applyPendingFolderSelection(pickerChip);
+    else await show();
+  }
+
+  return { show, remove, applyPending, retryPending, resetChoice, dropStaleOptions };
 }

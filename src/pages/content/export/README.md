@@ -2,7 +2,11 @@
 
 Start with the owner of the behavior being changed. `index.ts` is the composition root: it
 resolves the export site once per page, creates the runner, and mounts the entry points
-(persistent toolbar, conversation/response menus, logo dropdown, copy-as-image). File writing
+(persistent toolbar, conversation/response menus, logo dropdown, copy-as-image). An official
+plugin mounts them and calls the returned stop when it unmounts: `voyager.gemini-export`
+(`pluginHandler.ts`, admitted by `geminiBuiltinStartup.startExport`) and `voyager.chatgpt-export`
+(`features/plugins/builtin/chatgptExport`). Stopping removes every entry point, closes the dialog
+and cancels the active run. File writing
 (JSON/Markdown/PDF/image) lives in `src/features/export/`; it renders only content that was read
 from the page beforehand (`extractTurnContent` with an extractor from `createContentExtractor`).
 
@@ -21,6 +25,7 @@ from the page beforehand (`extractTurnContent` with an extractor from `createCon
 | Export item in Gemini conversation / sidebar / response menus                        | `conversationMenuExportObserver.ts` (+ `conversationMenuInjection.ts`)               |
 | Opening a sidebar conversation before exporting it                                   | `sidebarConversationNavigation.ts`                                                   |
 | Copy a single response as an image (button, width menu, Safari fallbacks)            | `responseCopyImageAction.ts`                                                         |
+| Gemini export as the `voyager.gemini-export` official plugin                         | `pluginHandler.ts`                                                                   |
 | Logo dropdown button (old Gemini layout) and its re-creation after re-renders        | `logoExportButton.ts`                                                                |
 | Always-visible toolbar (lr26 Gemini, ChatGPT and other plugin hosts)                 | `persistentExportToolbar.ts`, `exportEntryGate.ts`                                   |
 | Dictionaries, language reads and the `t()` used by every export surface              | `exportLocale.ts`                                                                    |
@@ -28,14 +33,17 @@ from the page beforehand (`extractTurnContent` with an extractor from `createCon
 
 Each owner takes its dependencies explicitly (site, translator, callbacks) and keeps
 its listeners, observers and timers beside the code that installs them. Page-wide observers
-(menu watcher, copy-image buttons) are singletons that stop on `beforeunload`. The runner is the only
+(menu watcher, copy-image buttons) are singletons that stop on `beforeunload` or when the plugin
+unmounts, removing what they injected. The runner is the only
 owner of the active export operation: a new run aborts the previous one and dismisses its
 selection UI.
 
 Keep these less obvious boundaries intact:
 
 - Gemini's preload click can reload the page. `exportRun.ts` persists the run in sessionStorage
-  before clicking; `startExportButton` resumes it on load. Do not move that persist after the click.
+  before clicking; `startExportButton` resumes it on the page's first plugin mount, so only while
+  `voyager.gemini-export` is on. A remount on the same page (switch off and on) does not resume,
+  and page teardown cancels without clearing the stored run. Do not move that persist after the click.
 - `generatedUiScreenshots.ensureGeneratedUiScreenshotPermission()` must run while the user gesture
   is still valid: before the run in the dialog, and before `takeSelection()` in selection mode.
 - `exportRun.ts` awaits `preparedExport.runPreparedExport()` through the entire selection session.

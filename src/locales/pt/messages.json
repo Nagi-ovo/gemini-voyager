@@ -430,6 +430,10 @@
     "message": "Pastas",
     "description": "Folder section title"
   },
+  "folder_account_unknown": {
+    "message": "Não foi possível confirmar qual conta está conectada nesta página, por isso as pastas estão ocultas. Elas continuam salvas.",
+    "description": "Shown in the folder panel when account isolation cannot read which account the page is signed in to"
+  },
   "folder_activity_turn_on": {
     "message": "Ativar vista de atividade",
     "description": "Ativar a vista de atividade"

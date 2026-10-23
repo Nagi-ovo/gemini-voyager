@@ -17,8 +17,14 @@ import { showExportNotice } from '../../../features/export/ui/exportToasts';
 import { removeCanvasExportSections } from './conversationCollector';
 import { type ExportDictionaries, createExportTranslator } from './exportLocale';
 import type { ExportSite } from './exportSite';
-import { injectResponseActionCopyImageButtons } from './responseActionImageButton';
-import { showResponseActionCopyImageMenu } from './responseActionImageMenu';
+import {
+  injectResponseActionCopyImageButtons,
+  removeResponseActionCopyImageButtons,
+} from './responseActionImageButton';
+import {
+  hideResponseActionCopyImageMenu,
+  showResponseActionCopyImageMenu,
+} from './responseActionImageMenu';
 import {
   copyImageBlobToClipboard,
   copyImageBlobViaSafariNativePasteboard,
@@ -220,15 +226,17 @@ function injectCopyImageButtons(root: ParentNode, options: ResponseCopyImageOpti
 /**
  * Add the button to every response on the page now and to responses rendered
  * later. The page-wide observer is created once and disconnected on
- * `beforeunload`. Returns `relabel`, which re-applies the buttons in the current
- * language (call it after a language change).
+ * `beforeunload` or by `stop`, which also removes the buttons and an open width
+ * menu; a copy already started still finishes. `relabel` re-applies the buttons
+ * in the current language (call it after a language change).
  */
 export function startResponseCopyImageActions(options: ResponseCopyImageOptions): {
   relabel: () => void;
+  stop: () => void;
 } {
   const relabel = () => injectCopyImageButtons(document, options);
   relabel();
-  if (responseActionObserver) return { relabel };
+  if (responseActionObserver) return { relabel, stop: () => {} };
 
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
@@ -242,15 +250,20 @@ export function startResponseCopyImageActions(options: ResponseCopyImageOptions)
   observer.observe(document.body, { childList: true, subtree: true });
   responseActionObserver = observer;
 
-  window.addEventListener(
-    'beforeunload',
-    () => {
-      try {
-        responseActionObserver?.disconnect();
-      } catch {}
-      responseActionObserver = null;
+  const disconnect = () => {
+    window.removeEventListener('beforeunload', disconnect);
+    try {
+      observer.disconnect();
+    } catch {}
+    if (responseActionObserver === observer) responseActionObserver = null;
+  };
+  window.addEventListener('beforeunload', disconnect, { once: true });
+  return {
+    relabel,
+    stop: () => {
+      disconnect();
+      hideResponseActionCopyImageMenu();
+      removeResponseActionCopyImageButtons();
     },
-    { once: true },
-  );
-  return { relabel };
+  };
 }

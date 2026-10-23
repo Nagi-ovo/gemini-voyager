@@ -1,0 +1,126 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.gemini-folders",
+  "name": "Gemini · Folders",
+  "version": "1.0.0",
+  "description": "Organize conversations into folders in Gemini's sidebar: drag them in, sort them, see them by activity, import and export them, and sync them with Google Drive.",
+  "changelog": "First release: Gemini's built-in folders, packaged as an official plugin that calls the folders primitive.",
+  "i18n": {
+    "zh": {
+      "name": "Gemini · 文件夹",
+      "description": "在 Gemini 侧边栏中用文件夹整理对话：拖入对话、排序、按活动查看、导入导出，并通过 Google Drive 同步。",
+      "changelog": "首个版本：Gemini 内置的文件夹，打包为调用 folders 原语的官方插件。",
+      "settings": {
+        "hideFiledChats": {
+          "label": "在侧边栏列表中隐藏已放入文件夹的对话"
+        }
+      }
+    },
+    "zh_TW": {
+      "name": "Gemini · 資料夾",
+      "description": "在 Gemini 側邊欄中用資料夾整理對話：拖入對話、排序、依活動檢視、匯入匯出，並透過 Google Drive 同步。",
+      "changelog": "首個版本：Gemini 內建的資料夾，打包為呼叫 folders 原語的官方外掛。",
+      "settings": {
+        "hideFiledChats": {
+          "label": "在側邊欄清單中隱藏已放入資料夾的對話"
+        }
+      }
+    },
+    "ja": {
+      "name": "Gemini · フォルダ",
+      "description": "Gemini のサイドバーで会話をフォルダに整理します。ドラッグで追加、並べ替え、アクティビティ表示、インポート・エクスポート、Google Drive との同期ができます。",
+      "changelog": "初版：Gemini 内蔵のフォルダを、folders プリミティブを呼び出す公式プラグインとして同梱しました。",
+      "settings": {
+        "hideFiledChats": {
+          "label": "フォルダに入れた会話をサイドバーの一覧に表示しない"
+        }
+      }
+    },
+    "ko": {
+      "name": "Gemini · 폴더",
+      "description": "Gemini 사이드바에서 대화를 폴더로 정리합니다. 끌어다 놓기, 정렬, 활동 보기, 가져오기·내보내기, Google Drive 동기화를 지원합니다.",
+      "changelog": "첫 릴리스: Gemini 내장 폴더를 folders 프리미티브를 호출하는 공식 플러그인으로 포함했습니다.",
+      "settings": {
+        "hideFiledChats": {
+          "label": "폴더에 넣은 대화를 사이드바 목록에서 숨기기"
+        }
+      }
+    },
+    "fr": {
+      "name": "Gemini · Dossiers",
+      "description": "Classez vos conversations dans des dossiers depuis la barre latérale de Gemini : glisser-déposer, tri, vue Activité, import et export, avec synchronisation Google Drive.",
+      "changelog": "Première version : les dossiers intégrés de Gemini, empaquetés en plugin officiel qui appelle la primitive folders.",
+      "settings": {
+        "hideFiledChats": {
+          "label": "Masquer de la liste de la barre latérale les conversations déjà classées dans un dossier"
+        }
+      }
+    },
+    "es": {
+      "name": "Gemini · Carpetas",
+      "description": "Organiza tus conversaciones en carpetas desde la barra lateral de Gemini: arrástralas, ordénalas, consulta la vista de actividad, importa y exporta, con sincronización en Google Drive.",
+      "changelog": "Primera versión: las carpetas integradas de Gemini, empaquetadas como plugin oficial que llama a la primitiva folders.",
+      "settings": {
+        "hideFiledChats": {
+          "label": "Ocultar de la lista lateral las conversaciones que ya están en carpetas"
+        }
+      }
+    },
+    "pt": {
+      "name": "Gemini · Pastas",
+      "description": "Organize as conversas em pastas na barra lateral do Gemini: arraste, ordene, veja a atividade, importe e exporte, com sincronização no Google Drive.",
+      "changelog": "Primeira versão: as pastas integradas do Gemini, empacotadas como plugin oficial que chama a primitiva folders.",
+      "settings": {
+        "hideFiledChats": {
+          "label": "Ocultar da lista lateral as conversas que já estão em pastas"
+        }
+      }
+    },
+    "ru": {
+      "name": "Gemini · Папки",
+      "description": "Раскладывайте чаты по папкам на боковой панели Gemini: перетаскивание, сортировка, вид «Активность», импорт и экспорт, синхронизация через Google Drive.",
+      "changelog": "Первый выпуск: встроенные папки Gemini в виде официального плагина, вызывающего примитив folders.",
+      "settings": {
+        "hideFiledChats": {
+          "label": "Скрывать в списке боковой панели чаты, уже разложенные по папкам"
+        }
+      }
+    },
+    "ar": {
+      "name": "Gemini · المجلدات",
+      "description": "نظّم محادثاتك في مجلدات من الشريط الجانبي في Gemini: بالسحب والترتيب وعرض النشاط والاستيراد والتصدير، مع المزامنة عبر Google Drive.",
+      "changelog": "الإصدار الأول: مجلدات Gemini المدمجة، مجمّعة كإضافة رسمية تستدعي العنصر الأساسي folders.",
+      "settings": {
+        "hideFiledChats": {
+          "label": "إخفاء المحادثات الموجودة في مجلدات من قائمة الشريط الجانبي"
+        }
+      }
+    }
+  },
+  "author": "voyager-official",
+  "category": "productivity",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/gemini/plugins/folders",
+  "engine": ">=next",
+  "tier": "declarative",
+  "matches": ["https://gemini.google.com/*"],
+  "requires": {
+    "handlers": ["folders"]
+  },
+  "contributes": {
+    "settings": {
+      "hideFiledChats": {
+        "type": "boolean",
+        "label": "Hide chats already in folders from the sidebar list",
+        "default": false
+      }
+    },
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "folders",
+        "params": {}
+      }
+    ]
+  }
+}

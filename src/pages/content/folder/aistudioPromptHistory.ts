@@ -1,6 +1,5 @@
 import {
   PROMPT_LINK_SELECTOR,
-  UNBOUND_PROMPT_LINK_SELECTOR,
   collectNativePromptTitles,
   mutationAddsPromptLinks,
   mutationMayAffectPromptTitles,
@@ -11,7 +10,9 @@ import {
 /**
  * AI Studio's prompt history as a drag source and a title source: the legacy
  * inline list (`ms-prompt-history-v3`) and the V2 nav's body-level hover
- * popovers. Each watcher returns the stop that removes what it started.
+ * popovers. Each watcher returns the stop that removes what it started. The
+ * prompt-link and popover selectors default to the built-in ones; the folders
+ * pass the ones AI Studio's site.json names.
  */
 import { applyNativeTitle } from './conversationTitleSync';
 import type { FolderData } from './types';
@@ -24,7 +25,7 @@ const PROMPT_DRAG_HOST_SELECTORS = [
   '.mat-mdc-list-item',
   'li',
 ];
-const BODY_PROMPT_POPOVER_SELECTOR = [
+export const BODY_PROMPT_POPOVER_SELECTOR = [
   '.cdk-overlay-container',
   '.cdk-overlay-pane',
   '[role="menu"]',
@@ -43,43 +44,53 @@ function promptDragHost(anchor: HTMLAnchorElement): HTMLElement {
 }
 
 /** The anchor a drag on `host` started from: the one under the pointer, else the host's own. */
-function draggedAnchor(event: DragEvent, host: HTMLElement): HTMLAnchorElement | null {
+function draggedAnchor(
+  event: DragEvent,
+  host: HTMLElement,
+  links: string,
+): HTMLAnchorElement | null {
   const target = event.target;
   if (target instanceof Element) {
-    const anchor = target.closest<HTMLAnchorElement>(PROMPT_LINK_SELECTOR);
+    const anchor = target.closest<HTMLAnchorElement>(links);
     if (anchor) return anchor;
   }
-  if (host.matches(PROMPT_LINK_SELECTOR)) return host as HTMLAnchorElement;
-  return host.querySelector<HTMLAnchorElement>(PROMPT_LINK_SELECTOR);
+  if (host.matches(links)) return host as HTMLAnchorElement;
+  return host.querySelector<HTMLAnchorElement>(links);
 }
 
-function bindDragHost(host: DragBoundHost): void {
+function bindDragHost(host: DragBoundHost, links: string): void {
   if (host._gvDragBound) return;
   host._gvDragBound = true;
   host.draggable = true;
   if (!host.style.cursor) host.style.cursor = 'grab';
   host.addEventListener('dragstart', (event) => {
-    const anchor = draggedAnchor(event, host);
+    const anchor = draggedAnchor(event, host, links);
     if (anchor) writePromptDragData(event, promptDragData(anchor), host);
   });
 }
+
+const DRAG_BOUND_ATTR = 'data-gv-drag-bound';
 
 /**
  * Makes each not-yet-bound prompt link under `root` (or `root` itself) drag its
  * prompt, from the row that holds it. Links are marked, so a second pass is free.
  */
-export function bindPromptDragSources(root: ParentNode): void {
+export function bindPromptDragSources(
+  root: ParentNode,
+  links: string = PROMPT_LINK_SELECTOR,
+): void {
   const anchors: HTMLAnchorElement[] = [];
-  if (root instanceof Element && root.matches(UNBOUND_PROMPT_LINK_SELECTOR)) {
+  const unbound = (anchor: Element) => !anchor.hasAttribute(DRAG_BOUND_ATTR);
+  if (root instanceof Element && root.matches(links) && unbound(root)) {
     anchors.push(root as HTMLAnchorElement);
   }
-  root.querySelectorAll<HTMLAnchorElement>(UNBOUND_PROMPT_LINK_SELECTOR).forEach((anchor) => {
-    anchors.push(anchor);
+  root.querySelectorAll<HTMLAnchorElement>(links).forEach((anchor) => {
+    if (unbound(anchor)) anchors.push(anchor);
   });
   for (const anchor of anchors) {
     const host = promptDragHost(anchor);
     anchor.dataset.gvDragBound = '1';
-    bindDragHost(host);
+    bindDragHost(host, links);
   }
 }
 
@@ -96,7 +107,11 @@ export type PromptHistoryHooks = {
  * Watches the inline history list: new links become drag sources and title
  * changes reach the folders, each debounced. Returns the stop.
  */
-export function watchPromptHistory(root: HTMLElement, hooks: PromptHistoryHooks): () => void {
+export function watchPromptHistory(
+  root: HTMLElement,
+  hooks: PromptHistoryHooks,
+  links: string = PROMPT_LINK_SELECTOR,
+): () => void {
   let bindTimer: number | null = null;
   let titleTimer: number | null = null;
   let syncing = false;
@@ -114,7 +129,7 @@ export function watchPromptHistory(root: HTMLElement, hooks: PromptHistoryHooks)
     if (bindTimer !== null) return;
     bindTimer = window.setTimeout(() => {
       bindTimer = null;
-      bindPromptDragSources(root);
+      bindPromptDragSources(root, links);
     }, PROMPT_LIST_BIND_DEBOUNCE_MS);
   };
   const scheduleTitleSync = () => {
@@ -126,8 +141,8 @@ export function watchPromptHistory(root: HTMLElement, hooks: PromptHistoryHooks)
   };
 
   const observer = new MutationObserver((mutations) => {
-    if (mutationAddsPromptLinks(mutations)) scheduleBinding();
-    if (mutationMayAffectPromptTitles(mutations)) scheduleTitleSync();
+    if (mutationAddsPromptLinks(mutations, links)) scheduleBinding();
+    if (mutationMayAffectPromptTitles(mutations, links)) scheduleTitleSync();
   });
   try {
     observer.observe(root, {
@@ -156,30 +171,28 @@ export function watchPromptHistory(root: HTMLElement, hooks: PromptHistoryHooks)
   };
 }
 
-function isBodyPromptPopover(element: Element): boolean {
-  return (
-    element.matches(BODY_PROMPT_POPOVER_SELECTOR) || !!element.closest(BODY_PROMPT_POPOVER_SELECTOR)
-  );
-}
-
 /**
  * The V2 nav renders History recents in body-level hover popovers, not inline
- * rows. Binds the links already open, then each popover as it appears.
+ * rows. Binds the links already open, then each popover (`popovers`) as it appears.
  */
-export function watchBodyPromptPopovers(): () => void {
+export function watchBodyPromptPopovers(
+  popovers: string = BODY_PROMPT_POPOVER_SELECTOR,
+  links: string = PROMPT_LINK_SELECTOR,
+): () => void {
+  const isPopover = (element: Element) => element.matches(popovers) || !!element.closest(popovers);
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       for (const node of Array.from(mutation.addedNodes)) {
         // The cheap overlay gate runs before the subtree scan for prompt links.
-        if (!(node instanceof Element) || !isBodyPromptPopover(node)) continue;
-        if (nodeContainsPromptLink(node)) bindPromptDragSources(node);
+        if (!(node instanceof Element) || !isPopover(node)) continue;
+        if (nodeContainsPromptLink(node, links)) bindPromptDragSources(node, links);
       }
     }
   });
   try {
     observer.observe(document.body, { childList: true, subtree: true });
   } catch {}
-  document.querySelectorAll(BODY_PROMPT_POPOVER_SELECTOR).forEach(bindPromptDragSources);
+  document.querySelectorAll(popovers).forEach((popover) => bindPromptDragSources(popover, links));
   return () => observer.disconnect();
 }
 

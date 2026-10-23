@@ -109,15 +109,12 @@ const SKIPPED_PLUGIN_IDS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Features Voyager still runs natively (no plugin) on Gemini and AI Studio, ticked
- * only on rows a plugin already gives the table. Both are on without any setup:
- * folders read `geminiFolderEnabled` as on unless it is `false` (on AI Studio too,
- * behind its on-by-default master switch), and Gemini's export has no switch.
+ * Features Voyager still runs natively (no plugin) on a site, ticked only on rows
+ * a plugin already gives the table. None today: Gemini's and AI Studio's folders
+ * are the `voyager.gemini-folders` and `voyager.aistudio-folders` plugins, on by
+ * default through `geminiFolderEnabled`.
  */
-const NATIVE_FEATURES: Readonly<Record<string, readonly PluginSite[]>> = {
-  folders: ['gemini', 'aistudio'],
-  export: ['gemini'],
-};
+const NATIVE_FEATURES: Readonly<Record<string, readonly PluginSite[]>> = {};
 
 /**
  * Packaged Gemini and AI Studio plugins that run on a fresh install. Their switch
@@ -127,8 +124,11 @@ const NATIVE_FEATURES: Readonly<Record<string, readonly PluginSite[]>> = {
 export const FRESH_INSTALL_ON: ReadonlySet<string> = new Set([
   OFFICIAL_PLUGIN_IDS.geminiBatchDelete,
   OFFICIAL_PLUGIN_IDS.aistudioBatchDelete,
+  OFFICIAL_PLUGIN_IDS.aistudioFolders,
+  OFFICIAL_PLUGIN_IDS.geminiFolders,
   OFFICIAL_PLUGIN_IDS.geminiTimeline,
   OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
+  OFFICIAL_PLUGIN_IDS.geminiExport,
   OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
   OFFICIAL_PLUGIN_IDS.geminiMarkdownFix,
   OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,

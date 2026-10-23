@@ -1,10 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
-import {
-  type MemoryStorage,
-  createMemoryStorage,
-} from '@/features/plugins/builtin/chatgptFolders/__tests__/memoryStorage';
 import { CATALOG_OUTLINE_WRITE_MESSAGE } from '@/features/timeline/catalogOutlineMessages';
+import { type MemoryStorage, createMemoryStorage } from '@/tests/memoryStorage';
 
 import { createCatalogOutlineMessageHandler } from '../catalogOutlineMessages';
 

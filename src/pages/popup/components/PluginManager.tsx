@@ -94,7 +94,7 @@ export interface PluginManagerProps {
   readonly catalogHost?: string;
   /**
    * Per-plugin status reported by the active tab's PluginHost (plan §4.2):
-   * needs-engine / needs-handler / needs-semantic disable the toggle with a
+   * needs-engine / needs-handler / needs-semantic / needs-site-data disable the toggle with a
    * reason, no-effect shows the health warning, pendingVersion says the update
    * applies after a page reload, blocked keeps the toggle and says why the
    * plugin waits. Empty when the tab reported nothing.
@@ -220,7 +220,7 @@ export function PluginManager({
           const needsSiteAccess = enabled && missingPermissionIds.has(plugin.id);
           const isUpdated = updatedIds.has(plugin.id);
           const status = statusById.get(plugin.id);
-          // Only the three incompatibility kinds block the toggle; `no-effect`
+          // Only the incompatibility kinds block the toggle; `no-effect`
           // stays enabled because the plugin did run, it just found no targets,
           // and `blocked` keeps the user's choice for when the reason clears.
           const incompatibleNote = ((): string | null => {
@@ -233,6 +233,7 @@ export function PluginManager({
               case 'needs-handler':
                 return t('pluginNeedsVoyagerUpdate');
               case 'needs-semantic':
+              case 'needs-site-data':
                 return t('pluginNeedsSiteAdapterUpdate').replace(
                   '{site}',
                   currentSiteLabel ?? hosts,
