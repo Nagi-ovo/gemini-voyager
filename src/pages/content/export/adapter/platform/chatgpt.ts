@@ -3,11 +3,25 @@ import type { ExtractedContent } from '@/features/export/services/DOMContentExtr
 import { escapeHtml, escapeHtmlAttribute } from '@/features/export/services/exportDomPolicy';
 import type { SiteAdapter } from '@/features/plugins/types';
 
-import { TURN_ITEM_SELECTOR, resolveVisibleConversationRoot } from '../chatgptThread';
+import {
+  DESKTOP_TURN_SELECTOR,
+  LOGGED_OUT_ASSISTANT_SELECTOR,
+  LOGGED_OUT_MESSAGE_SELECTOR,
+  isChatGptLoggedOutConversation,
+  resolveChatGptLoggedOutThread,
+} from '../chatgptLoggedOutDom';
+import { resolveVisibleConversationRoot } from '../chatgptThread';
 import type { ExportPlatformAdapter } from './contract';
 
+/** The logged-out page's tab title is ChatGPT's marketing copy, never the conversation's name. */
+function isLoggedOutPage(): boolean {
+  return (
+    LOGGED_OUT_ROUTE.test(window.location.pathname) || isChatGptLoggedOutConversation(document)
+  );
+}
+
 function extractTitle(): string {
-  const title = document.title?.trim();
+  const title = isLoggedOutPage() ? '' : document.title?.trim();
   if (title && title !== 'ChatGPT' && title !== 'New chat') return title;
 
   const active = document.querySelector(
@@ -21,23 +35,19 @@ function extractTitle(): string {
 }
 
 function extractId(): string | null {
-  return window.location.pathname.match(/\/c\/([^/?#]+)/)?.[1] ?? null;
+  return window.location.pathname.match(CONVERSATION_ROUTE)?.[1] ?? null;
 }
 
-/** `/c/<id>` or `/g/<gpt>/c/<id>`, optionally under `/u/<index>/`. */
-const CONVERSATION_ROUTE = /^(?:\/u\/[^/]+)?(?:\/g\/[^/]+)?\/c\/[^/?#]+/;
-/** A turn ChatGPT has actually rendered, whatever the route says. */
-const MOUNTED_TURN_SELECTOR = [
-  TURN_ITEM_SELECTOR,
-  // The earlier DOM, for accounts ChatGPT has not moved yet.
-  '[data-turn-id-container] [data-message-author-role]',
-  '[data-turn-id-container][data-turn]',
-  'section[data-turn]',
-].join(', ');
+/**
+ * Signed in: `/c/<id>` or `/g/<gpt>/c/<id>`, optionally under `/u/<index>/`.
+ * The logged-out page, at any width: `/uc/<id>`.
+ */
+const CONVERSATION_ROUTE = /^(?:\/u\/[^/]+)?(?:\/g\/[^/]+)?\/(?:c|uc)\/([^/?#]+)/;
+const LOGGED_OUT_ROUTE = /^(?:\/u\/[^/]+)?(?:\/g\/[^/]+)?\/uc\/[^/?#]+/;
 
 /**
  * ChatGPT serves Codex, settings and other non-chat pages from the same
- * origin. A conversation lives on a `/c/<id>` route, or, for a temporary chat
+ * origin. A conversation lives on a `/c/<id>` or `/uc/<id>` route, or, for a temporary chat
  * that never leaves `/?temporary-chat=true`, wherever a turn is rendered.
  */
 export function chatgptIsConversationPage(doc: Document, url: string): boolean {
@@ -47,7 +57,11 @@ export function chatgptIsConversationPage(doc: Document, url: string): boolean {
   } catch {
     return false;
   }
-  return CONVERSATION_ROUTE.test(pathname) || doc.querySelector(MOUNTED_TURN_SELECTOR) !== null;
+  return (
+    CONVERSATION_ROUTE.test(pathname) ||
+    doc.querySelector(DESKTOP_TURN_SELECTOR) !== null ||
+    resolveChatGptLoggedOutThread(doc)?.querySelector(LOGGED_OUT_MESSAGE_SELECTOR) != null
+  );
 }
 
 /** The visible conversation's `main`: ChatGPT keeps earlier pages in hidden ones. */
@@ -261,7 +275,7 @@ export function buildChatGptAdapter(site: SiteAdapter): ExportPlatformAdapter {
   return {
     site,
     getUserSelectors: () => [site.selectors.userTurn],
-    getAssistantSelectors: () => [site.selectors.assistantTurn],
+    getAssistantSelectors: () => [site.selectors.assistantTurn, LOGGED_OUT_ASSISTANT_SELECTOR],
     extractConversationTitle: extractTitle,
     extractConversationIdFromUrl: extractId,
     resolveConversationRoot: resolveRoot,
