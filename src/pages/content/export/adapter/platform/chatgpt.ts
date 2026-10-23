@@ -7,13 +7,21 @@ import {
   DESKTOP_TURN_SELECTOR,
   LOGGED_OUT_ASSISTANT_SELECTOR,
   LOGGED_OUT_MESSAGE_SELECTOR,
+  isChatGptLoggedOutConversation,
   resolveChatGptLoggedOutThread,
 } from '../chatgptLoggedOutDom';
 import { resolveVisibleConversationRoot } from '../chatgptThread';
 import type { ExportPlatformAdapter } from './contract';
 
+/** The logged-out page's tab title is ChatGPT's marketing copy, never the conversation's name. */
+function isLoggedOutPage(): boolean {
+  return (
+    LOGGED_OUT_ROUTE.test(window.location.pathname) || isChatGptLoggedOutConversation(document)
+  );
+}
+
 function extractTitle(): string {
-  const title = document.title?.trim();
+  const title = isLoggedOutPage() ? '' : document.title?.trim();
   if (title && title !== 'ChatGPT' && title !== 'New chat') return title;
 
   const active = document.querySelector(
@@ -35,6 +43,7 @@ function extractId(): string | null {
  * The logged-out page, at any width: `/uc/<id>`.
  */
 const CONVERSATION_ROUTE = /^(?:\/u\/[^/]+)?(?:\/g\/[^/]+)?\/(?:c|uc)\/([^/?#]+)/;
+const LOGGED_OUT_ROUTE = /^(?:\/u\/[^/]+)?(?:\/g\/[^/]+)?\/uc\/[^/?#]+/;
 
 /**
  * ChatGPT serves Codex, settings and other non-chat pages from the same

@@ -81,6 +81,22 @@ describe('ChatGPT logged-out conversation recognition', () => {
     expect(chatgptIsConversationPage(document, 'https://chatgpt.com/library')).toBe(false);
     expect(site.turns.messages()).toEqual([]);
   });
+
+  it("does not title the export with the logged-out page's marketing tab title", () => {
+    const tabTitle = document.title;
+    try {
+      document.title = 'ChatGPT - Free AI chat';
+      expect(site.title()).toBe('Conversation logged-o');
+      window.history.replaceState({}, '', '/');
+      expect(site.title()).toBe('Untitled Conversation');
+      window.history.replaceState({}, '', '/c/desktop');
+      document.body.innerHTML = '<main><section data-turn="user">Prompt</section></main>';
+      document.title = 'Trip planning';
+      expect(site.title()).toBe('Trip planning');
+    } finally {
+      document.title = tabTitle;
+    }
+  });
 });
 
 describe('ChatGPT logged-out page export', () => {
