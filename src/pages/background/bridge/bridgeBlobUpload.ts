@@ -86,10 +86,9 @@ export function createBlobUploadRelay(deps: BlobUploadDeps): BlobUploadRelay {
     request: HolderRequest,
   ): Promise<{ record: BridgeTaskRecord; connection: PairedConnection } | Refusal> => {
     await deps.ready();
-    const record = await deps.store.getTask();
+    const record = await deps.store.getTask(request.taskId);
     if (
       !record ||
-      record.taskId !== request.taskId ||
       record.op !== 'files.download' ||
       record.state !== 'running' ||
       record.cancelling !== undefined ||

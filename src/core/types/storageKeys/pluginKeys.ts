@@ -50,7 +50,7 @@ export const PLUGIN_STORAGE_KEYS = {
   // back to its default (Gemini = Everforest sage; others = adapter brandColor).
   ACCENT_COLORS: 'gvAccentColors',
 
-  // Local Bridge (src/pages/background/bridge/). All three are chrome.storage.local,
+  // Local Bridge (src/pages/background/bridge/). All five are chrome.storage.local,
   // written by the background only and never synced or backed up.
   // Pairing with `voyager serve`: { serverId, port, token, pairedAt }. The token is
   // a secret: read only in the background and never sent to a content script on
@@ -59,8 +59,12 @@ export const PLUGIN_STORAGE_KEYS = {
   // Highest bridge policy revision accepted so far: { revision, allow: OpName[] }.
   // Lets a later, older catalog never re-allow what a newer one denied.
   BRIDGE_POLICY_HIGH_WATER: 'gvBridgePolicyHighWater',
-  // Op results the server could not take yet (JSON only, at most 5 / 1 MiB).
+  // Op results the server could not take yet (JSON only, at most 16 / 1 MiB).
   BRIDGE_OUTBOX: 'gvBridgeOutbox',
+  // true once the person allowed jobs to run side by side (popup bridge card); absent: one at a time.
+  BRIDGE_PARALLEL: 'gvBridgeParallel',
+  // How many jobs may run side by side while BRIDGE_PARALLEL is on: 2–10, absent = 3.
+  BRIDGE_PARALLEL_JOBS: 'gvBridgeParallelJobs',
   // The ChatGPT plan each account's pages last showed, written by the Local Bridge content
   // script (chrome.storage.local, never synced or backed up). Keyed by a hash of the
   // account id; plan fields only, no id, e-mail or token — see

@@ -1,6 +1,9 @@
 /**
- * Task dispatch (spec §2.2 delivery, §3.1, §3.2). One task at a time: a second
- * one while a task is in flight is answered `busy`, never queued.
+ * Task dispatch (spec §2.2 delivery, §3.1, §3.2). One task per job, each job in
+ * the tab its own latest open created (`jobTabs.ts`); one job at a time, or as
+ * many as the person chose once they allow parallel jobs. A task past that (another of the same job, or of
+ * one job too many) is answered `busy`, never queued. Ops that dispatch page
+ * events still take the one page lease, so two jobs never type or click at once.
  *
  * Everything is event driven from the session record, so a service worker
  * restart loses nothing: a content `op.done` that arrives after a restart is
@@ -25,6 +28,7 @@ import {
   type ConversationReadyResult,
   type ErrorCode,
   type InflightState,
+  MAX_INFLIGHT_TASKS,
   type ValidatedBridgeTask,
   supportsOpVersion,
 } from '@/features/bridge/protocol';
@@ -49,6 +53,7 @@ import {
   type DispatcherConfig,
   type DispatcherDeps,
 } from './dispatcherConfig';
+import { jobTab } from './jobTabs';
 import { createTaskSettlement } from './taskSettlement';
 
 export {
@@ -58,9 +63,16 @@ export {
   DEFAULT_DISPATCHER_CONFIG,
   type DispatcherConfig,
   type DispatcherDeps,
+  MAX_BRIDGE_TASKS,
   SUPPORTED_BRIDGE_OPS,
 } from './dispatcherConfig';
 export { cancelReason } from './dispatchOutcome';
+
+interface Stop {
+  readonly record: BridgeTaskRecord;
+  readonly code: ErrorCode;
+  readonly message: string;
+}
 
 export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   const now = deps.now ?? (() => Date.now());
@@ -69,8 +81,11 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   let lastJobId: string | null = null;
 
   const context: DispatchContext = { deps, config, now };
+  const capacity = async (): Promise<number> =>
+    Math.min(config.maxTasks, Math.max(1, (await deps.parallelJobs?.()) ?? 1));
   const settle = createTaskSettlement(context);
-  const { ownConnection, deliver, finish, refuse, abortInPage, confirmStop, leaseFor } = settle;
+  const { ownConnection, deliver, finish, refuse, abortInPage, confirmStop } = settle;
+  const { leaseAfterLeftRestore } = settle;
   const { concludeClose, endLost, startOp } = settle;
   const conversations = createConversationTasks(context, settle, (delayMs) =>
     scheduleTick(delayMs),
@@ -81,8 +96,8 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   const cancel = async (taskId: string, code: ErrorCode): Promise<void> => {
     const marked =
       (await store.updateTask(taskId, { cancelling: code }, notCancelling)) ??
-      (await store.getTask());
-    if (!marked || marked.taskId !== taskId || !marked.cancelling) return;
+      (await store.getTask(taskId));
+    if (!marked?.cancelling) return;
     await confirmStop(marked, marked.cancelling);
     await restoreLeftMode(marked);
   };
@@ -93,11 +108,9 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   };
 
   const dispatchToContent = async (task: ValidatedBridgeTask, record: BridgeTaskRecord) => {
-    const tab = await store.getTab();
-    if (!tab)
-      return finish(task.taskId, fail('tab-closed', 'No bridge tab is open.'), {
-        releaseLease: false,
-      });
+    const got = await jobTab(store, task.jobId, (await capacity()) === 1);
+    if ('refused' in got) return finish(task.taskId, got.refused, { releaseLease: false });
+    const { tab } = got;
     const holder = holderOf(tab);
     if (!holder) {
       return finish(task.taskId, fail('document-lost', 'The bridge tab has not loaded yet.'), {
@@ -108,7 +121,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     let leaseId: string | undefined;
     let deadline = record.deadline;
     if (leased) {
-      const got = await leaseFor(task.taskId, task.op, holder, record.deadline - now());
+      const got = await leaseAfterLeftRestore(task.taskId, task.op, holder, record.deadline);
       if ('refused' in got) return finish(task.taskId, got.refused, { releaseLease: false });
       leaseId = got.lease.leaseId;
       deadline = Math.min(deadline, got.lease.deadline);
@@ -132,10 +145,8 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     scheduleTick(running.deadline + config.deadlineGraceMs - now());
   };
 
-  const tick = async (): Promise<void> => {
-    await deps.ready();
-    const record = await store.getTask();
-    if (!record) return;
+  /** One task's watchdog: its stop, its deadline, its tab and its document. */
+  const watch = async (record: BridgeTaskRecord): Promise<void> => {
     // A stop the page has not confirmed yet: ask again (the server may be away).
     if (record.cancelling) {
       await confirmStop(record, record.cancelling);
@@ -179,29 +190,62 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     }
   };
 
-  const stopCurrent = async (code: ErrorCode, message: string) => {
-    const record = await store.getTask();
-    if (!record) return;
-    abortInPage(record, code);
-    await finish(record.taskId, fail(code, message), { releaseLease: false });
+  const tick = async (): Promise<void> => {
+    await deps.ready();
+    for (const record of await store.listTasks()) await watch(record);
   };
+
+  /**
+   * Stop each task in its page before reporting any of them: a report awaits the server, and
+   * meanwhile another job's send would go on. Marked first, so one still waiting never starts.
+   */
+  const stopEach = async (stops: readonly Stop[]): Promise<void> => {
+    for (const { record, code } of stops) {
+      const marked = await store.updateTask(record.taskId, { cancelling: code }, notCancelling);
+      abortInPage(marked ?? record, code);
+    }
+    for (const { record, code, message } of stops) {
+      await finish(record.taskId, fail(code, message), { releaseLease: false });
+    }
+  };
+
+  const stopAll = async (code: ErrorCode, message: string) =>
+    stopEach((await store.listTasks()).map((record) => ({ record, code, message })));
 
   const intake = async (task: ValidatedBridgeTask, from?: PairedConnection): Promise<unknown> => {
     await deps.ready();
-    const current = await store.getTask();
+    const current = await store.getTask(task.taskId);
     const paired = await deps.connection();
     const connection = from ?? paired;
     // A poll of a pairing replaced meanwhile: its server is not the one this browser serves now.
     if (!connection || !paired) return;
     if (connection.serverId !== paired.serverId || connection.token !== paired.token) return;
     const { serverId } = connection;
-    if (current?.taskId === task.taskId) {
-      // A redelivery of the task we run: confirm again, run nothing.
+    if (current) {
+      // A redelivery of a task we run: confirm again, run nothing.
       if (current.serverId === serverId) await client.ack(connection, task.taskId);
       return;
     }
     if (!(await store.markSeen(task.taskId))) return; // seen before: never run twice
-    if (current) return refuse(task.taskId, fail('busy', 'Another task is running.'), serverId);
+    const running = await store.listTasks();
+    if (running.some((other) => other.jobId === task.jobId)) {
+      return refuse(task.taskId, fail('busy', 'This job already has a task running.'), serverId);
+    }
+    // A job that ran beside others in its own tab finishes after the switch went off; the
+    // cap admits new jobs, and with the switch off never depends on serve. `config.maxTasks`
+    // holds either way.
+    const ongoing =
+      (await store.tabOwner(task.jobId))?.parallel === true &&
+      (await store.listTabs()).some((tab) => tab.jobId === task.jobId);
+    const maxTasks = ongoing ? config.maxTasks : await capacity();
+    if (running.length >= maxTasks) {
+      return refuse(
+        task.taskId,
+        fail('busy', `${running.length} of ${maxTasks} tasks are running already.`, { maxTasks }),
+        serverId,
+      );
+    }
+    if (maxTasks > 1) await store.markParallel(task.jobId);
     if (!config.supportedOps.has(task.op) || !supportsOpVersion(task.op, task.opVersion)) {
       return refuse(
         task.taskId,
@@ -253,7 +297,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
         : fail('unsupported-op', 'This build cannot refresh the catalog.');
       return finish(task.taskId, refreshed, { releaseLease: false });
     }
-    if (task.op === 'conversation.open') return openConversation(task);
+    if (task.op === 'conversation.open') return openConversation(task, maxTasks > 1);
     if (task.op === 'conversation.close') return closeConversation(task);
     return dispatchToContent(task, record);
   };
@@ -265,8 +309,8 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
 
     onAbort: async (taskId, reason, from) => {
       await deps.ready();
-      const record = await store.getTask();
-      if (from && record?.taskId === taskId && record.serverId !== from.serverId) return;
+      const record = await store.getTask(taskId);
+      if (from && record && record.serverId !== from.serverId) return;
       await cancel(taskId, reason);
     },
 
@@ -274,8 +318,9 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
       await deps.ready();
       const accepted = await tabs.acceptHello(sender, docNonce);
       if (!accepted) return false;
-      const record = await store.getTask();
-      if (!record || record.tabId !== accepted.current.tabId) return true;
+      const { tabId } = accepted.current;
+      const record = (await store.listTasks()).find((task) => task.tabId === tabId);
+      if (!record) return true;
       if (record.op === 'conversation.open' && record.phase === 'awaiting-hello') {
         await startReady(record.taskId, {
           tabId: accepted.current.tabId,
@@ -292,8 +337,8 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
 
     onProgress: async (sender, message) => {
       await deps.ready();
-      const record = await store.getTask();
-      if (!record || record.taskId !== message.taskId) return false;
+      const record = await store.getTask(message.taskId);
+      if (!record) return false;
       if (!senderIsHolder(sender, message.docNonce, record)) return false;
       const seq = record.progressSeq + 1;
       await store.updateTask(record.taskId, { lastProgressAt: now(), progressSeq: seq });
@@ -306,12 +351,8 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
 
     onDone: async (sender, message) => {
       await deps.ready();
-      const record = await store.getTask();
-      if (
-        !record ||
-        record.taskId !== message.taskId ||
-        !senderIsHolder(sender, message.docNonce, record)
-      ) {
+      const record = await store.getTask(message.taskId);
+      if (!record || !senderIsHolder(sender, message.docNonce, record)) {
         // A late report from a document whose task already ended may still free its own lease.
         const held = await lease.current();
         if (
@@ -328,7 +369,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
         message.outcome,
       );
       if (record.op === 'conversation.close' && record.tabId !== undefined) {
-        const tab = await store.getTab();
+        const tab = await store.getTab(record.tabId);
         const restored =
           outcome.ok && (outcome.data as ConversationReadyResult).mode === tab?.restoreMode;
         if (record.leaseId) await lease.release(record.leaseId);
@@ -349,8 +390,8 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
       await deps.ready();
       await lease.releaseForTab(tabId);
       await store.clearTab(tabId);
-      const record = await store.getTask();
-      if (record?.tabId !== tabId) return;
+      const record = (await store.listTasks()).find((task) => task.tabId === tabId);
+      if (!record) return;
       if (record.op === 'conversation.close') {
         // Our own close removes the tab too; only a removal mid-restore ends the close here.
         if (record.phase === 'restoring-mode') await concludeClose(record.taskId, tabId, false);
@@ -359,36 +400,38 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
       await endLost(record, fail('tab-closed', 'The bridge tab was closed.'), false);
     },
 
-    stopCurrent,
+    stopAll,
 
     recheckPolicy: async () => {
       await deps.ready();
-      const record = await store.getTask();
-      if (!record) return;
-      const denied = await deps.policy.checkOp(record.op);
-      if (denied) await stopCurrent(denied.code, denied.message);
+      const stops: Stop[] = [];
+      for (const record of await store.listTasks()) {
+        const denied = await deps.policy.checkOp(record.op);
+        if (denied) stops.push({ record, ...denied });
+      }
+      await stopEach(stops);
     },
 
     tick,
 
     inflight: async () => {
-      // Record first, outbox second: a result only ever moves from the one to the other.
-      const record = await store.getTask();
+      // Records first, outbox second: a result only ever moves from the one to the other.
+      const records = await store.listTasks();
       const outbox = await store.listOutbox();
       // Only the tasks of the server polled now: another server never learns their ids.
       const serverId = (await deps.connection())?.serverId;
-      const list: { taskId: string; state: InflightState }[] = outbox
-        .filter((entry) => serverId !== undefined && entry.serverId === serverId)
-        .map((entry) => ({ taskId: entry.taskId, state: 'running' }));
-      if (
-        record &&
-        serverId !== undefined &&
-        record.serverId === serverId &&
-        !list.some((entry) => entry.taskId === record.taskId)
-      ) {
-        list.push({ taskId: record.taskId, state: record.state });
+      if (serverId === undefined) return [];
+      // Records lead the list: past the cap, a result left in the outbox is only redelivered,
+      // while a running task the server does not see listed is failed as reloaded.
+      const list: { taskId: string; state: InflightState }[] = records
+        .filter((record) => record.serverId === serverId)
+        .map((record) => ({ taskId: record.taskId, state: record.state }));
+      for (const entry of outbox) {
+        if (entry.serverId !== serverId || list.some((item) => item.taskId === entry.taskId))
+          continue;
+        list.push({ taskId: entry.taskId, state: 'running' });
       }
-      return list.slice(0, 8);
+      return list.slice(0, MAX_INFLIGHT_TASKS);
     },
 
     drainOutbox: async () => {
@@ -399,7 +442,9 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
       return true;
     },
 
-    current: () => store.getTask(),
+    tasks: () => store.listTasks(),
+
+    capacity,
   };
 }
 

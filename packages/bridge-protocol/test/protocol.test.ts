@@ -5,6 +5,7 @@ import {
   ERROR_CODES,
   isExtensionOrigin,
   MAX_BLOB_CHUNK_BASE64,
+  MAX_INFLIGHT_TASKS,
   negotiateProtocol,
   normalizePairingCode,
   parseProtocolHeader,
@@ -102,6 +103,24 @@ describe('validators', () => {
     expect(result.ok && result.value.capabilities.ops).toEqual([
       { name: 'conversation.ready', v: 1 },
     ]);
+  });
+
+  it('holds a poll to the tasks it can list, whatever maxTasks a newer extension offers', () => {
+    const poll = (maxTasks: unknown) =>
+      validateMessage('pollRequest', {
+        capabilities: { ops: [] },
+        inflight: [],
+        policy: { revision: 1, state: 'allowed' },
+        maxTasks,
+      });
+    const read = (maxTasks: unknown) => {
+      const result = poll(maxTasks);
+      return result.ok ? result.value.maxTasks : 'refused';
+    };
+    expect(read(4)).toBe(4);
+    expect(read(64)).toBe(MAX_INFLIGHT_TASKS);
+    expect(read(0)).toBe(1);
+    expect(read('many')).toBe(1);
   });
 
   it('reports every issue of a message at once', () => {

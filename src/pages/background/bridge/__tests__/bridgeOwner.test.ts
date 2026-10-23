@@ -1,133 +1,31 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
-import { bridgeError } from '@/features/bridge/protocol';
-import { BUNDLED_SITE_ADAPTERS } from '@/features/plugins/catalog/sites';
-import type { HostCatalogRefreshResult } from '@/features/plugins/remote/hostCatalogRefresh';
 
-import { createBridgeOwner } from '../bridgeOwner';
-import { BRIDGE_PLUGIN_ID } from '../bridgePolicy';
 import { BRIDGE_SESSION_KEYS } from '../bridgeTaskStore';
-import { contentSender, fakeTabs, testArea } from './bridgeTestKit';
-
-const TOKEN = 'A'.repeat(43);
-const PAIRING = { serverId: 'srv1', port: 47321, token: TOKEN, pairedAt: 1, protocol: 1 };
-const READ = { markdown: 'OK', turnKey: 't-8', textSha256: '0'.repeat(64), files: [] };
-
-const popup = {
-  id: chrome.runtime.id,
-  url: chrome.runtime.getURL('src/pages/popup/index.html'),
-} as chrome.runtime.MessageSender;
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
-
-function setup(
-  options: {
-    session?: Record<string, unknown>;
-    local?: Record<string, unknown>;
-    onlineUpdatesEnabled?: boolean;
-  } = {},
-) {
-  const session = testArea(options.session);
-  const local = testArea(options.local);
-  const page = fakeTabs();
-  const origins = new Set<string>(['https://chatgpt.com/*']);
-  const routes: Record<string, (body: unknown) => Response | Promise<Response>> = {
-    '/v1/hello': () =>
-      json({
-        ok: true,
-        data: {
-          serverId: 'srv1',
-          serverVersion: '0.1.0',
-          protocol: { min: 1, max: 1, selected: 1 },
-          paired: false,
-        },
-      }),
-    '/v1/pair': () => json({ ok: true, data: { token: TOKEN, serverId: 'srv1' } }),
-  };
-  const requests: {
-    path: string;
-    port: number;
-    body: unknown;
-    headers: Record<string, string>;
-  }[] = [];
-  const fetchImpl = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
-    const parsed = new URL(String(url));
-    const path = parsed.pathname;
-    const body = init?.body ? (JSON.parse(String(init.body)) as unknown) : undefined;
-    requests.push({
-      path,
-      port: Number(parsed.port),
-      body,
-      headers: (init?.headers ?? {}) as Record<string, string>,
-    });
-    const route = routes[path];
-    return route ? route(body) : json({ ok: true, data: {} });
-  });
-  const settings = { onlineUpdatesEnabled: options.onlineUpdatesEnabled ?? true };
-  /** What the online-update switch read when each catalog check ran. */
-  const refreshes: boolean[] = [];
-  const catalog = {
-    refreshNow: vi.fn(async (_host: string): Promise<HostCatalogRefreshResult> => ({
-      ok: true,
-      status: 'unchanged',
-      checkedAt: 5,
-    })),
-  };
-  const owner = createBridgeOwner({
-    session,
-    local,
-    tabs: page.api,
-    fetch: fetchImpl as unknown as typeof fetch,
-    hasOrigin: async (pattern) => origins.has(pattern),
-    refreshCatalog: async () => {
-      refreshes.push(settings.onlineUpdatesEnabled);
-    },
-    refreshCatalogNow: (host) => catalog.refreshNow(host),
-    loadOnlineUpdatesEnabled: async () => settings.onlineUpdatesEnabled,
-    saveOnlineUpdatesEnabled: async (enabled) => {
-      settings.onlineUpdatesEnabled = enabled;
-    },
-    alarms: { get: async () => undefined, create: vi.fn(), clear: vi.fn(async () => true) },
-    browser: 'chrome',
-    sleep: async () => {},
-  });
-  const send = async (message: Record<string, unknown>, sender = popup) =>
-    (await owner.handleMessage(message, sender)) as Record<string, unknown>;
-  return {
-    session,
-    local,
-    page,
-    origins,
-    routes,
-    requests,
-    owner,
-    send,
-    settings,
-    refreshes,
-    catalog,
-  };
-}
+import { contentSender } from './bridgeTestKit';
+import { PAIRING, READ, TOKEN, json, setup } from './ownerTestKit';
 
 describe('bridge owner', () => {
   it('matches a page report that wakes a fresh worker to the task stored before it stopped', async () => {
     const t = setup({
       local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING },
       session: {
-        [BRIDGE_SESSION_KEYS.task]: {
-          taskId: 'T1',
-          jobId: 'J1',
-          op: 'turns.read',
-          state: 'running',
-          startedAt: 1,
-          deadline: Number.MAX_SAFE_INTEGER,
-          lastProgressAt: 1,
-          progressSeq: 0,
-          tabId: 100,
-          docNonce: 'doc-1',
-          serverId: 'srv1',
-        },
+        [BRIDGE_SESSION_KEYS.tasks]: [
+          {
+            taskId: 'T1',
+            jobId: 'J1',
+            op: 'turns.read',
+            state: 'running',
+            startedAt: 1,
+            deadline: Number.MAX_SAFE_INTEGER,
+            lastProgressAt: 1,
+            progressSeq: 0,
+            tabId: 100,
+            docNonce: 'doc-1',
+            serverId: 'srv1',
+          },
+        ],
       },
     });
     let hydrate!: () => void;
@@ -155,20 +53,22 @@ describe('bridge owner', () => {
     const t = setup({
       local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING },
       session: {
-        [BRIDGE_SESSION_KEYS.task]: {
-          taskId: 'T1',
-          jobId: 'J1',
-          op: 'composer.attach',
-          state: 'running',
-          startedAt: 1,
-          deadline: Number.MAX_SAFE_INTEGER,
-          lastProgressAt: 1,
-          progressSeq: 0,
-          tabId: 100,
-          docNonce: 'doc-1',
-          serverId: 'srv1',
-          blobs: [{ blobId: 'b1', size: 6 }],
-        },
+        [BRIDGE_SESSION_KEYS.tasks]: [
+          {
+            taskId: 'T1',
+            jobId: 'J1',
+            op: 'composer.attach',
+            state: 'running',
+            startedAt: 1,
+            deadline: Number.MAX_SAFE_INTEGER,
+            lastProgressAt: 1,
+            progressSeq: 0,
+            tabId: 100,
+            docNonce: 'doc-1',
+            serverId: 'srv1',
+            blobs: [{ blobId: 'b1', size: 6 }],
+          },
+        ],
       },
     });
     t.routes['/v1/ext/blobs/b1/read'] = () =>
@@ -285,289 +185,69 @@ describe('bridge owner', () => {
         server: 'unknown',
         policy: 'allowed', // unstamped test build: the packaged chatgpt policy applies
         onlineUpdatesEnabled: true,
+        parallel: false,
+        parallelJobs: 3,
+        activeTasks: [],
       },
     });
   });
 
-  it('polls while on and paired, and forgets the pairing the server dropped', async () => {
+  it('lists every running job in its status, oldest first', async () => {
+    const record = (taskId: string, jobId: string, op: string) => ({
+      taskId,
+      jobId,
+      op,
+      state: 'running',
+      startedAt: 1,
+      deadline: Number.MAX_SAFE_INTEGER,
+      lastProgressAt: 1,
+      progressSeq: 0,
+    });
     const t = setup({
-      local: {
-        [StorageKeys.BRIDGE_PAIRING]: PAIRING,
-        [StorageKeys.PLUGINS_STATE]: { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } },
-      },
-    });
-    t.origins.add('http://127.0.0.1/*');
-    t.routes['/v1/ext/poll'] = () => json({ ok: true, data: { kind: 'unpaired' } });
-    await t.owner.wake();
-
-    const poll = t.requests.find((r) => r.path === '/v1/ext/poll');
-    expect(poll?.body).toMatchObject({
-      inflight: [],
-      policy: { state: 'allowed' },
-      capabilities: { ops: expect.arrayContaining([{ name: 'composer.send', v: 1 }]) },
-    });
-    expect(t.local.values[StorageKeys.BRIDGE_PAIRING]).toBeUndefined();
-  });
-
-  it('offers catalog.refresh and runs it although the policy does not list it', async () => {
-    const packaged = BUNDLED_SITE_ADAPTERS.find((site) => site.id === 'chatgpt');
-    expect(packaged?.bridge?.allow).not.toContain('catalog.refresh');
-    const t = setup({
-      local: {
-        [StorageKeys.BRIDGE_PAIRING]: PAIRING,
-        [StorageKeys.PLUGINS_STATE]: { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } },
-      },
-    });
-    t.origins.add('http://127.0.0.1/*');
-    t.origins.delete('https://chatgpt.com/*');
-    let polls = 0;
-    t.routes['/v1/ext/poll'] = () =>
-      json({
-        ok: true,
-        data:
-          polls++ === 0
-            ? {
-                kind: 'task',
-                task: {
-                  taskId: 'T1',
-                  jobId: 'J1',
-                  op: 'catalog.refresh',
-                  opVersion: 1,
-                  params: {},
-                  deadlineMs: 30_000,
-                  issuedAt: 1,
-                },
-              }
-            : { kind: 'unpaired' },
-      });
-    await t.owner.wake();
-
-    // No chatgpt.com access: the page ops go, the refresh, which needs no page, stays.
-    expect(t.requests.find((r) => r.path === '/v1/ext/poll')?.body).toMatchObject({
-      capabilities: { ops: [{ name: 'catalog.refresh', v: 1 }] },
-    });
-    expect(t.catalog.refreshNow).toHaveBeenCalledWith('chatgpt.com');
-    expect(t.requests.find((r) => r.path === '/v1/ext/tasks/T1/result')?.body).toMatchObject({
-      ok: true,
-      data: { host: 'chatgpt.com', status: 'unchanged', checkedAt: 5 },
-    });
-  });
-
-  it('keeps polling a CLI 0.1.0 serve that refuses the poll over catalog.refresh, without it', async () => {
-    const t = setup({
-      local: {
-        [StorageKeys.BRIDGE_PAIRING]: PAIRING,
-        [StorageKeys.PLUGINS_STATE]: { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } },
-      },
-    });
-    t.origins.add('http://127.0.0.1/*');
-    // As serve 0.1.0 answers: one op it does not know makes the whole poll invalid.
-    t.routes['/v1/ext/poll'] = (body) => {
-      const ops = (body as { capabilities: { ops: { name: string }[] } }).capabilities.ops;
-      const index = ops.findIndex((op) => op.name === 'catalog.refresh');
-      if (index < 0) return json({ ok: true, data: { kind: 'unpaired' } });
-      return json(
-        {
-          ok: false,
-          error: bridgeError('bad-request', 'invalid poll', {
-            issues: [{ path: `capabilities.ops[${index}].name`, message: 'unknown value' }],
-          }),
-        },
-        400,
-      );
-    };
-    await t.owner.wake();
-
-    const polls = t.requests.filter((r) => r.path === '/v1/ext/poll');
-    expect(polls).toHaveLength(2);
-    const offered = (polls[1].body as { capabilities: { ops: { name: string }[] } }).capabilities
-      .ops;
-    expect(offered.map((op) => op.name)).not.toContain('catalog.refresh');
-    expect(offered.length).toBeGreaterThan(0);
-    // The serve's answer to the second poll arrived: it dropped the pairing.
-    expect(t.local.values[StorageKeys.BRIDGE_PAIRING]).toBeUndefined();
-  });
-
-  it("tells the server the plan of the account the bridge's pages last used, with each poll", async () => {
-    const plan = { planType: 'pro', planDisplayName: 'Pro', observedAt: 1_792_000_000_000 };
-    const t = setup({
-      local: {
-        [StorageKeys.BRIDGE_PAIRING]: PAIRING,
-        [StorageKeys.PLUGINS_STATE]: { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } },
-        [StorageKeys.BRIDGE_ACCOUNT_PLANS]: {
-          version: 1,
-          accounts: { aaaaaaaa: plan, bbbbbbbb: { planType: 'plus', observedAt: 1 } },
-          current: 'aaaaaaaa',
-        },
-      },
-    });
-    t.origins.add('http://127.0.0.1/*');
-    t.routes['/v1/ext/poll'] = () => json({ ok: true, data: { kind: 'unpaired' } });
-    await t.owner.wake();
-
-    expect(t.requests.find((r) => r.path === '/v1/ext/poll')?.body).toMatchObject({
-      account: plan,
-    });
-  });
-
-  it('polls with no plan before any page showed one', async () => {
-    const t = setup({
-      local: {
-        [StorageKeys.BRIDGE_PAIRING]: PAIRING,
-        [StorageKeys.PLUGINS_STATE]: { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } },
-      },
-    });
-    t.origins.add('http://127.0.0.1/*');
-    t.routes['/v1/ext/poll'] = () => json({ ok: true, data: { kind: 'unpaired' } });
-    await t.owner.wake();
-
-    expect(t.requests.find((r) => r.path === '/v1/ext/poll')?.body).toMatchObject({
-      account: null,
-    });
-  });
-
-  it('stops the task of a pairing another server replaced and runs nothing its old poll brings', async () => {
-    const t = setup({
-      local: {
-        [StorageKeys.BRIDGE_PAIRING]: PAIRING,
-        [StorageKeys.PLUGINS_STATE]: { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } },
-      },
+      local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING },
       session: {
-        [BRIDGE_SESSION_KEYS.task]: {
-          taskId: 'T1',
-          jobId: 'J1',
-          op: 'turns.read',
-          state: 'running',
-          startedAt: 1,
-          deadline: Number.MAX_SAFE_INTEGER,
-          lastProgressAt: 1,
-          progressSeq: 0,
-          serverId: 'srv1',
-        },
+        [BRIDGE_SESSION_KEYS.tasks]: [
+          record('T1', 'J1', 'turns.waitReply'),
+          record('T2', 'J2', 'composer.send'),
+        ],
       },
     });
-    t.origins.add('http://127.0.0.1/*');
-    let answerPoll!: (response: Response) => void;
-    t.routes['/v1/ext/poll'] = () =>
-      new Promise<Response>((resolve) => {
-        answerPoll = resolve;
-      });
-    void t.owner.wake();
-    await vi.waitFor(() => expect(t.requests.some((r) => r.path === '/v1/ext/poll')).toBe(true));
-    t.routes['/v1/ext/poll'] = () => new Promise<Response>(() => {});
-
-    const replaced = { ...PAIRING, serverId: 'srv2', port: 47322 };
-    t.local.values[StorageKeys.BRIDGE_PAIRING] = replaced;
-    t.owner.onStorageChanged(
-      { [StorageKeys.BRIDGE_PAIRING]: { oldValue: PAIRING, newValue: replaced } },
-      'local',
-    );
-    answerPoll(
-      json({
-        ok: true,
-        data: {
-          kind: 'task',
-          task: {
-            taskId: 'T9',
-            jobId: 'J9',
-            op: 'turns.read',
-            opVersion: 1,
-            params: { conversationId: 'abc-123', assistantTurnKey: 't-8' },
-            deadlineMs: 60_000,
-            issuedAt: 1,
-          },
-        },
-      }),
-    );
-    // The next poll goes to the new server, after whatever the old poll brought was handled.
-    await vi.waitFor(() =>
-      expect(t.requests.filter((r) => r.path === '/v1/ext/poll').length).toBeGreaterThan(1),
-    );
-    await vi.waitFor(async () =>
-      expect((await t.send({ type: 'gv.bridge.status' })).data).not.toHaveProperty('activeTask'),
-    );
-    expect(t.requests.filter((r) => r.path.startsWith('/v1/ext/tasks/'))).toEqual([]);
-  });
-
-  const OUTBOX = [
-    {
-      taskId: 'T1',
-      result: { ok: true, data: { markdown: 'a private reply' } },
-      at: 1,
-      serverId: 'srv1',
-    },
-  ];
-  const ON = { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } };
-
-  it('drops reply text waiting in the outbox when the person unpairs', async () => {
-    const t = setup({
-      local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING, [StorageKeys.BRIDGE_OUTBOX]: OUTBOX },
-    });
-    await t.send({ type: 'gv.bridge.unpair' });
-    expect(t.local.values[StorageKeys.BRIDGE_OUTBOX]).toBeUndefined();
-  });
-
-  it('drops reply text waiting in the outbox when the bridge is turned off', async () => {
-    const t = setup({
-      local: {
-        [StorageKeys.BRIDGE_PAIRING]: PAIRING,
-        [StorageKeys.PLUGINS_STATE]: ON,
-        [StorageKeys.BRIDGE_OUTBOX]: OUTBOX,
+    expect(await t.send({ type: 'gv.bridge.status' })).toMatchObject({
+      data: {
+        activeTasks: [
+          { jobId: 'J1', op: 'turns.waitReply' },
+          { jobId: 'J2', op: 'composer.send' },
+        ],
       },
     });
-    t.owner.onStorageChanged(
-      { [StorageKeys.PLUGINS_STATE]: { oldValue: ON, newValue: {} } },
-      'local',
-    );
-    await vi.waitFor(() => expect(t.local.values[StorageKeys.BRIDGE_OUTBOX]).toBeUndefined());
-    expect(t.local.values[StorageKeys.BRIDGE_PAIRING]).toEqual(PAIRING);
   });
 
-  it('reads no session state for closed tabs while it is not paired', async () => {
-    const t = setup({ local: { [StorageKeys.PLUGINS_STATE]: ON } });
-    await t.send({ type: 'gv.bridge.status' }); // hydrated
-    const get = vi.spyOn(t.session, 'get');
-    t.owner.onTabRemoved(5);
-    t.owner.onTabRemoved(6);
-    await new Promise((resolve) => setTimeout(resolve, 30));
-    expect(get).not.toHaveBeenCalled();
-  });
-
-  it('still frees the page when a bridge tab closes while it is on and paired', async () => {
-    const t = setup({
-      local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING, [StorageKeys.PLUGINS_STATE]: ON },
-      session: { [BRIDGE_SESSION_KEYS.tab]: { tabId: 5, jobId: 'J1', openedAt: 1 } },
-    });
-    t.owner.onTabRemoved(5);
-    await vi.waitFor(() => expect(t.session.values[BRIDGE_SESSION_KEYS.tab]).toBeUndefined());
-  });
-
-  it('does not contact the server while the builtin is off', async () => {
+  it('keeps the parallel switch and count the popup sets, and refuses anything else', async () => {
     const t = setup({ local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING } });
-    t.origins.add('http://127.0.0.1/*');
-    await t.owner.wake();
-    expect(t.requests).toHaveLength(0);
-  });
+    for (const bad of [{ enabled: 'yes' }, { jobs: 1 }, { jobs: 11 }, { jobs: 2.5 }, {}]) {
+      expect(await t.send({ type: 'gv.bridge.setParallel', ...bad })).toMatchObject({
+        ok: false,
+        error: { code: 'bad-request' },
+      });
+    }
+    expect(await t.send({ type: 'gv.bridge.setParallel', enabled: true })).toEqual({
+      ok: true,
+      data: { parallel: true, parallelJobs: 3 },
+    });
+    expect(t.local.values[StorageKeys.BRIDGE_PARALLEL]).toBe(true);
+    expect(await t.send({ type: 'gv.bridge.setParallel', jobs: 6 })).toEqual({
+      ok: true,
+      data: { parallel: true, parallelJobs: 6 },
+    });
+    expect(await t.send({ type: 'gv.bridge.status' })).toMatchObject({
+      data: { parallel: true, parallelJobs: 6 },
+    });
 
-  it('refuses popup messages from a web page and content messages from other sites', async () => {
-    const t = setup();
-    const page = {
-      id: chrome.runtime.id,
-      url: 'https://evil.example/',
-      tab: { id: 3, url: 'https://evil.example/' },
-    };
-    expect(
-      await t.send(
-        { type: 'gv.bridge.pair', port: 47321, code: '12345678' },
-        page as chrome.runtime.MessageSender,
-      ),
-    ).toMatchObject({ ok: false, error: { code: 'unauthorized' } });
-    expect(
-      await t.send(
-        { type: 'gv.bridge.hello', docNonce: 'n' },
-        page as chrome.runtime.MessageSender,
-      ),
-    ).toEqual({ ok: false });
-    expect(t.requests).toHaveLength(0);
+    // Off keeps the count, so turning it back on restores it.
+    await t.send({ type: 'gv.bridge.setParallel', enabled: false });
+    expect(t.local.values[StorageKeys.BRIDGE_PARALLEL]).toBeUndefined();
+    expect(await t.send({ type: 'gv.bridge.status' })).toMatchObject({
+      data: { parallel: false, parallelJobs: 6 },
+    });
   });
 });

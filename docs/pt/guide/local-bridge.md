@@ -21,7 +21,7 @@ Depois de ativado e pareado, o Voyager oferece aos programas locais deste comput
 
 **Aba própria.** Cada tarefa roda em uma aba do ChatGPT aberta pelo Voyager, e a aba é fechada ao terminar.
 
-**Uma tarefa por vez.** Só uma tarefa roda de cada vez.
+**Uma tarefa por vez, a menos que você permita mais.** Por padrão, as tarefas rodam uma depois da outra. Ative **Executar tarefas em paralelo** no cartão **Ponte local** do pop-up e escolha **Tarefas ao mesmo tempo** (de 2 a 10, 3 por padrão): cada tarefa usa sua própria aba, e digitar e clicar continua sendo uma de cada vez. Tarefas em paralelo exigem uma Voyager CLI mais nova que a 0.4.0; com um `voyager serve` anterior, elas continuam rodando uma por vez.
 
 **Login e verificações ficam com você.** Se o ChatGPT pedir para você entrar na conta ou resolver uma verificação, a ponte para e avisa. Ela nunca tenta contornar isso.
 

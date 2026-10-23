@@ -4321,6 +4321,18 @@
     "message": "ジョブ {job} の {op} を実行中",
     "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
   },
+  "bridgeParallelLabel": {
+    "message": "ジョブを並行実行",
+    "description": "Switch in the ChatGPT bridge card that lets jobs run side by side"
+  },
+  "bridgeParallelHint": {
+    "message": "ジョブごとに専用の ChatGPT タブを使います。入力やクリックは引き続き順番に行います。0.4.0 より新しい voyager CLI が必要で、それ以前のバージョンでは一度に 1 ジョブずつ実行されます。",
+    "description": "Explains the parallel jobs switch in the ChatGPT bridge card"
+  },
+  "bridgeParallelJobsLabel": {
+    "message": "同時に実行するジョブ数",
+    "description": "Number field under the parallel jobs switch in the ChatGPT bridge card: how many jobs may run at once (2 to 10)"
+  },
   "bridgeUnsupportedSafari": {
     "message": "Safari ではまだローカルブリッジを使えません。",
     "description": "Shown in Safari, which the local bridge does not support yet"

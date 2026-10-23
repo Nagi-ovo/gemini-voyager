@@ -24,6 +24,9 @@ import { leaseDurationFor } from './pageLease';
 
 export type TaskSettlement = ReturnType<typeof createTaskSettlement>;
 
+/** Marks the untracked mode switch-back that follows a timeout or abort. */
+export const LEFT_RESTORE_SUFFIX = '.restore-mode';
+
 export function createTaskSettlement({ deps, config, now }: DispatchContext) {
   const { store, lease, tabs, client } = deps;
 
@@ -67,8 +70,8 @@ export function createTaskSettlement({ deps, config, now }: DispatchContext) {
     result: TaskResultRequest,
     options: { releaseLease: boolean },
   ): Promise<boolean> => {
-    const record = await store.getTask();
-    if (!record || record.taskId !== taskId) return false;
+    const record = await store.getTask(taskId);
+    if (!record) return false;
     const owner = record.serverId;
     // A failed open never hands the CLI its tab, so the error names it: the CLI can close it.
     if (!result.ok && record.op === 'conversation.open' && record.tabId !== undefined) {
@@ -170,6 +173,29 @@ export function createTaskSettlement({ deps, config, now }: DispatchContext) {
     return { refused: fail(acquired.code, message) };
   };
 
+  /**
+   * `leaseFor`, waiting until `until` while a timeout's mode switch-back holds the page. No
+   * job knows of that lease, so serve cannot take turns around it: an op it would refuse as
+   * `busy` (another job's, or the close of the job that timed out) waits it out instead.
+   */
+  const leaseAfterLeftRestore = async (
+    taskId: string,
+    op: OpName,
+    holder: ContentHolder,
+    until: number,
+  ): Promise<LeaseOutcome> => {
+    for (;;) {
+      const got = await leaseFor(taskId, op, holder, until - now());
+      if (!('refused' in got)) return got;
+      const held = await lease.current();
+      const switchingBack = held?.taskId.endsWith(LEFT_RESTORE_SUFFIX) === true;
+      if (!switchingBack || now() >= until) return got;
+      const record = await store.getTask(taskId);
+      if (!record || record.cancelling) return got; // stopped meanwhile
+      await new Promise((resolve) => setTimeout(resolve, config.leftRestorePollMs));
+    }
+  };
+
   /** Close the job's tab and report it; `restoredMode` only when a mode restore was due. */
   const concludeClose = async (
     taskId: string,
@@ -241,6 +267,7 @@ export function createTaskSettlement({ deps, config, now }: DispatchContext) {
     abortInPage,
     confirmStop,
     leaseFor,
+    leaseAfterLeftRestore,
     concludeClose,
     endLost,
     startOp,

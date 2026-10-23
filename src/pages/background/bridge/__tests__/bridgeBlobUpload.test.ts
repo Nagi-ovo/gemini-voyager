@@ -126,7 +126,7 @@ describe('bridge blob upload relay', () => {
     expect(await t.write(0, FILE.subarray(0, 8))).toEqual({ ok: true });
     expect(await t.write(8, FILE.subarray(8))).toEqual({ ok: true });
     // A long hand-over counts as progress, so the silence probe leaves it alone.
-    expect((await t.store.getTask())?.lastProgressAt).toBe(1_800_000_005_000);
+    expect((await t.store.listTasks())[0]?.lastProgressAt).toBe(1_800_000_005_000);
     expect(await t.commit()).toEqual({
       ok: true,
       blobId: 'blob-1',
@@ -152,7 +152,7 @@ describe('bridge blob upload relay', () => {
 
   it('refuses a blob from a running upload task, which only reads blobs', async () => {
     const t = await setup('composer.attach');
-    expect((await t.store.getTask())?.state).toBe('running');
+    expect((await t.store.listTasks())[0]?.state).toBe('running');
     const reply = await t.create();
     expect(!reply.ok && reply.error.code).toBe('unauthorized');
     const write = await t.write(0, FILE);
@@ -196,7 +196,7 @@ describe('bridge blob upload relay', () => {
   it('stops relaying once the task ended', async () => {
     const t = await setup();
     await t.create();
-    await t.session.remove(BRIDGE_SESSION_KEYS.task);
+    await t.session.remove(BRIDGE_SESSION_KEYS.tasks);
     const reply = await t.write(0, FILE);
     expect(!reply.ok && reply.error.code).toBe('unauthorized');
     expect(t.client.blobWrite).not.toHaveBeenCalled();

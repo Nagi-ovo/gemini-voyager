@@ -21,7 +21,7 @@ Une fois activé et associé, Voyager met un ensemble d’actions sur la page Ch
 
 **Son propre onglet.** Chaque tâche s’exécute dans un onglet ChatGPT ouvert par Voyager, qui se ferme une fois la tâche terminée.
 
-**Une tâche à la fois.** Une seule tâche s’exécute à la fois.
+**Une tâche à la fois, sauf si vous en autorisez plus.** Par défaut, les tâches s’exécutent l’une après l’autre. Activez **Exécuter les tâches en parallèle** dans la carte **Pont local** de la fenêtre contextuelle et choisissez **Tâches simultanées** (de 2 à 10, 3 par défaut) : chaque tâche a son propre onglet, et la saisie et les clics se font toujours chacun leur tour. Les tâches en parallèle nécessitent une Voyager CLI plus récente que la 0.4.0 ; avec un `voyager serve` plus ancien, elles s’exécutent toujours une par une.
 
 **La connexion et les vérifications vous reviennent.** Si ChatGPT vous demande de vous connecter ou de passer une vérification, le pont s’arrête et le signale. Il ne la contourne jamais.
 

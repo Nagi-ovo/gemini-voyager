@@ -4321,6 +4321,18 @@
     "message": "جارٍ تنفيذ {op} للمهمة {job}",
     "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
   },
+  "bridgeParallelLabel": {
+    "message": "تشغيل المهام بالتوازي",
+    "description": "Switch in the ChatGPT bridge card that lets jobs run side by side"
+  },
+  "bridgeParallelHint": {
+    "message": "تعمل كل مهمة في علامة تبويب ChatGPT خاصة بها؛ وتبقى الكتابة والنقر بالتناوب. يتطلب إصدارًا من voyager CLI أحدث من 0.4.0؛ ومع إصدار أقدم تظل المهام تعمل واحدة تلو الأخرى.",
+    "description": "Explains the parallel jobs switch in the ChatGPT bridge card"
+  },
+  "bridgeParallelJobsLabel": {
+    "message": "عدد المهام في الوقت نفسه",
+    "description": "Number field under the parallel jobs switch in the ChatGPT bridge card: how many jobs may run at once (2 to 10)"
+  },
   "bridgeUnsupportedSafari": {
     "message": "الجسر المحلي غير متاح في Safari بعد.",
     "description": "Shown in Safari, which the local bridge does not support yet"

@@ -54,10 +54,9 @@ export function createBlobRelay(deps: BlobRelayDeps): BlobRelay {
   return {
     async read(sender, request) {
       await deps.ready();
-      const record = await deps.store.getTask();
+      const record = await deps.store.getTask(request.taskId);
       if (
         !record ||
-        record.taskId !== request.taskId ||
         (record.op !== 'composer.attach' && record.op !== 'project.upload') ||
         record.state !== 'running' ||
         record.cancelling !== undefined ||

@@ -4321,6 +4321,18 @@
     "message": "正在為工作 {job} 執行 {op}",
     "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
   },
+  "bridgeParallelLabel": {
+    "message": "並行執行任務",
+    "description": "Switch in the ChatGPT bridge card that lets jobs run side by side"
+  },
+  "bridgeParallelHint": {
+    "message": "每個任務各用一個 ChatGPT 分頁；輸入和點擊仍會輪流進行。需要 0.4.0 之後的 voyager CLI，舊版仍一次只跑一個任務。",
+    "description": "Explains the parallel jobs switch in the ChatGPT bridge card"
+  },
+  "bridgeParallelJobsLabel": {
+    "message": "同時執行的任務數",
+    "description": "Number field under the parallel jobs switch in the ChatGPT bridge card: how many jobs may run at once (2 to 10)"
+  },
   "bridgeUnsupportedSafari": {
     "message": "Safari 暫不支援本機橋接。",
     "description": "Shown in Safari, which the local bridge does not support yet"

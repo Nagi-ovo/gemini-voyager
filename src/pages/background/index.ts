@@ -11,7 +11,7 @@ import {
   disableRetiredTabTitleUpdateSetting,
   migrateOptionalHighlightSetting,
 } from './backgroundSettings';
-import { startBridgeOwner } from './bridge/bridgeOwner';
+import { startBridgeOwner } from './bridge/bridgeOwnerStart';
 import { createCloudSyncMessageHandler } from './cloudSyncMessages';
 import { startDevAutoReload } from './devAutoReload';
 import { guardDriveOnPhones } from './driveDeviceGuard';

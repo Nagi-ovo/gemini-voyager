@@ -171,6 +171,7 @@ const HANDLED_BACKGROUND_MESSAGE_TYPES = new Set([
   'gv.bridge.unpair',
   'gv.bridge.status',
   'gv.bridge.enableRefresh',
+  'gv.bridge.setParallel',
   'gv.bridge.hello',
   'gv.bridge.op.progress',
   'gv.bridge.op.done',

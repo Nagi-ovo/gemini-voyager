@@ -16,19 +16,15 @@
  */
 import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
-import { getVoyagerBuildTarget, isEdge } from '@/core/utils/browser';
 import { EXTENSION_VERSION } from '@/core/utils/version';
-import { currentAccountPlan, readAccountPlanStore } from '@/features/bridge/accountPlanStore';
+import { DEFAULT_PARALLEL_JOBS } from '@/features/bridge/parallelJobs';
 import {
   type BridgeBrowser,
-  type BridgeError,
   type ErrorCode,
   OP_VERSIONS,
   bridgeError,
   type OpCapability,
   type OpName,
-  type PolicyState,
-  type UpgradeSide,
   isPolicyExemptOp,
 } from '@/features/bridge/protocol';
 import { BUNDLED_SITE_ADAPTERS } from '@/features/plugins/catalog/sites';
@@ -37,33 +33,37 @@ import {
   loadHostCatalogCache,
 } from '@/features/plugins/remote/hostCatalogCache';
 import type { HostCatalogRefreshResult } from '@/features/plugins/remote/hostCatalogRefresh';
-import {
-  loadPluginCatalogSettings,
-  savePluginCatalogSettings,
-} from '@/features/plugins/remote/hostCatalogSettings';
 import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
 
 import { createBlobRelay } from './bridgeBlobRelay';
 import { createBlobUploadRelay } from './bridgeBlobUpload';
 import { createBridgeClient } from './bridgeClient';
 import { SUPPORTED_BRIDGE_OPS, createBridgeDispatcher } from './bridgeDispatcher';
+import { createLeaseProbe } from './bridgeLeaseProbe';
 import { createBridgePairing, parsePairing } from './bridgePairing';
+import {
+  PARALLEL_CHANGE_RULE,
+  parallelJobsOf,
+  parseParallelChange,
+  readBridgeParallel,
+  writeBridgeParallel,
+} from './bridgeParallel';
 import {
   BRIDGE_PLUGIN_ID,
   BRIDGE_POLICY_HOST,
   LOOPBACK_ORIGIN_PATTERN,
-  type PolicyVerdict,
   createBridgePolicy,
 } from './bridgePolicy';
+import { isUpgradeSide, policyLabel, readPolledAccount, refusedOps } from './bridgePollReplies';
 import {
   type BridgeMessageOwner,
   type BridgeStatusData,
   createBridgeRuntimeMessageHandler,
 } from './bridgeRuntimeMessages';
 import { type TabsApi, createBridgeTabs } from './bridgeTabs';
-import { type StorageAreaLike, createBridgeTaskStore, createMemoryArea } from './bridgeTaskStore';
+import { type StorageAreaLike, createBridgeTaskStore } from './bridgeTaskStore';
 import { createCatalogRefreshRunner } from './catalogRefreshOp';
-import { type LeaseProbeOutcome, createPageLeaseArbiter } from './pageLease';
+import { createPageLeaseArbiter } from './pageLease';
 
 export const BRIDGE_WAKE_ALARM = 'gv-bridge-wake';
 const BACKOFF_START_MS = 5_000;
@@ -107,28 +107,6 @@ export interface BridgeOwner {
   idle(): Promise<void>;
 }
 
-const policyLabel = (verdict: PolicyVerdict): PolicyState =>
-  verdict.state === 'allowed' ? 'allowed' : verdict.code === 'policy-stale' ? 'stale' : 'denied';
-
-function isUpgradeSide(value: unknown): value is UpgradeSide {
-  return value === 'extension' || value === 'cli';
-}
-
-/** The offered ops a serve's `bad-request` names as invalid, by their place in the poll. */
-function refusedOps(error: BridgeError, offered: readonly OpCapability[]): OpName[] {
-  if (error.code !== 'bad-request') return [];
-  const issues = error.details?.issues;
-  if (!Array.isArray(issues)) return [];
-  return issues.flatMap((issue: unknown) => {
-    const path =
-      typeof issue === 'object' && issue !== null ? (issue as { path?: unknown }).path : null;
-    const index =
-      typeof path === 'string' ? /^capabilities\.ops\[(\d+)\]/.exec(path)?.[1] : undefined;
-    const op = index === undefined ? undefined : offered[Number(index)];
-    return op ? [op.name] : [];
-  });
-}
-
 export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
   const now = env.now ?? (() => Date.now());
   const sleep = env.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
@@ -136,28 +114,13 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
   const client = createBridgeClient(env.fetch);
   const tabs = createBridgeTabs({ store, api: env.tabs, now });
   // Hydrate: read the session state back before any handler acts on it.
-  const ready = Promise.all([store.getTask(), store.getTab()]).then(
+  const ready = Promise.all([store.listTasks(), store.listTabs()]).then(
     () => undefined,
     (error: unknown) => logger.warn('Bridge session state unreadable', { error: String(error) }),
   );
   const awaitReady = () => ready;
 
-  const probe = async (lease: { tabId: number; leaseId: string; documentId?: string }) => {
-    if (!(await tabs.exists(lease.tabId))) return 'gone' satisfies LeaseProbeOutcome;
-    try {
-      const reply = await env.tabs.sendMessage(
-        lease.tabId,
-        { type: 'gv.bridge.lease.probe', leaseId: lease.leaseId },
-        lease.documentId ? { documentId: lease.documentId } : undefined,
-      );
-      const stopped = (reply as { stopped?: unknown } | undefined)?.stopped;
-      if (typeof stopped !== 'boolean') return 'no-answer';
-      return stopped ? 'stopped' : 'running';
-    } catch {
-      // No receiver: the document is gone, or its bridge runtime (and every leased op) ended.
-      return 'gone';
-    }
-  };
+  const probe = createLeaseProbe(tabs, env.tabs);
   const lease = createPageLeaseArbiter({ area: env.session, ready: awaitReady, probe, now });
   const policy = createBridgePolicy({
     local: env.local,
@@ -207,20 +170,11 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       loadEntry: loadHostCatalogCache,
       extensionVersion: EXTENSION_VERSION,
     }),
+    parallelJobs: async () => parallelJobsOf(await readBridgeParallel(env.local)),
     now,
   });
   const blobRelay = createBlobRelay({ store, client, connection, ready: awaitReady, now });
   const blobUpload = createBlobUploadRelay({ store, client, connection, ready: awaitReady, now });
-
-  // The plan the bridge's ChatGPT pages last showed; it rides on every poll.
-  const readAccount = async () => {
-    try {
-      const stored = await env.local.get(StorageKeys.BRIDGE_ACCOUNT_PLANS);
-      return currentAccountPlan(readAccountPlanStore(stored[StorageKeys.BRIDGE_ACCOUNT_PLANS]));
-    } catch {
-      return null;
-    }
-  };
 
   let loopGeneration = 0;
   let loop: Promise<void> | null = null;
@@ -269,7 +223,8 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
           capabilities: { ops },
           inflight: await dispatcher.inflight(),
           policy: { revision: verdict.revision ?? 0, state: policyLabel(verdict) },
-          account: await readAccount(),
+          account: await readPolledAccount(env.local),
+          maxTasks: await dispatcher.capacity(),
         },
         pollAbort.signal,
       );
@@ -303,7 +258,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       const message = reply.data;
       if (!message) continue;
       if (message.kind === 'unpaired') {
-        await dispatcher.stopCurrent('not-paired', 'voyager serve dropped this pairing.');
+        await dispatcher.stopAll('not-paired', 'voyager serve dropped this pairing.');
         await pairing.forget();
         await store.clearOutbox();
         return;
@@ -332,17 +287,18 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
   const shutDown = async (code: 'bridge-disabled' | 'not-paired', message: string) => {
     stop();
     clearAlarm();
-    // The stopped task's result gets its one delivery try first.
-    await dispatcher.stopCurrent(code, message);
+    // The stopped tasks' results get their one delivery try first.
+    await dispatcher.stopAll(code, message);
     // Results wait only for the server they belong to; reply text must not outlive the pairing.
     await store.clearOutbox();
   };
 
   const status = async (): Promise<BridgeStatusData> => {
-    const [record, gate, task] = await Promise.all([
+    const [record, gate, tasks, parallel] = await Promise.all([
       pairing.load(),
       policy.status(),
-      dispatcher.current(),
+      dispatcher.tasks(),
+      readBridgeParallel(env.local),
     ]);
     return {
       permission: gate.permissions.loopback,
@@ -353,7 +309,9 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       ...(lastPollAt !== undefined ? { lastPollAt } : {}),
       policy: policyLabel(gate.verdict),
       onlineUpdatesEnabled: gate.onlineUpdatesEnabled,
-      ...(task ? { activeTask: { jobId: task.jobId, op: task.op } } : {}),
+      parallel: parallel.enabled,
+      parallelJobs: parallel.jobs,
+      activeTasks: tasks.map((task) => ({ jobId: task.jobId, op: task.op })),
       ...(lastError ? { lastError } : {}),
     };
   };
@@ -380,6 +338,9 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
             server: 'unknown',
             policy: 'unknown',
             onlineUpdatesEnabled: true,
+            parallel: false,
+            parallelJobs: DEFAULT_PARALLEL_JOBS,
+            activeTasks: [],
           },
         };
       }
@@ -411,6 +372,18 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       await policy.refresh();
       void wake();
       return { ok: true, data: { policy: policyLabel((await policy.status()).verdict) } };
+    },
+    setParallel: async (enabled, jobs) => {
+      const change = parseParallelChange(enabled, jobs);
+      if (!change) {
+        return { ok: false, error: bridgeError('bad-request', PARALLEL_CHANGE_RULE) };
+      }
+      await writeBridgeParallel(env.local, change);
+      // Poll again now, so the server hears the new capacity instead of after its hold.
+      stop();
+      void wake();
+      const kept = await readBridgeParallel(env.local);
+      return { ok: true, data: { parallel: kept.enabled, parallelJobs: kept.jobs } };
     },
     hello: (sender, docNonce) => dispatcher.onHello(sender, docNonce),
     progress: (sender, message) => dispatcher.onProgress(sender, message),
@@ -500,78 +473,4 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       await loop;
     },
   };
-}
-
-function chromeArea(area: chrome.storage.StorageArea | undefined): StorageAreaLike | null {
-  if (!area?.get) return null;
-  return {
-    get: async (keys) => ((await area.get(keys)) ?? {}) as Record<string, unknown>,
-    set: (items) => area.set(items),
-    remove: (keys) => area.remove(keys),
-  };
-}
-
-function detectBrowser(): BridgeBrowser {
-  if (getVoyagerBuildTarget() === 'firefox') return 'firefox';
-  return isEdge() ? 'edge' : 'chrome';
-}
-
-/**
- * Register the bridge's listeners synchronously and return its runtime-message
- * handler. Safari has no bridge in v1: the handler then only tells the popup so.
- */
-export function startBridgeOwner(options: {
-  readonly refreshCatalog: (host: string) => Promise<unknown>;
-  readonly refreshCatalogNow: (host: string) => Promise<HostCatalogRefreshResult>;
-}): BridgeOwner['handleMessage'] {
-  if (getVoyagerBuildTarget() === 'safari') return createBridgeRuntimeMessageHandler(null);
-  const local = chromeArea(chrome.storage?.local);
-  if (!local) return createBridgeRuntimeMessageHandler(null);
-  const owner = createBridgeOwner({
-    session: chromeArea(chrome.storage?.session) ?? createMemoryArea(),
-    local,
-    tabs: {
-      create: async (props) => {
-        const tab = await chrome.tabs.create(props);
-        // A Pro reply can take hours in a background tab; Memory Saver would discard it mid-wait.
-        if (tab.id !== undefined) {
-          await chrome.tabs.update(tab.id, { autoDiscardable: false }).catch(() => undefined);
-        }
-        return tab;
-      },
-      remove: (tabId) => chrome.tabs.remove(tabId),
-      get: (tabId) => chrome.tabs.get(tabId),
-      sendMessage: (tabId, message, sendOptions) =>
-        sendOptions
-          ? chrome.tabs.sendMessage(tabId, message, sendOptions)
-          : chrome.tabs.sendMessage(tabId, message),
-    },
-    fetch: (...args) => fetch(...args),
-    hasOrigin: async (pattern) =>
-      (await chrome.permissions?.contains({ origins: [pattern] })) === true,
-    refreshCatalog: () => options.refreshCatalog(BRIDGE_POLICY_HOST),
-    refreshCatalogNow: options.refreshCatalogNow,
-    loadOnlineUpdatesEnabled: async () => (await loadPluginCatalogSettings()).onlineUpdatesEnabled,
-    saveOnlineUpdatesEnabled: (enabled) =>
-      savePluginCatalogSettings({ onlineUpdatesEnabled: enabled }),
-    alarms: chrome.alarms
-      ? {
-          get: (name) => chrome.alarms.get(name),
-          create: (name, info) => chrome.alarms.create(name, info),
-          clear: (name) => chrome.alarms.clear(name),
-        }
-      : undefined,
-    browser: detectBrowser(),
-  });
-  chrome.alarms?.onAlarm?.addListener((alarm) => owner.onAlarm(alarm.name));
-  chrome.tabs?.onRemoved?.addListener((tabId) => owner.onTabRemoved(tabId));
-  chrome.storage?.onChanged?.addListener((changes, area) => owner.onStorageChanged(changes, area));
-  chrome.permissions?.onAdded?.addListener((permissions) =>
-    owner.onPermissionsAdded(permissions.origins),
-  );
-  chrome.permissions?.onRemoved?.addListener(() => owner.onPermissionsRemoved());
-  chrome.runtime?.onStartup?.addListener(() => void owner.wake());
-  chrome.runtime?.onInstalled?.addListener(() => void owner.wake());
-  void owner.wake();
-  return owner.handleMessage;
 }

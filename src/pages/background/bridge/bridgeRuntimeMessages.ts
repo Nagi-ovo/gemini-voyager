@@ -44,7 +44,12 @@ export interface BridgeStatusData {
   readonly lastPollAt?: number;
   readonly policy: 'allowed' | 'denied' | 'stale' | 'unknown';
   readonly onlineUpdatesEnabled: boolean;
-  readonly activeTask?: { readonly jobId: string; readonly op: OpName };
+  /** Jobs may run side by side, each in its own tab (the person's switch). */
+  readonly parallel: boolean;
+  /** How many at once while `parallel` is on; kept while it is off. */
+  readonly parallelJobs: number;
+  /** Every task in flight, oldest first: one per running job. */
+  readonly activeTasks: readonly { readonly jobId: string; readonly op: OpName }[];
   /** Kept until the next successful poll or pairing. */
   readonly lastError?: { readonly code: ErrorCode; readonly upgrade?: UpgradeSide };
 }
@@ -53,6 +58,10 @@ export type BridgeStatusReply = Envelope<BridgeStatusData>;
 export type BridgePairReply = Envelope<{ readonly serverId?: string; readonly pending?: boolean }>;
 export type BridgeUnpairReply = Envelope<{ readonly unpaired: true }>;
 export type BridgeEnableRefreshReply = Envelope<{ readonly policy: BridgeStatusData['policy'] }>;
+export type BridgeSetParallelReply = Envelope<{
+  readonly parallel: boolean;
+  readonly parallelJobs: number;
+}>;
 
 /** What the background owner does for each message, once the sender has passed. */
 export interface BridgeMessageOwner {
@@ -61,6 +70,7 @@ export interface BridgeMessageOwner {
   pair(port: unknown, code: unknown): Promise<BridgePairReply>;
   unpair(): Promise<BridgeUnpairReply>;
   enableRefresh(): Promise<BridgeEnableRefreshReply>;
+  setParallel(enabled: unknown, jobs: unknown): Promise<BridgeSetParallelReply>;
   hello(sender: chrome.runtime.MessageSender, docNonce: string): Promise<boolean>;
   progress(
     sender: chrome.runtime.MessageSender,
@@ -101,6 +111,7 @@ export const BRIDGE_POPUP_MESSAGE_TYPES = [
   'gv.bridge.unpair',
   'gv.bridge.status',
   'gv.bridge.enableRefresh',
+  'gv.bridge.setParallel',
 ] as const;
 export const BRIDGE_CONTENT_MESSAGE_TYPES = [
   'gv.bridge.hello',
@@ -143,6 +154,7 @@ export function createBridgeRuntimeMessageHandler(
       if (type === 'gv.bridge.pairIntent') return owner.pairIntent(fields.port, fields.code);
       if (type === 'gv.bridge.pair') return owner.pair(fields.port, fields.code);
       if (type === 'gv.bridge.unpair') return owner.unpair();
+      if (type === 'gv.bridge.setParallel') return owner.setParallel(fields.enabled, fields.jobs);
       return owner.enableRefresh();
     }
 

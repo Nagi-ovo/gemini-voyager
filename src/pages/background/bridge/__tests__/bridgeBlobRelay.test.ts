@@ -103,7 +103,7 @@ describe('bridge blob relay', () => {
     expect(reply.ok && Buffer.from(reply.base64, 'base64').length).toBe(1_048_576);
     expect(t.served).toEqual([{ blobId: 'b1', offset: 1_048_576, length: 1_048_576 }]);
     // A long upload counts as progress, so the silence probe leaves it alone.
-    expect((await t.store.getTask())?.lastProgressAt).toBe(1_800_000_005_000);
+    expect((await t.store.listTasks())[0]?.lastProgressAt).toBe(1_800_000_005_000);
   });
 
   it('reads nothing for a task of an earlier pairing from the server paired since', async () => {
@@ -162,7 +162,7 @@ describe('bridge blob relay', () => {
 
   it('stops serving once the task ended', async () => {
     const t = await setup();
-    await t.session.remove(BRIDGE_SESSION_KEYS.task);
+    await t.session.remove(BRIDGE_SESSION_KEYS.tasks);
     const reply = await t.read(0, 10);
     expect(!reply.ok && reply.error.code).toBe('unauthorized');
   });
@@ -170,12 +170,12 @@ describe('bridge blob relay', () => {
   it('gives an upload a lease as long as its task budget, within the cap', async () => {
     const long = await setup(ATTACH_LEASE_MAX_MS * 2);
     const lease = long.session.values[BRIDGE_SESSION_KEYS.lease] as { deadline: number };
-    const task = await long.store.getTask();
+    const task = (await long.store.listTasks())[0];
     expect(lease.deadline - (task?.startedAt ?? 0)).toBe(ATTACH_LEASE_MAX_MS);
 
     const sized = await setup(300_000);
     const sizedLease = sized.session.values[BRIDGE_SESSION_KEYS.lease] as { deadline: number };
-    const sizedTask = await sized.store.getTask();
+    const sizedTask = (await sized.store.listTasks())[0];
     expect(sizedLease.deadline - (sizedTask?.startedAt ?? 0)).toBe(300_000);
   });
 });

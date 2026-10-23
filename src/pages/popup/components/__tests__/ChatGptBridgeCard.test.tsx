@@ -325,13 +325,18 @@ describe('ChatGptBridgeCard pairing', () => {
 });
 
 describe('ChatGptBridgeCard paired status', () => {
-  it('shows the connected server by the start of its id', async () => {
-    status = pairedStatus({ activeTask: { jobId: 'job-1234567890', op: 'turns.waitReply' } });
+  it('shows the connected server by the start of its id, and the step of every running job', async () => {
+    status = pairedStatus({
+      activeTasks: [
+        { jobId: 'job-1234567890', op: 'turns.waitReply' },
+        { jobId: 'job-abcdefghij', op: 'composer.send' },
+      ],
+    });
     await render();
 
     expect(card()?.textContent).toContain('bridgeStatusConnected');
     expect(card()?.textContent).not.toContain('bridgeCodeLabel');
-    expect(card()?.textContent).toContain('bridgeActiveTask');
+    expect(card()?.textContent?.match(/bridgeActiveTask/g)).toHaveLength(2);
   });
 
   it('asks the person to start the server when it stopped answering', async () => {
@@ -367,6 +372,87 @@ describe('ChatGptBridgeCard paired status', () => {
     await click('bridgeTurnOnUpdates');
 
     expect(sent('gv.bridge.enableRefresh')).toEqual([{ type: 'gv.bridge.enableRefresh' }]);
+  });
+
+  it('lets the person allow parallel jobs, off until they do', async () => {
+    status = pairedStatus();
+    await render();
+    const toggle = container.querySelector<HTMLInputElement>('#gv-bridge-parallel');
+    expect(toggle?.checked).toBe(false);
+    expect(card()?.textContent).toContain('bridgeParallelHint');
+
+    replies['gv.bridge.setParallel'] = { ok: true, data: { parallel: true } };
+    mocks.sendMessage.mockClear();
+    status = pairedStatus({ parallel: true });
+    await act(async () => {
+      toggle?.click();
+    });
+    await flush();
+
+    expect(sent('gv.bridge.setParallel')).toEqual([
+      { type: 'gv.bridge.setParallel', enabled: true },
+    ]);
+    expect(container.querySelector<HTMLInputElement>('#gv-bridge-parallel')?.checked).toBe(true);
+  });
+
+  it('keeps the switch where the person put it until the status read after the change is in', async () => {
+    status = pairedStatus();
+    await render();
+    let answerStatus = () => {};
+    const held = new Promise<void>((resolve) => {
+      answerStatus = resolve;
+    });
+    mocks.sendMessage.mockImplementation(async (message: { type: string }) => {
+      if (message.type !== 'gv.bridge.status') return { ok: true, data: { parallel: true } };
+      await held;
+      return { ok: true, data: pairedStatus({ parallel: true }) };
+    });
+    await act(async () => {
+      container.querySelector<HTMLInputElement>('#gv-bridge-parallel')?.click();
+    });
+    await flush();
+    // The background kept it, and the status read that would show so has not answered yet.
+    expect(container.querySelector<HTMLInputElement>('#gv-bridge-parallel')?.checked).toBe(true);
+
+    answerStatus();
+    await flush();
+    expect(container.querySelector<HTMLInputElement>('#gv-bridge-parallel')?.checked).toBe(true);
+  });
+
+  it('offers how many jobs run at once only while parallel jobs are on, from 2 to 10', async () => {
+    const count = () =>
+      container.querySelector<HTMLInputElement>('input[aria-label="bridgeParallelJobsLabel"]');
+    status = pairedStatus({ parallel: false, parallelJobs: 4 });
+    await render();
+    expect(count()).toBeNull();
+
+    act(() => root.unmount());
+    root = createRoot(container);
+    status = pairedStatus({ parallel: true, parallelJobs: 3 });
+    await render();
+    const input = count();
+    expect(input).toMatchObject({ value: '3', min: '2', max: '10' });
+
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    const type = async (value: string) => {
+      await act(async () => {
+        setter?.call(input, value);
+        input?.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      await flush();
+    };
+    await type('6');
+    await type('12'); // out of range: sent only once the field clamps it on blur
+    expect(sent('gv.bridge.setParallel')).toEqual([{ type: 'gv.bridge.setParallel', jobs: 6 }]);
+    await act(async () => {
+      input?.focus();
+      input?.blur();
+    });
+    await flush();
+    expect(sent('gv.bridge.setParallel')).toEqual([
+      { type: 'gv.bridge.setParallel', jobs: 6 },
+      { type: 'gv.bridge.setParallel', jobs: 10 },
+    ]);
   });
 
   it('keeps the pairing when the unpair confirm is cancelled', async () => {

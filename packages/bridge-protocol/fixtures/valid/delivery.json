@@ -56,6 +56,30 @@
     }
   },
   {
+    "name": "poll of an extension that runs tasks of several jobs at once",
+    "kind": "pollRequest",
+    "input": {
+      "capabilities": {
+        "ops": []
+      },
+      "inflight": [
+        {
+          "taskId": "T4",
+          "state": "running"
+        },
+        {
+          "taskId": "T9",
+          "state": "acked"
+        }
+      ],
+      "policy": {
+        "revision": 2638,
+        "state": "allowed"
+      },
+      "maxTasks": 4
+    }
+  },
+  {
     "name": "task",
     "kind": "pollResponse",
     "input": {

@@ -14,12 +14,10 @@ import type {
 
 import { type ContentHolder, conversationUrl } from './bridgeTabs';
 import type { BridgeTabRecord, BridgeTaskRecord } from './bridgeTaskStore';
-import { type LeaseOutcome, fail, holderOf, notCancelling, parseAck } from './dispatchOutcome';
+import { fail, holderOf, notCancelling, parseAck } from './dispatchOutcome';
 import type { DispatchContext } from './dispatcherConfig';
-import type { TaskSettlement } from './taskSettlement';
-
-/** Marks the untracked mode switch-back that follows a timeout or abort. */
-const LEFT_RESTORE_SUFFIX = '.restore-mode';
+import { ownTab } from './jobTabs';
+import { LEFT_RESTORE_SUFFIX, type TaskSettlement } from './taskSettlement';
 
 export function createConversationTasks(
   { deps, config, now }: DispatchContext,
@@ -27,17 +25,19 @@ export function createConversationTasks(
   scheduleTick: (delayMs: number) => void,
 ) {
   const { store, lease, tabs } = deps;
-  const { finish, leaseFor, concludeClose, startOp } = settle;
+  const { finish, leaseFor, leaseAfterLeftRestore, concludeClose, startOp } = settle;
 
   /**
    * After the job gave an op up (timeout, abort), switch its tab back to the mode a
    * bridge op moved it from: a failed job leaves the tab open and may never send the
-   * close that would. Once, untracked, in a background tab too; a refusal is final.
+   * close that would. Once, untracked, in a background tab too, and only while no task
+   * runs: its lease is one no job knows of, so a leased op that comes meanwhile waits it out
+   * (`leaseAfterLeftRestore`). A refusal is final.
    */
   const restoreLeftMode = async (ended: BridgeTaskRecord): Promise<void> => {
-    if (ended.op === 'conversation.close' || (await store.getTask())) return;
-    const tab = await store.getTab();
-    if (!tab?.restoreMode || tab.jobId !== ended.jobId) return;
+    if (ended.op === 'conversation.close' || (await store.listTasks()).length > 0) return;
+    const tab = await ownTab(store, ended.jobId);
+    if (!tab?.restoreMode) return;
     const holder = holderOf(tab);
     if (!holder || !(await tabs.exists(tab.tabId))) return;
     if (await deps.policy.checkOp('conversation.ready')) return;
@@ -68,15 +68,19 @@ export function createConversationTasks(
     if (!parseAck(reply).accepted) await lease.release(leaseId);
   };
 
+  /** `parallel`: the job was admitted beside other jobs. */
   const openConversation = async (
     task: Extract<ValidatedBridgeTask, { op: 'conversation.open' }>,
+    parallel: boolean,
   ) => {
-    const current = await store.getTask();
-    if (current?.taskId !== task.taskId || current.cancelling) return; // stopped meanwhile
+    const current = await store.getTask(task.taskId);
+    if (!current || current.cancelling) return; // stopped meanwhile
     const conversationId = 'conversationId' in task.params ? task.params.conversationId : undefined;
     let tabId: number;
     try {
-      tabId = await tabs.open(task.jobId, conversationUrl(conversationId), config.openTabActive);
+      tabId = await tabs.open(task.jobId, conversationUrl(conversationId), config.openTabActive, {
+        parallel,
+      });
     } catch (error) {
       return finish(task.taskId, fail('tab-closed', `Could not open a tab: ${String(error)}`), {
         releaseLease: false,
@@ -107,7 +111,7 @@ export function createConversationTasks(
       (current) => current.phase === 'awaiting-hello' && notCancelling(current),
     );
     if (!claimed) return;
-    const got = await leaseFor(taskId, 'conversation.ready', holder);
+    const got = await leaseAfterLeftRestore(taskId, 'conversation.ready', holder, claimed.deadline);
     if ('refused' in got) {
       await finish(taskId, got.refused, { releaseLease: false });
       return;
@@ -137,37 +141,20 @@ export function createConversationTasks(
     scheduleTick(running.deadline + config.deadlineGraceMs - now());
   };
 
-  /**
-   * The CLI closes a failed job's tab, often while a timeout's switch-back still holds the
-   * page: wait for it, since closing the tab meanwhile would cut the switch short.
-   */
-  const leaseAfterLeftRestore = async (
-    taskId: string,
-    holder: ContentHolder,
-    until: number,
-  ): Promise<LeaseOutcome> => {
-    for (;;) {
-      const got = await leaseFor(taskId, 'conversation.ready', holder);
-      if (!('refused' in got)) return got;
-      const held = await lease.current();
-      const switchingBack = held?.taskId.endsWith(LEFT_RESTORE_SUFFIX) === true;
-      if (!switchingBack || now() >= until) return got;
-      await new Promise((resolve) => setTimeout(resolve, config.leftRestorePollMs));
-    }
-  };
-
   /** Switch the tab back to the mode a bridge op switched it from; false when that cannot start. */
   const restoreMode = async (
     task: Extract<ValidatedBridgeTask, { op: 'conversation.close' }>,
     tab: BridgeTabRecord,
   ): Promise<boolean> => {
     const holder = holderOf(tab);
-    const record = await store.getTask();
-    if (!holder || !tab.restoreMode || !record || record.taskId !== task.taskId) return false;
+    const record = await store.getTask(task.taskId);
+    if (!holder || !tab.restoreMode || !record) return false;
     if (!(await tabs.exists(tab.tabId))) return false;
     const until = record.deadline - config.closeMarginMs;
     if (until <= now()) return false;
-    const got = await leaseAfterLeftRestore(task.taskId, holder, until);
+    // The CLI closes a failed job's tab, often while that switch-back still holds the page:
+    // closing the tab meanwhile would cut the switch short.
+    const got = await leaseAfterLeftRestore(task.taskId, 'conversation.ready', holder, until);
     if ('refused' in got) return false;
     const { leaseId } = got.lease;
     const running = await store.updateTask(
@@ -197,8 +184,8 @@ export function createConversationTasks(
   const closeConversation = async (
     task: Extract<ValidatedBridgeTask, { op: 'conversation.close' }>,
   ) => {
-    const tab = await store.getTab();
-    if (!tab || tab.tabId !== task.params.tabId || tab.jobId !== task.jobId) {
+    const tab = await store.getTab(task.params.tabId);
+    if (!tab || tab.jobId !== task.jobId) {
       return finish(
         task.taskId,
         fail('bad-request', 'Only the tab this job opened can be closed.'),
@@ -214,8 +201,8 @@ export function createConversationTasks(
 
   /** Remember the mode a ready step switched the tab from, until it is back in it. */
   const noteMode = async (tabId: number, ready: ConversationReadyResult): Promise<void> => {
-    const tab = await store.getTab();
-    if (!tab || tab.tabId !== tabId) return;
+    const tab = await store.getTab(tabId);
+    if (!tab) return;
     if (ready.switchedMode && !tab.restoreMode && config.restoreSwitchedMode) {
       await store.updateTab(tabId, { restoreMode: ready.switchedMode.from });
     } else if (tab.restoreMode && ready.mode === tab.restoreMode) {

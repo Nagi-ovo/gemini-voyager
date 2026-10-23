@@ -2,6 +2,7 @@ import { type FormEvent, type MouseEvent, useEffect, useRef, useState } from 're
 
 import { askConfirm } from '@/core/ui/confirm';
 import { getVoyagerBuildTarget, supportsOptionalHostPermissions } from '@/core/utils/browser';
+import { MAX_PARALLEL_JOBS, MIN_PARALLEL_JOBS } from '@/features/bridge/parallelJobs';
 import { DEFAULT_PORT, normalizePairingCode } from '@/features/bridge/protocol';
 import type { TranslationKey } from '@/utils/translations';
 
@@ -9,16 +10,20 @@ import { Button } from '../../../components/ui/button';
 import { Card, CardContent } from '../../../components/ui/card';
 import { fieldVariants } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
+import { Switch } from '../../../components/ui/switch';
 import {
   type BridgeActionResult,
+  type BridgeParallelChange,
   type BridgeStatus,
   enableBridgeRefresh,
   pairBridge,
   requestBridgeAccess,
+  setBridgeParallel,
   unpairBridge,
   useBridgePluginEnabled,
   useBridgeStatus,
 } from '../hooks/useBridgeStatus';
+import { NumberSetting } from './NumberSetting';
 
 const INPUT_CLASS = `${fieldVariants({ size: 'lg' })} w-full tabular-nums`;
 
@@ -26,6 +31,11 @@ const INPUT_CLASS = `${fieldVariants({ size: 'lg' })} w-full tabular-nums`;
 const SERVER_ID_PREFIX = 8;
 
 type Failure = Extract<BridgeActionResult, { ok: false }>;
+
+interface ParallelChoice {
+  readonly enabled: boolean;
+  readonly jobs: number;
+}
 
 /** Copy for a failed pairing, phrased as what to do next. */
 export function bridgeErrorKey(failure: Pick<Failure, 'code' | 'upgrade'>): TranslationKey {
@@ -97,6 +107,9 @@ export function ChatGptBridgeCard({ t }: ChatGptBridgeCardProps) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<TranslationKey | null>(null);
+  // Shown at once; the status read after the last change takes over once it is in.
+  const [parallelShown, setParallelShown] = useState<ParallelChoice | null>(null);
+  const parallelPending = useRef(0);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -108,11 +121,12 @@ export function ChatGptBridgeCard({ t }: ChatGptBridgeCardProps) {
 
   if (!enabled) return null;
 
-  const finish = (result: BridgeActionResult, failureKey?: TranslationKey): void => {
-    if (!mounted.current) return;
+  /** Settles an action; resolves once the status read it asks for is in. */
+  const finish = (result: BridgeActionResult, failureKey?: TranslationKey): Promise<void> => {
+    if (!mounted.current) return Promise.resolve();
     setBusy(false);
     setNote(result.ok ? null : (failureKey ?? bridgeErrorKey(result)));
-    void refresh();
+    return refresh();
   };
 
   const pair = (event: FormEvent<HTMLFormElement>): void => {
@@ -133,7 +147,7 @@ export function ChatGptBridgeCard({ t }: ChatGptBridgeCardProps) {
     // Called synchronously from the gesture: it asks for loopback access as its first await.
     void pairBridge(portNumber, normalized).then((result) => {
       if (result.ok && mounted.current) setCode('');
-      finish(result);
+      void finish(result);
     });
   };
 
@@ -149,7 +163,25 @@ export function ChatGptBridgeCard({ t }: ChatGptBridgeCardProps) {
   const turnOnUpdates = (): void => {
     setNote(null);
     setBusy(true);
-    void enableBridgeRefresh().then((result) => finish(result, 'bridgeErrorAction'));
+    void enableBridgeRefresh().then((result) => void finish(result, 'bridgeErrorAction'));
+  };
+
+  const changeParallel = (change: BridgeParallelChange): void => {
+    if (!status) return;
+    setNote(null);
+    setParallelShown((shown) => ({
+      ...(shown ?? { enabled: status.parallel, jobs: status.parallelJobs }),
+      ...change,
+    }));
+    // Only the switch waits: a count typed digit by digit must keep its field usable.
+    if (change.enabled !== undefined) setBusy(true);
+    parallelPending.current += 1;
+    void setBridgeParallel(change).then(async (result) => {
+      await finish(result, 'bridgeErrorAction');
+      parallelPending.current -= 1;
+      // Cleared only after the status read has the change: earlier, the switch flicks back.
+      if (mounted.current && parallelPending.current === 0) setParallelShown(null);
+    });
   };
 
   const unpair = async (anchor: HTMLElement): Promise<void> => {
@@ -164,7 +196,7 @@ export function ChatGptBridgeCard({ t }: ChatGptBridgeCardProps) {
     });
     if (answer !== 'unpair' || !mounted.current) return;
     setBusy(true);
-    finish(await unpairBridge(), 'bridgeErrorAction');
+    await finish(await unpairBridge(), 'bridgeErrorAction');
   };
 
   // A failure the background kept (the popup may have closed during the
@@ -188,6 +220,8 @@ export function ChatGptBridgeCard({ t }: ChatGptBridgeCardProps) {
             status={status}
             serverId={status.paired.serverId}
             busy={busy}
+            parallel={parallelShown ?? { enabled: status.parallel, jobs: status.parallelJobs }}
+            onParallelChange={changeParallel}
             onAllowAccess={allowAccess}
             onTurnOnUpdates={turnOnUpdates}
             onUnpair={(event) => void unpair(event.currentTarget)}
@@ -258,6 +292,8 @@ function PairedDetails({
   status,
   serverId,
   busy,
+  parallel,
+  onParallelChange,
   onAllowAccess,
   onTurnOnUpdates,
   onUnpair,
@@ -266,6 +302,8 @@ function PairedDetails({
   status: BridgeStatus;
   serverId: string;
   busy: boolean;
+  parallel: ParallelChoice;
+  onParallelChange: (change: BridgeParallelChange) => void;
   onAllowAccess: () => void;
   onTurnOnUpdates: () => void;
   onUnpair: (event: MouseEvent<HTMLButtonElement>) => void;
@@ -307,13 +345,13 @@ function PairedDetails({
               )}
             </p>
           )}
-          {status.activeTask && (
-            <p className="text-muted-foreground text-[11px]">
+          {status.activeTasks.map((task) => (
+            <p key={task.jobId} className="text-muted-foreground text-[11px]">
               {t('bridgeActiveTask')
-                .replace('{op}', status.activeTask.op)
-                .replace('{job}', status.activeTask.jobId.slice(0, SERVER_ID_PREFIX))}
+                .replace('{op}', task.op)
+                .replace('{job}', task.jobId.slice(0, SERVER_ID_PREFIX))}
             </p>
-          )}
+          ))}
         </div>
       </div>
       {policyKey && (
@@ -321,6 +359,42 @@ function PairedDetails({
         <div className="flex items-start gap-2 text-[11px] leading-snug">
           <StatusDot tone="warn" />
           <p className="min-w-0 flex-1">{t(policyKey)}</p>
+        </div>
+      )}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <Label htmlFor="gv-bridge-parallel" className="cursor-pointer text-xs font-medium">
+            {t('bridgeParallelLabel')}
+          </Label>
+          <p
+            id="gv-bridge-parallel-hint"
+            className="text-muted-foreground mt-0.5 text-[11px] leading-snug"
+          >
+            {t('bridgeParallelHint')}
+          </p>
+        </div>
+        <Switch
+          id="gv-bridge-parallel"
+          size="sm"
+          checked={parallel.enabled}
+          disabled={busy}
+          aria-describedby="gv-bridge-parallel-hint"
+          onChange={(event) => onParallelChange({ enabled: event.target.checked })}
+        />
+      </div>
+      {parallel.enabled && (
+        <div className="flex items-center justify-between gap-3">
+          <span aria-hidden="true" className="text-foreground/80 text-xs">
+            {t('bridgeParallelJobsLabel')}
+          </span>
+          <NumberSetting
+            label={t('bridgeParallelJobsLabel')}
+            value={parallel.jobs}
+            min={MIN_PARALLEL_JOBS}
+            max={MAX_PARALLEL_JOBS}
+            disabled={false}
+            onChange={(jobs) => onParallelChange({ jobs })}
+          />
         </div>
       )}
       <div className="flex flex-wrap justify-end gap-2">

@@ -4321,6 +4321,18 @@
     "message": "Exécution de {op} pour la tâche {job}",
     "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
   },
+  "bridgeParallelLabel": {
+    "message": "Exécuter les tâches en parallèle",
+    "description": "Switch in the ChatGPT bridge card that lets jobs run side by side"
+  },
+  "bridgeParallelHint": {
+    "message": "Chaque tâche a son propre onglet ChatGPT ; la saisie et les clics se font toujours chacun leur tour. Nécessite une CLI voyager plus récente que la 0.4.0 ; avec une version antérieure, les tâches s’exécutent toujours une par une.",
+    "description": "Explains the parallel jobs switch in the ChatGPT bridge card"
+  },
+  "bridgeParallelJobsLabel": {
+    "message": "Tâches simultanées",
+    "description": "Number field under the parallel jobs switch in the ChatGPT bridge card: how many jobs may run at once (2 to 10)"
+  },
   "bridgeUnsupportedSafari": {
     "message": "Le pont local n’est pas encore disponible dans Safari.",
     "description": "Shown in Safari, which the local bridge does not support yet"
