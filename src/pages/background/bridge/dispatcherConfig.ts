@@ -1,3 +1,4 @@
+import { MAX_PARALLEL_JOBS } from '@/features/bridge/parallelJobs';
 /**
  * The dispatcher's surface: what it needs, how it is tuned, and what it
  * answers. `bridgeDispatcher.ts` re-exports all of it for its callers.
@@ -17,10 +18,11 @@ import type { CatalogRefreshRunner } from './catalogRefreshOp';
 import { LEASE_PROBE_TIMEOUT_MS, type PageLeaseArbiter } from './pageLease';
 
 /**
- * Tasks of different jobs that run at once, each job in its own ChatGPT tab (a
+ * Most tasks of different jobs that run at once, each job in its own ChatGPT tab (a
  * tab costs a few hundred MB), once the person allows parallel jobs; one until then.
+ * The person picks how many up to this in the popup.
  */
-export const MAX_BRIDGE_TASKS = 10;
+export const MAX_BRIDGE_TASKS = MAX_PARALLEL_JOBS;
 
 /** Ops this build can run: the service worker's own plus what the content runtime implements. */
 export const SUPPORTED_BRIDGE_OPS: ReadonlySet<OpName> = new Set<OpName>([
@@ -92,8 +94,8 @@ export interface DispatcherDeps {
   readonly ready: () => Promise<void>;
   /** Runs `catalog.refresh` in the service worker; without it the op is unsupported. */
   readonly refreshCatalog?: CatalogRefreshRunner;
-  /** The person allows jobs side by side; without it one task runs at a time. */
-  readonly parallelAllowed?: () => Promise<boolean>;
+  /** Jobs the person lets run side by side: one while the switch is off, and without it. */
+  readonly parallelJobs?: () => Promise<number>;
   readonly now?: () => number;
   readonly config?: Partial<DispatcherConfig>;
 }
@@ -124,7 +126,7 @@ export interface BridgeDispatcher {
   drainOutbox(): Promise<boolean>;
   /** The tasks in flight, oldest first. */
   tasks(): Promise<BridgeTaskRecord[]>;
-  /** Tasks it takes at once now: `maxTasks` while parallel jobs are allowed, else one. */
+  /** Tasks it takes at once now: the person's count (at most `maxTasks`) while parallel jobs are allowed, else one. */
   capacity(): Promise<number>;
 }
 

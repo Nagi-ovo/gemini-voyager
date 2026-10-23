@@ -4314,8 +4314,12 @@
     "description": "Switch in the ChatGPT bridge card that lets jobs run side by side"
   },
   "bridgeParallelHint": {
-    "message": "Jusqu’à 10 tâches à la fois, chacune dans son propre onglet ChatGPT ; la saisie et les clics se font toujours chacun leur tour. Désactivé : une tâche à la fois.",
+    "message": "Chaque tâche a son propre onglet ChatGPT ; la saisie et les clics se font toujours chacun leur tour. Nécessite une CLI voyager plus récente que la 0.4.0 ; avec une version antérieure, les tâches s’exécutent toujours une par une.",
     "description": "Explains the parallel jobs switch in the ChatGPT bridge card"
+  },
+  "bridgeParallelJobsLabel": {
+    "message": "Tâches simultanées",
+    "description": "Number field under the parallel jobs switch in the ChatGPT bridge card: how many jobs may run at once (2 to 10)"
   },
   "bridgeUnsupportedSafari": {
     "message": "Le pont local n’est pas encore disponible dans Safari.",

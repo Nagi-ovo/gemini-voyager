@@ -186,24 +186,68 @@ describe('bridge owner', () => {
         policy: 'allowed', // unstamped test build: the packaged chatgpt policy applies
         onlineUpdatesEnabled: true,
         parallel: false,
+        parallelJobs: 3,
+        activeTasks: [],
       },
     });
   });
 
-  it('keeps the parallel switch the popup sets, and refuses anything but a boolean', async () => {
-    const t = setup({ local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING } });
-    expect(await t.send({ type: 'gv.bridge.setParallel', enabled: 'yes' })).toMatchObject({
-      ok: false,
-      error: { code: 'bad-request' },
+  it('lists every running job in its status, oldest first', async () => {
+    const record = (taskId: string, jobId: string, op: string) => ({
+      taskId,
+      jobId,
+      op,
+      state: 'running',
+      startedAt: 1,
+      deadline: Number.MAX_SAFE_INTEGER,
+      lastProgressAt: 1,
+      progressSeq: 0,
     });
+    const t = setup({
+      local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING },
+      session: {
+        [BRIDGE_SESSION_KEYS.tasks]: [
+          record('T1', 'J1', 'turns.waitReply'),
+          record('T2', 'J2', 'composer.send'),
+        ],
+      },
+    });
+    expect(await t.send({ type: 'gv.bridge.status' })).toMatchObject({
+      data: {
+        activeTasks: [
+          { jobId: 'J1', op: 'turns.waitReply' },
+          { jobId: 'J2', op: 'composer.send' },
+        ],
+      },
+    });
+  });
+
+  it('keeps the parallel switch and count the popup sets, and refuses anything else', async () => {
+    const t = setup({ local: { [StorageKeys.BRIDGE_PAIRING]: PAIRING } });
+    for (const bad of [{ enabled: 'yes' }, { jobs: 1 }, { jobs: 11 }, { jobs: 2.5 }, {}]) {
+      expect(await t.send({ type: 'gv.bridge.setParallel', ...bad })).toMatchObject({
+        ok: false,
+        error: { code: 'bad-request' },
+      });
+    }
     expect(await t.send({ type: 'gv.bridge.setParallel', enabled: true })).toEqual({
       ok: true,
-      data: { parallel: true },
+      data: { parallel: true, parallelJobs: 3 },
     });
     expect(t.local.values[StorageKeys.BRIDGE_PARALLEL]).toBe(true);
-    expect(await t.send({ type: 'gv.bridge.status' })).toMatchObject({ data: { parallel: true } });
+    expect(await t.send({ type: 'gv.bridge.setParallel', jobs: 6 })).toEqual({
+      ok: true,
+      data: { parallel: true, parallelJobs: 6 },
+    });
+    expect(await t.send({ type: 'gv.bridge.status' })).toMatchObject({
+      data: { parallel: true, parallelJobs: 6 },
+    });
 
+    // Off keeps the count, so turning it back on restores it.
     await t.send({ type: 'gv.bridge.setParallel', enabled: false });
     expect(t.local.values[StorageKeys.BRIDGE_PARALLEL]).toBeUndefined();
+    expect(await t.send({ type: 'gv.bridge.status' })).toMatchObject({
+      data: { parallel: false, parallelJobs: 6 },
+    });
   });
 });

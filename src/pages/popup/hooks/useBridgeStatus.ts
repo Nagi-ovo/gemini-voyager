@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import browser from 'webextension-polyfill';
 
+import { clampParallelJobs } from '@/features/bridge/parallelJobs';
 import { type ErrorCode, type OpName, isErrorCode, isOpName } from '@/features/bridge/protocol';
 import type {
   BridgeEnableRefreshMessage,
@@ -48,9 +49,17 @@ export interface BridgeStatus {
   readonly onlineUpdatesEnabled: boolean;
   /** `gvBridgeParallel`: jobs may run side by side, each in its own tab. */
   readonly parallel: boolean;
-  readonly activeTask?: { readonly jobId: string; readonly op: OpName };
+  /** `gvBridgeParallelJobs`: how many at once while `parallel` is on (2–10). */
+  readonly parallelJobs: number;
+  /** The step each running job is on, oldest job first. */
+  readonly activeTasks: readonly BridgeActiveTask[];
   /** The last pairing or connection failure, kept until the next success. */
   readonly lastError?: { readonly code: ErrorCode; readonly upgrade?: BridgeUpgradeSide };
+}
+
+export interface BridgeActiveTask {
+  readonly jobId: string;
+  readonly op: OpName;
 }
 
 /** A popup action's outcome; `no-response` means the background never answered. */
@@ -82,6 +91,15 @@ function readPaired(value: unknown): BridgeStatus['paired'] {
   return { serverId: value.serverId, port, pairedAt };
 }
 
+function readActiveTasks(value: unknown): BridgeActiveTask[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((task: unknown) =>
+    isRecord(task) && typeof task.jobId === 'string' && isOpName(task.op)
+      ? [{ jobId: task.jobId, op: task.op }]
+      : [],
+  );
+}
+
 function readLastError(value: unknown): BridgeStatus['lastError'] {
   if (!isRecord(value) || !isErrorCode(value.code)) return undefined;
   const upgrade = upgradeSide(value.upgrade);
@@ -98,11 +116,6 @@ export function parseBridgeStatus(response: unknown): BridgeStatus | null {
     data.policy === 'allowed' || data.policy === 'denied' || data.policy === 'stale'
       ? data.policy
       : 'unknown';
-  const task = data.activeTask;
-  const activeTask =
-    isRecord(task) && typeof task.jobId === 'string' && isOpName(task.op)
-      ? { jobId: task.jobId, op: task.op }
-      : undefined;
   const lastPollAt = finiteNumber(data.lastPollAt);
   const lastError = readLastError(data.lastError);
   return {
@@ -112,8 +125,9 @@ export function parseBridgeStatus(response: unknown): BridgeStatus | null {
     policy,
     onlineUpdatesEnabled: data.onlineUpdatesEnabled === true,
     parallel: data.parallel === true,
+    parallelJobs: clampParallelJobs(data.parallelJobs),
+    activeTasks: readActiveTasks(data.activeTasks),
     ...(lastPollAt !== undefined ? { lastPollAt } : {}),
-    ...(activeTask ? { activeTask } : {}),
     ...(lastError ? { lastError } : {}),
   };
 }
@@ -178,9 +192,15 @@ export function enableBridgeRefresh(): Promise<BridgeActionResult> {
   return sendAction({ type: 'gv.bridge.enableRefresh' });
 }
 
-/** Allow or stop jobs running side by side; the background keeps the switch. */
-export function setBridgeParallel(enabled: boolean): Promise<BridgeActionResult> {
-  return sendAction({ type: 'gv.bridge.setParallel', enabled });
+export interface BridgeParallelChange {
+  readonly enabled?: boolean;
+  /** Whole number within `MIN_PARALLEL_JOBS`–`MAX_PARALLEL_JOBS`. */
+  readonly jobs?: number;
+}
+
+/** Allow or stop jobs running side by side, or change how many; the background keeps both. */
+export function setBridgeParallel(change: BridgeParallelChange): Promise<BridgeActionResult> {
+  return sendAction({ type: 'gv.bridge.setParallel', ...change });
 }
 
 /** Whether the bridge builtin is on, following later toggles in the plugin list. */

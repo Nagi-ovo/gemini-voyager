@@ -82,7 +82,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
 
   const context: DispatchContext = { deps, config, now };
   const capacity = async (): Promise<number> =>
-    (await deps.parallelAllowed?.()) === true ? config.maxTasks : 1;
+    Math.min(config.maxTasks, Math.max(1, (await deps.parallelJobs?.()) ?? 1));
   const settle = createTaskSettlement(context);
   const { ownConnection, deliver, finish, refuse, abortInPage, confirmStop } = settle;
   const { leaseAfterLeftRestore } = settle;

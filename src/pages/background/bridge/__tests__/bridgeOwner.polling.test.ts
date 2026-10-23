@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
+import { DEFAULT_PARALLEL_JOBS, MIN_PARALLEL_JOBS } from '@/features/bridge/parallelJobs';
 import { bridgeError } from '@/features/bridge/protocol';
 import { BUNDLED_SITE_ADAPTERS } from '@/features/plugins/catalog/sites';
 
@@ -147,7 +148,7 @@ describe('bridge owner: polling and pairings', () => {
     });
   });
 
-  it('tells the server with each poll how many jobs it runs side by side: one until allowed', async () => {
+  it("tells the server with each poll how many jobs it runs side by side: one until allowed, then the person's count", async () => {
     const local = {
       [StorageKeys.BRIDGE_PAIRING]: PAIRING,
       [StorageKeys.PLUGINS_STATE]: { [BRIDGE_PLUGIN_ID]: { enabled: true, installedAt: 1 } },
@@ -159,9 +160,22 @@ describe('bridge owner: polling and pairings', () => {
       await t.owner.wake();
       return t.requests.find((r) => r.path === '/v1/ext/poll')?.body;
     };
+    const on = { [StorageKeys.BRIDGE_PARALLEL]: true };
     expect(await polled({})).toMatchObject({ maxTasks: 1 });
-    expect(await polled({ [StorageKeys.BRIDGE_PARALLEL]: true })).toMatchObject({
+    expect(await polled({ [StorageKeys.BRIDGE_PARALLEL_JOBS]: 5 })).toMatchObject({ maxTasks: 1 });
+    expect(await polled(on)).toMatchObject({ maxTasks: DEFAULT_PARALLEL_JOBS });
+    expect(await polled({ ...on, [StorageKeys.BRIDGE_PARALLEL_JOBS]: 5 })).toMatchObject({
+      maxTasks: 5,
+    });
+    // A stored count out of range or of the wrong type is clamped, never passed on.
+    expect(await polled({ ...on, [StorageKeys.BRIDGE_PARALLEL_JOBS]: 99 })).toMatchObject({
       maxTasks: MAX_BRIDGE_TASKS,
+    });
+    expect(await polled({ ...on, [StorageKeys.BRIDGE_PARALLEL_JOBS]: 0 })).toMatchObject({
+      maxTasks: MIN_PARALLEL_JOBS,
+    });
+    expect(await polled({ ...on, [StorageKeys.BRIDGE_PARALLEL_JOBS]: '7' })).toMatchObject({
+      maxTasks: DEFAULT_PARALLEL_JOBS,
     });
   });
 

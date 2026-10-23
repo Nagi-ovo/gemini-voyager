@@ -91,15 +91,19 @@ describe('bridge dispatcher: jobs side by side', () => {
     expect(await dispatcher.capacity()).toBe(2);
   });
 
-  it('runs up to its default capacity of jobs at once', async () => {
-    const t = setup();
-    t.parallel.allowed = true;
-    for (let i = 1; i <= MAX_BRIDGE_TASKS + 1; i += 1) {
-      await t.bridgeTab(`doc-${i}`, false, `J${i}`);
-      await t.dispatcher.onTask(waitReply(`T${i}`, `J${i}`));
+  it('runs as many jobs at once as the person chose, and answers busy past them', async () => {
+    for (const jobs of [3, MAX_BRIDGE_TASKS]) {
+      const t = setup();
+      t.parallel.allowed = true;
+      t.parallel.jobs = jobs;
+      for (let i = 1; i <= jobs + 1; i += 1) {
+        await t.bridgeTab(`doc-${i}`, false, `J${i}`);
+        await t.dispatcher.onTask(waitReply(`T${i}`, `J${i}`));
+      }
+      expect(t.page.starts()).toHaveLength(jobs);
+      expect(t.resultOf(`T${jobs + 1}`)).toMatchObject({ error: { code: 'busy' } });
+      expect(await t.dispatcher.capacity()).toBe(jobs);
     }
-    expect(t.page.starts()).toHaveLength(MAX_BRIDGE_TASKS);
-    expect(t.resultOf(`T${MAX_BRIDGE_TASKS + 1}`)).toMatchObject({ error: { code: 'busy' } });
   });
 
   it('still lets one job at a time type or click: the page lease spans every tab', async () => {

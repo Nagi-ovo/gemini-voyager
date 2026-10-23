@@ -4314,8 +4314,12 @@
     "description": "Switch in the ChatGPT bridge card that lets jobs run side by side"
   },
   "bridgeParallelHint": {
-    "message": "До 10 задач одновременно, каждая в своей вкладке ChatGPT; ввод и нажатия по-прежнему идут по очереди. Если выключено, задачи идут по одной.",
+    "message": "Каждая задача работает в своей вкладке ChatGPT; ввод и нажатия по-прежнему идут по очереди. Нужен voyager CLI новее 0.4.0; со старой версией задачи по-прежнему выполняются по одной.",
     "description": "Explains the parallel jobs switch in the ChatGPT bridge card"
+  },
+  "bridgeParallelJobsLabel": {
+    "message": "Задач одновременно",
+    "description": "Number field under the parallel jobs switch in the ChatGPT bridge card: how many jobs may run at once (2 to 10)"
   },
   "bridgeUnsupportedSafari": {
     "message": "Локальный мост пока недоступен в Safari.",

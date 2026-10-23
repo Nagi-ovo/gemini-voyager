@@ -37,10 +37,12 @@ export interface BridgeStatusMessage {
 export interface BridgeEnableRefreshMessage {
   type: 'gv.bridge.enableRefresh';
 }
-/** Allow or stop jobs running side by side, each in its own tab. */
+/** Allow or stop jobs running side by side, each in its own tab, or change how many at once. */
 export interface BridgeSetParallelMessage {
   type: 'gv.bridge.setParallel';
-  enabled: boolean;
+  enabled?: boolean;
+  /** 2–10 (`MIN_PARALLEL_JOBS`–`MAX_PARALLEL_JOBS`). */
+  jobs?: number;
 }
 
 // content → background (sender must be the current task holder's top frame)

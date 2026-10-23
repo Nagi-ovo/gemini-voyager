@@ -17,6 +17,7 @@
 import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
 import { EXTENSION_VERSION } from '@/core/utils/version';
+import { DEFAULT_PARALLEL_JOBS } from '@/features/bridge/parallelJobs';
 import {
   type BridgeBrowser,
   type ErrorCode,
@@ -40,7 +41,13 @@ import { createBridgeClient } from './bridgeClient';
 import { SUPPORTED_BRIDGE_OPS, createBridgeDispatcher } from './bridgeDispatcher';
 import { createLeaseProbe } from './bridgeLeaseProbe';
 import { createBridgePairing, parsePairing } from './bridgePairing';
-import { readBridgeParallel, writeBridgeParallel } from './bridgeParallel';
+import {
+  PARALLEL_CHANGE_RULE,
+  parallelJobsOf,
+  parseParallelChange,
+  readBridgeParallel,
+  writeBridgeParallel,
+} from './bridgeParallel';
 import {
   BRIDGE_PLUGIN_ID,
   BRIDGE_POLICY_HOST,
@@ -163,7 +170,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       loadEntry: loadHostCatalogCache,
       extensionVersion: EXTENSION_VERSION,
     }),
-    parallelAllowed: () => readBridgeParallel(env.local),
+    parallelJobs: async () => parallelJobsOf(await readBridgeParallel(env.local)),
     now,
   });
   const blobRelay = createBlobRelay({ store, client, connection, ready: awaitReady, now });
@@ -293,7 +300,6 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       dispatcher.tasks(),
       readBridgeParallel(env.local),
     ]);
-    const task = tasks[0];
     return {
       permission: gate.permissions.loopback,
       paired: record
@@ -303,8 +309,9 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       ...(lastPollAt !== undefined ? { lastPollAt } : {}),
       policy: policyLabel(gate.verdict),
       onlineUpdatesEnabled: gate.onlineUpdatesEnabled,
-      parallel,
-      ...(task ? { activeTask: { jobId: task.jobId, op: task.op } } : {}),
+      parallel: parallel.enabled,
+      parallelJobs: parallel.jobs,
+      activeTasks: tasks.map((task) => ({ jobId: task.jobId, op: task.op })),
       ...(lastError ? { lastError } : {}),
     };
   };
@@ -332,6 +339,8 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
             policy: 'unknown',
             onlineUpdatesEnabled: true,
             parallel: false,
+            parallelJobs: DEFAULT_PARALLEL_JOBS,
+            activeTasks: [],
           },
         };
       }
@@ -364,15 +373,17 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       void wake();
       return { ok: true, data: { policy: policyLabel((await policy.status()).verdict) } };
     },
-    setParallel: async (enabled) => {
-      if (typeof enabled !== 'boolean') {
-        return { ok: false, error: bridgeError('bad-request', 'enabled must be a boolean.') };
+    setParallel: async (enabled, jobs) => {
+      const change = parseParallelChange(enabled, jobs);
+      if (!change) {
+        return { ok: false, error: bridgeError('bad-request', PARALLEL_CHANGE_RULE) };
       }
-      await writeBridgeParallel(env.local, enabled);
+      await writeBridgeParallel(env.local, change);
       // Poll again now, so the server hears the new capacity instead of after its hold.
       stop();
       void wake();
-      return { ok: true, data: { parallel: enabled } };
+      const kept = await readBridgeParallel(env.local);
+      return { ok: true, data: { parallel: kept.enabled, parallelJobs: kept.jobs } };
     },
     hello: (sender, docNonce) => dispatcher.onHello(sender, docNonce),
     progress: (sender, message) => dispatcher.onProgress(sender, message),

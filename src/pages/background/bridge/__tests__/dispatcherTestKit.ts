@@ -3,7 +3,11 @@ import { vi } from 'vitest';
 
 import { type ErrorCode, type OpName, type ValidatedBridgeTask } from '@/features/bridge/protocol';
 
-import { type DispatcherConfig, createBridgeDispatcher } from '../bridgeDispatcher';
+import {
+  type DispatcherConfig,
+  MAX_BRIDGE_TASKS,
+  createBridgeDispatcher,
+} from '../bridgeDispatcher';
 import { createBridgeTabs } from '../bridgeTabs';
 import { createBridgeTaskStore } from '../bridgeTaskStore';
 import { type LeaseProbeOutcome, createPageLeaseArbiter } from '../pageLease';
@@ -70,8 +74,8 @@ export function setup(options: SetupOptions = {}) {
   });
   const tabs = createBridgeTabs({ store, api: page.api, now });
   const pairing = { current: SERVER_A as typeof SERVER_A | null };
-  /** The person's popup switch; off, as in a fresh install. */
-  const parallel = { allowed: false };
+  /** The person's popup switch (off, as in a fresh install) and their count of jobs. */
+  const parallel = { allowed: false, jobs: MAX_BRIDGE_TASKS };
   const make = (
     checkOp: (op: OpName) => Promise<{ code: ErrorCode; message: string } | null> = policy.checkOp,
     config?: Partial<DispatcherConfig>,
@@ -84,7 +88,7 @@ export function setup(options: SetupOptions = {}) {
       client: server.client,
       connection: async () => pairing.current,
       ready: async () => {},
-      parallelAllowed: async () => parallel.allowed,
+      parallelJobs: async () => (parallel.allowed ? parallel.jobs : 1),
       now,
       ...(config ? { config } : {}),
     });

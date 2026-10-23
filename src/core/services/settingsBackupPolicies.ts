@@ -422,6 +422,11 @@ export const NON_SETTINGS_BACKUP_POLICIES = {
     disposition: 'device-local',
     reason: "Whether this device's bridge runs jobs side by side goes with its local pairing.",
   },
+  [StorageKeys.BRIDGE_PARALLEL_JOBS]: {
+    storage: 'local',
+    disposition: 'device-local',
+    reason: "How many jobs this device's bridge runs side by side goes with its local pairing.",
+  },
   [StorageKeys.BRIDGE_ACCOUNT_PLANS]: {
     storage: 'local',
     disposition: 'cache',

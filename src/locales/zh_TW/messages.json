@@ -4314,8 +4314,12 @@
     "description": "Switch in the ChatGPT bridge card that lets jobs run side by side"
   },
   "bridgeParallelHint": {
-    "message": "最多同時 10 個任務，各用一個 ChatGPT 分頁；輸入和點擊仍會輪流進行。關閉時一次只跑一個任務。",
+    "message": "每個任務各用一個 ChatGPT 分頁；輸入和點擊仍會輪流進行。需要 0.4.0 之後的 voyager CLI，舊版仍一次只跑一個任務。",
     "description": "Explains the parallel jobs switch in the ChatGPT bridge card"
+  },
+  "bridgeParallelJobsLabel": {
+    "message": "同時執行的任務數",
+    "description": "Number field under the parallel jobs switch in the ChatGPT bridge card: how many jobs may run at once (2 to 10)"
   },
   "bridgeUnsupportedSafari": {
     "message": "Safari 暫不支援本機橋接。",
