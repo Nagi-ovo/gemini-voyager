@@ -304,4 +304,32 @@ describe('ChatGPT export reader choice', () => {
     await site.turns.prepare!({});
     expect(ids()).toHaveLength(4);
   });
+
+  it('offers the logged-out messages that mount after an export starts on an empty thread', async () => {
+    window.history.replaceState({}, '', '/uc/logged-out-chat');
+    document.body.innerHTML = '<main><div data-mobile-thread></div></main>';
+    expect(await site.turns.prepare!({ expectedUrl: location.href })).toBeNull();
+    // The messages mount while the export waits for the page to settle.
+    mountLoggedOut();
+
+    expect(ids()).toHaveLength(4);
+    expect(await site.turns.build(new Set(ids()), {})).toHaveLength(2);
+  });
+
+  it('does not export another logged-out conversation opened before the selection appears', async () => {
+    window.history.replaceState({}, '', '/uc/logged-out-chat');
+    const selected = new Set(ids());
+    const session = await site.turns.prepare!({ expectedUrl: location.href });
+    window.history.replaceState({}, '', '/uc/another-chat');
+    document.querySelector('[data-user-message-bubble]')!.textContent = 'Another prompt';
+    const options = { expectedUrl: location.href };
+
+    expect(session?.messages()).toEqual([]);
+    await expect(session!.build(selected, options)).rejects.toThrow(
+      'chatgpt_export_conversation_changed',
+    );
+    await expect(session!.roles!(selected, options)).rejects.toThrow(
+      'chatgpt_export_conversation_changed',
+    );
+  });
 });

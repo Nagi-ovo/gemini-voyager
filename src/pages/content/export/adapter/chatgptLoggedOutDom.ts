@@ -27,12 +27,21 @@ export function resolveChatGptLoggedOutThread(doc: Document = document): HTMLEle
   );
 }
 
+export type ChatGptThreadKind = 'desktop' | 'loggedOut';
+
 /**
- * Whether the page shows the logged-out page's messages and no desktop thread.
- * A desktop turn wins: its reader also crawls the virtual list's unmounted
- * history, which the logged-out reader would never see.
+ * Which thread the page shows, or null while neither has rendered a message
+ * (an empty logged-out wrapper still mounting its messages, say). A desktop
+ * turn wins: its reader also crawls the virtual list's unmounted history,
+ * which the logged-out reader would never see.
  */
+export function readChatGptThreadKind(doc: Document = document): ChatGptThreadKind | null {
+  if (Array.from(doc.querySelectorAll(DESKTOP_TURN_SELECTOR)).some(isRendered)) return 'desktop';
+  const thread = resolveChatGptLoggedOutThread(doc);
+  return thread?.querySelector(LOGGED_OUT_MESSAGE_SELECTOR) ? 'loggedOut' : null;
+}
+
+/** Whether the page shows the logged-out page's messages and no desktop thread. */
 export function isChatGptLoggedOutConversation(doc: Document = document): boolean {
-  if (Array.from(doc.querySelectorAll(DESKTOP_TURN_SELECTOR)).some(isRendered)) return false;
-  return resolveChatGptLoggedOutThread(doc)?.querySelector(LOGGED_OUT_MESSAGE_SELECTOR) != null;
+  return readChatGptThreadKind(doc) === 'loggedOut';
 }

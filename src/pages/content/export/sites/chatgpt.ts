@@ -2,7 +2,7 @@ import { createContentExtractor } from '@/features/export/services/DOMContentExt
 
 import { buildChatGptTurnsForSelection, resolveChatGptSelectionRoles } from '../adapter/chatgpt';
 import { createChatGptLoggedOutReader } from '../adapter/chatgptLoggedOut';
-import { isChatGptLoggedOutConversation } from '../adapter/chatgptLoggedOutDom';
+import { type ChatGptThreadKind, readChatGptThreadKind } from '../adapter/chatgptLoggedOutDom';
 import { normalizedConversationUrl } from '../adapter/chatgptShared';
 import {
   type ChatGptThreadSession,
@@ -37,11 +37,20 @@ function exportSession(session: ChatGptThreadSession): ExportTurnSession {
   };
 }
 
-type ChatGptReaderKind = 'desktop' | 'loggedOut';
+type TurnReader = ExportTurnReader & Required<Pick<ExportTurnReader, 'roles'>>;
 
-/** The desktop thread wins whenever its turns are rendered; see `isChatGptLoggedOutConversation`. */
-function currentReaderKind(): ChatGptReaderKind {
-  return isChatGptLoggedOutConversation() ? 'loggedOut' : 'desktop';
+/**
+ * The logged-out reader bound to the route it was prepared on, as the desktop
+ * crawl's session is: the selection opens a moment after preparation, and a
+ * conversation opened meanwhile must not export in its place.
+ */
+function routeBoundSession(reader: TurnReader, route: string): ExportTurnSession {
+  return {
+    messages: () => (normalizedConversationUrl() === route ? reader.messages() : []),
+    build: (selectedIds, options) => reader.build(selectedIds, { ...options, expectedUrl: route }),
+    roles: (selectedIds, options) => reader.roles(selectedIds, { ...options, expectedUrl: route }),
+    release() {},
+  };
 }
 
 /**
@@ -55,7 +64,7 @@ export function createChatGptExportSite(adapter: ExportPlatformAdapter): ExportS
   const extractor = createContentExtractor(adapter);
   const preparer = createChatGptThreadPreparer();
   const loggedOut = createChatGptLoggedOutReader(adapter);
-  const desktop: ExportTurnReader & Required<Pick<ExportTurnReader, 'roles'>> = {
+  const desktop: TurnReader = {
     messages: () => selectionMessages(uncrawledChatGptTurnContainers()),
     build: async (selectedIds, options) => {
       // Direct consumers also need a full crawl; they do not run the selection preparer.
@@ -72,14 +81,20 @@ export function createChatGptExportSite(adapter: ExportPlatformAdapter): ExportS
     roles: resolveChatGptSelectionRoles,
   };
   /**
-   * The reader the last preparation chose, for its route. The earlier DOM's
-   * export reads `turns` itself rather than a session, and must not switch
-   * readers when the page's markers change under the selection.
+   * The reader the last preparation chose, for its route. An export without a
+   * session (the earlier DOM, or a page whose messages had not mounted yet)
+   * reads `turns` itself and must not switch readers under the selection. It
+   * is fixed only once the DOM shows which thread it is: an empty logged-out
+   * wrapper fixed as desktop would then offer none of the messages it mounts.
    */
-  let prepared: { route: string; kind: ChatGptReaderKind } | null = null;
-  const reader = () => {
-    const kind =
-      prepared?.route === normalizedConversationUrl() ? prepared.kind : currentReaderKind();
+  let prepared: { route: string; kind: ChatGptThreadKind | null } | null = null;
+  const reader = (): TurnReader => {
+    const route = normalizedConversationUrl();
+    let kind = prepared?.route === route ? prepared.kind : null;
+    if (!kind) {
+      kind = readChatGptThreadKind();
+      if (prepared?.route === route) prepared = { route, kind };
+    }
     return kind === 'loggedOut' ? loggedOut : desktop;
   };
 
@@ -94,9 +109,10 @@ export function createChatGptExportSite(adapter: ExportPlatformAdapter): ExportS
       build: (selectedIds, options) => reader().build(selectedIds, options),
       roles: (selectedIds, options) => reader().roles(selectedIds, options),
       prepare: async (options) => {
-        const kind = currentReaderKind();
-        prepared = { route: normalizedConversationUrl(options.expectedUrl), kind };
-        if (kind === 'loggedOut') return { ...loggedOut, release() {} };
+        const route = normalizedConversationUrl(options.expectedUrl);
+        const kind = readChatGptThreadKind();
+        prepared = { route, kind };
+        if (kind === 'loggedOut') return routeBoundSession(loggedOut, route);
         const session = await prepareChatGptExportWithProgress(preparer, { ...options, extractor });
         return session && exportSession(session);
       },
