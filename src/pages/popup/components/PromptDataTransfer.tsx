@@ -25,7 +25,8 @@ function MaterialGlyphIcon({ path, className }: { path: string; className?: stri
 
 /** Shared prompt-library transfer controls for native and plugin platform popups. */
 export function PromptDataTransfer({ transfer, t }: PromptDataTransferProps) {
-  const { status, busy, inputRef, onExport, onImport, onCloudPull, onCloudPush } = transfer;
+  const { status, busy, cloudUnavailable, inputRef, onExport, onImport, onCloudPull, onCloudPush } =
+    transfer;
 
   return (
     <div className="space-y-2">
@@ -61,12 +62,15 @@ export function PromptDataTransfer({ transfer, t }: PromptDataTransferProps) {
           </span>
         </Button>
       </div>
+      {cloudUnavailable && (
+        <p className="text-muted-foreground text-xs">{t('syncGoogleDriveUnavailableAndroid')}</p>
+      )}
       <div className="grid grid-cols-2 gap-2">
         <Button
           variant="outline"
           size="sm"
           className="w-full"
-          disabled={busy}
+          disabled={busy || cloudUnavailable}
           onClick={() => {
             void onCloudPull();
           }}
@@ -80,7 +84,7 @@ export function PromptDataTransfer({ transfer, t }: PromptDataTransferProps) {
           variant="outline"
           size="sm"
           className="w-full"
-          disabled={busy}
+          disabled={busy || cloudUnavailable}
           onClick={() => {
             void onCloudPush();
           }}

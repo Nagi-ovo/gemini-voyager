@@ -1,5 +1,6 @@
 import { NOTIFICATION_ENABLEMENT_MESSAGE } from '@/core/types/notificationEnablement';
 import type { SyncPlatform } from '@/core/types/sync';
+import { FORM_FACTOR_MESSAGE } from '@/core/utils/formFactor';
 import {
   FOLDER_PLATFORMS,
   FOLDER_PLATFORM_IDS,
@@ -104,6 +105,7 @@ export function isTrustedSharedDataSyncSender(sender: chrome.runtime.MessageSend
 const HANDLED_BACKGROUND_MESSAGE_TYPES = new Set([
   NOTIFICATION_ENABLEMENT_MESSAGE,
   LIBRARY_OPEN_MESSAGE,
+  FORM_FACTOR_MESSAGE,
   'gv.fetchImage',
   'gv.fetchImageViaPage',
   'gv.generatedUi.ensureCapturePermission',

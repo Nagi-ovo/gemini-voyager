@@ -342,6 +342,17 @@ export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding
     StorageKeys.DEFAULT_MODEL_AUTO_APPLY,
     onUnlessFalse,
   ),
+  // New with the plugin, so there is no older reading: off unless switched on.
+  [OFFICIAL_PLUGIN_IDS.geminiSiteCheck]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiSiteCheck,
+    StorageKeys.SITE_CHECK_ENABLED,
+    onOnlyIfTrue,
+  ),
+  [OFFICIAL_PLUGIN_IDS.aistudioSiteCheck]: binding(
+    OFFICIAL_PLUGIN_IDS.aistudioSiteCheck,
+    StorageKeys.SITE_CHECK_ENABLED,
+    onOnlyIfTrue,
+  ),
 };
 
 /** The stored value of `key`; `undefined` when the snapshot lacks it or holds it removed. */

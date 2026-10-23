@@ -122,7 +122,11 @@ export function timelineManifest({
     engine: '>=1.6.0',
     tier: 'declarative',
     matches,
-    requires: { handlers: ['turnNavigator'], semantic: ['userTurn'] },
+    requires: {
+      handlers: ['turnNavigator'],
+      semantic: ['userTurn'],
+      formFactors: ['desktop', 'mobile'],
+    },
     contributes: {
       settings: {
         timelineStyle: {

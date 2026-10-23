@@ -125,6 +125,7 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS = {
   [StorageKeys.GV_VISUAL_EFFECT]: 'off',
   [StorageKeys.FORK_ENABLED]: false,
   [StorageKeys.RESEARCH_PACK_ENABLED]: false,
+  [StorageKeys.SITE_CHECK_ENABLED]: false,
   [StorageKeys.MARKDOWN_FIX_ENABLED]: true,
   [StorageKeys.CANVAS_COPY_ENABLED]: true,
   [StorageKeys.DEEP_RESEARCH_EXPORT_ENABLED]: true,

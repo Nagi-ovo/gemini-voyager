@@ -99,6 +99,7 @@ describe('plugin authoring prompt contract', () => {
       'formulaCopy',
       'mermaid',
       'sendShortcut',
+      'siteCheck',
       'turnNavigator',
       'userLatex',
       'vimInput',
@@ -107,6 +108,7 @@ describe('plugin authoring prompt contract', () => {
     expect(listed(buildPluginAuthoringPrompt('x', byId('aistudio')))).toEqual([
       'formulaCopy',
       'sendShortcut',
+      'siteCheck',
     ]);
   });
 

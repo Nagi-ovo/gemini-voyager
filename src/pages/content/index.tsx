@@ -39,6 +39,7 @@ import { createPromptManagerEngine, readPromptCoverage } from './prompt/promptMa
 import { resolvePromptSiteAdapter } from './prompt/resolvePromptSiteAdapter';
 import { createGeminiRendererStartup } from './rendererStartup';
 import { createSelectionStartup } from './selectionStartup';
+import { admitSiteCheck } from './siteCheckStartup';
 import { admitVisualEffectsForPage } from './visualEffectsStartup';
 
 // Suppress Vite's CSS preload errors in the Chrome extension content script context.
@@ -127,6 +128,7 @@ async function initializeFeatures(): Promise<void> {
       startEnterprisePanel: () => promptManager.startPanel(),
     });
     if (entry !== 'start-points') return;
+    admitSiteCheck(officialAdmission, location.href);
 
     if (location.hostname === 'gemini.google.com') {
       await startGeminiPage({

@@ -5,7 +5,8 @@
  *   1. resolve the SiteAdapter for the current URL (may be null on unknown sites)
  *   2. load manifests from all configured sources (builtin, bundled catalog,
  *      cached per-host remote catalog)
- *   3. load per-plugin enable state from storage. On Gemini / AI Studio the
+ *   3. load per-plugin enable state from storage, and the page's device class
+ *      (`formFactor`). On Gemini / AI Studio the
  *      legacy switches packaged official plugins follow are read beside this,
  *      off the op chain: those plugins join in the reconcile after that read
  *      lands, once the content script admits them (`officialAdmission.ts`)
@@ -27,18 +28,19 @@
  * without touching this class.
  */
 import { logger } from '@/core/services/LoggerService';
+import type { FormFactor } from '@/core/types/formFactor';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
+import { requestPageFormFactor } from '@/core/utils/formFactor';
 
 import { LocalEntitlementProvider } from '../entitlement/LocalEntitlementProvider';
 import { subscribeLocalPlugins } from '../local/localPluginStore';
 import { subscribeHostCatalog } from '../remote/hostCatalogCache';
-import { catalogHostFromUrl, hasEnabledPluginForUrl } from '../remote/hostCatalogPolicy';
+import { catalogHostFromUrl } from '../remote/hostCatalogPolicy';
 import {
   isSameSiteAdapter,
   resolveSiteAdapterForUrl,
   resolveSiteOverride,
 } from '../remote/siteOverride';
-import { tracksPluginHealth } from '../sites/featureOwners';
 import { packagedSiteForUrl } from '../sites/hostPolicy';
 import { SiteRegistry } from '../sites/registry';
 import { createDefaultPluginSources, listPluginManifests } from '../sources/defaultSources';
@@ -50,8 +52,14 @@ import type {
   PluginSourceContext,
   SiteAdapter,
 } from '../types';
-import { type FrozenVersions, freezeUpdatedPrimitives, staleMountedIds } from './catalogReloadPlan';
-import { DeclarativeEngine } from './declarativeEngine';
+import {
+  type FrozenVersions,
+  freezeUpdatedPrimitives,
+  runningManifests,
+  staleMountedIds,
+} from './catalogReloadPlan';
+import type { DeclarativeEngine } from './declarativeEngine';
+import { createHostEngine } from './hostEngine';
 import {
   DEFAULT_LEGACY_SETTINGS,
   DEFAULT_VISUAL_EFFECT_SETTINGS,
@@ -66,6 +74,7 @@ import { evaluatePlugin, resolveRunSettings, targetsPage } from './pluginEligibi
 import {
   type PluginHostOptions,
   detectTopFrame,
+  maybeRequestCatalogRefresh,
   sendCatalogRefreshRequest,
 } from './pluginHostOptions';
 import type { PluginStatus } from './pluginStatus';
@@ -73,7 +82,6 @@ import { collectPluginStatuses } from './pluginStatuses';
 import type { PluginBlock, WishVerdict } from './reconcileArbitration';
 import { ReleaseLedger } from './releaseLedger';
 import { arbitrate, nextHolders } from './resourceArbiter';
-import { claimedResources } from './resourceClaims';
 import { type SurfaceSwitch, surfaceSwitchForUrl } from './surfaceSwitch';
 
 export type { PluginHostOptions };
@@ -87,6 +95,7 @@ export class PluginHost {
   private readonly context: PluginSourceContext;
   private readonly requestCatalogRefresh: (host: string) => void;
   private readonly isTopFrame: boolean;
+  private readonly readFormFactor: () => Promise<FormFactor>;
 
   private adapter: SiteAdapter | null = null;
   private engine: DeclarativeEngine | null = null;
@@ -98,6 +107,8 @@ export class PluginHost {
    */
   private readonly frozen: FrozenVersions = new Map();
   private state: PluginStateMap = {};
+  /** Null until the initial read; no pass runs before it. */
+  private formFactor: FormFactor | null = null;
   private unsubscribeState: (() => void) | null = null;
   private unsubscribeCatalog: (() => void) | null = null;
   private unsubscribeLocal: (() => void) | null = null;
@@ -142,6 +153,7 @@ export class PluginHost {
     this.context = { url: this.url, host: catalogHostFromUrl(this.url) };
     this.requestCatalogRefresh = options.requestCatalogRefresh ?? sendCatalogRefreshRequest;
     this.isTopFrame = options.isTopFrame ?? detectTopFrame();
+    this.readFormFactor = options.formFactor ?? requestPageFormFactor;
     this.surfaceSwitch =
       options.surfaceSwitch === undefined ? surfaceSwitchForUrl(this.url) : options.surfaceSwitch;
     this.admission = options.admission ?? CLOSED_ADMISSION;
@@ -170,6 +182,7 @@ export class PluginHost {
       // remembered and the initial pass replays it; afterwards every change
       // reloads + re-mounts on the serialized chain so new/changed plugin CSS
       // applies live without a page reload.
+      const formFactorRead = this.readFormFactor(); // beside the reads below, never alone
       let engineReady = false;
       let catalogChangedBeforeEngine = false;
       const onSourceChange = (): void => {
@@ -225,10 +238,12 @@ export class PluginHost {
       // The initial read runs ON the chain, so a catalog reload the listener
       // queued meanwhile runs after it and its fresher listing wins.
       await this.enqueue(async () => {
-        const manifests = await this.loadManifests();
+        const manifests = await listPluginManifests(this.sources, this.context);
         const state = await loadPluginState();
         const surfaceOn = surfaceSwitch ? await surfaceSwitch.read() : true;
+        const formFactor = await formFactorRead;
         if (this.generation !== gen) return;
+        this.formFactor = formFactor;
         this.surfaceOn = surfaceFromListener ?? surfaceOn;
         this.manifests = manifests;
         // A listener revision that arrived mid-read is newer than what we read.
@@ -243,7 +258,8 @@ export class PluginHost {
         site: this.adapter?.id ?? 'unknown',
         manifests: this.manifests.length,
       });
-      this.maybeRequestCatalogRefresh();
+      const page = { host: this.context.host, url: this.url, isTopFrame: this.isTopFrame };
+      maybeRequestCatalogRefresh(page, this.manifests, this.state, this.requestCatalogRefresh);
     } catch (error) {
       if (isExtensionContextInvalidatedError(error)) return;
       logger.error('PluginHost start failed', { error: String(error) });
@@ -280,6 +296,7 @@ export class PluginHost {
       manifests: this.manifests,
       frozen: this.frozen,
       adapter: this.adapter,
+      formFactor: this.formFactor ?? 'desktop', // nothing is listed before it either
       wish: {
         state: this.state,
         legacy: this.legacy?.current() ?? null,
@@ -293,18 +310,14 @@ export class PluginHost {
   }
 
   private createEngine(adapter: SiteAdapter | null): DeclarativeEngine {
-    return new DeclarativeEngine({
+    return createHostEngine({
       doc: this.doc,
       adapter,
-      onHealthChange: (id, noEffect) => {
-        logger.info('Plugin health changed', { id, noEffect });
-      },
-      shouldTrackHealth: (manifest) => tracksPluginHealth(manifest.id),
-      // The mounted manifest decides what is released, so a plugin frozen
-      // on its old version (D7) releases what that version claimed.
-      onRelease: (manifest, released) => {
-        this.releases.record(manifest.id, claimedResources(manifest), released);
-      },
+      releases: this.releases,
+      inspectPlugins: () => ({
+        statuses: this.getStatuses(),
+        manifests: runningManifests(this.manifests, this.frozen),
+      }),
     });
   }
 
@@ -322,7 +335,10 @@ export class PluginHost {
   private async reloadCatalog(gen: number): Promise<void> {
     const engine = this.engine;
     if (!engine || this.generation !== gen) return;
-    const [manifests, adapter] = await Promise.all([this.loadManifests(), this.resolveAdapter()]);
+    const [manifests, adapter] = await Promise.all([
+      listPluginManifests(this.sources, this.context),
+      this.resolveAdapter(),
+    ]);
     if (this.generation !== gen) return;
     const listing = {
       previous: new Map(this.manifests.map((manifest) => [manifest.id, manifest])),
@@ -361,8 +377,9 @@ export class PluginHost {
     const legacyPhase = this.legacy?.phase() ?? 'none';
     const feed = this.legacy;
     const wasChangedLive = (key: string): boolean => feed?.wasChangedLive(key) ?? false;
-    const manifests = this.manifests.map((listed) => this.frozen.get(listed.id)?.mounted ?? listed);
-    if (!engine) return;
+    const manifests = runningManifests(this.manifests, this.frozen);
+    const formFactor = this.formFactor;
+    if (!engine || !formFactor) return;
     const verdicts: Record<Exclude<WishVerdict, 'skip'>, PluginManifest[]> = {
       run: [],
       reserve: [],
@@ -378,6 +395,7 @@ export class PluginHost {
           surfaceOn: this.surfaceOn,
           admission: this.admission,
           adapter: this.adapter,
+          formFactor,
           entitlement: this.entitlement,
         },
       );
@@ -424,21 +442,5 @@ export class PluginHost {
 
   private targetsThisPage(manifest: PluginManifest): boolean {
     return targetsPage(this.url, manifest);
-  }
-
-  private async loadManifests(): Promise<readonly PluginManifest[]> {
-    return listPluginManifests(this.sources, this.context);
-  }
-
-  /**
-   * D4 trigger. Only the top frame of a page that an ENABLED plugin targets
-   * may ask for a check; embedded companion frames and pages without an
-   * enabled plugin (all of Gemini / AI Studio) stay silent.
-   */
-  private maybeRequestCatalogRefresh(): void {
-    const host = this.context.host;
-    if (!host || !this.isTopFrame) return;
-    if (!hasEnabledPluginForUrl(this.manifests, this.state, this.url)) return;
-    this.requestCatalogRefresh(host);
   }
 }

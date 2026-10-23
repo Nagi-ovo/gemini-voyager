@@ -1,7 +1,10 @@
 import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
 import { getVoyagerBuildTarget, isFirefox } from '@/core/utils/browser';
+import { readPlatformFormFactor } from '@/core/utils/formFactor';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
+import { packagedPluginRunsOn } from '@/features/plugins/runtime/packagedFormFactor';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 
 import { injectWatermarkInterceptorIntoOpenTabs } from './watermarkOpenTabs';
 
@@ -40,6 +43,11 @@ export function createMainWorldRegistration() {
     // watermark removal happens in the content script and never touches fetch.
     const result = await chrome.storage.sync.get([...WATERMARK_STORAGE_KEYS]);
     const { download: downloadEnabled } = resolveWatermarkSettings(result);
+    // On a device the download plugin skips (a phone), nothing would answer the interceptor.
+    const downloadRuns = await packagedPluginRunsOn(
+      OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload,
+      await readPlatformFormFactor(),
+    );
 
     try {
       // Always unregister first to update settings
@@ -48,7 +56,7 @@ export function createMainWorldRegistration() {
       // No-op if script was not registered
     }
 
-    if (!downloadEnabled) {
+    if (!downloadEnabled || !downloadRuns) {
       logger.info('[Background] Fetch interceptor not registered (download path disabled)');
       return;
     }

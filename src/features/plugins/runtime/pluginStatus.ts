@@ -5,6 +5,9 @@
  * instead of silently filtering incompatible ones, so the popup can show a
  * disabled toggle WITH a reason:
  *
+ *   needs-form-factor  the plugin does not run on this kind of device (a
+ *                    phone, say); `requires.formFactors` names where it does.
+ *                    The user's switch and its sync are untouched
  *   needs-engine     the manifest's `engine` range is above this build
  *   needs-handler    a primitive it invokes, or the scripted runtime it needs,
  *                    is not in this build
@@ -23,6 +26,8 @@
  * which owns the permission flow; a content script that is running already
  * has its permission.
  */
+import type { FormFactor } from '@/core/types/formFactor';
+
 import { resolveEngineVersion } from '../engineVersion';
 import { acceptedSemanticKeyParamValues } from '../manifest/semanticKeyParams';
 import { engineSatisfied } from '../semver';
@@ -35,6 +40,7 @@ import {
 import type { OpDiagnostic } from './opDiagnostics';
 
 export type PluginStatusKind =
+  | 'needs-form-factor'
   | 'needs-engine'
   | 'needs-handler'
   | 'needs-semantic'
@@ -74,6 +80,8 @@ export interface PluginStatus {
   readonly id: string;
   readonly version: string;
   readonly kind: PluginStatusKind;
+  /** For needs-form-factor: the device class this page runs on, which the plugin does not support. */
+  readonly formFactor?: FormFactor;
   /** For needs-engine: the range the manifest asks for. */
   readonly requiredEngine?: string;
   /** For needs-handler: primitives this build does not ship (none for a scripted plugin). */
@@ -107,11 +115,28 @@ export interface PluginStatus {
 export interface PluginIncompatibility {
   readonly id: string;
   readonly version: string;
-  readonly kind: 'needs-engine' | 'needs-handler' | 'needs-semantic' | 'needs-site-data';
+  readonly kind:
+    | 'needs-form-factor'
+    | 'needs-engine'
+    | 'needs-handler'
+    | 'needs-semantic'
+    | 'needs-site-data';
+  readonly formFactor?: FormFactor;
   readonly requiredEngine?: string;
   readonly missingHandlers?: readonly string[];
   readonly missingSemantic?: readonly string[];
   readonly missingSections?: readonly string[];
+}
+
+/** What a manifest without `requires.formFactors` runs on: plugins predate phones. */
+export const DEFAULT_PLUGIN_FORM_FACTORS: readonly FormFactor[] = ['desktop'];
+
+/**
+ * Whether the plugin runs on `formFactor`. The popup asks this directly, since
+ * on Firefox for Android it opens as its own tab and may get no page status.
+ */
+export function runsOnFormFactor(manifest: PluginManifest, formFactor: FormFactor): boolean {
+  return (manifest.requires?.formFactors ?? DEFAULT_PLUGIN_FORM_FACTORS).includes(formFactor);
 }
 
 /** Primitives the plugin invokes: declared `requires.handlers` plus every `native` op. */
@@ -185,12 +210,19 @@ export interface CompatibilityInput {
   readonly adapter: SiteAdapter | null;
   readonly hasPrimitive: (name: string) => boolean;
   readonly engineVersion?: string;
+  /** The device class the page runs on (`core/utils/formFactor.ts`); desktop when absent. */
+  readonly formFactor?: FormFactor;
 }
 
 /** The first blocking reason, or null when the plugin can run in this build on this site. */
 export function findIncompatibility(input: CompatibilityInput): PluginIncompatibility | null {
   const { manifest } = input;
   const base = { id: manifest.id, version: manifest.version };
+  // First: no update or site fix makes a desktop-only plugin run on a phone.
+  const formFactor = input.formFactor ?? 'desktop';
+  if (!runsOnFormFactor(manifest, formFactor)) {
+    return { ...base, kind: 'needs-form-factor', formFactor };
+  }
   const requiredEngine = resolveEngineVersion(manifest.engine);
   if (!engineSatisfied(requiredEngine, input.engineVersion ?? EFFECTIVE_PLUGIN_ENGINE_VERSION)) {
     return { ...base, kind: 'needs-engine', requiredEngine };

@@ -57,7 +57,9 @@ export type OwnedFeatureId =
   | 'preventAutoScroll'
   | 'responseNotification'
   | 'timeline'
-  | 'folders';
+  | 'folders'
+  /** Diagnostics with no native predecessor: off until switched on. */
+  | 'siteCheck';
 
 /** The packaged official plugin ids, by feature. */
 export const OFFICIAL_PLUGIN_IDS = {
@@ -107,6 +109,8 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiSafariEnterFix: 'voyager.gemini-safari-enter-fix',
   aistudioEnterSend: 'voyager.aistudio-enter-send',
   geminiDraftSave: 'voyager.gemini-draft-save',
+  geminiSiteCheck: 'voyager.gemini-site-check',
+  aistudioSiteCheck: 'voyager.aistudio-site-check',
 } as const;
 
 /** Page-wide features admitted before site-specific initialization, with no public primitive. */
@@ -461,6 +465,21 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     feature: 'responseNotification',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
     handlers: [],
+    healthTracking: false,
+  },
+  // A read-only report: opening `siteCheck` lets a local plugin show the same launcher.
+  {
+    site: 'gemini',
+    feature: 'siteCheck',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiSiteCheck,
+    handlers: ['siteCheck'],
+    healthTracking: false,
+  },
+  {
+    site: 'aistudio',
+    feature: 'siteCheck',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.aistudioSiteCheck,
+    handlers: ['siteCheck'],
     healthTracking: false,
   },
 ];

@@ -6,6 +6,8 @@
  * its DOM ops finds on the page now (`opDiagnostics.ts`). Read-only: it
  * decides nothing the reconcile pass acts on.
  */
+import type { FormFactor } from '@/core/types/formFactor';
+
 import { hostPolicyRefusal } from '../sites/hostPolicy';
 import { matchesAnyPattern } from '../sites/matchPattern';
 import { sharedTimelineAdmissionId } from '../sites/sharedTimelinePolicy';
@@ -29,6 +31,8 @@ export interface StatusInput {
   /** Plugins kept on their mounted version until a reload (plan D7). */
   readonly frozen: ReadonlyMap<string, { mounted: PluginManifest; pendingVersion: string }>;
   readonly adapter: SiteAdapter | null;
+  /** The device class the page runs on (`needs-form-factor`). */
+  readonly formFactor: FormFactor;
   /** The wish inputs of the last reconcile, to tell an admission still pending apart. */
   readonly wish: Omit<WishInput, 'admissionId'>;
   /** Plugins the last pass kept off by a conflict or a pending release. */
@@ -61,6 +65,7 @@ export function collectPluginStatuses(input: StatusInput): readonly PluginStatus
       manifest,
       adapter: input.adapter,
       hasPrimitive,
+      formFactor: input.formFactor,
     });
     if (incompatibility) {
       statuses.push({ ...incompatibility, ...pending });

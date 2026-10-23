@@ -15,6 +15,18 @@ import { type PluginManifest, hasNativeOps } from '../types';
 /** Plugins kept on their mounted version until a reload, by id. */
 export type FrozenVersions = Map<string, { mounted: PluginManifest; pendingVersion: string }>;
 
+/**
+ * The manifest each listed plugin runs with on this page: a frozen one keeps
+ * its mounted version. Diagnostics read these too, or a frozen plugin would be
+ * reported at its old version but checked against its pending selectors.
+ */
+export function runningManifests(
+  listed: readonly PluginManifest[],
+  frozen: ReadonlyMap<string, { mounted: PluginManifest }>,
+): PluginManifest[] {
+  return listed.map((manifest) => frozen.get(manifest.id)?.mounted ?? manifest);
+}
+
 export interface ReloadListing {
   /** The listing before the reload, by id. */
   readonly previous: ReadonlyMap<string, PluginManifest>;

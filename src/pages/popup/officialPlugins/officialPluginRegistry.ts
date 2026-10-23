@@ -137,6 +137,16 @@ export const POPUP_LEGACY_SNAPSHOT_KEYS: readonly string[] = [
   ...new Set([...legacyBindingKeys(), ...OFFICIAL_PANEL_STORAGE_KEYS]),
 ];
 
+/**
+ * A plugin this device does not run (its manifest's `requires.formFactors`
+ * leaves it out): the row shows it off and greyed, with why, and keeps the
+ * stored choice for the user's other devices.
+ */
+export const UNAVAILABLE_ON_THIS_DEVICE: NonNullable<OfficialPluginEntry['requires']> = {
+  met: () => false,
+  note: 'pluginUnavailableOnMobile',
+};
+
 /** What a row's eligibility may depend on besides the active tab. */
 export interface OfficialPluginContext {
   readonly isSafariBrowser: boolean;

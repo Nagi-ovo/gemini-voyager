@@ -66,4 +66,8 @@ export const PLUGIN_STORAGE_KEYS = {
   // account id; plan fields only, no id, e-mail or token — see
   // src/features/bridge/accountPlanStore.ts.
   BRIDGE_ACCOUNT_PLANS: 'gvBridgeAccountPlans',
+
+  // Site check on Gemini and AI Studio (chrome.storage.sync, backed up, default off): the
+  // switch of their packaged `voyager.*-site-check` plugins. Other sites use gvPluginsState.
+  SITE_CHECK_ENABLED: 'gvSiteCheckEnabled',
 } as const;

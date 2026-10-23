@@ -1,5 +1,7 @@
 import { useCallback, useMemo } from 'react';
 
+import type { FormFactor } from '@/core/types/formFactor';
+import { runsOnFormFactor } from '@/features/plugins/runtime/pluginStatus';
 import { effectivePluginView } from '@/features/plugins/storage/effectivePluginView';
 import {
   type LegacySettingSnapshot,
@@ -16,6 +18,7 @@ import { writePopupSyncChangesChecked } from '../utils/popupStorage';
 import {
   POPUP_LEGACY_SNAPSHOT_KEYS,
   OFFICIAL_PLUGIN_ENTRIES,
+  UNAVAILABLE_ON_THIS_DEVICE,
   type OfficialPluginContext,
   type OfficialPluginEntry,
   type OfficialPluginTopicId,
@@ -52,6 +55,8 @@ export interface OfficialPluginListOptions {
   readonly legacy: LegacySettingSnapshot;
   readonly legacyLoaded: boolean;
   readonly context: OfficialPluginContext;
+  /** The device the popup runs on; a plugin it does not support is greyed with why. Null while read. */
+  readonly formFactor?: FormFactor | null;
   /** Test seam; the popup writes sync storage and checks the result. */
   readonly write?: (payload: Record<string, unknown>) => Promise<boolean>;
 }
@@ -63,6 +68,7 @@ export function useOfficialPluginList({
   legacy,
   legacyLoaded,
   context,
+  formFactor = null,
   write = writePopupSyncChangesChecked,
 }: OfficialPluginListOptions) {
   const { isSafariBrowser } = context;
@@ -82,7 +88,13 @@ export function useOfficialPluginList({
         const hint = plugin.entry.usageHint;
         const usageHint = typeof hint === 'function' ? hint({ isSafariBrowser }) : (hint ?? null);
         const requires = plugin.entry.requires;
-        const unmetRequirement = requires && !requires.met(preferences.legacy) ? requires : null;
+        // Worked out here too: on Firefox for Android the page may report nothing.
+        const unmetRequirement =
+          formFactor && !runsOnFormFactor(plugin.manifest, formFactor)
+            ? UNAVAILABLE_ON_THIS_DEVICE
+            : requires && !requires.met(preferences.legacy)
+              ? requires
+              : null;
         return {
           ...plugin,
           enabled: view.enabled,
@@ -91,7 +103,7 @@ export function useOfficialPluginList({
           unmetRequirement,
         };
       }),
-    [listed, pluginState, preferences.legacy, isSafariBrowser],
+    [listed, pluginState, preferences.legacy, isSafariBrowser, formFactor],
   );
   const searchItems = useMemo(() => officialPluginSearchItems(listed), [listed]);
   // Rows wait for the first read: a default must not flash over a stored choice.

@@ -60,6 +60,5 @@ One-line answer for the data-usage questionnaire:
 
 - Privacy policy wording, all 10 locales: `docs/privacy.md` and
   `docs/<locale>/privacy.md`, under the plugin catalog bullet or section.
-- Implementation and gates: `src/features/plugins/README.md`, section "Remote
-  host catalog".
+- Implementation and gates: `src/features/plugins/remote/README.md`.
 - Build flags: `src/features/plugins/remote/config.ts`.

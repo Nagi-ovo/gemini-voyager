@@ -79,6 +79,25 @@ describe('MAIN-world registrations', () => {
     expect(injectOpenTabs).not.toHaveBeenCalled();
   });
 
+  it('leaves the download interceptor out on Android, where watermark removal does not run', async () => {
+    const runtime = chrome.runtime as unknown as { getPlatformInfo?: () => Promise<unknown> };
+    runtime.getPlatformInfo = async () => ({ os: 'android' });
+    vi.spyOn(chrome.storage.sync, 'get').mockImplementation((async () => ({
+      [StorageKeys.WATERMARK_DOWNLOAD_ENABLED]: true,
+    })) as never);
+    try {
+      // A fresh module: the platform is read once per background lifetime.
+      vi.resetModules();
+      const fresh = await import('../mainWorldRegistration');
+      await fresh.createMainWorldRegistration().registerFetchInterceptor(true);
+      expect(unregisterContentScripts).toHaveBeenCalledWith({ ids: ['gv-fetch-interceptor'] });
+      expect(registerContentScripts).not.toHaveBeenCalled();
+      expect(injectOpenTabs).not.toHaveBeenCalled();
+    } finally {
+      delete runtime.getPlatformInfo;
+    }
+  });
+
   it.each(['firefox', 'safari'])(
     'cleans up response observers without adding MAIN-world copies on %s',
     async (target) => {

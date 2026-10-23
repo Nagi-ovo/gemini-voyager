@@ -1,0 +1,126 @@
+{
+  "siteCheckLauncher": {
+    "message": "サイトチェック",
+    "description": "Label of the small floating button that opens Voyager's site check panel"
+  },
+  "siteCheckTitle": {
+    "message": "Voyager サイトチェック",
+    "description": "Heading of the panel listing which Voyager selectors match on the current page"
+  },
+  "siteCheckPrivacy": {
+    "message": "コピー、ダウンロード、Issue の作成を行うまで、このページから何も送信されません。レポートにはメッセージ本文、タイトル、アカウント情報、完全な URL は含まれません。",
+    "description": "Privacy note at the top of the site check panel"
+  },
+  "siteCheckSummary": {
+    "message": "{checked} 個のセレクターを確認 · {broken} 個が壊れている可能性",
+    "description": "Summary line; {checked} and {broken} are numbers and must stay as written"
+  },
+  "siteCheckAllFound": {
+    "message": "{checked} 個のセレクターを確認 · このページで必要な要素はすべて見つかりました",
+    "description": "Summary line when nothing looks broken; {checked} is a number and must stay as written"
+  },
+  "siteCheckRerun": {
+    "message": "もう一度チェック",
+    "description": "Button that runs the site check again on the current page"
+  },
+  "siteCheckPick": {
+    "message": "要素を選択",
+    "description": "Button that starts the element picker, which adds one page element's structure to the report"
+  },
+  "siteCheckPickHint": {
+    "message": "おかしく見える部分をクリックしてください。Esc でキャンセルします。",
+    "description": "Instruction shown while the element picker is active"
+  },
+  "siteCheckCancel": {
+    "message": "キャンセル",
+    "description": "Button that leaves the element picker without picking"
+  },
+  "siteCheckSelectors": {
+    "message": "セレクター",
+    "description": "Heading of the table of selectors and their match counts"
+  },
+  "siteCheckColSource": {
+    "message": "使用元",
+    "description": "Table column: the site adapter or the plugin that relies on the selector"
+  },
+  "siteCheckColName": {
+    "message": "名前",
+    "description": "Table column: the selector's name"
+  },
+  "siteCheckColMatches": {
+    "message": "一致数",
+    "description": "Table column: how many page elements the selector matches"
+  },
+  "siteCheckColResult": {
+    "message": "結果",
+    "description": "Table column: whether the match count looks right"
+  },
+  "siteCheckVerdictOk": {
+    "message": "検出",
+    "description": "Result: the selector matched at least one element"
+  },
+  "siteCheckVerdictMissing": {
+    "message": "見つからない",
+    "description": "Result: the selector matched nothing although the element should be on this page; likely broken"
+  },
+  "siteCheckVerdictNotHere": {
+    "message": "会話内のみ",
+    "description": "Result: nothing matched, but the element appears only once a conversation is open"
+  },
+  "siteCheckVerdictNotJudged": {
+    "message": "見つからない（正常な場合あり）",
+    "description": "Result: nothing matched, and Voyager cannot tell whether the element should exist right now"
+  },
+  "siteCheckVerdictInvalid": {
+    "message": "無効なセレクター",
+    "description": "Result: this browser cannot parse the selector"
+  },
+  "siteCheckVerdictUnresolved": {
+    "message": "このサイトでは未定義",
+    "description": "Result: a plugin needs a selector this site does not define"
+  },
+  "siteCheckPicked": {
+    "message": "選択した要素",
+    "description": "Heading of the section about the element the person picked"
+  },
+  "siteCheckPickedNone": {
+    "message": "任意：おかしく見える部分を選択すると、その構造（テキストなし）がレポートに追加されます。",
+    "description": "Shown before any element is picked"
+  },
+  "siteCheckPickedNoMatch": {
+    "message": "この要素とその周辺の要素に一致する Voyager のセレクターはありません。",
+    "description": "Shown when the picked element and its ancestors match no selector"
+  },
+  "siteCheckPreview": {
+    "message": "レポートのプレビュー（コピーされる内容そのもの）",
+    "description": "Expandable section showing the full Markdown report"
+  },
+  "siteCheckCopy": {
+    "message": "レポートをコピー",
+    "description": "Button that copies the report as Markdown"
+  },
+  "siteCheckDownload": {
+    "message": ".json をダウンロード",
+    "description": "Button that downloads the report as a JSON file"
+  },
+  "siteCheckOpenIssue": {
+    "message": "コピーして Issue を作成",
+    "description": "Button that copies the report and opens Voyager's GitHub bug report form"
+  },
+  "siteCheckClose": {
+    "message": "閉じる",
+    "description": "Accessible name of the button that closes the site check panel"
+  },
+  "siteCheckCopied": {
+    "message": "レポートをコピーしました。",
+    "description": "Toast after the report was copied"
+  },
+  "siteCheckCopiedForIssue": {
+    "message": "レポートをコピーしました。Issue フォームの Sanitized Diagnostics 欄に貼り付けてください。",
+    "description": "Toast after copying the report and opening the issue form"
+  },
+  "siteCheckCopyFailed": {
+    "message": "レポートをコピーできませんでした。「.json をダウンロード」でファイルを添付してください。",
+    "description": "Toast when the clipboard is unavailable"
+  }
+}

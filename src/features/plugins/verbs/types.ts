@@ -11,8 +11,17 @@ import type { Result } from '@/core/types/common';
 
 import type { ManifestIssue } from '../manifest/validate';
 import type { PluginScope } from '../runtime/pluginScope';
-import type { PluginSettings, SiteAdapter } from '../types';
+import type { PluginStatus } from '../runtime/pluginStatus';
+import type { PluginManifest, PluginSettings, SiteAdapter } from '../types';
 import type { PrimitiveContract } from './contractTypes';
+
+/** What the page's plugin host knows about its plugins, read at the moment of the call. */
+export interface PluginInspection {
+  /** Every plugin whose `matches` cover the page, with its status (`runtime/pluginStatuses.ts`). */
+  readonly statuses: readonly PluginStatus[];
+  /** The listed manifests; the ones without a status do not target this page. */
+  readonly manifests: readonly PluginManifest[];
+}
 
 export interface PrimitiveContext {
   readonly doc: Document;
@@ -26,6 +35,11 @@ export interface PrimitiveContext {
    * zero on a page that already shows conversation turns.
    */
   setTargetCounter(count: () => number): void;
+  /**
+   * Read-only view of the page's plugins, for diagnostics (`siteCheck`). Absent
+   * when the engine runs without a host (tests, a bare engine).
+   */
+  readonly inspectPlugins?: () => PluginInspection;
 }
 
 /**

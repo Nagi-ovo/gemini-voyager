@@ -13,7 +13,9 @@
  * and is checked for:
  *   1. a `plugin.json` that parses and passes `validateManifest` with its
  *      `contributes.styles[].file` inlined exactly as the build inlines it,
- *      every referenced CSS file passing `validateStyleCss`, and `format` 1;
+ *      every referenced CSS file passing `validateStyleCss`, `format` 1, and
+ *      `requires.formFactors`, when present, a non-empty list of `desktop` /
+ *      `mobile`;
  *   2. a sibling `../../site.json` that passes `validateSiteAdapterData`, whose
  *      `id` equals its directory name, and whose `matches` cover the plugin's
  *      (plan D18);

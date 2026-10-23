@@ -155,6 +155,7 @@ describe('the official plugin list in the popup', () => {
           OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
           OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
           OFFICIAL_PLUGIN_IDS.geminiContextSync,
+          OFFICIAL_PLUGIN_IDS.geminiSiteCheck,
         ],
       },
     ]);
@@ -382,7 +383,10 @@ describe('the official plugin list in the popup', () => {
         ['pluginsSidebar', [OFFICIAL_PLUGIN_IDS.aistudioSidebarWidth]],
         ['pluginsContent', [OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy]],
         ['pluginsInput', [OFFICIAL_PLUGIN_IDS.aistudioEnterSend]],
-        ['pluginsConversations', [OFFICIAL_PLUGIN_IDS.aistudioBatchDelete]],
+        [
+          'pluginsConversations',
+          [OFFICIAL_PLUGIN_IDS.aistudioBatchDelete, OFFICIAL_PLUGIN_IDS.aistudioSiteCheck],
+        ],
       ]);
       expect(toggle(OFFICIAL_PLUGIN_IDS.aistudioEnterSend).checked).toBe(expected);
       expect(container.querySelector('#changelog-notify-badge')).not.toBeNull();

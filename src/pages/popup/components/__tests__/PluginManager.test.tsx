@@ -251,6 +251,7 @@ describe('PluginManager plugin status', () => {
     mockMessages.current = {
       pluginNeedsNewerVoyager: enMessages.pluginNeedsNewerVoyager.message,
       pluginNeedsVoyagerUpdate: enMessages.pluginNeedsVoyagerUpdate.message,
+      pluginUnavailableOnMobile: enMessages.pluginUnavailableOnMobile.message,
       pluginNeedsSiteAdapterUpdate: enMessages.pluginNeedsSiteAdapterUpdate.message,
       pluginNoEffectOnPage: enMessages.pluginNoEffectOnPage.message,
       pluginUpdateAfterReload: enMessages.pluginUpdateAfterReload.message,
@@ -288,6 +289,16 @@ describe('PluginManager plugin status', () => {
     });
 
     expect(container.textContent).toContain('Needs a newer Voyager to run');
+    expect(pluginToggle().disabled).toBe(true);
+  });
+
+  it('says a phone cannot run it and blocks enabling there', async () => {
+    pluginState.current = { [PLUGIN_ID]: { enabled: false, installedAt: 0 } };
+    await renderManager({
+      statuses: [{ ...READY, kind: 'needs-form-factor', formFactor: 'mobile' }],
+    });
+
+    expect(container.textContent).toContain('Not available on phones yet');
     expect(pluginToggle().disabled).toBe(true);
   });
 

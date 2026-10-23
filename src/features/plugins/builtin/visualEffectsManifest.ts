@@ -119,6 +119,7 @@ export const VISUAL_EFFECTS_MANIFEST: PluginManifest = {
   tier: 'declarative',
   // Runtime coverage only: no extension permission or content-script registration.
   matches: ['<all_urls>'],
+  requires: { formFactors: ['desktop', 'mobile'] },
   contributes: {
     settings: {
       effect: {

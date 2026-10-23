@@ -24,7 +24,7 @@
  * ships no JSON Schema validator (D17: no schema library), and adding ajv to
  * assert this would be a runtime dependency bought for one test file. It covers
  * exactly the keywords these schemas use: $ref (within a file, or to a file
- * beside it: the site schema keeps its large sections in `site-sections/`),
+ * beside it: the schemas keep large sections in `site-sections/` and `plugin-sections/`),
  * type, const, enum, pattern, minLength/maxLength, minimum/maximum,
  * minItems/maxItems, items, properties, additionalProperties, required,
  * propertyNames, if/then/else, anyOf/oneOf, and `format: "regex"` (the one
@@ -111,7 +111,11 @@ const EVERY_FIELD_MANIFEST: Record<string, unknown> = {
   changelog: 'Uses every field at once.',
   matches: ['https://demo.example/*'],
   theme: { brand: '#d97757' },
-  requires: { handlers: ['formulaCopy'], semantic: ['composer'] },
+  requires: {
+    handlers: ['formulaCopy'],
+    semantic: ['composer'],
+    formFactors: ['desktop', 'mobile'],
+  },
   contributes: {
     styles: [{ css: 'body { color: red; }', source: 'style.css' }],
     settings: {
@@ -288,6 +292,9 @@ describe('plugin.schema.json', () => {
       /\$\.theme\.brand/,
     );
     expect(check({ ...base, matches: [] }, pluginSchema).join('\n')).toMatch(/\$\.matches/);
+    const formFactors = (list: unknown): unknown => ({ ...base, requires: { formFactors: list } });
+    expect(check(formFactors([]), pluginSchema).join('\n')).toMatch(/formFactors/);
+    expect(check(formFactors(['tablet']), pluginSchema).join('\n')).toMatch(/formFactors/);
 
     // Same shapes, through the validator: the schema is not stricter than it.
     for (const broken of [
@@ -297,6 +304,8 @@ describe('plugin.schema.json', () => {
       { ...base, format: 2 },
       { ...base, theme: { brand: 'red' } },
       { ...base, matches: [] },
+      formFactors([]),
+      formFactors(['tablet']),
     ]) {
       expect(validateManifest(broken).success).toBe(false);
     }
