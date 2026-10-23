@@ -26,7 +26,7 @@ For architecture or distribution changes, read `src/features/plugins/README.md` 
 
 ## Convert a native Gemini or AI Studio feature
 
-A native feature becomes a packaged official plugin that keeps its old setting as its switch: a fixed-id builtin for feature code, or `catalog/sites/{gemini,aistudio}/plugins/` when pure CSS or a shipped primitive covers it. Touch, in order: `builtin/<site><Feature>Manifest.ts` (registered in `builtin/index.ts`), the owner entry in `sites/featureOwners.ts` (`handlers: []` unless a public primitive is deliberately opened), the enable binding in `storage/legacyEnableBindingTable.ts` and any value bindings in `storage/legacyValueBindings.ts`, the handler on `PluginScope` (`src/pages/content/<feature>/pluginHandler.ts`), `admission.admit(...)` at the native start point in place of the native call (`runtime/officialAdmission.ts`), and the popup row in `src/pages/popup/officialPlugins/officialPluginRegistry.ts`. Read the **Gemini and AI Studio** paragraph of `src/features/plugins/README.md`, the migration template in `.github/docs/GEMINI_PLUGIN_PLATFORM_PLAN.md` §7.12 and the popup steps in `.github/docs/POPUP_PLUGIN_LIST_DESIGN.md` §5.
+A native feature becomes a packaged official plugin that keeps its old setting as its switch: a fixed-id builtin for feature code, or `catalog/sites/{gemini,aistudio}/plugins/` when pure CSS or a shipped primitive covers it. Touch, in order: `builtin/<site><Feature>Manifest.ts` (registered in `builtin/index.ts`), the owner entry in `sites/featureOwners.ts` (`handlers: []` unless a public primitive is deliberately opened), the enable binding in `storage/legacyEnableBindingTable.ts` and any value bindings in `storage/legacyValueBindings.ts`, the handler on `PluginScope` (`src/pages/content/<feature>/pluginHandler.ts`), `admission.admit(...)` at the native start point in place of the native call (`runtime/officialAdmission.ts`), and the popup row in `src/pages/popup/officialPlugins/officialPluginRegistry.ts`. Read the **Gemini and AI Studio** paragraph of `src/features/plugins/local/README.md`, the migration template in `.github/docs/GEMINI_PLUGIN_PLATFORM_PLAN.md` §7.12 and the popup steps in `.github/docs/POPUP_PLUGIN_LIST_DESIGN.md` §5.
 
 ## Shared constraints
 
@@ -151,7 +151,7 @@ A declarative plugin for personal use needs no PR, catalog entry or release. Use
 - Export downloads the manifest with CSS inlined; that file is also the starting point for an official contribution, after renaming the id out of `local.` and moving it into `catalog/sites/<site>/plugins/<id>/`.
 - Manifests stay on the device (no Drive backup yet); export to keep a copy.
 
-Implementation: `src/features/plugins/local/` and the "Write your own plugin locally" section of `src/features/plugins/README.md`.
+Implementation: `src/features/plugins/local/` and `src/features/plugins/local/README.md`.
 
 ## Verification and completion
 
