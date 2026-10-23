@@ -3,6 +3,11 @@ import type { ExtractedContent } from '@/features/export/services/DOMContentExtr
 import { escapeHtml, escapeHtmlAttribute } from '@/features/export/services/exportDomPolicy';
 import type { SiteAdapter } from '@/features/plugins/types';
 
+import {
+  MOBILE_ASSISTANT_SELECTOR,
+  MOBILE_MESSAGE_SELECTOR,
+  resolveChatGptMobileThread,
+} from '../chatgptMobileDom';
 import { TURN_ITEM_SELECTOR, resolveVisibleConversationRoot } from '../chatgptThread';
 import type { ExportPlatformAdapter } from './contract';
 
@@ -21,11 +26,11 @@ function extractTitle(): string {
 }
 
 function extractId(): string | null {
-  return window.location.pathname.match(/\/c\/([^/?#]+)/)?.[1] ?? null;
+  return window.location.pathname.match(CONVERSATION_ROUTE)?.[1] ?? null;
 }
 
-/** `/c/<id>` or `/g/<gpt>/c/<id>`, optionally under `/u/<index>/`. */
-const CONVERSATION_ROUTE = /^(?:\/u\/[^/]+)?(?:\/g\/[^/]+)?\/c\/[^/?#]+/;
+/** Mobile logged-out chats use `/uc/<id>` instead of the desktop `/c/<id>`. */
+const CONVERSATION_ROUTE = /^(?:\/u\/[^/]+)?(?:\/g\/[^/]+)?\/(?:c|uc)\/([^/?#]+)/;
 /** A turn ChatGPT has actually rendered, whatever the route says. */
 const MOUNTED_TURN_SELECTOR = [
   TURN_ITEM_SELECTOR,
@@ -37,7 +42,7 @@ const MOUNTED_TURN_SELECTOR = [
 
 /**
  * ChatGPT serves Codex, settings and other non-chat pages from the same
- * origin. A conversation lives on a `/c/<id>` route, or, for a temporary chat
+ * origin. A conversation lives on a `/c/<id>` or `/uc/<id>` route, or, for a temporary chat
  * that never leaves `/?temporary-chat=true`, wherever a turn is rendered.
  */
 export function chatgptIsConversationPage(doc: Document, url: string): boolean {
@@ -47,7 +52,11 @@ export function chatgptIsConversationPage(doc: Document, url: string): boolean {
   } catch {
     return false;
   }
-  return CONVERSATION_ROUTE.test(pathname) || doc.querySelector(MOUNTED_TURN_SELECTOR) !== null;
+  return (
+    CONVERSATION_ROUTE.test(pathname) ||
+    doc.querySelector(MOUNTED_TURN_SELECTOR) !== null ||
+    resolveChatGptMobileThread(doc)?.querySelector(MOBILE_MESSAGE_SELECTOR) != null
+  );
 }
 
 /** The visible conversation's `main`: ChatGPT keeps earlier pages in hidden ones. */
@@ -261,7 +270,7 @@ export function buildChatGptAdapter(site: SiteAdapter): ExportPlatformAdapter {
   return {
     site,
     getUserSelectors: () => [site.selectors.userTurn],
-    getAssistantSelectors: () => [site.selectors.assistantTurn],
+    getAssistantSelectors: () => [site.selectors.assistantTurn, MOBILE_ASSISTANT_SELECTOR],
     extractConversationTitle: extractTitle,
     extractConversationIdFromUrl: extractId,
     resolveConversationRoot: resolveRoot,

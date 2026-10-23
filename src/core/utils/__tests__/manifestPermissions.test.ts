@@ -21,6 +21,7 @@ type ManifestPermissions = {
   }>;
   browser_specific_settings?: {
     safari?: { strict_min_version?: string };
+    gecko_android?: { strict_min_version?: string };
   };
 };
 
@@ -142,6 +143,13 @@ describe('manifest permissions', () => {
 
   it('declares Safari 15.4 as the Manifest V3 compatibility floor', () => {
     expect(safariManifest.browser_specific_settings?.safari?.strict_min_version).toBe('15.4');
+  });
+
+  it('declares Android support with optional host permission grants', () => {
+    expect(firefoxManifest.browser_specific_settings?.gecko_android?.strict_min_version).toBe(
+      '128.0',
+    );
+    expect(firefoxManifest.optional_host_permissions).toContain('https://chatgpt.com/*');
   });
 
   it('provides native-size Safari toolbar icons', () => {

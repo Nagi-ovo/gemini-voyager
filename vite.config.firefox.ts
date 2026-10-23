@@ -88,6 +88,10 @@ export const firefoxManifest = appendFirefoxChangelogResources({
         required: ['none'],
       },
     },
+    gecko_android: {
+      // Android export needs the popup's optional host permission grant flow.
+      strict_min_version: '128.0',
+    },
   },
   background: {
     scripts: ['src/pages/background/index.ts'],

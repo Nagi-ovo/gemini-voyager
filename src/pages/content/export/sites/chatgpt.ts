@@ -1,6 +1,7 @@
 import { createContentExtractor } from '@/features/export/services/DOMContentExtractor';
 
 import { buildChatGptTurnsForSelection, resolveChatGptSelectionRoles } from '../adapter/chatgpt';
+import { createChatGptMobileReader } from '../adapter/chatgptMobile';
 import {
   type ChatGptThreadSession,
   createChatGptThreadPreparer,
@@ -42,6 +43,7 @@ function exportSession(session: ChatGptThreadSession): ExportTurnSession {
 export function createChatGptExportSite(adapter: ExportPlatformAdapter): ExportSite {
   const extractor = createContentExtractor(adapter);
   const preparer = createChatGptThreadPreparer();
+  const mobile = createChatGptMobileReader(adapter);
   return {
     id: adapter.site.id,
     label: adapter.site.label,
@@ -49,8 +51,10 @@ export function createChatGptExportSite(adapter: ExportPlatformAdapter): ExportS
     title: adapter.extractConversationTitle,
     turns: {
       scrollsWhileBuilding: true,
-      messages: () => selectionMessages(uncrawledChatGptTurnContainers()),
+      messages: () =>
+        mobile.isActive() ? mobile.messages() : selectionMessages(uncrawledChatGptTurnContainers()),
       build: async (selectedIds, options) => {
+        if (mobile.isActive()) return mobile.build(selectedIds, options);
         // Direct consumers also need a full crawl; they do not run the selection preparer.
         const session = await createChatGptThreadPreparer().prepare({ ...options, extractor });
         if (!session) {
@@ -62,8 +66,12 @@ export function createChatGptExportSite(adapter: ExportPlatformAdapter): ExportS
           session.release();
         }
       },
-      roles: resolveChatGptSelectionRoles,
+      roles: (selectedIds, options) =>
+        mobile.isActive()
+          ? mobile.roles!(selectedIds, options)
+          : resolveChatGptSelectionRoles(selectedIds, options),
       prepare: async (options) => {
+        if (mobile.isActive()) return { ...mobile, release() {} };
         const session = await prepareChatGptExportWithProgress(preparer, { ...options, extractor });
         return session && exportSession(session);
       },
