@@ -1,5 +1,3 @@
-import { type ChangeEvent, useEffect, useState } from 'react';
-
 import {
   compatibleSettingWrite,
   resolvePluginSettings,
@@ -7,12 +5,13 @@ import {
 } from '@/features/plugins/runtime/resolvePluginSettings';
 import type { PluginManifest, PluginSettingValue } from '@/features/plugins/types';
 
-import { Input, Select } from '../../../components/ui/input';
+import { Select } from '../../../components/ui/input';
 import { Slider } from '../../../components/ui/slider';
-import { SliderRow, sliderValueChipClass } from '../../../components/ui/slider-row';
+import { SliderRow } from '../../../components/ui/slider-row';
 import { Switch } from '../../../components/ui/switch';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { ExperimentalBadge } from './ExperimentalBadge';
+import { NumberSetting } from './NumberSetting';
 import { pickLocalized, pickLocalizedSetting } from './PluginIdentity';
 
 /**
@@ -23,68 +22,6 @@ import { pickLocalized, pickLocalizedSetting } from './PluginIdentity';
  * precise number input.
  */
 const PRECISE_NUMBER_MIN_RANGE = 1000;
-
-interface NumberSettingProps {
-  readonly label: string;
-  readonly value: number;
-  readonly min: number;
-  readonly max: number;
-  readonly disabled: boolean;
-  readonly onChange: (value: number) => void;
-}
-
-/**
- * The precise path for a wide number setting. A draft lets the person clear or
- * overshoot while typing; valid values update the slider immediately, invalid
- * ones clamp on blur.
- */
-function NumberSetting({ label, value, min, max, disabled, onChange }: NumberSettingProps) {
-  const [draft, setDraft] = useState(String(value));
-  useEffect(() => {
-    setDraft(String(value));
-  }, [value]);
-
-  const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    const raw = event.target.value;
-    setDraft(raw);
-    if (raw.trim() === '') return;
-    const next = Number(raw);
-    if (!Number.isFinite(next)) return;
-    const rounded = Math.round(next);
-    if (rounded >= min && rounded <= max) onChange(rounded);
-  };
-
-  const handleBlur = (): void => {
-    const next = Number(draft);
-    if (draft.trim() === '' || !Number.isFinite(next)) {
-      setDraft(String(value));
-      return;
-    }
-    const clamped = Math.min(max, Math.max(min, Math.round(next)));
-    setDraft(String(clamped));
-    if (clamped !== value) onChange(clamped);
-  };
-
-  return (
-    <Input
-      type="number"
-      min={min}
-      max={max}
-      step={1}
-      value={draft}
-      disabled={disabled}
-      inputMode="numeric"
-      aria-label={label}
-      onChange={handleChange}
-      onBlur={handleBlur}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') event.currentTarget.blur();
-      }}
-      size="sm"
-      className={`${sliderValueChipClass} hover:border-border h-6 w-16 border-transparent text-end`}
-    />
-  );
-}
 
 interface PluginSettingsProps {
   readonly plugin: PluginManifest;
