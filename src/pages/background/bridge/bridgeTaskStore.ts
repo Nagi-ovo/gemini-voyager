@@ -4,8 +4,9 @@
  * only in memory:
  *   - `storage.session` (cleared with the browser session, closed to content
  *     scripts by default) holds the tasks in flight (one per job, of up to
- *     `maxTasks` jobs at once), the bridge tabs (one per job), the page lease
- *     (`pageLease.ts`), the pending pairing intent and the task ids already seen;
+ *     `maxTasks` jobs at once), the bridge tabs and the job that opened each,
+ *     the page lease (`pageLease.ts`), the pending pairing intent and the task
+ *     ids already seen;
  *   - `storage.local` holds the outbox: results the server could not take yet.
  *
  * Session keys are module constants rather than `StorageKeys`: backup policies

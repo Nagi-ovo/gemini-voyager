@@ -1,7 +1,7 @@
 /**
  * Task dispatch (spec §2.2 delivery, §3.1, §3.2). One task per job, each job in
- * the tab its own open created; one job at a time, or up to `maxTasks` once the
- * person allows parallel jobs. A task past that (another of the same job, or of
+ * the tab its own latest open created (`jobTabs.ts`); one job at a time, or as
+ * many as the person chose once they allow parallel jobs. A task past that (another of the same job, or of
  * one job too many) is answered `busy`, never queued. Ops that dispatch page
  * events still take the one page lease, so two jobs never type or click at once.
  *
