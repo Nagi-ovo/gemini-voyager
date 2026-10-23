@@ -67,6 +67,12 @@ export {
 } from './dispatcherConfig';
 export { cancelReason } from './dispatchOutcome';
 
+interface Stop {
+  readonly record: BridgeTaskRecord;
+  readonly code: ErrorCode;
+  readonly message: string;
+}
+
 export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   const now = deps.now ?? (() => Date.now());
   const config: DispatcherConfig = { ...DEFAULT_DISPATCHER_CONFIG, ...deps.config };
@@ -202,12 +208,22 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     for (const record of await store.listTasks()) await watch(record);
   };
 
-  const stopAll = async (code: ErrorCode, message: string) => {
-    for (const record of await store.listTasks()) {
-      abortInPage(record, code);
+  /**
+   * Stop each task in its page before reporting any of them: a report awaits the server, and
+   * meanwhile another job's send would go on. Marked first, so one still waiting never starts.
+   */
+  const stopEach = async (stops: readonly Stop[]): Promise<void> => {
+    for (const { record, code } of stops) {
+      const marked = await store.updateTask(record.taskId, { cancelling: code }, notCancelling);
+      abortInPage(marked ?? record, code);
+    }
+    for (const { record, code, message } of stops) {
       await finish(record.taskId, fail(code, message), { releaseLease: false });
     }
   };
+
+  const stopAll = async (code: ErrorCode, message: string) =>
+    stopEach((await store.listTasks()).map((record) => ({ record, code, message })));
 
   const intake = async (task: ValidatedBridgeTask, from?: PairedConnection): Promise<unknown> => {
     await deps.ready();
@@ -397,12 +413,12 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
 
     recheckPolicy: async () => {
       await deps.ready();
+      const stops: Stop[] = [];
       for (const record of await store.listTasks()) {
         const denied = await deps.policy.checkOp(record.op);
-        if (!denied) continue;
-        abortInPage(record, denied.code);
-        await finish(record.taskId, fail(denied.code, denied.message), { releaseLease: false });
+        if (denied) stops.push({ record, ...denied });
       }
+      await stopEach(stops);
     },
 
     tick,
