@@ -84,7 +84,8 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
   const capacity = async (): Promise<number> =>
     (await deps.parallelAllowed?.()) === true ? config.maxTasks : 1;
   const settle = createTaskSettlement(context);
-  const { ownConnection, deliver, finish, refuse, abortInPage, confirmStop, leaseFor } = settle;
+  const { ownConnection, deliver, finish, refuse, abortInPage, confirmStop } = settle;
+  const { leaseAfterLeftRestore } = settle;
   const { concludeClose, endLost, startOp } = settle;
   const conversations = createConversationTasks(context, settle, (delayMs) =>
     scheduleTick(delayMs),
@@ -120,7 +121,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     let leaseId: string | undefined;
     let deadline = record.deadline;
     if (leased) {
-      const got = await leaseFor(task.taskId, task.op, holder, record.deadline - now());
+      const got = await leaseAfterLeftRestore(task.taskId, task.op, holder, record.deadline);
       if ('refused' in got) return finish(task.taskId, got.refused, { releaseLease: false });
       leaseId = got.lease.leaseId;
       deadline = Math.min(deadline, got.lease.deadline);
