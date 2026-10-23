@@ -21,7 +21,7 @@ The preview shows exactly the Markdown that **Copy report** puts on the
 clipboard; **Download .json** saves the same report; **Copy and open an
 issue** copies it and opens the bug report form with only a short title,
 summary and the extension and browser versions in the URL. The report holds
-the site id, the route with conversation ids replaced by `:id`, the extension,
+the site id, the route with every segment but the site's route words replaced by `:id`, the extension,
 engine and browser versions, the plugins on the page with their status, the
 selector table and the picked element. It never holds message text, titles,
 account names or emails, or a full URL; a local plugin is named `local.#n`

@@ -32,7 +32,7 @@ export function checkPage(
   const inspection = context.inspectPlugins?.() ?? null;
   const url = doc.defaultView?.location.href ?? '';
   const probes = collectProbes(adapter, inspection, context.pluginId);
-  const conversation = redactRoute(url, adapter?.conversationIdPattern).conversation;
+  const conversation = redactRoute(url, adapter).conversation;
   const results = runProbes(probes, { doc, conversation });
   const statuses = inspection?.statuses ?? [];
   const report = buildSiteCheckReport({ url, doc, adapter, results, statuses, picked });

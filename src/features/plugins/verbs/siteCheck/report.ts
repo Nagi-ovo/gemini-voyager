@@ -120,7 +120,7 @@ export function buildSiteCheckReport(input: ReportInput): SiteCheckReport {
   const ids = pluginIds([...results.map((r) => r.source), ...input.statuses.map((s) => s.id)]);
   const diagnostics = input.diagnostics ?? buildVoyagerDiagnostics({ now: input.now });
   const { activeSite: _activeSite, ...environment } = diagnostics.environment;
-  const route = redactRoute(input.url, adapter?.conversationIdPattern);
+  const route = redactRoute(input.url, adapter);
   const scheme = input.doc.documentElement.getAttribute('data-gv-scheme');
   const lang = input.doc.documentElement.lang;
   const count = (verdict: ProbeResult['verdict']) =>
