@@ -239,9 +239,9 @@ checked again after `{{setting}}` substitution (`manifest/sinkGuards.ts`).
 Maintain bundled official plugins in this repository; the retired
 `../voyager-plugins` marketplace is no longer a source. `bun run catalog:build`
 generates the remote catalog published by the docs deploy. See the
-[distribution design](../../../.github/docs/PLUGIN_DISTRIBUTION_PLAN.md). Gemini and AI
-Studio became plugin platforms too, as recorded in the
-[Gemini plugin platform plan](../../../.github/docs/GEMINI_PLUGIN_PLATFORM_PLAN.md).
+[distribution decisions](remote/DECISIONS.md). Gemini and AI
+Studio became plugin platforms too; their packaged official plugins and the
+rules they keep are in [builtin/README.md](builtin/README.md).
 
 ## What is NOT done yet (next milestones)
 

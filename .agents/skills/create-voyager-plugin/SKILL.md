@@ -22,11 +22,11 @@ A new site also requires an extension release: its host is an optional permissio
 
 New features follow `.github/CONTRIBUTING.md`; a new primitive or site requires explicit maintainer approval of the approach. Reuse a direct maintainer instruction in the current task as approval; loading this skill grants none. A selector fix within an existing site's approved scope needs no new feature approval.
 
-For architecture or distribution changes, read `src/features/plugins/README.md` and `.github/docs/PLUGIN_DISTRIBUTION_PLAN.md`. PR preparation uses `voyager-contribute`; live checks use `verify-in-browser` (Safari loading uses `update-safari-extension`).
+For architecture or distribution changes, read `src/features/plugins/README.md` and the distribution decisions in `src/features/plugins/remote/DECISIONS.md`. PR preparation uses `voyager-contribute`; live checks use `verify-in-browser` (Safari loading uses `update-safari-extension`).
 
 ## Convert a native Gemini or AI Studio feature
 
-A native feature becomes a packaged official plugin that keeps its old setting as its switch: a fixed-id builtin for feature code, or `catalog/sites/{gemini,aistudio}/plugins/` when pure CSS or a shipped primitive covers it. Touch, in order: `builtin/<site><Feature>Manifest.ts` (registered in `builtin/index.ts`), the owner entry in `sites/featureOwners.ts` (`handlers: []` unless a public primitive is deliberately opened), the enable binding in `storage/legacyEnableBindingTable.ts` and any value bindings in `storage/legacyValueBindings.ts`, the handler on `PluginScope` (`src/pages/content/<feature>/pluginHandler.ts`), `admission.admit(...)` at the native start point in place of the native call (`runtime/officialAdmission.ts`), and the popup row in `src/pages/popup/officialPlugins/officialPluginRegistry.ts`. Read the **Gemini and AI Studio** paragraph of `src/features/plugins/local/README.md`, the migration template in `.github/docs/GEMINI_PLUGIN_PLATFORM_PLAN.md` §7.12 and the popup steps in `.github/docs/POPUP_PLUGIN_LIST_DESIGN.md` §5.
+A native feature becomes a packaged official plugin that keeps its old setting as its switch: a fixed-id builtin for feature code, or `catalog/sites/{gemini,aistudio}/plugins/` when pure CSS or a shipped primitive covers it. Follow [Native migration](references/native-migration.md) for the order of work, its tests and checks, and the **Gemini and AI Studio** paragraph of `src/features/plugins/local/README.md` for what local plugins may use there.
 
 ## Shared constraints
 
@@ -95,7 +95,7 @@ A native feature becomes a packaged official plugin that keeps its old setting a
   Gemini/AI Studio official plugins stay out of `marketplace.json` but appear
   in that table. Fixed-id builtins live in `builtin/` and use the
   manifest/handler binding checks instead.
-- `params` is configuration, not instructions (plan §5, C1): no conditions, no
+- `params` is configuration, not instructions (C1 in `remote/DECISIONS.md`): no conditions, no
   ordering, no code. A selector-valued parameter such as `yieldWhen` is still
   data, so do not reject one on its name.
 - Themes come from the site, not from guesswork: `site.json`'s `theme` block

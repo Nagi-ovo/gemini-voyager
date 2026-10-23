@@ -152,8 +152,8 @@ rail and navigation shortcut lease; saved stars and hierarchy remain, and the
 message timestamp labels plugin follows **Show Message Timestamps** independently;
 history and turn identity remain page services.
 
-The packaged owners in [`sites/featureOwners.ts`](sites/featureOwners.ts) and
-the builtins in [`builtin/index.ts`](builtin/index.ts) cover:
+The packaged owners in [`sites/featureOwners.ts`](../sites/featureOwners.ts) and
+the builtins in [`builtin/index.ts`](../builtin/index.ts) cover:
 
 - Gemini: Chat width, edit input width, font size, line height and paragraph spacing, sidebar width,
   sidebar auto-hide, sidebar full hide, Gems sidebar count, hide input halo; formula copy, Canvas
@@ -173,8 +173,8 @@ the builtins in [`builtin/index.ts`](builtin/index.ts) cover:
 Other sites' declarative plugins live in `catalog/sites/`. Every packaged Gemini / AI Studio
 official plugin has a popup row in the
 [`officialPluginRegistry.ts`](../../../pages/popup/officialPlugins/officialPluginRegistry.ts).
-For the next migration, follow the [plan §7.12 recipe](../../../../.github/docs/GEMINI_PLUGIN_PLATFORM_PLAN.md#712-剩余小功能迁移2026-10-16)
-and the [popup design §5](../../../../.github/docs/POPUP_PLUGIN_LIST_DESIGN.md#5-以后每项迁移的步骤).
+For the next migration, follow the [native migration recipe](../../../../.agents/skills/create-voyager-plugin/references/native-migration.md)
+and the popup's [Adding a row](../../../pages/popup/officialPlugins/README.md#adding-a-row).
 
 **NanoBanana watermark removal.** Two packaged fixed-ID builtins,
 `voyager.gemini-watermark-download` and `voyager.gemini-watermark-preview`, map

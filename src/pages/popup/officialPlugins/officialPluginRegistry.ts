@@ -6,7 +6,7 @@
  *
  * The rows live in `officialPluginEntries.ts`. A plugin joins that table in the
  * same change that removes its old settings row, so one switch never shows twice (see
- * `.github/docs/POPUP_PLUGIN_LIST_DESIGN.md`).
+ * `README.md` in this directory).
  */
 import { StorageKeys } from '@/core/types/common';
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';

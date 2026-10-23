@@ -16,6 +16,7 @@ Read only the reference needed for the current task:
 - New release, version bump, or interrupted release preparation: [normal-release.md](references/normal-release.md).
 - Failed Chrome or Edge submission, or an urgent Firefox-only hotfix: [store-recovery.md](references/store-recovery.md).
 - Safari CI failure or an explicitly requested local recovery artifact: [safari-dmg.md](references/safari-dmg.md).
+- Store listing copy about the plugin catalog connection (Chrome, Edge, Firefox): [store-listing-plugin-catalog.md](references/store-listing-plugin-catalog.md).
 
 ## Authorization and publication boundaries
 
