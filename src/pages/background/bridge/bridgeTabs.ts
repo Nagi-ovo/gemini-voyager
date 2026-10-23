@@ -65,8 +65,16 @@ export function senderIsHolder(
 }
 
 export interface BridgeTabs {
-  /** Open a fresh tab for `jobId` and record it as that job's bridge tab. */
-  open(jobId: string, url: string, active: boolean): Promise<number>;
+  /**
+   * Open a fresh tab for `jobId` and record it as that job's current tab; `parallel`: the
+   * job was admitted beside other jobs.
+   */
+  open(
+    jobId: string,
+    url: string,
+    active: boolean,
+    options?: { readonly parallel?: boolean },
+  ): Promise<number>;
   /** False when the tab was already gone. */
   close(tabId: number): Promise<boolean>;
   exists(tabId: number): Promise<boolean>;
@@ -101,10 +109,10 @@ export function createBridgeTabs(deps: {
   };
 
   return {
-    open: async (jobId, url, active) => {
+    open: async (jobId, url, active, options) => {
       const tab = await api.create({ url, active });
       if (typeof tab?.id !== 'number') throw new Error('The browser did not open a tab.');
-      await store.setTab({ tabId: tab.id, jobId, openedAt: now() });
+      await store.setTab({ tabId: tab.id, jobId, openedAt: now() }, options);
       return tab.id;
     },
     close: async (tabId) => {

@@ -142,17 +142,6 @@ describe('bridge dispatcher: jobs side by side', () => {
     expect(t.resultOf('T1')).toMatchObject({ ok: false, error: { code: 'tab-closed' } });
   });
 
-  it('lends a job that opened no tab (voyager call) the newest tab no task is in', async () => {
-    const t = setup();
-    t.parallel.allowed = true;
-    const older = await t.bridgeTab('doc-1', false, 'J1');
-    const newer = await t.bridgeTab('doc-2', false, 'J2');
-    await t.dispatcher.onTask(waitReply('T1', 'J2'));
-    await t.dispatcher.onTask(task('turns.read', 'T2', 'CALL'));
-
-    expect(t.page.starts().map((start) => start.tabId)).toEqual([newer, older]);
-  });
-
   it('lists every running task in flight ahead of the results still to hand over', async () => {
     const t = setup();
     t.parallel.allowed = true;

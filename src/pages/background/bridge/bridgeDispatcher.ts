@@ -36,7 +36,7 @@ import { LEASED_OPS } from '@/features/bridge/runtimeMessages';
 
 import type { PairedConnection } from './bridgeClient';
 import { senderIsHolder } from './bridgeTabs';
-import type { BridgeTabRecord, BridgeTaskRecord } from './bridgeTaskStore';
+import type { BridgeTaskRecord } from './bridgeTaskStore';
 import { createConversationTasks } from './conversationTasks';
 import {
   fail,
@@ -53,6 +53,7 @@ import {
   type DispatcherConfig,
   type DispatcherDeps,
 } from './dispatcherConfig';
+import { jobTab } from './jobTabs';
 import { createTaskSettlement } from './taskSettlement';
 
 export {
@@ -105,25 +106,10 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     setTimeout(() => void tick().catch(() => undefined), Math.max(0, delayMs) + 50);
   };
 
-  /**
-   * The tab a job's op runs in: the one its own open created. Only a job that never
-   * opened one (`voyager call`) borrows a tab, the newest no other job's task is in.
-   */
-  const tabFor = async (jobId: string): Promise<BridgeTabRecord | null> => {
-    const tabs = await store.listTabs();
-    const own = tabs.find((tab) => tab.jobId === jobId);
-    if (own || (await store.openedTab(jobId))) return own ?? null;
-    const others = await store.listTasks();
-    const inUse = new Set(others.filter((t) => t.jobId !== jobId).map((t) => t.tabId));
-    return tabs.findLast((tab) => !inUse.has(tab.tabId)) ?? null;
-  };
-
   const dispatchToContent = async (task: ValidatedBridgeTask, record: BridgeTaskRecord) => {
-    const tab = await tabFor(task.jobId);
-    if (!tab)
-      return finish(task.taskId, fail('tab-closed', 'No bridge tab is open.'), {
-        releaseLease: false,
-      });
+    const got = await jobTab(store, task.jobId, (await capacity()) === 1);
+    if ('refused' in got) return finish(task.taskId, got.refused, { releaseLease: false });
+    const { tab } = got;
     const holder = holderOf(tab);
     if (!holder) {
       return finish(task.taskId, fail('document-lost', 'The bridge tab has not loaded yet.'), {
@@ -255,6 +241,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
         serverId,
       );
     }
+    if (maxTasks > 1) await store.markParallel(task.jobId);
     if (!config.supportedOps.has(task.op) || !supportsOpVersion(task.op, task.opVersion)) {
       return refuse(
         task.taskId,
@@ -306,7 +293,7 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
         : fail('unsupported-op', 'This build cannot refresh the catalog.');
       return finish(task.taskId, refreshed, { releaseLease: false });
     }
-    if (task.op === 'conversation.open') return openConversation(task);
+    if (task.op === 'conversation.open') return openConversation(task, maxTasks > 1);
     if (task.op === 'conversation.close') return closeConversation(task);
     return dispatchToContent(task, record);
   };

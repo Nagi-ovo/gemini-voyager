@@ -16,6 +16,7 @@ import { type ContentHolder, conversationUrl } from './bridgeTabs';
 import type { BridgeTabRecord, BridgeTaskRecord } from './bridgeTaskStore';
 import { type LeaseOutcome, fail, holderOf, notCancelling, parseAck } from './dispatchOutcome';
 import type { DispatchContext } from './dispatcherConfig';
+import { ownTab } from './jobTabs';
 import type { TaskSettlement } from './taskSettlement';
 
 /** Marks the untracked mode switch-back that follows a timeout or abort. */
@@ -37,7 +38,7 @@ export function createConversationTasks(
    */
   const restoreLeftMode = async (ended: BridgeTaskRecord): Promise<void> => {
     if (ended.op === 'conversation.close' || (await store.listTasks()).length > 0) return;
-    const tab = (await store.listTabs()).find((entry) => entry.jobId === ended.jobId);
+    const tab = await ownTab(store, ended.jobId);
     if (!tab?.restoreMode) return;
     const holder = holderOf(tab);
     if (!holder || !(await tabs.exists(tab.tabId))) return;
@@ -69,15 +70,19 @@ export function createConversationTasks(
     if (!parseAck(reply).accepted) await lease.release(leaseId);
   };
 
+  /** `parallel`: the job was admitted beside other jobs. */
   const openConversation = async (
     task: Extract<ValidatedBridgeTask, { op: 'conversation.open' }>,
+    parallel: boolean,
   ) => {
     const current = await store.getTask(task.taskId);
     if (!current || current.cancelling) return; // stopped meanwhile
     const conversationId = 'conversationId' in task.params ? task.params.conversationId : undefined;
     let tabId: number;
     try {
-      tabId = await tabs.open(task.jobId, conversationUrl(conversationId), config.openTabActive);
+      tabId = await tabs.open(task.jobId, conversationUrl(conversationId), config.openTabActive, {
+        parallel,
+      });
     } catch (error) {
       return finish(task.taskId, fail('tab-closed', `Could not open a tab: ${String(error)}`), {
         releaseLease: false,

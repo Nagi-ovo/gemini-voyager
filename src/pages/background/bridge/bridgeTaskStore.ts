@@ -30,7 +30,10 @@ export const BRIDGE_SESSION_KEYS = {
   tabs: 'gvBridgeTabs',
   pairIntent: 'gvBridgePairIntent',
   seenTasks: 'gvBridgeSeenTasks',
-  /** Jobs that opened a tab: one whose tab is gone never borrows another job's. */
+  /**
+   * One {@link BridgeTabOwner} per job that opened a tab, oldest first: its current tab, and
+   * whether it ran beside other jobs. A job whose tab is gone never borrows another job's.
+   */
   tabJobs: 'gvBridgeTabJobs',
 } as const;
 
@@ -112,6 +115,15 @@ export interface BridgeTabRecord {
   readonly restoreMode?: SwitchableMode;
 }
 
+/** A job that opened a tab of its own. */
+export interface BridgeTabOwner {
+  readonly jobId: string;
+  /** The tab its latest `conversation.open` created; its ops run there (it may be closed by now). */
+  readonly tabId: number;
+  /** A task of the job was admitted while jobs ran side by side: it finishes after the switch goes off. */
+  readonly parallel?: true;
+}
+
 export interface OutboxEntry {
   readonly taskId: string;
   readonly result: TaskResultRequest;
@@ -124,6 +136,7 @@ export interface OutboxEntry {
 export const OUTBOX_MAX_ENTRIES = 16;
 export const OUTBOX_MAX_BYTES = 1024 * 1024;
 const MAX_SEEN_TASKS = 64;
+/** Owners whose tabs are all gone that are still remembered; one with a tab is never dropped. */
 const MAX_TAB_JOBS = 64;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -175,6 +188,15 @@ export function parseTabRecord(raw: unknown): BridgeTabRecord | null {
   return ok ? (raw as unknown as BridgeTabRecord) : null;
 }
 
+function parseTabOwner(raw: unknown): BridgeTabOwner | null {
+  if (!isRecord(raw) || !isText(raw.jobId) || !isInt(raw.tabId)) return null;
+  return {
+    jobId: raw.jobId,
+    tabId: raw.tabId,
+    ...(raw.parallel === true ? { parallel: true } : {}),
+  };
+}
+
 function parseList<T>(raw: unknown, parse: (entry: unknown) => T | null): T[] {
   if (!Array.isArray(raw)) return [];
   return raw.flatMap((entry) => {
@@ -222,10 +244,17 @@ export interface BridgeTaskStore {
   /** Every recorded bridge tab, oldest first. */
   listTabs(): Promise<BridgeTabRecord[]>;
   getTab(tabId: number): Promise<BridgeTabRecord | null>;
-  /** Record a tab, replacing the one with its id; its job counts as one that opened a tab. */
-  setTab(record: BridgeTabRecord): Promise<void>;
-  /** `jobId` opened a tab of its own (it may be closed by now). */
-  openedTab(jobId: string): Promise<boolean>;
+  /**
+   * Record a tab. A known tab is updated in place; a new one becomes its job's current tab
+   * (`parallel`: the job runs beside others, see {@link BridgeTabOwner}).
+   */
+  setTab(record: BridgeTabRecord, options?: { readonly parallel?: boolean }): Promise<void>;
+  /** The job that opened `jobId`'s tabs, or null when it never opened one. */
+  tabOwner(jobId: string): Promise<BridgeTabOwner | null>;
+  /** Every job that opened a tab, oldest first. */
+  listTabOwners(): Promise<BridgeTabOwner[]>;
+  /** `jobId`, which opened a tab, now runs beside other jobs; nothing when it opened none. */
+  markParallel(jobId: string): Promise<void>;
   updateTab(tabId: number, patch: Partial<Omit<BridgeTabRecord, 'tabId'>>): Promise<void>;
   clearTab(tabId: number): Promise<boolean>;
   /** Remember `taskId`; false when it had been seen already (a redelivery). */
@@ -255,6 +284,17 @@ export function createBridgeTaskStore(areas: {
     (await area.get(key))[key];
   const listTasks = async () => parseList(await read(session, K.tasks), parseTaskRecord);
   const listTabs = async () => parseList(await read(session, K.tabs), parseTabRecord);
+  const listTabOwners = async () => parseList(await read(session, K.tabJobs), parseTabOwner);
+  /**
+   * Unserialized; callers hold the chain. Past the cap only owners without any tab are
+   * forgotten, oldest first: a job keeps its tab for as long as the tab is open.
+   */
+  const writeOwners = async (owners: readonly BridgeTabOwner[]) => {
+    const open = new Set((await listTabs()).map((tab) => tab.jobId));
+    const closed = owners.filter((owner) => !open.has(owner.jobId));
+    const forget = new Set(closed.slice(0, Math.max(0, closed.length - MAX_TAB_JOBS)));
+    await session.set({ [K.tabJobs]: owners.filter((owner) => !forget.has(owner)) });
+  };
   /** Unserialized; callers hold the chain. An empty list leaves no key behind. */
   const writeTasks = (tasks: readonly BridgeTaskRecord[]) =>
     tasks.length === 0 ? session.remove(K.tasks) : session.set({ [K.tasks]: tasks });
@@ -309,20 +349,38 @@ export function createBridgeTaskStore(areas: {
       }),
     listTabs,
     getTab: async (tabId) => (await listTabs()).find((tab) => tab.tabId === tabId) ?? null,
-    setTab: (record) =>
+    setTab: (record, options) =>
       serial(async () => {
-        const raw = await read(session, K.tabJobs);
-        const jobs = Array.isArray(raw) ? raw.filter(isText) : [];
-        if (!jobs.includes(record.jobId)) {
-          await session.set({ [K.tabJobs]: [...jobs, record.jobId].slice(-MAX_TAB_JOBS) });
+        const tabs = await listTabs();
+        // A hello only renews the document: the tab keeps its place and its job's current tab.
+        if (tabs.some((tab) => tab.tabId === record.tabId)) {
+          await writeTabs(tabs.map((tab) => (tab.tabId === record.tabId ? record : tab)));
+          return;
         }
-        const others = (await listTabs()).filter((tab) => tab.tabId !== record.tabId);
-        await writeTabs([...others, record]);
+        await writeTabs([...tabs, record]);
+        const owners = await listTabOwners();
+        const before = owners.find((owner) => owner.jobId === record.jobId);
+        const parallel = before?.parallel === true || options?.parallel === true;
+        const owner: BridgeTabOwner = {
+          jobId: record.jobId,
+          tabId: record.tabId,
+          ...(parallel ? { parallel: true } : {}),
+        };
+        await writeOwners([...owners.filter((entry) => entry.jobId !== record.jobId), owner]);
       }),
-    openedTab: async (jobId) => {
-      const raw = await read(session, K.tabJobs);
-      return Array.isArray(raw) && raw.includes(jobId);
-    },
+    tabOwner: async (jobId) =>
+      (await listTabOwners()).find((owner) => owner.jobId === jobId) ?? null,
+    listTabOwners,
+    markParallel: (jobId) =>
+      serial(async () => {
+        const owners = await listTabOwners();
+        if (!owners.some((owner) => owner.jobId === jobId && !owner.parallel)) return;
+        await session.set({
+          [K.tabJobs]: owners.map((owner) =>
+            owner.jobId === jobId ? { ...owner, parallel: true } : owner,
+          ),
+        });
+      }),
     updateTab: (tabId, patch) =>
       serial(async () => {
         const tabs = await listTabs();
