@@ -182,6 +182,11 @@
       "name": "deepseek-export",
       "source": "sites/deepseek/plugins/export/plugin.json",
       "official": true
+    },
+    {
+      "name": "claude-export",
+      "source": "sites/claude/plugins/export/plugin.json",
+      "official": true
     }
   ]
 }

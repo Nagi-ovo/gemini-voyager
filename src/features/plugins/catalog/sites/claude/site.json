@@ -20,6 +20,12 @@
   "brandColor": "#d97757",
   "capabilities": ["chat", "sidebar", "composer", "darkMode"],
   "conversationIdPattern": "^/chat/([^/?#]+)",
+  "export": {
+    "version": 1,
+    "read": "virtual",
+    "messageKey": "data-turn-key",
+    "generating": "[data-testid=\"assistant-message\"][data-is-streaming=\"true\"]"
+  },
   "folders": {
     "format": 1,
     "sidebar": "[data-testid=\"sidebar\"]",

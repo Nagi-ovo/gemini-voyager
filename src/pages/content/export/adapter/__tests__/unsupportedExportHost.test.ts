@@ -4,7 +4,9 @@ import { resolveExportHost } from '../platformAdapters';
 
 describe('export host isolation', () => {
   it('does not export a catalog site without an exporter using Gemini message rules', () => {
-    expect(() => resolveExportHost('https://claude.ai/chat/123')).toThrow('unavailable');
+    expect(() => resolveExportHost('https://aistudio.google.com/prompts/123')).toThrow(
+      'unavailable',
+    );
   });
 
   it('resolves catalog page facts while preserving both existing exporters', () => {

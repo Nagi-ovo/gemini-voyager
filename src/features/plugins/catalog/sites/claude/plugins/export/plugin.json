@@ -1,0 +1,64 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.claude-export",
+  "name": "Claude · Conversation export",
+  "version": "1.0.0",
+  "description": "Select messages and export Claude conversations as JSON, Markdown, PDF or images.",
+  "i18n": {
+    "zh": {
+      "name": "Claude · 会话导出",
+      "description": "将 Claude 对话导出为 JSON、Markdown、PDF 或图片，并在导出前选择消息。"
+    },
+    "zh_TW": {
+      "name": "Claude · 對話匯出",
+      "description": "將 Claude 對話匯出為 JSON、Markdown、PDF 或圖片，並在匯出前選取訊息。"
+    },
+    "ja": {
+      "name": "Claude · 会話エクスポート",
+      "description": "メッセージを選んで、Claude の会話を JSON、Markdown、PDF、画像としてエクスポートします。"
+    },
+    "ko": {
+      "name": "Claude · 대화 내보내기",
+      "description": "메시지를 선택해 Claude 대화를 JSON, Markdown, PDF 또는 이미지로 내보냅니다."
+    },
+    "fr": {
+      "name": "Claude · Export de conversations",
+      "description": "Exportez vos conversations Claude en JSON, Markdown, PDF ou image après avoir sélectionné les messages."
+    },
+    "es": {
+      "name": "Claude · Exportar conversaciones",
+      "description": "Selecciona mensajes y exporta conversaciones de Claude como JSON, Markdown, PDF o imagen."
+    },
+    "pt": {
+      "name": "Claude · Exportar conversas",
+      "description": "Selecione mensagens e exporte conversas do Claude como JSON, Markdown, PDF ou imagem."
+    },
+    "ru": {
+      "name": "Claude · Экспорт диалогов",
+      "description": "Выбирайте сообщения и экспортируйте диалоги Claude в JSON, Markdown, PDF или изображение."
+    },
+    "ar": {
+      "name": "Claude · تصدير المحادثات",
+      "description": "اختر الرسائل وصدّر محادثات Claude بصيغة JSON أو Markdown أو PDF أو صورة."
+    }
+  },
+  "author": "voyager-official",
+  "category": "productivity",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/claude/plugins/export",
+  "engine": ">=next",
+  "tier": "declarative",
+  "matches": ["https://claude.ai/*"],
+  "requires": {
+    "formFactors": ["desktop"]
+  },
+  "contributes": {
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "conversationExport",
+        "params": {}
+      }
+    ]
+  }
+}
