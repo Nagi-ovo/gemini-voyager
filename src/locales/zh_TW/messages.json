@@ -3353,6 +3353,10 @@
     "message": "手機上暫不支援",
     "description": "Note on a plugin that does not run on phones (Firefox for Android); the user's on/off choice is kept for their other devices"
   },
+  "folderUnavailableOnMobile": {
+    "message": "手機上暫不支援資料夾。這些設定會保留原值，在電腦上照常生效。",
+    "description": "Shown in the Folders settings card on phones (Firefox for Android), where the folder plugins do not run; the card's switches are disabled but keep their values for the user's computer"
+  },
   "pluginNeedsSiteAdapterUpdate": {
     "message": "需要更新後的 {site} 配接器",
     "description": "Note on a plugin whose site adapter lacks something it relies on; {site} is the current site name"

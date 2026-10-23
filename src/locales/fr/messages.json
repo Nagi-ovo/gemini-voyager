@@ -3353,6 +3353,10 @@
     "message": "Pas encore disponible sur mobile",
     "description": "Note on a plugin that does not run on phones (Firefox for Android); the user's on/off choice is kept for their other devices"
   },
+  "folderUnavailableOnMobile": {
+    "message": "Les dossiers ne sont pas encore disponibles sur téléphone. Ces réglages gardent leurs valeurs et s’appliquent toujours sur votre ordinateur.",
+    "description": "Shown in the Folders settings card on phones (Firefox for Android), where the folder plugins do not run; the card's switches are disabled but keep their values for the user's computer"
+  },
   "pluginNeedsSiteAdapterUpdate": {
     "message": "Nécessite un adaptateur {site} à jour",
     "description": "Note on a plugin whose site adapter lacks something it relies on; {site} is the current site name"
