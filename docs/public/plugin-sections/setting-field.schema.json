@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://voyager.nagi.fun/plugin-sections/setting-field.schema.json",
+  "title": "Voyager plugin manifest: one setting",
+  "type": "object",
+  "required": ["type", "label", "default"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["boolean", "number", "string", "color", "select"],
+      "description": "string and color are for bundled plugins only; a local plugin may use boolean, number or select."
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "description": "English label. Every locale needs a translation under `i18n.<locale>.settings.<key>.label`."
+    },
+    "default": {
+      "type": ["boolean", "number", "string"]
+    },
+    "enabledBy": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Key of another boolean setting in this plugin. The popup keeps this control visible with its value, but disables it unless that boolean's resolved value is true. The gate checks that the key is non-empty, names a boolean in the same schema and is not this field; the target must have no enabledBy of its own (one level only)."
+    },
+    "minLabel": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "Label for the low end of a number/range control."
+    },
+    "maxLabel": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "Label for the high end of a number/range control."
+    },
+    "min": {
+      "type": "number"
+    },
+    "max": {
+      "type": "number"
+    },
+    "options": {
+      "type": "array",
+      "description": "Choices for a `select` setting: at least one, with unique values; `default` must be one of them.",
+      "items": {
+        "type": "object",
+        "required": ["value", "label"],
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "if": {
+    "properties": {
+      "type": {
+        "const": "select"
+      }
+    }
+  },
+  "then": {
+    "required": ["options"],
+    "properties": {
+      "default": {
+        "type": "string"
+      },
+      "options": {
+        "minItems": 1
+      }
+    }
+  }
+}

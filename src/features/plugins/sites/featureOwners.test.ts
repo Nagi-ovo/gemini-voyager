@@ -54,11 +54,12 @@ describe('feature owners', () => {
         'draftSave',
         'turnNavigator',
         'folders',
+        'siteCheck',
       ]),
     );
     // Folders on both are their official plugins'; local plugins stay refused (packagedFoldersPolicy).
     expect(pluginOwnedHandlers('aistudio')).toEqual(
-      new Set(['formulaCopy', 'sendShortcut', 'folders']),
+      new Set(['formulaCopy', 'sendShortcut', 'folders', 'siteCheck']),
     );
     // Appearance is pure CSS or a fixed-id builtin: it opens no primitive.
     for (const id of [

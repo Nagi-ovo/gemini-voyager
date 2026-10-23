@@ -151,7 +151,8 @@
   "matches": ["https://chat.deepseek.com/*"],
   "requires": {
     "handlers": ["turnNavigator"],
-    "semantic": ["userTurn"]
+    "semantic": ["userTurn"],
+    "formFactors": ["desktop", "mobile"]
   },
   "contributes": {
     "settings": {

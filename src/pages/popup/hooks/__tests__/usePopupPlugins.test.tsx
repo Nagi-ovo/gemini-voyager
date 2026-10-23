@@ -23,6 +23,11 @@ import type { SiteAdapter } from '@/features/plugins/types';
 
 import { type PopupPluginsContext, usePopupPlugins } from '../usePopupPlugins';
 
+// Plain functions, so the suite's resetAllMocks keeps them.
+const device = vi.hoisted(() => ({ formFactor: 'desktop' as 'desktop' | 'mobile' }));
+vi.mock('@/core/utils/formFactor', () => ({
+  readPlatformFormFactor: async () => device.formFactor,
+}));
 vi.mock('webextension-polyfill', () => ({
   default: { tabs: { sendMessage: vi.fn() }, runtime: { sendMessage: vi.fn() } },
 }));
@@ -133,6 +138,42 @@ describe('usePopupPlugins', () => {
     if (root) unmount();
     container.remove();
     vi.useRealTimers();
+    device.formFactor = 'desktop';
+  });
+
+  it('says on a phone which plugins cannot run there, even when the tab answers nothing', async () => {
+    device.formFactor = 'mobile';
+    const desktopOnly = record('claude-desktop-only');
+    const everywhere = record('claude-everywhere');
+    const mobileManifest = {
+      ...everywhere.manifest,
+      requires: { formFactors: ['desktop', 'mobile'] as const },
+    };
+    vi.mocked(listPluginManifestsWithSources).mockResolvedValue([
+      desktopOnly,
+      { ...everywhere, manifest: mobileManifest },
+    ]);
+    // Firefox for Android opens the popup as its own tab: the page may not answer.
+    vi.mocked(browser.tabs.sendMessage).mockRejectedValue(new Error('No receiving end'));
+
+    await render();
+
+    expect(plugins.formFactor).toBe('mobile');
+    expect(plugins.pluginStatuses).toEqual([
+      {
+        id: 'claude-desktop-only',
+        version: '1.0.0',
+        kind: 'needs-form-factor',
+        formFactor: 'mobile',
+      },
+    ]);
+  });
+
+  it('reports no device refusal on a desktop', async () => {
+    vi.mocked(listPluginManifestsWithSources).mockResolvedValue([record('claude-desktop-only')]);
+    await render();
+    expect(plugins.formFactor).toBe('desktop');
+    expect(plugins.pluginStatuses).toEqual([]);
   });
 
   it('waits for tab context and keeps complete records separate from site-visible plugins', async () => {

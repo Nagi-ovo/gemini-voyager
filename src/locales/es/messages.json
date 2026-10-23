@@ -1416,6 +1416,10 @@
   "syncProviderGoogleDrive": {
     "message": "Google Drive"
   },
+  "syncGoogleDriveUnavailableAndroid": {
+    "message": "La sincronización con Google Drive aún no está disponible en Android: Firefox para Android no puede abrir la ventana de inicio de sesión de Google.",
+    "description": "Shown in Cloud Sync on Android, where Firefox cannot run the Google Drive sign-in (no identity.launchWebAuthFlow)"
+  },
   "syncProviderICloud": {
     "message": "iCloud"
   },
@@ -3344,6 +3348,14 @@
   "pluginNeedsVoyagerUpdate": {
     "message": "Necesita una versión más reciente de Voyager para funcionar",
     "description": "Note on a plugin that uses a capability this build of Voyager does not ship"
+  },
+  "pluginUnavailableOnMobile": {
+    "message": "Aún no está disponible en el móvil",
+    "description": "Note on a plugin that does not run on phones (Firefox for Android); the user's on/off choice is kept for their other devices"
+  },
+  "folderUnavailableOnMobile": {
+    "message": "Las carpetas aún no están disponibles en teléfonos. Estos ajustes conservan sus valores y siguen aplicándose en tu ordenador.",
+    "description": "Shown in the Folders settings card on phones (Firefox for Android), where the folder plugins do not run; the card's switches are disabled but keep their values for the user's computer"
   },
   "pluginNeedsSiteAdapterUpdate": {
     "message": "Necesita un adaptador de {site} actualizado",

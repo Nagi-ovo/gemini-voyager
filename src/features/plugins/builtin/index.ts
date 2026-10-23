@@ -252,6 +252,7 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
     engine: '>=1.2.0',
     tier: 'declarative',
     matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*'],
+    requires: { formFactors: ['desktop', 'mobile'] },
     contributes: {},
   },
   {

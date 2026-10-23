@@ -1,9 +1,14 @@
 /**
  * What a `PluginHost` is built from, and the defaults it falls back to outside
- * tests: the catalog-refresh message to the background and the top-frame check.
+ * tests: the catalog-refresh message to the background, when a page may send
+ * it, and the top-frame check.
  */
+import type { FormFactor } from '@/core/types/formFactor';
+
+import { hasEnabledPluginForUrl } from '../remote/hostCatalogPolicy';
 import type { SiteRegistry } from '../sites/registry';
-import type { EntitlementProvider, PluginSource } from '../types';
+import type { PluginStateMap } from '../storage/pluginState';
+import type { EntitlementProvider, PluginManifest, PluginSource } from '../types';
 import type { LegacySettingsSource } from './legacySnapshotFeed';
 import { PLUGIN_CATALOG_REFRESH_MESSAGE } from './messages';
 import type { OfficialAdmission } from './officialAdmission';
@@ -32,6 +37,12 @@ export interface PluginHostOptions {
   readonly admission?: OfficialAdmission;
   /** Injectable for tests; native surfaces read every binding, other pages only shared visual keys. */
   readonly legacySettings?: LegacySettingsSource;
+  /**
+   * The device class this page runs on; a plugin without it in
+   * `requires.formFactors` reports `needs-form-factor` and never mounts.
+   * Defaults to asking the background (`requestPageFormFactor`).
+   */
+  readonly formFactor?: () => Promise<FormFactor>;
 }
 
 /** Fire-and-forget: the background decides whether a network request is due. */
@@ -54,4 +65,20 @@ export function detectTopFrame(): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * D4 trigger. Only the top frame of a page that an ENABLED plugin targets
+ * may ask for a check; embedded companion frames and pages without an
+ * enabled plugin (all of Gemini / AI Studio) stay silent.
+ */
+export function maybeRequestCatalogRefresh(
+  page: { readonly host?: string; readonly url: string; readonly isTopFrame: boolean },
+  manifests: readonly PluginManifest[],
+  state: PluginStateMap,
+  request: (host: string) => void,
+): void {
+  if (!page.host || !page.isTopFrame) return;
+  if (!hasEnabledPluginForUrl(manifests, state, page.url)) return;
+  request(page.host);
 }

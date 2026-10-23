@@ -39,7 +39,9 @@ import {
 import type { PluginManifest, SiteAdapter } from '@/features/plugins/types';
 
 import { POPUP_LEGACY_SNAPSHOT_KEYS } from '../officialPlugins/officialPluginRegistry';
+import { withFormFactorStatuses } from '../utils/formFactorStatuses';
 import { isSelfClearingBlock } from '../utils/releasingStatus';
+import { usePopupFormFactor } from './usePopupFormFactor';
 
 // A plugin waiting for a runtime to shut down, or for the official plugin's
 // legacy switch to be read (`pending`), starts without any storage change the
@@ -82,6 +84,7 @@ export function usePopupPlugins({
   const [legacySettings, setLegacySettings] = useState<LegacySettingSnapshot>({});
   const [legacySettingsLoaded, setLegacySettingsLoaded] = useState(false);
   const [surfaceRevision, setSurfaceRevision] = useState(0);
+  const formFactor = usePopupFormFactor();
 
   // Plugins whose match patterns cover the active tab's URL. A plugin only ever
   // shows on — and only affects — the site it targets, so Claude plugins appear
@@ -89,6 +92,11 @@ export function usePopupPlugins({
   const siteScopedManifests = useMemo(
     () => pluginManifests.filter((plugin) => matchesAnyPattern(activeUrl, plugin.matches)),
     [activeUrl, pluginManifests],
+  );
+  // A plugin this device cannot run says so even when the tab reports nothing.
+  const shownStatuses = useMemo(
+    () => withFormFactorStatuses(pluginStatuses, pluginManifests, formFactor),
+    [pluginStatuses, pluginManifests, formFactor],
   );
   const diagnosticPlugins = useMemo<readonly DiagnosticPluginInput[]>(
     () =>
@@ -284,7 +292,7 @@ export function usePopupPlugins({
     pluginSourceIds,
     pluginBlockedUpdates,
     pluginSiteOverride,
-    pluginStatuses,
+    pluginStatuses: shownStatuses,
     pluginState,
     pluginStateLoaded,
     legacySettings,
@@ -294,6 +302,7 @@ export function usePopupPlugins({
     pluginCatalogHost,
     siteScopedManifests,
     diagnosticPlugins,
+    formFactor,
     refresh,
   };
 }

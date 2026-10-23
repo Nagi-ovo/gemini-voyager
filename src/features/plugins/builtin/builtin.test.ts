@@ -90,7 +90,11 @@ describe('BUILTIN_PLUGINS', () => {
       },
     ]);
     expect(timeline?.engine).toBe('>=1.6.0');
-    expect(timeline?.requires).toEqual({ handlers: ['turnNavigator'], semantic: ['userTurn'] });
+    expect(timeline?.requires).toEqual({
+      handlers: ['turnNavigator'],
+      semantic: ['userTurn'],
+      formFactors: ['desktop', 'mobile'],
+    });
     expect(timeline?.contributes.settings?.timelineStyle).toEqual({
       type: 'select',
       label: 'Timeline style',
@@ -120,7 +124,11 @@ describe('BUILTIN_PLUGINS', () => {
         },
       },
     ]);
-    expect(timeline?.requires).toEqual({ handlers: ['turnNavigator'], semantic: ['userTurn'] });
+    expect(timeline?.requires).toEqual({
+      handlers: ['turnNavigator'],
+      semantic: ['userTurn'],
+      formFactors: ['desktop', 'mobile'],
+    });
     expect(timeline?.contributes.settings?.timelineStyle?.default).toBe('dots');
     const locales = ['zh', 'zh_TW', 'ja', 'ko', 'fr', 'es', 'pt', 'ru', 'ar'] as const;
     for (const locale of locales) {

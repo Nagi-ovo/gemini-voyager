@@ -14,14 +14,14 @@ import { admitBatchDelete } from './batchDeleteStartup';
 import { startChangelog } from './changelog/index';
 import type { NativeFeature, StopNativeFeature } from './featureLifecycle';
 import { startFolderItemFontSizeAdjuster } from './folderItemFontSize/index';
-import { startFolderProject } from './folderProject/index';
+import { startFolderProjectWhereFoldersRun } from './folderProjectStartup';
 import { startFolderSpacingAdjuster } from './folderSpacing/index';
 import type { GeminiBuiltinStartup } from './geminiBuiltinStartup';
 import { admitGeminiFolders } from './geminiFolderStartup';
 import { HEAVY_FEATURE_INIT_DELAY, LIGHT_FEATURE_INIT_DELAY } from './initPacing';
 import { type GeminiInputStartup, startGeminiSendKeys } from './inputStartup';
 import { NATIVE_FEATURES } from './nativeFeatures';
-import type { PageSteps } from './pageInitSteps';
+import { PageRetiredError, type PageSteps } from './pageInitSteps';
 import { createPostChangelogFlow } from './postChangelogFlow';
 import type { GeminiRendererStartup } from './rendererStartup';
 import type { SelectionStartup } from './selectionStartup';
@@ -58,11 +58,17 @@ export async function startGeminiPage(deps: GeminiPageStartupDeps): Promise<void
 
   admitBatchDelete(admission, 'gemini', deps.lifetime);
   // The plugin shows the folders; the page holds their data, which Folder-as-Project
-  // files into with the folders off too.
+  // files into with the folders off too, though not on a device the plugin skips.
   const folders = await settle(
     admitGeminiFolders(admission, { cleanupManager, lifetime: deps.lifetime }),
   );
-  if (folders) startFolderProject(folders);
+  if (folders) {
+    // Not awaited: the device check must not hold back the features after it.
+    void startFolderProjectWhereFoldersRun(folders, { settle }).catch((error: unknown) => {
+      if (!(error instanceof PageRetiredError))
+        console.error('[FolderProject] Start error:', error);
+    });
+  }
   await delay(HEAVY_FEATURE_INIT_DELAY);
 
   // Layout preferences are independent and only install lightweight

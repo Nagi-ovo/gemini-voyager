@@ -4,6 +4,8 @@ import type { TranslationKey } from '@/utils/translations';
 
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
+import { usePackagedPluginsRunHere } from '../hooks/usePackagedPluginsRunHere';
+import { SWITCHED_BY_SETTINGS_CARD } from '../officialPlugins/officialPluginRegistry';
 import { SettingToggleRow } from './SettingToggleRow';
 
 /** Every folder toggle the card edits; the popup owns the state and persistence. */
@@ -37,6 +39,9 @@ export interface FolderSettingsCardProps {
   t: (key: TranslationKey) => string;
 }
 
+/** The Gemini and AI Studio folder plugins, whose switch this card is. */
+const FOLDER_PLUGIN_IDS = [...SWITCHED_BY_SETTINGS_CARD];
+
 const AI_COPY_LABELS: Record<AiStructureCopyStatus, TranslationKey> = {
   idle: 'aiOrgCopyButton',
   loading: 'aiOrgCopyButton',
@@ -53,16 +58,24 @@ export function FolderSettingsCard({
   isVisible,
   t,
 }: FolderSettingsCardProps) {
+  // On a device the folder plugins skip, their rows show but stay off; the stored choices
+  // still apply on the desktop. Account isolation also scopes other data (research packs), so
+  // it stays usable.
+  const unavailable = usePackagedPluginsRunHere(FOLDER_PLUGIN_IDS) === false;
   return (
     <Card className="p-4">
       <CardTitle className="mb-4">{t('folderOptions')}</CardTitle>
       <CardContent className="space-y-4 p-0">
+        {unavailable && (
+          <p className="text-muted-foreground text-xs">{t('folderUnavailableOnMobile')}</p>
+        )}
         <SettingToggleRow
           id="folder-enabled"
           settingId="enableFolderFeature"
           label="enableFolderFeature"
           checked={values.folderEnabled}
           onChange={(folderEnabled) => onChange({ folderEnabled })}
+          disabled={unavailable}
           isVisible={isVisible}
           t={t}
         />
@@ -74,6 +87,7 @@ export function FolderSettingsCard({
           experimental
           checked={values.floatingModeEnabled}
           onChange={(floatingModeEnabled) => onChange({ floatingModeEnabled })}
+          disabled={unavailable}
           isVisible={isVisible}
           t={t}
         />
@@ -86,6 +100,7 @@ export function FolderSettingsCard({
               hint="openFloatingFolderOnStartupHint"
               checked={values.floatingOpenOnStart}
               onChange={(floatingOpenOnStart) => onChange({ floatingOpenOnStart })}
+              disabled={unavailable}
               isVisible={isVisible}
               unmountWhenHidden
               t={t}
@@ -98,6 +113,7 @@ export function FolderSettingsCard({
           label="hideArchivedConversations"
           checked={values.hideArchivedConversations}
           onChange={(hideArchivedConversations) => onChange({ hideArchivedConversations })}
+          disabled={unavailable}
           isVisible={isVisible}
           t={t}
         />
@@ -107,6 +123,7 @@ export function FolderSettingsCard({
           label="showFolderSearch"
           checked={values.folderSearchEnabled}
           onChange={(folderSearchEnabled) => onChange({ folderSearchEnabled })}
+          disabled={unavailable}
           isVisible={isVisible}
           t={t}
         />
@@ -137,6 +154,7 @@ export function FolderSettingsCard({
           experimental
           checked={values.folderProjectEnabled}
           onChange={(folderProjectEnabled) => onChange({ folderProjectEnabled })}
+          disabled={unavailable}
           isVisible={isVisible}
           t={t}
         />
@@ -145,7 +163,7 @@ export function FolderSettingsCard({
             variant="outline"
             className="w-full text-sm"
             onClick={aiStructureCopy.onCopy}
-            disabled={aiStructureCopy.status === 'loading'}
+            disabled={unavailable || aiStructureCopy.status === 'loading'}
           >
             <span className="inline-flex items-center justify-center gap-1.5">
               <span

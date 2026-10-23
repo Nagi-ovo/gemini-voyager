@@ -4,6 +4,7 @@
  * the settings it runs with.
  */
 import { logger } from '@/core/services/LoggerService';
+import type { FormFactor } from '@/core/types/formFactor';
 
 import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import { hostPolicyRefusal } from '../sites/hostPolicy';
@@ -28,6 +29,8 @@ export interface EligibilityContext {
   readonly surfaceOn: boolean;
   readonly admission: OfficialAdmission;
   readonly adapter: SiteAdapter | null;
+  /** The device class the page runs on; a plugin that does not list it stays off. */
+  readonly formFactor: FormFactor;
   readonly entitlement: EntitlementProvider;
 }
 
@@ -68,11 +71,13 @@ export async function evaluatePlugin(
     manifest,
     adapter: context.adapter,
     hasPrimitive,
+    formFactor: context.formFactor,
   });
   if (incompatibility) {
     logger.warn('Plugin skipped: incompatible with this build or site', {
       id: manifest.id,
       status: incompatibility.kind,
+      formFactor: incompatibility.formFactor,
       requiredEngine: incompatibility.requiredEngine,
       missingHandlers: incompatibility.missingHandlers,
       missingSemantic: incompatibility.missingSemantic,

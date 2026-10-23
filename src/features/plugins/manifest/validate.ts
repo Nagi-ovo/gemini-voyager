@@ -8,6 +8,7 @@
  * to avoid adding a runtime dependency (the codebase has no zod).
  */
 import type { Result } from '@/core/types/common';
+import { FORM_FACTORS, type FormFactor, isFormFactor } from '@/core/types/formFactor';
 
 import { MAX_DOM_OPS, PLUGIN_MANIFEST_FORMAT } from '../constants';
 import type {
@@ -382,8 +383,29 @@ function normalizeRequires(raw: unknown, issues: ManifestIssue[]): PluginRequire
   if (handlers?.some((name) => !PRIMITIVE_NAME_PATTERN.test(name))) {
     issues.push({ path: 'requires.handlers', message: 'entries must be primitive names' });
   }
-  if (!handlers && !semantic) return undefined;
-  return { ...(handlers ? { handlers } : {}), ...(semantic ? { semantic } : {}) };
+  const formFactors = normalizeFormFactors(raw.formFactors, issues);
+  if (!handlers && !semantic && !formFactors) return undefined;
+  return {
+    ...(handlers ? { handlers } : {}),
+    ...(semantic ? { semantic } : {}),
+    ...(formFactors ? { formFactors } : {}),
+  };
+}
+
+/** A non-empty list of known device classes; an empty one would make the plugin run nowhere. */
+function normalizeFormFactors(
+  raw: unknown,
+  issues: ManifestIssue[],
+): readonly FormFactor[] | undefined {
+  if (raw === undefined) return undefined;
+  if (!Array.isArray(raw) || raw.length === 0 || !raw.every(isFormFactor)) {
+    issues.push({
+      path: 'requires.formFactors',
+      message: `must be a non-empty array of ${FORM_FACTORS.join(', ')}`,
+    });
+    return undefined;
+  }
+  return FORM_FACTORS.filter((formFactor) => raw.includes(formFactor));
 }
 
 export function validateManifest(input: unknown): Result<PluginManifest, ManifestIssue[]> {

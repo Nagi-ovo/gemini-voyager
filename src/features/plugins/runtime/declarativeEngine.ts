@@ -85,6 +85,8 @@ export interface DeclarativeEngineOptions {
    * startup included). Never rejects.
    */
   readonly onRelease?: (manifest: PluginManifest, released: Promise<void>) => void;
+  /** Handed to primitives as `context.inspectPlugins` (the host's statuses and manifests). */
+  readonly inspectPlugins?: PrimitiveEnv['inspectPlugins'];
 }
 
 export class DeclarativeEngine {
@@ -112,6 +114,7 @@ export class DeclarativeEngine {
       doc: this.doc,
       adapter: this.adapter,
       isCurrent: (slot) => this.active.get(slot.manifest.id) === slot,
+      inspectPlugins: options.inspectPlugins,
     };
     this.health = new HealthMonitor({
       countUserTurns: () => this.countUserTurns(),

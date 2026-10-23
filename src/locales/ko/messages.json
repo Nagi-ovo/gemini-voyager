@@ -1416,6 +1416,10 @@
   "syncProviderGoogleDrive": {
     "message": "Google Drive"
   },
+  "syncGoogleDriveUnavailableAndroid": {
+    "message": "Android에서는 아직 Google Drive 동기화를 사용할 수 없습니다. Firefox for Android에서 Google 로그인 창을 열 수 없기 때문입니다.",
+    "description": "Shown in Cloud Sync on Android, where Firefox cannot run the Google Drive sign-in (no identity.launchWebAuthFlow)"
+  },
   "syncProviderICloud": {
     "message": "iCloud"
   },
@@ -3344,6 +3348,14 @@
   "pluginNeedsVoyagerUpdate": {
     "message": "실행하려면 최신 버전의 Voyager가 필요합니다",
     "description": "Note on a plugin that uses a capability this build of Voyager does not ship"
+  },
+  "pluginUnavailableOnMobile": {
+    "message": "휴대폰에서는 아직 사용할 수 없습니다",
+    "description": "Note on a plugin that does not run on phones (Firefox for Android); the user's on/off choice is kept for their other devices"
+  },
+  "folderUnavailableOnMobile": {
+    "message": "폴더는 아직 휴대폰에서 사용할 수 없습니다. 이 설정은 그대로 유지되며 컴퓨터에서는 계속 적용됩니다.",
+    "description": "Shown in the Folders settings card on phones (Firefox for Android), where the folder plugins do not run; the card's switches are disabled but keep their values for the user's computer"
   },
   "pluginNeedsSiteAdapterUpdate": {
     "message": "업데이트된 {site} 어댑터가 필요합니다",

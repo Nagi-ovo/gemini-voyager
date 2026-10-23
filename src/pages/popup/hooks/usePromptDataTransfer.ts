@@ -4,9 +4,13 @@ import { PromptImportExportService } from '@/features/backup/services/PromptImpo
 import { createRuntimePromptLibraryClient } from '@/features/prompt/library/promptLibraryMessages';
 import type { TranslationKey } from '@/utils/translations';
 
+import { usePopupFormFactor } from './usePopupFormFactor';
+
 export interface PromptDataTransferController {
   status: { kind: 'ok' | 'warn' | 'err'; text: string } | null;
   busy: boolean;
+  /** True on a phone, where Google Drive cannot sign in; the cloud actions stay off. */
+  cloudUnavailable: boolean;
   inputRef: RefObject<HTMLInputElement | null>;
   onExport: () => Promise<void>;
   onImport: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
@@ -28,6 +32,8 @@ export function usePromptDataTransfer(
   const [status, setStatus] = useState<PromptDataTransferController['status']>(null);
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  // Firefox for Android has no identity.launchWebAuthFlow, so Drive cannot sign in there.
+  const cloudUnavailable = usePopupFormFactor() === 'mobile';
 
   const onExport = useCallback(async () => {
     setBusy(true);
@@ -99,6 +105,7 @@ export function usePromptDataTransfer(
   // The background owns the whole prompts-only Drive merge so opening the
   // Google account picker can close the popup without abandoning the operation.
   const onCloudPull = useCallback(async () => {
+    if (cloudUnavailable) return;
     setBusy(true);
     setStatus(null);
     try {
@@ -141,9 +148,10 @@ export function usePromptDataTransfer(
     } finally {
       setBusy(false);
     }
-  }, [t]);
+  }, [cloudUnavailable, t]);
 
   const onCloudPush = useCallback(async () => {
+    if (cloudUnavailable) return;
     setBusy(true);
     setStatus(null);
     try {
@@ -172,7 +180,16 @@ export function usePromptDataTransfer(
     } finally {
       setBusy(false);
     }
-  }, [t]);
+  }, [cloudUnavailable, t]);
 
-  return { status, busy, inputRef, onExport, onImport, onCloudPull, onCloudPush };
+  return {
+    status,
+    busy,
+    cloudUnavailable,
+    inputRef,
+    onExport,
+    onImport,
+    onCloudPull,
+    onCloudPush,
+  };
 }

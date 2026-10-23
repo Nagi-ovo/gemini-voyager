@@ -1,0 +1,126 @@
+{
+  "siteCheckLauncher": {
+    "message": "사이트 점검",
+    "description": "Label of the small floating button that opens Voyager's site check panel"
+  },
+  "siteCheckTitle": {
+    "message": "Voyager 사이트 점검",
+    "description": "Heading of the panel listing which Voyager selectors match on the current page"
+  },
+  "siteCheckPrivacy": {
+    "message": "복사, 다운로드 또는 이슈 열기 전까지는 아무것도 이 페이지를 벗어나지 않습니다. 보고서에는 메시지 본문, 제목, 계정 정보, 전체 링크가 포함되지 않습니다.",
+    "description": "Privacy note at the top of the site check panel"
+  },
+  "siteCheckSummary": {
+    "message": "선택자 {checked}개 점검 · {broken}개 고장 의심",
+    "description": "Summary line; {checked} and {broken} are numbers and must stay as written"
+  },
+  "siteCheckAllFound": {
+    "message": "선택자 {checked}개 점검 · 이 페이지에 있어야 할 요소를 모두 찾았습니다",
+    "description": "Summary line when nothing looks broken; {checked} is a number and must stay as written"
+  },
+  "siteCheckRerun": {
+    "message": "다시 점검",
+    "description": "Button that runs the site check again on the current page"
+  },
+  "siteCheckPick": {
+    "message": "요소 선택",
+    "description": "Button that starts the element picker, which adds one page element's structure to the report"
+  },
+  "siteCheckPickHint": {
+    "message": "이상해 보이는 부분을 클릭하세요. 취소하려면 Esc를 누르세요.",
+    "description": "Instruction shown while the element picker is active"
+  },
+  "siteCheckCancel": {
+    "message": "취소",
+    "description": "Button that leaves the element picker without picking"
+  },
+  "siteCheckSelectors": {
+    "message": "선택자",
+    "description": "Heading of the table of selectors and their match counts"
+  },
+  "siteCheckColSource": {
+    "message": "사용처",
+    "description": "Table column: the site adapter or the plugin that relies on the selector"
+  },
+  "siteCheckColName": {
+    "message": "이름",
+    "description": "Table column: the selector's name"
+  },
+  "siteCheckColMatches": {
+    "message": "일치 수",
+    "description": "Table column: how many page elements the selector matches"
+  },
+  "siteCheckColResult": {
+    "message": "결과",
+    "description": "Table column: whether the match count looks right"
+  },
+  "siteCheckVerdictOk": {
+    "message": "찾음",
+    "description": "Result: the selector matched at least one element"
+  },
+  "siteCheckVerdictMissing": {
+    "message": "찾지 못함",
+    "description": "Result: the selector matched nothing although the element should be on this page; likely broken"
+  },
+  "siteCheckVerdictNotHere": {
+    "message": "대화에서만",
+    "description": "Result: nothing matched, but the element appears only once a conversation is open"
+  },
+  "siteCheckVerdictNotJudged": {
+    "message": "찾지 못함(정상일 수 있음)",
+    "description": "Result: nothing matched, and Voyager cannot tell whether the element should exist right now"
+  },
+  "siteCheckVerdictInvalid": {
+    "message": "잘못된 선택자",
+    "description": "Result: this browser cannot parse the selector"
+  },
+  "siteCheckVerdictUnresolved": {
+    "message": "이 사이트에 정의되지 않음",
+    "description": "Result: a plugin needs a selector this site does not define"
+  },
+  "siteCheckPicked": {
+    "message": "선택한 요소",
+    "description": "Heading of the section about the element the person picked"
+  },
+  "siteCheckPickedNone": {
+    "message": "선택 사항: 이상해 보이는 부분을 선택하면 그 구조(텍스트 제외)가 보고서에 추가됩니다.",
+    "description": "Shown before any element is picked"
+  },
+  "siteCheckPickedNoMatch": {
+    "message": "이 요소와 주변 요소에 일치하는 Voyager 선택자가 없습니다.",
+    "description": "Shown when the picked element and its ancestors match no selector"
+  },
+  "siteCheckPreview": {
+    "message": "보고서 미리보기(복사되는 내용 그대로)",
+    "description": "Expandable section showing the full Markdown report"
+  },
+  "siteCheckCopy": {
+    "message": "보고서 복사",
+    "description": "Button that copies the report as Markdown"
+  },
+  "siteCheckDownload": {
+    "message": ".json 다운로드",
+    "description": "Button that downloads the report as a JSON file"
+  },
+  "siteCheckOpenIssue": {
+    "message": "복사하고 이슈 열기",
+    "description": "Button that copies the report and opens Voyager's GitHub bug report form"
+  },
+  "siteCheckClose": {
+    "message": "닫기",
+    "description": "Accessible name of the button that closes the site check panel"
+  },
+  "siteCheckCopied": {
+    "message": "보고서를 복사했습니다.",
+    "description": "Toast after the report was copied"
+  },
+  "siteCheckCopiedForIssue": {
+    "message": "보고서를 복사했습니다. 이슈 양식의 Sanitized Diagnostics 칸에 붙여 넣으세요.",
+    "description": "Toast after copying the report and opening the issue form"
+  },
+  "siteCheckCopyFailed": {
+    "message": "보고서를 복사하지 못했습니다. '.json 다운로드'로 파일을 첨부하세요.",
+    "description": "Toast when the clipboard is unavailable"
+  }
+}

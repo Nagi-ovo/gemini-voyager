@@ -162,6 +162,21 @@
       "name": "chatgpt-folders",
       "source": "sites/chatgpt/plugins/folders/plugin.json",
       "official": true
+    },
+    {
+      "name": "chatgpt-site-check",
+      "source": "sites/chatgpt/plugins/site-check/plugin.json",
+      "official": true
+    },
+    {
+      "name": "claude-site-check",
+      "source": "sites/claude/plugins/site-check/plugin.json",
+      "official": true
+    },
+    {
+      "name": "deepseek-site-check",
+      "source": "sites/deepseek/plugins/site-check/plugin.json",
+      "official": true
     }
   ]
 }

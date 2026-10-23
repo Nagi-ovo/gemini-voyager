@@ -8,7 +8,8 @@
  * modes are visible instead of leaving the later listener silently inactive. A timeline rail
  * also owns page navigation and one visual surface, including the fixed-id Gemini builtin. The
  * folders runtime owns the site's folder data session and its sidebar surface: two runtimes
- * would open two repositories on one bucket.
+ * would open two repositories on one bucket. The site check is one launcher and one picker,
+ * which takes the page's presses while it runs.
  */
 import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import type { PluginManifest } from '../types';
@@ -21,6 +22,7 @@ const HANDLER_RESOURCES: Readonly<Record<string, readonly ResourceId[]>> = {
   sendShortcut: ['composer-send-key-mode'],
   turnNavigator: ['timeline-rail'],
   folders: ['folders-surface'],
+  siteCheck: ['site-check-launcher'],
 };
 
 /** One resource claimed by one `native` op, kept per op so repeats stay visible. */

@@ -169,6 +169,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.AISTUDIO_ENTER_SEND,
         StorageKeys.DRAFT_AUTO_SAVE,
         StorageKeys.SAFARI_ENTER_FIX,
+        StorageKeys.SITE_CHECK_ENABLED,
         StorageKeys.CHAT_FONT_SIZE,
         StorageKeys.CHAT_LINE_HEIGHT,
         StorageKeys.CHAT_PARAGRAPH_SPACING,
