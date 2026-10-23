@@ -38,9 +38,11 @@ describe('site check skeleton', () => {
 
   it('withholds a data value that could be an id or free text, keeping the attribute name', () => {
     const root = mount(
-      '<div data-row-key="chat:abc123" data-kind="Two words" data-count="12"></div>',
+      '<div data-row-key="chat:abc123" data-kind="Two words" data-count="12" data-test-id="chat-history"></div>',
     );
-    expect(describeElement(root)).toBe('div[data-row-key][data-kind][data-count]');
+    expect(describeElement(root)).toBe(
+      'div[data-row-key][data-kind][data-count][data-test-id=chat-history]',
+    );
   });
 
   it('caps depth, children per element and the whole size, and says it truncated', () => {

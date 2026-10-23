@@ -49,7 +49,7 @@ const ROLE = /^[a-z]{1,20}$/;
 /** A data value that names a state or kind ("assistant", "code-block", "true"). */
 const DATA_TOKEN = /^[A-Za-z][A-Za-z-]{0,23}$/;
 /** Data attribute names that name a kind or a state, whose token values are vocabulary. */
-const ENUM_DATA_NAME = /(?:-role|-kind|-type|-state|-status|-variant|-mode|-side|testid)$/;
+const ENUM_DATA_NAME = /(?:-role|-kind|-type|-state|-status|-variant|-mode|-side|test-?id)$/;
 /** Data attribute names whose values are text or identity, whatever they look like. */
 const TEXTUAL_DATA_NAME =
   /title|label|name|text|content|query|prompt|mail|user|account|author|tooltip|alt|desc|value|url|href|src|placeholder|message|chat|conv|session|token|key|id$/i;
