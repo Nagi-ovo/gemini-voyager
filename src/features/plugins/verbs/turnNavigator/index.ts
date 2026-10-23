@@ -1,5 +1,5 @@
 /**
- * `turnNavigator` primitive (plan §6): the conversation timeline rail. Every
+ * `turnNavigator` primitive (D10): the conversation timeline rail. Every
  * parameter is optional; defaults come from the site adapter so a manifest
  * usually needs no more than `{ "op": "native", "handler": "turnNavigator" }`.
  */

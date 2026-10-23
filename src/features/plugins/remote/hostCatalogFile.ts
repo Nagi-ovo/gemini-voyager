@@ -30,7 +30,7 @@ export interface HostCatalogFileValidation {
   /**
    * The site adapter published for this host, when the file carries a valid
    * one whose `matches` cover the host. Overrides the bundled adapter at
-   * runtime (plan §3); an invalid section is reported and ignored.
+   * runtime; an invalid section is reported and ignored.
    */
   readonly site?: SiteAdapter;
   /**

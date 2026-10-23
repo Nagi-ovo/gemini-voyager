@@ -21,7 +21,7 @@ function issuesOf(raw: unknown): string[] {
   return result.success ? [] : result.error.map((issue) => `${issue.path}: ${issue.message}`);
 }
 
-describe('validateManifest: native ops, requires, format, changelog (plan §5)', () => {
+describe('validateManifest: native ops, requires, format, changelog (D9)', () => {
   it('normalises a native op with default params and keeps handler + params', () => {
     const result = validateManifest({
       ...BASE,

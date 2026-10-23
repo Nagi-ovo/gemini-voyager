@@ -21,7 +21,7 @@
  * issue (`readSiteAdapterData`), every `plugin.json` passes
  * `validateManifest` with its `contributes.styles[].file` inlined as `css`, and
  * a plugin may not target a URL its own site does not cover (plan D18). On top
- * of that, the primitive checks from plan §5 / §8 run here: a plugin may only
+ * of that, the primitive checks run here: a plugin may only
  * name primitives this build ships, its `engine` range may not admit a build
  * older than those primitives, and every semantic key it relies on must be
  * defined by its own site. A published site may not use a semantic key that

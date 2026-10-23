@@ -9,13 +9,13 @@
  * Never edit the reader body: it stands for code already installed.
  */
 /**
- * `site.json` — the data form of a SiteAdapter (plan §2 layer 1).
+ * `site.json` — the data form of a SiteAdapter.
  *
  * The same shape is read from three places, so one validator covers them all:
  *   - the bundled snapshot `catalog/sites/<site>/site.json` (thin-shell adapters
  *     in `sites/adapters/` export the validated result);
  *   - the `site` section of a published per-host catalog file, which can
- *     override the bundled adapter at runtime (remote override, plan §3);
+ *     override the bundled adapter at runtime (remote override);
  *   - `scripts/build-plugin-catalog.ts`, which validates before publishing.
  *
  * Remote input is UNTRUSTED: every field is shape-checked, selector keys must

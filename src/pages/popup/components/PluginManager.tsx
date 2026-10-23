@@ -93,7 +93,7 @@ export interface PluginManagerProps {
   /** Host whose remote catalog this popup reads; undefined on hosts that can never have one. */
   readonly catalogHost?: string;
   /**
-   * Per-plugin status reported by the active tab's PluginHost (plan §4.2):
+   * Per-plugin status reported by the active tab's PluginHost (D8):
    * needs-form-factor / needs-engine / needs-handler / needs-semantic / needs-site-data disable the toggle with a
    * reason, no-effect shows the health warning, pendingVersion says the update
    * applies after a page reload, blocked keeps the toggle and says why the

@@ -1,5 +1,5 @@
 /**
- * `vimInput` primitive (plan §6): Vim-style modal editing in the prompt
+ * `vimInput` primitive (D10): Vim-style modal editing in the prompt
  * composer, built on `chatInput/vimMode.ts`. The composer is located through
  * the site adapter's `composer` semantic selector (or an explicit `composer`
  * param), so a site Voyager has no hard-coded selector for still works.

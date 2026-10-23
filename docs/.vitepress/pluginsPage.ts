@@ -100,13 +100,9 @@ const FEATURE_ALIASES: Readonly<Record<string, string>> = {
 
 /**
  * Rows the table leaves out. Gemini's Safari Enter fix only undoes a Safari-specific
- * double-Enter bug. Recent Gems has nothing to attach to since Gemini moved Gems into
- * its More menu, and its popup row is greyed out.
+ * double-Enter bug.
  */
-const SKIPPED_PLUGIN_IDS: ReadonlySet<string> = new Set([
-  OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix,
-  OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
-]);
+const SKIPPED_PLUGIN_IDS: ReadonlySet<string> = new Set([OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix]);
 
 /**
  * Features Voyager still runs natively (no plugin) on a site, ticked only on rows

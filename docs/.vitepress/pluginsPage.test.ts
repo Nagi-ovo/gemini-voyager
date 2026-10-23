@@ -235,14 +235,20 @@ describe('plugin table', () => {
     }
   });
 
-  it('leaves the greyed-out Recent Gems row out and links Context Sync in all locales', () => {
+  it('lists Recent Gems as on by default and links it and Context Sync in all locales', () => {
     const manifests = BUILTIN_PLUGINS.filter(
       (plugin) =>
         plugin.id === OFFICIAL_PLUGIN_IDS.geminiGemsSidebar ||
         plugin.id === OFFICIAL_PLUGIN_IDS.geminiContextSync,
     );
     const rows = featureRows(builtinPlugins(manifests));
-    expect(ticked(rows)).toEqual([['context-sync', ['gemini']]]);
+    expect(ticked(rows)).toEqual(
+      expect.arrayContaining([
+        ['gems-sidebar', ['gemini']],
+        ['context-sync', ['gemini']],
+      ]),
+    );
+    expect(rows).toHaveLength(2);
     for (const entry of PLUGINS_LOCALES) {
       const prefix = entry.prefix ? `/${entry.prefix}` : '';
       const exists = (path: string) => existsSync(resolve('docs', `.${path}.md`));
@@ -252,7 +258,8 @@ describe('plugin table', () => {
         const name = (plugin.i18n?.[entry.manifest]?.name ?? plugin.name).replace(/^Gemini · /, '');
         const label = `[${name}](${prefix}/guide/${row.feature})`;
         expect(page).toContain(`| **${label}** |`);
-        expect(cells(page, label)).toEqual(['✓', '', '', '', '']);
+        const mark = FRESH_INSTALL_ON.has(plugin.id) ? 'on' : '✓';
+        expect(cells(page, label)).toEqual([mark, '', '', '', '']);
       }
     }
   });

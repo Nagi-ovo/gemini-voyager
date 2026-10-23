@@ -195,7 +195,7 @@ effective engine version, so its bundled unreleased plugins are usable.
 
 A manifest that uses a primitive must set an `engine` range whose **minimum** is
 at least its resolved `sinceEngine`, and `bun run catalog:build` fails the build
-otherwise (plan §5, §8). Contributor checks, CLI checks and bundled loading
+otherwise (D9). Contributor checks, CLI checks and bundled loading
 resolve the same notation. Catalog publishing writes only concrete versions,
 so a released extension filters an update requiring the next engine without
 mistaking it for a remote kill switch. Local imports require concrete versions;

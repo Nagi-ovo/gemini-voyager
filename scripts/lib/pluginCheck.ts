@@ -1,5 +1,5 @@
 /**
- * Contributor-facing checker for one plugin directory (plan §8).
+ * Contributor-facing checker for one plugin directory.
  *
  * `bun run plugin:check` answers "will this plugin be accepted?" before a PR is
  * opened, with the same rules the publisher applies in
@@ -20,7 +20,7 @@
  *      `id` equals its directory name, and whose `matches` cover the plugin's
  *      (plan D18);
  *   3. only primitives this build ships, behind an `engine` floor ≥ their
- *      `sinceEngine` (plan §5);
+ *      `sinceEngine` (D9);
  *   4. only semantic keys its own site defines;
  *   5. localized `name`/`description` (plus `changelog` and every setting
  *      `label` when present) for all nine non-English app locales — a missing

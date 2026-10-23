@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Scaffold a bundled official plugin directory (plan §8).
+ * Scaffold a bundled official plugin directory.
  *
  * Creates `catalog/sites/<site>/plugins/<id-segment>/` with a manifest, a
  * scoped placeholder stylesheet and a README skeleton, then appends the entry
@@ -10,7 +10,7 @@
  * The manifest copies `matches` straight from the site's `site.json`, so the
  * plugin starts inside its own site (plan D18), and pins `engine` to the engine
  * version this build ships, so a plugin that later calls a primitive already
- * declares a range no older than that primitive's `sinceEngine` (plan §5).
+ * declares a range no older than that primitive's `sinceEngine` (D9).
  *
  * The scaffold is a starting point, not an approval: fill in the copy, write
  * the real CSS or `domOps`, then run `bun run plugin:check <dir>`, which is the

@@ -1,5 +1,5 @@
 /**
- * Primitive ("verb") contracts — DATA ONLY (plan §2 layer 2, §5).
+ * Primitive ("verb") contracts — DATA ONLY (D9).
  *
  * A primitive is first-party behaviour shipped inside the extension that a
  * declarative plugin can invoke through `{ "op": "native", "handler": "<name>",
@@ -8,7 +8,7 @@
  * module collects them, sorted by name, without importing any implementation,
  * so that:
  *   - `scripts/build-plugin-catalog.ts` (Bun, no DOM) can check a manifest's
- *     `requires.handlers` and `engine` against it (plan §5, §8);
+ *     `requires.handlers` and `engine` against it (D9);
  *   - `verbs/contracts.test.ts` can enforce D9 (a published parameter never
  *     changes type or becomes required) against each folder's committed
  *     `paramsBaseline.json`.

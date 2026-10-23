@@ -1,5 +1,5 @@
 /**
- * Plugin status machine (plan §4.2, D8).
+ * Plugin status machine (D8).
  *
  * `PluginHost` reports a status for every plugin that targets the page
  * instead of silently filtering incompatible ones, so the popup can show a

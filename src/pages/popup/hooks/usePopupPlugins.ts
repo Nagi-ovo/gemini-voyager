@@ -70,7 +70,7 @@ export function usePopupPlugins({
   // Site adapter published for the active host through the remote catalog, if
   // any; it replaces the bundled adapter's label and brand colour.
   const [pluginSiteOverride, setPluginSiteOverride] = useState<SiteAdapter | null>(null);
-  // Statuses computed by the active tab's PluginHost (plan §4.2); empty when
+  // Statuses computed by the active tab's PluginHost (D8); empty when
   // the tab has no content script, in which case the card infers locally.
   const [pluginStatuses, setPluginStatuses] = useState<readonly PluginStatus[]>([]);
   const [pluginState, setPluginState] = useState<PluginStateMap>({});

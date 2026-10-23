@@ -1,6 +1,6 @@
 /**
  * Primitive checks that relate a validated manifest to the primitives this
- * build ships (plan §5, §8). Data only: reads `verbs/contracts.ts`, never the
+ * build ships (D9). Data only: reads `verbs/contracts.ts`, never the
  * implementations, so the catalog scripts (Bun, no DOM) and the popup's local
  * plugin importer apply exactly the same rules.
  */

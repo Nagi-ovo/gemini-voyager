@@ -1,5 +1,5 @@
 /**
- * `formulaCopy` primitive (plan §6): Voyager's formula-copy feature, unchanged,
+ * `formulaCopy` primitive (D10): Voyager's formula-copy feature, unchanged,
  * exposed to declarative plugins. A plugin turns it on for its site with
  *
  *   { "op": "native", "handler": "formulaCopy", "params": {} }

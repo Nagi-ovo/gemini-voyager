@@ -1,5 +1,5 @@
 /**
- * Bundled catalog discovery (plan §3).
+ * Bundled catalog discovery.
  *
  * Layout, one directory per site:
  *

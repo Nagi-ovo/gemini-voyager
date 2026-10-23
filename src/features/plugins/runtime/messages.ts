@@ -18,7 +18,7 @@ export const PLUGIN_SET_SETTING_MESSAGE = 'gv.plugins.setSetting';
 
 /**
  * Popup → content script of the active tab: report every plugin's status as
- * computed by that page's PluginHost (plan §4.2). Response:
+ * computed by that page's PluginHost (D8). Response:
  * `{ ok: true, statuses: PluginStatus[] }`.
  */
 export const PLUGIN_STATUS_MESSAGE = 'gv.plugins.status';

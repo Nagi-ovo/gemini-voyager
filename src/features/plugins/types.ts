@@ -172,7 +172,7 @@ export type DomOperation =
   | NativeOperation;
 
 /**
- * Invoke a first-party primitive by name with configuration (plan §5). The
+ * Invoke a first-party primitive by name with configuration (D9). The
  * handler must exist in `verbs/registry.ts`; `params` are validated by that
  * primitive's own guard. Configuration, never instructions (plan C1).
  */
@@ -287,7 +287,7 @@ export interface PluginLocalization {
 }
 
 /**
- * What a plugin needs from the host beyond the engine range (plan §5, D8).
+ * What a plugin needs from the host beyond the engine range (D8).
  * Checked by the status machine; a miss disables the plugin with a reason
  * instead of hiding it.
  */
@@ -398,7 +398,7 @@ export interface PluginSource {
   /**
    * Remote sources only: the site adapter published for `context.host`, when
    * a usable cached catalog carries one. Replaces the bundled adapter for
-   * pages it covers (plan §3).
+   * pages it covers.
    */
   siteOverride?(context?: PluginSourceContext): Promise<SiteAdapter | null>;
 }

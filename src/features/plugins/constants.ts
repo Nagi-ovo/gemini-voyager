@@ -14,7 +14,7 @@
  */
 export const PLUGIN_ENGINE_VERSION = '1.9.0';
 
-/** Manifest format major this engine understands (plan §5). */
+/** Manifest format major this engine understands (D9). */
 export const PLUGIN_MANIFEST_FORMAT = 1;
 
 /** Plugin-scoped CSS class prefix. Authors should namespace classes under this. */

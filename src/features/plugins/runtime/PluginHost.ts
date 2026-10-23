@@ -197,7 +197,7 @@ export class PluginHost {
       if (host) this.unsubscribeCatalog = subscribeHostCatalog(host, onSourceChange);
       // An import, update or removal of a local plugin is a catalog change too.
       this.unsubscribeLocal = subscribeLocalPlugins(onSourceChange);
-      // A published site override (plan §3) beats the bundled adapter for
+      // A published site override beats the bundled adapter for
       // pages it covers; resolved before the engine exists so semantic
       // selectors use the newest site knowledge from the first mount.
       const adapter = await this.resolveAdapter();

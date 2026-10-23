@@ -70,7 +70,7 @@ const dumpScopeLedgers = (): void => {
   logger.info('Plugin scope ledgers', host?.getScopeLedgers() ?? {});
 };
 
-/** Popup asks the page for plugin statuses (plan §4.2); answered synchronously. */
+/** Popup asks the page for plugin statuses (D8); answered synchronously. */
 const onStatusRequest = (
   message: unknown,
   _sender: chrome.runtime.MessageSender,

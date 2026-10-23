@@ -1,5 +1,5 @@
 /**
- * Remote site override (plan §3): the `site` section of a published per-host
+ * Remote site override: the `site` section of a published per-host
  * catalog file can replace the bundled adapter for that host, so a selector
  * or brand-colour fix reaches users without a release.
  *

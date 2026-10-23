@@ -1,6 +1,6 @@
 /**
  * The status `PluginHost` reports for every plugin whose `matches` cover the
- * page (plan §4.2). Incompatible and blocked plugins are reported with their
+ * page (D8). Incompatible and blocked plugins are reported with their
  * reason instead of being hidden; the popup renders these and adds its own
  * permission check. Every plugin that can run here also carries what each of
  * its DOM ops finds on the page now (`opDiagnostics.ts`). Read-only: it

@@ -1,5 +1,5 @@
 /**
- * The semantic selector vocabulary (plan §5, D9).
+ * The semantic selector vocabulary (D9).
  *
  * A site adapter maps these keys to site-specific CSS selectors; plugins and
  * primitives reference the KEY, never the selector, so a site redesign is a

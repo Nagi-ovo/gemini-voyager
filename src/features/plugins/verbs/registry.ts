@@ -1,5 +1,5 @@
 /**
- * Primitive registry — the whitelist behind the `native` op (plan §5).
+ * Primitive registry — the whitelist behind the `native` op (D9).
  *
  * Keyed by primitive NAME (not plugin id: that is the separate, first-party
  * `nativeHandlers` binding for builtin plugins, left untouched until P4).

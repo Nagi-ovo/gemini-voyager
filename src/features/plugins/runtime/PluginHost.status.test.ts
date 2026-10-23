@@ -95,7 +95,7 @@ afterEach(() => {
   vi.mocked(activateFormulaCopy).mockClear();
 });
 
-describe('PluginHost status machine (plan §4.2)', () => {
+describe('PluginHost status machine (D8)', () => {
   it('blocks code folding when its adapter lacks the native contract semantic keys', async () => {
     const plugins = await new BundledCatalogPluginSource().list();
     const codeCollapse = plugins.find((plugin) => plugin.id === 'voyager.deepseek-code-collapse');
