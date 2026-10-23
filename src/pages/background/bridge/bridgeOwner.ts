@@ -17,7 +17,6 @@
 import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
 import { EXTENSION_VERSION } from '@/core/utils/version';
-import { currentAccountPlan, readAccountPlanStore } from '@/features/bridge/accountPlanStore';
 import {
   type BridgeBrowser,
   type ErrorCode,
@@ -39,6 +38,7 @@ import { createBlobRelay } from './bridgeBlobRelay';
 import { createBlobUploadRelay } from './bridgeBlobUpload';
 import { createBridgeClient } from './bridgeClient';
 import { SUPPORTED_BRIDGE_OPS, createBridgeDispatcher } from './bridgeDispatcher';
+import { createLeaseProbe } from './bridgeLeaseProbe';
 import { createBridgePairing, parsePairing } from './bridgePairing';
 import { readBridgeParallel, writeBridgeParallel } from './bridgeParallel';
 import {
@@ -47,7 +47,7 @@ import {
   LOOPBACK_ORIGIN_PATTERN,
   createBridgePolicy,
 } from './bridgePolicy';
-import { isUpgradeSide, policyLabel, refusedOps } from './bridgePollReplies';
+import { isUpgradeSide, policyLabel, readPolledAccount, refusedOps } from './bridgePollReplies';
 import {
   type BridgeMessageOwner,
   type BridgeStatusData,
@@ -56,7 +56,7 @@ import {
 import { type TabsApi, createBridgeTabs } from './bridgeTabs';
 import { type StorageAreaLike, createBridgeTaskStore } from './bridgeTaskStore';
 import { createCatalogRefreshRunner } from './catalogRefreshOp';
-import { type LeaseProbeOutcome, createPageLeaseArbiter } from './pageLease';
+import { createPageLeaseArbiter } from './pageLease';
 
 export const BRIDGE_WAKE_ALARM = 'gv-bridge-wake';
 const BACKOFF_START_MS = 5_000;
@@ -113,22 +113,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
   );
   const awaitReady = () => ready;
 
-  const probe = async (lease: { tabId: number; leaseId: string; documentId?: string }) => {
-    if (!(await tabs.exists(lease.tabId))) return 'gone' satisfies LeaseProbeOutcome;
-    try {
-      const reply = await env.tabs.sendMessage(
-        lease.tabId,
-        { type: 'gv.bridge.lease.probe', leaseId: lease.leaseId },
-        lease.documentId ? { documentId: lease.documentId } : undefined,
-      );
-      const stopped = (reply as { stopped?: unknown } | undefined)?.stopped;
-      if (typeof stopped !== 'boolean') return 'no-answer';
-      return stopped ? 'stopped' : 'running';
-    } catch {
-      // No receiver: the document is gone, or its bridge runtime (and every leased op) ended.
-      return 'gone';
-    }
-  };
+  const probe = createLeaseProbe(tabs, env.tabs);
   const lease = createPageLeaseArbiter({ area: env.session, ready: awaitReady, probe, now });
   const policy = createBridgePolicy({
     local: env.local,
@@ -184,16 +169,6 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
   const blobRelay = createBlobRelay({ store, client, connection, ready: awaitReady, now });
   const blobUpload = createBlobUploadRelay({ store, client, connection, ready: awaitReady, now });
 
-  // The plan the bridge's ChatGPT pages last showed; it rides on every poll.
-  const readAccount = async () => {
-    try {
-      const stored = await env.local.get(StorageKeys.BRIDGE_ACCOUNT_PLANS);
-      return currentAccountPlan(readAccountPlanStore(stored[StorageKeys.BRIDGE_ACCOUNT_PLANS]));
-    } catch {
-      return null;
-    }
-  };
-
   let loopGeneration = 0;
   let loop: Promise<void> | null = null;
   let loopRunsGeneration = -1;
@@ -241,7 +216,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
           capabilities: { ops },
           inflight: await dispatcher.inflight(),
           policy: { revision: verdict.revision ?? 0, state: policyLabel(verdict) },
-          account: await readAccount(),
+          account: await readPolledAccount(env.local),
           maxTasks: await dispatcher.capacity(),
         },
         pollAbort.signal,
