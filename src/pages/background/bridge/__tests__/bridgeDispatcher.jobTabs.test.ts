@@ -107,4 +107,16 @@ describe('bridge dispatcher: the tab each job runs in', () => {
     expect(t.page.starts()).toHaveLength(0);
     expect(t.resultOf('T1')?.ok).toBe(false);
   });
+
+  it('holds a job that ran one at a time to the switch once it is off, whatever serve sends', async () => {
+    const t = setup();
+    const first = await t.bridgeTab('doc-1', false, 'J1');
+    await t.bridgeTab('doc-2', false, 'J2');
+    await waitedIn(t, first, 'doc-1', 'T1', 'J1');
+    await t.dispatcher.onTask(waitReply('T2', 'J2'));
+
+    await t.dispatcher.onTask(task('turns.read', 'T3', 'J1'));
+    expect(t.resultOf('T3')).toMatchObject({ ok: false, error: { code: 'busy' } });
+    expect(startedIn(t, 'T3')).toBeUndefined();
+  });
 });

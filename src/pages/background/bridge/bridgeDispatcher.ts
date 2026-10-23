@@ -230,9 +230,12 @@ export function createBridgeDispatcher(deps: DispatcherDeps): BridgeDispatcher {
     if (running.some((other) => other.jobId === task.jobId)) {
       return refuse(task.taskId, fail('busy', 'This job already has a task running.'), serverId);
     }
-    // A job that already opened its tab finishes even after the switch went off; the cap
-    // admits new jobs. `config.maxTasks` holds either way.
-    const ongoing = (await store.listTabs()).some((tab) => tab.jobId === task.jobId);
+    // A job that ran beside others in its own tab finishes after the switch went off; the
+    // cap admits new jobs, and with the switch off never depends on serve. `config.maxTasks`
+    // holds either way.
+    const ongoing =
+      (await store.tabOwner(task.jobId))?.parallel === true &&
+      (await store.listTabs()).some((tab) => tab.jobId === task.jobId);
     const maxTasks = ongoing ? config.maxTasks : await capacity();
     if (running.length >= maxTasks) {
       return refuse(
