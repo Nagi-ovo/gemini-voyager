@@ -1,6 +1,7 @@
+import { startChatGptExportOpenListener } from '@/features/plugins/builtin/chatgptExport/openListener';
 import { createExportEntrypoint } from '@/pages/content/export';
-import { hasCatalogExport } from '@/pages/content/export/adapter/platform/catalog';
-import { createCatalogExportSite } from '@/pages/content/export/sites/catalogSite';
+import { openPersistentExportToolbar } from '@/pages/content/export/persistentExportToolbar';
+import { exportSiteFor } from '@/pages/content/export/sites/resolveExportSite';
 
 import { getPrimitiveContract } from '../contracts';
 import type { Primitive } from '../types';
@@ -17,12 +18,34 @@ export const conversationExportPrimitive: Primitive = {
     return { success: true, data: {} };
   },
   activate(scope, _params, context) {
-    const site = context.adapter;
     context.setTargetCounter(
       () => context.doc.querySelectorAll('[data-gv-component="persistent-export-toolbar"]').length,
     );
-    if (!site || !hasCatalogExport(site) || !site.conversationIdPattern) return;
-    const start = createExportEntrypoint(createCatalogExportSite(site));
-    scope.effect(() => start({ signal: scope.signal }), 'conversation-export');
+    const exportSite = context.adapter ? exportSiteFor(context.adapter) : null;
+    if (!exportSite) return;
+    const { entryPoints } = exportSite;
+    // Installed before the async mount: until the toolbar exists the popup hears "no conversation".
+    const stopOpenListener =
+      entryPoints.kind === 'toolbar' && entryPoints.opensFromPopup
+        ? scope.effect(() => {
+            const stop = startChatGptExportOpenListener(openPersistentExportToolbar);
+            // dispose() aborts first but awaits the mount before this effect: go silent at the abort.
+            scope.signal.addEventListener('abort', stop, { once: true });
+            return () => {
+              scope.signal.removeEventListener('abort', stop);
+              stop();
+            };
+          }, 'conversation-export-popup-open')
+        : null;
+    const start = createExportEntrypoint(exportSite);
+    scope.effect(
+      () =>
+        start({ signal: scope.signal }).catch((error: unknown) => {
+          // Nothing mounted, so the popup reports the exporter unreachable, not an empty page.
+          void stopOpenListener?.();
+          throw error;
+        }),
+      'conversation-export',
+    );
   },
 };

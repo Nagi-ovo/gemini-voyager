@@ -45,7 +45,11 @@ export function createChatGptExportSite(adapter: ExportPlatformAdapter): ExportS
   return {
     id: adapter.site.id,
     label: adapter.site.label,
-    entryPoints: { kind: 'toolbar', isConversationPage: chatgptIsConversationPage },
+    entryPoints: {
+      kind: 'toolbar',
+      isConversationPage: chatgptIsConversationPage,
+      opensFromPopup: true,
+    },
     title: adapter.extractConversationTitle,
     turns: {
       scrollsWhileBuilding: true,

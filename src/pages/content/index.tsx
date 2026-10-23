@@ -409,10 +409,8 @@ function handleVisibilityChange(): void {
         // this host is in the user's custom-website list, which is what the
         // popup's "enable Prompt Manager on <site>" toggle edits.
         void promptManager.followCoverage(location.host);
-        // ChatGPT export is driven by PluginHost via the voyager.chatgpt-export
-        // builtin plugin (opt-in), not started unconditionally here.
-        // Formula copy here is driven by PluginHost via the voyager.formula-copy
-        // builtin plugin (opt-in), not started unconditionally.
+        // ChatGPT export and formula copy run only as their opt-in builtin
+        // plugins (voyager.chatgpt-export, voyager.formula-copy) under PluginHost.
         return;
       }
 

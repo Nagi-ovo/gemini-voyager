@@ -40,15 +40,47 @@ function isExportHostId(id: string): id is ExportHostId {
   return Object.hasOwn(EXPORT_ADAPTER_FACTORIES, id);
 }
 
+/**
+ * The exporter for a bundled site: the packaged module registered under its id,
+ * else the catalog exporter its `export` descriptor enables; null when it has
+ * neither. Only for bundled adapters, whose id is not remote data.
+ */
+function exportHostForBundledSite(site: SiteAdapter): ExportHost | null {
+  if (isExportHostId(site.id) && site.id !== 'catalog') {
+    return { id: site.id, adapter: EXPORT_ADAPTER_FACTORIES[site.id](site) };
+  }
+  if (hasCatalogExport(site)) {
+    return { id: 'catalog', adapter: buildCatalogExportAdapter(site) };
+  }
+  return null;
+}
+
+/**
+ * The exporter `conversationExport` mounts for the page at `url` with the
+ * plugin host's `site`, which may be a remote override. A packaged reader is
+ * chosen by the bundled site the URL resolves to, never by `site.id`; the
+ * override supplies that site's selectors only when it names the same id.
+ */
+export function exportHostForPage(
+  site: SiteAdapter,
+  url = window.location.href,
+): ExportHost | null {
+  const bundled = siteRegistry.resolveByUrl(url);
+  if (bundled && isExportHostId(bundled.id) && bundled.id !== 'catalog') {
+    // An override's id is untrusted data: `id: "gemini"` on ChatGPT must not mount Gemini's exporter.
+    const data = site.id === bundled.id ? site : bundled;
+    return { id: bundled.id, adapter: EXPORT_ADAPTER_FACTORIES[bundled.id](data) };
+  }
+  return hasCatalogExport(site)
+    ? { id: 'catalog', adapter: buildCatalogExportAdapter(site) }
+    : null;
+}
+
 /** The exporter registered for the current site. */
 export function resolveExportHost(url = window.location.href): ExportHost {
   const site = siteRegistry.resolveByUrl(url);
-  if (site && isExportHostId(site.id) && site.id !== 'catalog') {
-    return { id: site.id, adapter: EXPORT_ADAPTER_FACTORIES[site.id](site) };
-  }
-  if (site && hasCatalogExport(site)) {
-    return { id: 'catalog', adapter: buildCatalogExportAdapter(site) };
-  }
+  const host = site && exportHostForBundledSite(site);
+  if (host) return host;
 
   // A catalog site without an exporter must not read its page with Gemini's rules.
   if (site) throw new Error('Conversation export is unavailable on this site');

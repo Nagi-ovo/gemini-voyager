@@ -84,6 +84,8 @@ export type ExportEntryPoints =
   | {
       readonly kind: 'toolbar';
       readonly isConversationPage?: (doc: Document, url: string) => boolean;
+      /** The popup's export card opens this toolbar's dialog through a runtime message (ChatGPT). */
+      readonly opensFromPopup?: boolean;
     };
 
 export interface ExportSite {

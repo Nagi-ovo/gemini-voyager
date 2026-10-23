@@ -5,10 +5,6 @@
  * handler (or vice versa) fails the suite instead of shipping a dead toggle.
  */
 import { NATIVE_BUILTIN_PLUGIN_IDS } from '@/features/plugins/builtin';
-import {
-  startChatGptExportPlugin,
-  stopChatGptExportPlugin,
-} from '@/features/plugins/builtin/chatgptExport/runtime';
 import { activateChatGptLocalBridge } from '@/features/plugins/builtin/chatgptLocalBridge';
 import { activateChatGptProUsage } from '@/features/plugins/builtin/chatgptProUsage';
 import { isChatGptProUsageSupported } from '@/features/plugins/builtin/chatgptProUsage/manifest';
@@ -99,12 +95,8 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   'voyager.gemini-sidebar-full-hide': { activate: activateGeminiSidebarFullHide },
   'voyager.gemini-timeline': { activate: activateGeminiTimeline },
   'voyager.gemini-safari-enter-fix': { activate: activateGeminiSafariEnterFix },
-  // formula-copy, input-vim and claude-timeline invoke primitives through a
-  // `native` op in their manifests (see verbs/); they need no binding here.
-  'voyager.chatgpt-export': {
-    start: startChatGptExportPlugin,
-    stop: stopChatGptExportPlugin,
-  },
+  // formula-copy, input-vim, claude-timeline and chatgpt-export invoke primitives
+  // through a `native` op in their manifests (see verbs/); they need no binding here.
   'voyager.chatgpt-temporary-handoff': {
     activate: activateChatGptTemporaryHandoff,
   },

@@ -1,4 +1,5 @@
 import { type PluginManifest, hasNativeOps } from '../types';
+import { contract as conversationExportContract } from '../verbs/conversationExport/contract';
 import { AISTUDIO_BATCH_DELETE_MANIFEST } from './aistudioBatchDeleteManifest';
 import { AISTUDIO_SIDEBAR_WIDTH_MANIFEST } from './aistudioSidebarWidthManifest';
 import { CHATGPT_LOCAL_BRIDGE_MANIFEST } from './chatgptLocalBridge/manifest';
@@ -42,8 +43,8 @@ export const CHATGPT_CONVERSATION_ID_ATTRIBUTE = 'data-chatgpt-selection-convers
  * remote marketplace.
  *
  * Two kinds live here. A manifest with a `native` op invokes a first-party
- * primitive by name (formula copy, Vim input, the timeline; see verbs/) and
- * needs nothing else. A "native function plugin" (export, temporary-chat
+ * primitive by name (formula copy, Vim input, the timeline, ChatGPT export; see
+ * verbs/) and needs nothing else. A "native function plugin" (temporary-chat
  * handoff) declares no contributions and the content script binds its
  * behaviour with `registerNativeHandler(<same id>, { start, stop })` (see
  * runtime/nativeHandlers). Either way the engine runs the code in lockstep
@@ -249,11 +250,13 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
     author: 'voyager-official',
     category: 'productivity',
     license: 'GPL-3.0-or-later',
-    engine: '>=1.2.0',
+    // The primitive's own floor: the release stamp of its contract stamps this builtin too.
+    engine: `>=${conversationExportContract.sinceEngine}`,
     tier: 'declarative',
     matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*'],
     requires: { formFactors: ['desktop', 'mobile'] },
-    contributes: {},
+    // The primitive mounts ChatGPT's packaged reader (`exportSiteFor`), not the catalog one.
+    contributes: { domOps: [{ op: 'native', handler: 'conversationExport', params: {} }] },
   },
   {
     id: 'voyager.chatgpt-temporary-handoff',
@@ -343,11 +346,11 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
 
 /**
  * Builtin plugins come in two shapes. Those whose behaviour is a primitive
- * (`native` op: formula copy, Vim input, the timeline) need no binding — the
- * engine resolves the primitive by name. The rest (export, temporary-chat
- * handoff) still run first-party code bound to their plugin id and MUST have a
- * `registerNativeHandler(<id>, …)` call in the content script (and vice
- * versa). `verifyNativeHandlerBindings(NATIVE_BUILTIN_PLUGIN_IDS)` enforces
+ * (`native` op: formula copy, Vim input, the timeline, ChatGPT export) need no
+ * binding — the engine resolves the primitive by name. The rest (temporary-chat
+ * handoff, Gemini's fixed-id builtins) still run first-party code bound to their
+ * plugin id and MUST have a `registerNativeHandler(<id>, …)` call in the content
+ * script (and vice versa). `verifyNativeHandlerBindings(NATIVE_BUILTIN_PLUGIN_IDS)` enforces
  * both directions after registration — adding a plugin to one side without
  * the other surfaces as a logged error instead of a dead toggle.
  */

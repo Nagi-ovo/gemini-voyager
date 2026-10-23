@@ -4,14 +4,16 @@ Start with the owner of the behavior being changed. `index.ts` is the compositio
 resolves the export site once per page, creates the runner, and mounts the entry points
 (persistent toolbar, conversation/response menus, logo dropdown, copy-as-image). An official
 plugin mounts them and calls the returned stop when it unmounts: `voyager.gemini-export`
-(`pluginHandler.ts`, admitted by `geminiBuiltinStartup.startExport`) and `voyager.chatgpt-export`
-(`features/plugins/builtin/chatgptExport`). Stopping removes every entry point, closes the dialog
-and cancels the active run. File writing
+(`pluginHandler.ts`, admitted by `geminiBuiltinStartup.startExport`), and every other host through
+the `conversationExport` primitive (`voyager.chatgpt-export`, `voyager.deepseek-export`). Stopping
+removes every entry point, closes the dialog and cancels the active run. File writing
 (JSON/Markdown/PDF/image) lives in `src/features/export/`; it renders only content that was read
 from the page beforehand (`extractTurnContent` with an extractor from `createContentExtractor`).
 
-Catalog sites use the `conversationExport` primitive and `sites/catalogSite.ts`, with facts in
-the adapter's versioned `export` descriptor. `catalogReader.ts` snapshots mounted messages or
+The primitive picks the site's reader with `exportSiteFor` (`sites/resolveExportSite.ts`): a site
+Voyager ships a reader for (ChatGPT's thread crawl, keyed by the bundled site id) keeps it, and
+answers the popup's export card when its entry points say `opensFromPopup`; any other site uses
+`sites/catalogSite.ts`, with facts in the adapter's versioned `export` descriptor. `catalogReader.ts` snapshots mounted messages or
 crawls a virtual list. Virtual reading requires `export.messageKey`; without a key, use
 `mounted` to read the current DOM once in order, always with `unknown` completeness.
 `catalogReaderMerge.ts` orders keyed messages with adjacent-window constraints and a Kahn

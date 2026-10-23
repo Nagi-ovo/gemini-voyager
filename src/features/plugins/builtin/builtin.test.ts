@@ -50,12 +50,16 @@ describe('BUILTIN_PLUGINS', () => {
     expect(vim?.i18n?.zh?.name).toBe('Vim 输入');
   });
 
-  it('includes the ChatGPT export native function plugin scoped to ChatGPT', () => {
+  it('includes the ChatGPT export plugin scoped to ChatGPT', () => {
     const exportPlugin = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.chatgpt-export');
     expect(exportPlugin).toBeDefined();
     expect(exportPlugin?.matches).toEqual(['https://chatgpt.com/*', 'https://chat.openai.com/*']);
     expect(exportPlugin?.contributes.styles ?? []).toEqual([]);
-    expect(exportPlugin?.contributes.domOps ?? []).toEqual([]);
+    // Its behaviour is the conversationExport primitive, invoked through a native op.
+    expect(exportPlugin?.contributes.domOps).toEqual([
+      { op: 'native', handler: 'conversationExport', params: {} },
+    ]);
+    expect(exportPlugin?.requires?.formFactors).toEqual(['desktop', 'mobile']);
     expect(exportPlugin?.i18n?.zh?.name).toBe('ChatGPT · 对话导出');
   });
 
