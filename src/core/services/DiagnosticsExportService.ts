@@ -6,7 +6,14 @@ import {
   parseNativeHealthEntries,
 } from '@/core/gemini/nativeHealth';
 import { type VoyagerBuildTarget, getVoyagerBuildTarget } from '@/core/utils/browser';
-import type { PluginSettingValue, PluginSettings, SettingsSchema } from '@/features/plugins/types';
+import { BUNDLED_SITE_ADAPTERS } from '@/features/plugins/catalog/sites';
+import { matchesAnyPattern } from '@/features/plugins/sites/matchPattern';
+import type {
+  PluginSettingValue,
+  PluginSettings,
+  SettingsSchema,
+  SiteId,
+} from '@/features/plugins/types';
 import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '@/features/plugins/verbs/contracts';
 
 export const VOYAGER_DIAGNOSTICS_FORMAT = 'gemini-voyager.plugin-diagnostics.v1' as const;
@@ -20,19 +27,7 @@ export type DiagnosticPluginSource =
   | 'marketplace'
   | 'unknown';
 
-export type DiagnosticSite =
-  | 'aistudio'
-  | 'chatgpt'
-  | 'claude'
-  | 'custom'
-  | 'deepseek'
-  | 'gemini'
-  | 'grok'
-  | 'kimi'
-  | 'midjourney'
-  | 'notebooklm'
-  | 'qwen'
-  | 'unknown';
+export type DiagnosticSite = SiteId | 'custom' | 'unknown';
 
 /**
  * `enabled` and `settings` were derived in the popup from stored values, not
@@ -278,6 +273,11 @@ function detectOperatingSystem(
 
 function resolveDiagnosticSite(activeUrl: string): DiagnosticSite {
   if (!activeUrl) return 'unknown';
+  // Remote site records must never supply identifiers in an exported diagnostic report.
+  const bundledSite = BUNDLED_SITE_ADAPTERS.find((site) =>
+    matchesAnyPattern(activeUrl, site.matches),
+  );
+  if (bundledSite) return bundledSite.id;
   try {
     const url = new URL(activeUrl);
     const hostname = url.hostname.toLowerCase().replace(/^www\./, '');

@@ -13,6 +13,24 @@ import {
   serializeVoyagerDiagnostics,
 } from '../DiagnosticsExportService';
 
+vi.mock('@/features/plugins/catalog/sites', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/features/plugins/catalog/sites')>();
+  const template = actual.BUNDLED_SITE_ADAPTERS.find((site) => site.id === 'deepseek');
+  if (!template) throw new Error('Missing bundled site fixture');
+  return {
+    ...actual,
+    BUNDLED_SITE_ADAPTERS: [
+      ...actual.BUNDLED_SITE_ADAPTERS,
+      {
+        ...template,
+        id: 'derived-chat',
+        label: 'Derived Chat',
+        matches: ['https://chat.derived.example/*'],
+      },
+    ],
+  };
+});
+
 function fixturePayload(): VoyagerDiagnosticsPayload {
   return {
     format: 'gemini-voyager.plugin-diagnostics.v1',
@@ -114,6 +132,22 @@ describe('DiagnosticsExportService', () => {
     });
     expect(serializeVoyagerDiagnostics(payload)).not.toContain('must-not-export');
     expect(serializeVoyagerDiagnostics(payload)).not.toContain('private-conversation-id');
+  });
+
+  it('resolves a derived bundled site to its catalog id', () => {
+    const payload = buildVoyagerDiagnostics({
+      activeUrl: 'https://chat.derived.example/a/chat/s/example',
+    });
+
+    expect(payload.environment.activeSite).toBe('derived-chat');
+  });
+
+  it.each([
+    ['https://chat.openai.com/c/example', 'chatgpt'],
+    ['https://chat.deepseek.com/a/chat/s/example', 'deepseek'],
+    ['https://api.deepseek.com/', 'deepseek'],
+  ])('keeps the existing diagnostic site for %s', (activeUrl, activeSite) => {
+    expect(buildVoyagerDiagnostics({ activeUrl }).environment.activeSite).toBe(activeSite);
   });
 
   it('labels plugin values the popup derived from storage, and only those', () => {
